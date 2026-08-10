@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: territorio_e2e
+      POSTGRES_USER: territorio_e2e
+      POSTGRES_PASSWORD: ${E2E_DB_PASSWORD:?E2E_DB_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U territorio_e2e -d territorio_e2e"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_e2e:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    environment:
+      APP_ENV: e2e
+      APP_DEBUG: "false"
+      POSTGRES_DB: territorio_e2e
+      POSTGRES_USER: territorio_e2e
+      POSTGRES_PASSWORD: ${E2E_DB_PASSWORD:?E2E_DB_PASSWORD is required}
+      POSTGRES_HOST: db
+      SECRET_KEY: ${E2E_SECRET_KEY:?E2E_SECRET_KEY is required}
+      BROWSER_REFRESH_TOKEN_HMAC_SECRET: ${E2E_REFRESH_SECRET:?E2E_REFRESH_SECRET is required}
+      SURVEY_SUBMISSION_HMAC_SECRET: ${E2E_SURVEY_SECRET:?E2E_SURVEY_SECRET is required}
+      E2E_USER_PASSWORD: ${E2E_USER_PASSWORD:?E2E_USER_PASSWORD is required}
+      FRONTEND_ORIGINS: http://localhost:15173
+      BROWSER_ALLOWED_ORIGINS: http://localhost:15173
+      TRUSTED_HOSTS: localhost,127.0.0.1,api
+      REPORT_OUTPUT_DIR: /app/generated-reports
+    ports:
+      - "18000:8000"
+    volumes:
+      - reports_e2e:/app/generated-reports
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "15173:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_e2e:
+  reports_e2e:

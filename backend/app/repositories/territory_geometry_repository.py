@@ -1,0 +1,2 @@
+from app.repositories.map_repository import MapRepository
+class TerritoryGeometryRepository(MapRepository):pass

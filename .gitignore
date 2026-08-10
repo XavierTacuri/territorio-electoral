@@ -1,0 +1,47 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Codex/local tooling
+.codex/
+
+# Playwright / test artifacts
+test-results/
+playwright-report/
+frontend/test-results/
+
+# Generated reports
+backend/quality-artifacts/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.temp

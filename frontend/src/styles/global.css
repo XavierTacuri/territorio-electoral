@@ -1,0 +1,32 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+body {
+  overflow-x: hidden;
+}
+.skip-link {
+  position: fixed;
+  top: -4rem;
+  left: 1rem;
+  z-index: 2000;
+  background: #fff;
+  color: #16333e;
+  padding: 0.75rem 1rem;
+  border: 2px solid currentColor;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+:focus-visible {
+  outline: 3px solid #bf7b2d !important;
+  outline-offset: 2px;
+}
+@media (max-width: 320px) {
+  .MuiToolbar-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}

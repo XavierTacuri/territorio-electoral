@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "dpa_code": "010350", "name": "Gualaceo" },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-78.79, -2.9],
+              [-78.77, -2.9],
+              [-78.77, -2.88],
+              [-78.79, -2.88],
+              [-78.79, -2.9]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+﻿PROFILES={
+'CANONICAL_ELECTORAL_PROCESS':['process_code','name','process_type','election_date','status','is_final'],
+'CANONICAL_POLITICAL_ORGANIZATION':['organization_code','name','short_name','organization_type','list_number','scope'],
+'CANONICAL_ELECTORAL_CANDIDATE':['process_code','office_type','contest_code','candidate_code','full_name','organization_code','list_number','ballot_order'],
+'CANONICAL_ELECTORAL_TURNOUT':['process_code','contest_code','geography_level','geography_code','province_dpa','canton_dpa','parish_dpa','zone_code','precinct_code','jrv_code','registered_voters','ballots_cast','valid_votes','blank_votes','null_votes','other_votes','is_final'],
+'CANONICAL_ELECTORAL_CANDIDATE_RESULT':['process_code','contest_code','geography_level','geography_code','candidate_code','votes','is_final'],
+'CANONICAL_DEMOGRAPHIC_INDICATOR':['indicator_code','name','description','category','unit','value_type'],
+'CANONICAL_DEMOGRAPHIC_OBSERVATION':['indicator_code','reference_year','geography_level','province_dpa','canton_dpa','parish_dpa','value','numerator','denominator'],
+'CANONICAL_ELECTORAL_ROLL_SNAPSHOT':['snapshot_date','process_code','geography_level','province_dpa','canton_dpa','parish_dpa','registered_voters','male_voters','female_voters','electoral_zones','juntas']}
+DATASET_PROFILE={'CNE_TURNOUT':'CANONICAL_ELECTORAL_TURNOUT','CNE_ELECTORAL_RESULTS':'CANONICAL_ELECTORAL_CANDIDATE_RESULT','CNE_CANDIDATES':'CANONICAL_ELECTORAL_CANDIDATE','CNE_POLITICAL_ORGANIZATIONS':'CANONICAL_POLITICAL_ORGANIZATION','CNE_ELECTORAL_ROLL_SNAPSHOT':'CANONICAL_ELECTORAL_ROLL_SNAPSHOT','INEC_DEMOGRAPHIC_INDICATORS':'CANONICAL_DEMOGRAPHIC_INDICATOR'}
+FORBIDDEN_HEADERS={'cedula','identificacion','nombres','apellidos','telefono','correo','email','direccion','fecha_nacimiento','persona_id','hogar_id','ip_address'}

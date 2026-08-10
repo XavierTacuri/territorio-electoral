@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg[binary]
+alembic
+pydantic-settings
+pytest
+httpx
+PyJWT
+pwdlib[argon2]
+python-multipart
+email-validator
+geoalchemy2
+
+reportlab
+openpyxl
+pypdf

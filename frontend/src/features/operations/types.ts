@@ -1,0 +1,57 @@
+export type Page<T> = {
+  items: T[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+export type Activity = {
+  id: string;
+  campaign_id: string;
+  activity_type_id: number;
+  title: string;
+  description?: string | null;
+  activity_date: string;
+  status: string;
+  parish_id: number;
+  community_id?: string | null;
+  sector_id?: string | null;
+  location_name?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  responsible_user_id?: string | null;
+  is_active: boolean;
+};
+export type Need = {
+  id: string;
+  campaign_id?: string;
+  activity_id: string;
+  need_category_id: number;
+  title: string;
+  description?: string | null;
+  mentions_count: number;
+  priority: string;
+  status: string;
+  parish_id: number;
+  community_id?: string | null;
+  sector_id?: string | null;
+  is_active: boolean;
+};
+export type Commitment = {
+  id: string;
+  campaign_id: string;
+  activity_id?: string | null;
+  title: string;
+  description?: string | null;
+  priority: string;
+  status: string;
+  due_date?: string | null;
+  completed_date?: string | null;
+  responsible_user_id?: string | null;
+  parish_id: number;
+  community_id?: string | null;
+  sector_id?: string | null;
+  is_active: boolean;
+};
+export type Catalog = { id: number; code: string; name: string };
+export type Parish = { id: number; name: string };
