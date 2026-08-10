@@ -47,7 +47,7 @@ jobs:
       - run: E2E_EXTERNAL_SERVER=1 E2E_BASE_URL=http://localhost:5173 npm run e2e
         working-directory: frontend
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with: { name: playwright-failures, path: "frontend/test-results" }
       - if: always()
         run: docker compose --profile frontend down -v
