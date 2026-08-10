@@ -20,7 +20,7 @@ jobs:
       SECRET_KEY: ci-secret-key-with-at-least-32-characters
       BROWSER_REFRESH_TOKEN_HMAC_SECRET: ci-refresh-secret-with-at-least-32-characters
       SURVEY_SUBMISSION_HMAC_SECRET: ci-survey-secret-with-at-least-32-characters
-      REPORT_OUTPUT_DIR: ${{ runner.temp }}/generated-reports
+      REPORT_OUTPUT_DIR: /tmp/territorio-electoral-reports
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -42,6 +42,8 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
+      - name: Create report output directory
+        run: mkdir -p "$REPORT_OUTPUT_DIR"
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
       - name: Apply migrations
