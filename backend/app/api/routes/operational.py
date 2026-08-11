@@ -152,3 +152,7 @@ def summary(cid:UUID,date_from:date|None=None,date_to:date|None=None,user:User=D
     if date_from and date_to and date_from>date_to:raise HTTPException(400,"Rango inválido")
     try:return OperationalService(db).summary(cid,user,date_from,date_to)
     except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/territories/summary")
+def territory_summaries(cid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).territory_summaries(cid,user)
+    except Exception as e:raise fail(e)

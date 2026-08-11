@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
@@ -19,7 +20,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -539,6 +540,18 @@ export default function CurrentElectionPage() {
             </Stack>
           )}
         </DialogContent>
+        {detail && (
+          <DialogActions>
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${id}/territories/${detail.parish_id}`}
+              aria-label={`Ver ficha territorial de ${detail.name}`}
+            >
+              VER FICHA TERRITORIAL
+            </Button>
+            <Button onClick={() => setDetail(null)}>CERRAR</Button>
+          </DialogActions>
+        )}
       </Dialog>
     </>
   );

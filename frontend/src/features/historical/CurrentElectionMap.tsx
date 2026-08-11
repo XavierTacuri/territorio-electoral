@@ -100,6 +100,7 @@ export function CurrentElectionMap({
   compact = false,
   title = 'MAPA · ELECCIÓN ACTUAL',
   onStatusChange,
+  selectedParishId,
 }: {
   campaignId: string;
   parishes: ElectionMapParish[];
@@ -107,6 +108,7 @@ export function CurrentElectionMap({
   compact?: boolean;
   title?: string;
   onStatusChange?: (status: 'loading' | 'success' | 'empty' | 'error') => void;
+  selectedParishId?: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [metric, setMetric] = useState('projected_central_rate');
@@ -254,6 +256,18 @@ export function CurrentElectionMap({
           if (bounds) map.fitBounds(bounds, { padding: 30, duration: 0 });
           let hovered: string | number | undefined;
           let selected: string | number | undefined;
+          const selectedFeature = merged.features.find(
+            (feature) => Number(feature.properties.parish_id) === selectedParishId,
+          );
+          if (selectedFeature?.id != null) {
+            selected = selectedFeature.id;
+            map.setFeatureState(
+              { source: 'current-election-boundaries', id: selected },
+              { selected: true },
+            );
+            const selectedBounds = geometryBounds([selectedFeature]);
+            if (selectedBounds) map.fitBounds(selectedBounds, { padding: 55, duration: 0 });
+          }
           const hoverPopup = new Popup({ closeButton: false, closeOnClick: false });
           map.on('mousemove', 'current-election-fill', (event) => {
             const feature = event.features?.[0];
@@ -315,7 +329,7 @@ export function CurrentElectionMap({
       cancelled = true;
       map?.remove();
     };
-  }, [status, merged, metric, scale, onSelect, compact]);
+  }, [status, merged, metric, scale, onSelect, compact, selectedParishId]);
 
   return (
     <Paper sx={{ p: 2 }}>

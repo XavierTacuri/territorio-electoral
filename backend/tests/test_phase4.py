@@ -74,6 +74,18 @@ def test_activity_lifecycle_and_participant_upsert(db, admin, operational_contex
     with pytest.raises(NotFoundError): service.activity(campaign.id, activity.id, admin)
 
 
+def test_territorial_intelligence_aggregates_each_parish_without_n_plus_one(db, admin, operational_context):
+    campaign, parishes = operational_context; service = OperationalService(db)
+    activity = service.create_activity(campaign.id, completed_payload(parishes[0].id), admin)
+    service.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="Necesidad sintética", mentions_count=2, priority="MEDIUM"), admin)
+    service.create_commitment(campaign.id, CommitmentCreate(title="Compromiso sintético", priority="MEDIUM", status="PENDING", parish_id=parishes[0].id), admin)
+    payload = service.territory_summaries(campaign.id, admin)
+    assert len(payload["parishes"]) == len(parishes)
+    selected = next(item for item in payload["parishes"] if item["parish_id"] == parishes[0].id)
+    assert selected["activities"] == 1 and selected["needs_open"] == 1
+    assert selected["commitments_pending"] == 1 and selected["latest_activities"][0]["title"]
+
+
 def test_need_derives_territory_and_prevents_duplicates(db, admin, operational_context):
     campaign, parishes = operational_context; service = OperationalService(db)
     activity = service.create_activity(campaign.id, completed_payload(parishes[1].id), admin)

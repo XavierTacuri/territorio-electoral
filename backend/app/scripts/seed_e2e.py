@@ -106,6 +106,10 @@ def ensure_current_election_fixture(db, admin):
         for parish,value in zip(parishes,values,strict=True):
             if not db.scalar(select(DemographicObservation).where(DemographicObservation.demographic_indicator_id==indicator.id,DemographicObservation.parish_id==parish.id,DemographicObservation.reference_year==2022)):
                 db.add(DemographicObservation(demographic_indicator_id=indicator.id,geography_level="PARISH",province_id=province.id,canton_id=canton.id,parish_id=parish.id,reference_year=2022,value=Decimal(value),source_id=source.id,import_job_id=job.id,is_official=True,is_active=True))
+        if code=="POP_TOTAL":
+            for parish,value in zip(parishes,[170,210,250],strict=True):
+                if not db.scalar(select(DemographicObservation).where(DemographicObservation.demographic_indicator_id==indicator.id,DemographicObservation.parish_id==parish.id,DemographicObservation.reference_year==2010)):
+                    db.add(DemographicObservation(demographic_indicator_id=indicator.id,geography_level="PARISH",province_id=province.id,canton_id=canton.id,parish_id=parish.id,reference_year=2010,value=Decimal(value),source_id=source.id,import_job_id=job.id,is_official=True,is_active=True))
     db.flush()
 
 def ensure_users(db, password):

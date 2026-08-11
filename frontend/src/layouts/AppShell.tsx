@@ -36,7 +36,7 @@ export function AppShell() {
     ['Dashboard', selectedId ? base + '/dashboard' : '/app/campaigns'],
     ['Elección actual', selectedId ? base + '/current-election' : '/app/campaigns'],
     ['Campañas', '/app/campaigns'],
-    ['Territorio', selectedId ? base + '/territories' : '/app/campaigns'],
+    ['Inteligencia territorial', selectedId ? base + '/territories' : '/app/campaigns'],
     ['Actividades', selectedId ? base + '/activities' : '/app/campaigns'],
     ['Necesidades', selectedId ? base + '/needs' : '/app/campaigns'],
     ['Compromisos', selectedId ? base + '/commitments' : '/app/campaigns'],

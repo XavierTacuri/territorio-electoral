@@ -8,7 +8,7 @@ from sqlalchemy import select
 class ReportDataService:
     def __init__(self,db):self.dashboard=DashboardService(db)
     def collect(self,campaign_id,user,report_type,request,template_code=None):
-        if template_code == "CURRENT_ELECTION_EXECUTIVE":
+        if template_code in {"CURRENT_ELECTION_EXECUTIVE", "PARISH_TERRITORIAL_PROFILE"}:
             from app.api.routes.participation import current_election_analysis
             analysis = current_election_analysis(campaign_id,user,self.dashboard.db)
             campaign = self.dashboard.db.get(Campaign, campaign_id)
@@ -27,6 +27,15 @@ class ReportDataService:
                 "election_name": campaign.election_name if campaign else (process.name if process else None),
                 "sources": [{"institution": s.institution, "dataset": s.dataset_name, "reference_date": s.reference_date, "reference_year": s.reference_year, "publication_date": s.publication_date, "official_url": s.official_url} for s in sources],
             }
+            if template_code == "PARISH_TERRITORIAL_PROFILE":
+                if request.parish_id is None: raise ValueError("La ficha territorial requiere parroquia")
+                parish = next((p for p in analysis["parishes"] if p["parish_id"] == request.parish_id), None)
+                if parish is None: raise ValueError("Parroquia sin análisis disponible")
+                analysis["parishes"] = [parish]
+                analysis["snapshot"].update({"registered_voters":parish["registered_voters_current"],"male_voters":parish["male_voters"],"female_voters":parish["female_voters"],"juntas":parish["juntas"]})
+                analysis["historical"] = {year: parish.get(f"historical_{year}") or {} for year in ("2019","2023")}
+                projection=parish.get("projection") or {};analysis["projection"].update({key:projection.get(key) for key in ("expected_voters_low","expected_voters_central","expected_voters_high")})
+                analysis["report_context"]["parish_name"] = parish["name"];analysis["report_context"]["dpa_code"] = parish["dpa_code"]
             return {"current_election": analysis}
         filters=DashboardFilters(date_from=request.date_from,date_to=request.date_to,period=request.period,parish_id=request.parish_id,community_id=request.community_id,sector_id=request.sector_id,compare_previous_period=request.include_comparisons,survey_ids=request.survey_ids or None,electoral_process_ids=request.electoral_process_ids or None,demographic_indicator_codes=request.demographic_indicator_codes or None)
         overview=self.dashboard.overview(campaign_id,user,filters)

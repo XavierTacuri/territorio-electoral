@@ -9,7 +9,7 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { PageHeader } from '../components/layout/PageHeader';
 type GeoJSON = { type: 'FeatureCollection'; features: any[] };
@@ -22,6 +22,7 @@ const LAYERS = [
 ] as const;
 export default function MapPage() {
   const { campaignId = '' } = useParams();
+  const navigate = useNavigate();
   const container = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState<string[]>(['boundaries?level=PARISH']);
   const [error, setError] = useState('');
@@ -67,6 +68,18 @@ export default function MapPage() {
                       },
                     },
               );
+              if (path === 'boundaries?level=PARISH') {
+                map?.on('mouseenter', id, () => {
+                  if (map) map.getCanvas().style.cursor = 'pointer';
+                });
+                map?.on('mouseleave', id, () => {
+                  if (map) map.getCanvas().style.cursor = '';
+                });
+                map?.on('click', id, (event) => {
+                  const parishId = event.features?.[0]?.properties?.resource_id;
+                  if (parishId) navigate(`/app/campaigns/${campaignId}/territories/${parishId}`);
+                });
+              }
             } catch {
               setError('Una o más capas no pudieron cargarse.');
             }
@@ -78,7 +91,7 @@ export default function MapPage() {
       cancelled = true;
       map?.remove();
     };
-  }, [style, campaignId, enabled]);
+  }, [style, campaignId, enabled, navigate]);
   return (
     <>
       <PageHeader

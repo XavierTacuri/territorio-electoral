@@ -27,6 +27,9 @@ const InecImport = lazy(() => import('../features/official-data/InecImportPage')
 const RollSnapshotImport = lazy(() => import('../features/official-data/RollSnapshotImportPage'));
 const GeographyImport = lazy(() => import('../features/official-data/GeographyImportPage'));
 const CurrentElection = lazy(() => import('../features/historical/CurrentElectionPage'));
+const TerritorialIntelligence = lazy(
+  () => import('../features/territory/TerritorialIntelligencePage'),
+);
 const Reports = lazy(() => import('../features/reports/ReportsPage'));
 const Alerts = lazy(() => import('../features/alerts/AlertsPage'));
 const Electoral = lazy(() => import('../features/historical/ElectoralPage'));
@@ -77,12 +80,14 @@ export const router = createBrowserRouter([
             path: campaign.slice(5) + '/current-election',
             element: lazyElement(<CurrentElection />),
           },
-          moduleRoute(
-            campaign.slice(5) + '/territories',
-            'Territorio',
-            'Parroquias, comunidades y sectores habilitados.',
-            () => '/parishes',
-          ),
+          {
+            path: campaign.slice(5) + '/territories',
+            element: lazyElement(<TerritorialIntelligence />),
+          },
+          {
+            path: campaign.slice(5) + '/territories/:parishId',
+            element: lazyElement(<TerritorialIntelligence />),
+          },
           { path: campaign.slice(5) + '/activities', element: lazyElement(<Activities />) },
           {
             path: campaign.slice(5) + '/activities/:activityId',
