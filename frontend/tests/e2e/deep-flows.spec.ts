@@ -1,14 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
-async function login(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin_e2e');
-  await page.getByRole('textbox', { name: /Contrase/ }).fill(password!);
-  await page.getByRole('button', { name: /Iniciar sesi/ }).click();
-  await expect(page).toHaveURL(/\/app/);
-}
+import { apiToken, browserLogin } from './support/auth';
 async function campaign(page: Page) {
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
@@ -17,10 +9,10 @@ async function campaign(page: Page) {
 test('encuesta anónima real, importaciones, descargas y alertas', async ({ page, request }) => {
   test.setTimeout(240000);
   const suffix = Date.now().toString();
-  await login(page);
+  await browserLogin(page);
   const campaignId = await campaign(page);
   await test.step('encuesta completa y supresión', async () => {
-    await page.getByRole('link', { name: 'Encuestas' }).click();
+    await page.getByRole('link', { name: 'Encuestas', exact: true }).click();
     await page.getByRole('button', { name: 'Crear encuesta' }).click();
     let dialog = page.getByRole('dialog');
     await dialog.getByLabel('Título').fill('Encuesta profunda ' + suffix);
@@ -101,7 +93,9 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page.getByRole('option').first().click();
     await page.getByLabel('Tipo de conjunto').click();
     await page.getByRole('option', { name: 'CNE_TURNOUT' }).click();
-    await page.getByLabel('Perfil de mapeo').fill('CANONICAL_ELECTORAL_PROCESS');
+    await page
+      .getByRole('textbox', { name: 'Perfil explícito (opcional)' })
+      .fill('CANONICAL_ELECTORAL_PROCESS');
     await page
       .locator('input[type=file]')
       .setInputFiles(path.join(import.meta.dirname, 'fixtures', 'electoral-process.csv'));
@@ -120,8 +114,8 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     response = page.waitForResponse((r) => r.url().endsWith('/data-imports/execute'));
     await page.getByRole('button', { name: '2. Ejecutar' }).click();
     expect((await response).status()).toBe(200);
-    await campaign(page);
-    await page.getByRole('link', { name: 'Datos electorales' }).click();
+    await page.goto(`/app/campaigns/${campaignId}/dashboard`);
+    await page.getByRole('link', { name: 'Datos electorales', exact: true }).click();
     await page.getByLabel('Proceso').click();
     await expect(
       page.getByRole('option', { name: /Proceso sintético importado 2024/ }),
@@ -129,11 +123,7 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page.keyboard.press('Escape');
   });
   await test.step('GeoJSON real conserva el territorio y publica su feature', async () => {
-    const technicalLogin = await request.post('/api/v1/auth/login', {
-      form: { username: 'admin_e2e', password: password! },
-    });
-    expect(technicalLogin.status()).toBe(200);
-    const token = (await technicalLogin.json()).access_token as string;
+    const token = await apiToken(request);
     const headers = { Authorization: 'Bearer ' + token };
     const parishesBefore = await (await request.get('/api/v1/parishes', { headers })).json();
     const targetBefore = parishesBefore.find(
@@ -149,23 +139,22 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
 
     await page.goto('/app/admin/geometry-imports');
     await page.getByLabel('Fuente oficial').click();
-    await page.getByRole('option').first().click();
-    await page.getByLabel('Nivel territorial').click();
-    await page.getByRole('option', { name: 'PARISH' }).click();
-    await page.getByLabel('Propiedad DPA').fill('dpa_code');
+    await page.getByRole('option').nth(1).click();
+    await expect(page.getByText(/Nivel territorial:/)).toContainText('PARISH');
+    await expect(page.getByText(/Propiedad de unión:/)).toContainText('dpa_code');
     await page
       .locator('input[type=file]')
       .setInputFiles(path.join(import.meta.dirname, 'fixtures', 'parish.geojson'));
     let response = page.waitForResponse((item) =>
       item.url().endsWith('/geometry-imports/validate'),
     );
-    await page.getByRole('button', { name: '1. Validar' }).click();
+    await page.getByRole('button', { name: 'VALIDAR', exact: true }).click();
     expect((await response).status()).toBe(200);
-    await expect(page.getByText(/Validos: 1|V.lidos: 1/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Resultado.*VALIDATED/ })).toBeVisible();
     response = page.waitForResponse((item) => item.url().endsWith('/geometry-imports/execute'));
-    await page.getByRole('button', { name: '2. Ejecutar' }).click();
+    await page.getByRole('button', { name: 'EJECUTAR', exact: true }).click();
     expect((await response).status()).toBe(200);
-    await expect(page.getByText(/Resultado: COMPLETED/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Resultado.*COMPLETED/ })).toBeVisible();
 
     const parishesAfter = await (await request.get('/api/v1/parishes', { headers })).json();
     expect(parishesAfter).toHaveLength(parishesBefore.length);
@@ -198,9 +187,7 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     expect(importedFeatures).toHaveLength(1);
     expect(importedFeatures[0].geometry.type).toBe('MultiPolygon');
 
-    response = page.waitForResponse((item) => item.url().endsWith('/geometry-imports/execute'));
-    await page.getByRole('button', { name: '2. Ejecutar' }).click();
-    expect((await response).status()).toBe(409);
+    await expect(page.getByRole('button', { name: 'EJECUTAR', exact: true })).toBeDisabled();
 
     const layerResponse = page.waitForResponse((item) =>
       item.url().includes('/map/boundaries?level=PARISH'),
@@ -219,8 +206,8 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await expect(page.getByText('Parroquias', { exact: true }).first()).toBeVisible();
   });
   await test.step('PDF y XLSX descargables y protegidos', async () => {
-    await campaign(page);
-    await page.getByRole('link', { name: 'Informes' }).click();
+    await page.goto(`/app/campaigns/${campaignId}/dashboard`);
+    await page.getByRole('link', { name: 'Informes', exact: true }).click();
     for (const format of ['PDF', 'XLSX']) {
       await page.getByRole('button', { name: 'Generar informe' }).click();
       const dialog = page.getByRole('dialog');
@@ -257,7 +244,7 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     }
   });
   await test.step('alerta reconocida, resuelta y deduplicada', async () => {
-    await page.getByRole('link', { name: 'Alertas' }).click();
+    await page.getByRole('link', { name: 'Alertas', exact: true }).click();
     let response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
     const refreshedAlerts = page.waitForResponse(
       (r) => r.url().includes('/alerts?page=') && r.request().method() === 'GET',

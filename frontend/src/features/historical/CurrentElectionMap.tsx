@@ -97,15 +97,23 @@ export function CurrentElectionMap({
   campaignId,
   parishes,
   onSelect,
+  compact = false,
+  title = 'MAPA · ELECCIÓN ACTUAL',
+  onStatusChange,
 }: {
   campaignId: string;
   parishes: ElectionMapParish[];
   onSelect: (id: number) => void;
+  compact?: boolean;
+  title?: string;
+  onStatusChange?: (status: 'loading' | 'success' | 'empty' | 'error') => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [metric, setMetric] = useState('projected_central_rate');
   const [boundaries, setBoundaries] = useState<Collection>();
   const [status, setStatus] = useState<'loading' | 'success' | 'empty' | 'error'>('loading');
+
+  useEffect(() => onStatusChange?.(status), [onStatusChange, status]);
 
   useEffect(() => {
     let active = true;
@@ -204,7 +212,7 @@ export function CurrentElectionMap({
           style: import.meta.env.VITE_MAP_STYLE_URL || '/map-style.json',
           scrollZoom: false,
         });
-        map.addControl(new NavigationControl(), 'top-right');
+        map.addControl(new NavigationControl({ showCompass: !compact }), 'top-right');
         map.on('load', () => {
           if (!map) return;
           map.addSource('current-election-boundaries', { type: 'geojson', data: merged as any });
@@ -307,12 +315,12 @@ export function CurrentElectionMap({
       cancelled = true;
       map?.remove();
     };
-  }, [status, merged, metric, scale, onSelect]);
+  }, [status, merged, metric, scale, onSelect, compact]);
 
   return (
     <Paper sx={{ p: 2 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-        <Typography variant="h2">MAPA · ELECCIÓN ACTUAL</Typography>
+        <Typography variant="h2">{title}</Typography>
         <Select size="small" value={metric} onChange={(event) => setMetric(event.target.value)}>
           {METRICS.map((item) => (
             <MenuItem key={item.value} value={item.value}>
@@ -334,8 +342,8 @@ export function CurrentElectionMap({
         aria-label="Mapa de elección actual"
         sx={{
           display: status === 'success' ? 'block' : 'none',
-          height: { xs: 480, md: 620 },
-          minHeight: 480,
+          height: compact ? { xs: 300, sm: 340, md: 390 } : { xs: 480, md: 620 },
+          minHeight: compact ? 300 : 480,
           width: '100%',
           mt: 2,
           borderRadius: 1,

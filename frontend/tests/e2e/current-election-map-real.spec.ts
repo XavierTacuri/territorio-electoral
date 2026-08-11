@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { apiToken, browserLogin } from './support/auth';
 
 test('elección actual solicita boundaries y monta MapLibre con tamaño visible', async ({
   page,
@@ -7,10 +8,7 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Network.enable');
   await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
-  const password = process.env.CURRENT_ELECTION_E2E_PASSWORD || 'admin';
-  const login = await request.post('/api/v1/auth/login', { form: { username: 'admin', password } });
-  expect(login.status(), 'El administrador local debe poder autenticarse').toBe(200);
-  const token = (await login.json()).access_token as string;
+  const token = await apiToken(request);
   const headers = { Authorization: `Bearer ${token}` };
   const campaigns = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
@@ -28,11 +26,7 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
   }
   expect(campaignId, 'Debe existir una campaña con análisis de elección actual').not.toBe('');
 
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin');
-  await page.locator('input[type="password"]').fill(password);
-  await page.getByRole('button', { name: /Iniciar sesi/ }).click();
-  await expect(page).toHaveURL(/\/app/);
+  await browserLogin(page);
 
   const boundaryResponse = page.waitForResponse((response) =>
     response
@@ -70,7 +64,7 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
   expect(size.width).toBeGreaterThan(0);
   expect(size.height).toBeGreaterThan(0);
   await expect(map).toHaveAttribute('data-metric', 'projected_central_rate');
-  await expect(map).toHaveAttribute('data-feature-count', '9');
+  await expect(map).toHaveAttribute('data-feature-count', String(geojson.features.length));
   const paint = JSON.parse((await map.getAttribute('data-fill-color-expression')) || 'null');
   expect(paint).toEqual([
     'case',
@@ -123,5 +117,19 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
   await page.getByRole('option', { name: 'Población INEC 2022' }).click();
   await expect(page.getByLabel('Leyenda — Población INEC 2022')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('current-election-map.png'), fullPage: true });
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1024, height: 768 },
+    { width: 1366, height: 768 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      )
+      .toBe(true);
+  }
   testInfo.annotations.push({ type: 'features', description: String(geojson.features.length) });
 });

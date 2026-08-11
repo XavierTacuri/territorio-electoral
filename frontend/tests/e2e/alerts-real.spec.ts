@@ -1,14 +1,10 @@
 import { test, expect } from '@playwright/test';
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
+import { browserLogin } from './support/auth';
 
 test('evaluación, reconocimiento, resolución y deduplicación reales de alerta', async ({
   page,
 }) => {
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin_e2e');
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill(password);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await browserLogin(page);
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
   await page.getByRole('link', { name: 'Alertas' }).click();

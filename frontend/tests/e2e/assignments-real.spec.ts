@@ -1,15 +1,6 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
+import { expect, test, type Page } from '@playwright/test';
+import { apiToken, browserLogin, e2eUsers } from './support/auth';
 const auth = (token: string) => ({ Authorization: 'Bearer ' + token });
-async function token(request: APIRequestContext, username: string) {
-  const response = await request.post('/api/v1/auth/login', {
-    form: { username, password: password! },
-  });
-  expect(response.status()).toBe(200);
-  return (await response.json()).access_token as string;
-}
 async function choose(page: Page, label: string | RegExp, option: string | RegExp) {
   await page.getByLabel(label).click();
   await page.getByRole('option', { name: option }).click();
@@ -20,8 +11,8 @@ test('asignaciones reales de parroquia, comunidad y sector respetan la jerarquia
   request,
 }) => {
   test.setTimeout(120000);
-  const admin = await token(request, 'admin_e2e');
-  const coordinator = await token(request, 'coordinator_e2e');
+  const admin = await apiToken(request);
+  const coordinator = await apiToken(request, e2eUsers.coordinator);
   const campaigns = await (
     await request.get('/api/v1/campaigns?page_size=100', { headers: auth(admin) })
   ).json();
@@ -73,11 +64,7 @@ test('asignaciones reales de parroquia, comunidad y sector respetan la jerarquia
     ).toBe(200);
   }
 
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin_e2e');
-  await page.getByRole('textbox', { name: /Contrase/ }).fill(password!);
-  await page.getByRole('button', { name: /Iniciar sesi/ }).click();
-  await expect(page).toHaveURL(/\/app/);
+  await browserLogin(page);
   await page.getByRole('link', { name: 'Asignaciones' }).click();
   await expect(page.getByRole('heading', { name: 'Asignaciones' })).toBeVisible();
   await page.getByRole('main').getByLabel('Campana').click();

@@ -7,7 +7,7 @@ from app.api.dependencies import get_current_active_user, require_admin
 from app.db.session import get_db
 from app.models.historical import ElectoralRollSnapshot, ElectoralRollSnapshotEntry, ParticipationProjectionRun, ParticipationProjectionResult, ElectoralProcess, ElectoralContest, ElectoralGeography, ElectoralTurnout, DemographicIndicator, DemographicObservation
 from app.models.campaign import Campaign
-from app.models.territory import Parish
+from app.models.territory import Canton, Parish
 from app.services.campaign_access_service import CampaignAccessService
 from app.models.user import User
 from app.schemas.historical import ElectoralRollSnapshotRead, ElectoralRollSnapshotEntryRead, ParticipationProjectionRunRead, ParticipationProjectionResultRead
@@ -56,7 +56,9 @@ def current_election_analysis(campaign_id: UUID, user: User = Depends(get_curren
     if latest_historical and latest_historical['registered_voters'] and abs(current_total['registered_voters'] - latest_historical['registered_voters']) / latest_historical['registered_voters'] > 0.10: warnings.append({'code': 'REGISTRATION_SERIES_BREAK', 'message': 'Se detectó una variación elevada del registro electoral entre procesos. Esta diferencia puede responder a cambios administrativos, metodológicos, territoriales o del registro electoral y no debe interpretarse automáticamente como una tendencia demográfica.'})
     older_historical = historical_totals.get('2019')
     if older_historical and latest_historical and older_historical['registered_voters'] and abs(latest_historical['registered_voters'] - older_historical['registered_voters']) / older_historical['registered_voters'] > 0.10 and not warnings: warnings.append({'code': 'REGISTRATION_SERIES_BREAK', 'message': 'Se detectó una variación elevada del registro electoral entre procesos. Esta diferencia puede responder a cambios administrativos, metodológicos, territoriales o del registro electoral y no debe interpretarse automáticamente como una tendencia demográfica.'})
-    return {'snapshot': {'id': str(snapshot.id), 'snapshot_date': snapshot.snapshot_date, 'name': snapshot.name, **current_total}, 'historical': historical_totals, 'projection': {'model_code': run.model_code, 'model_version': run.model_version, 'parameters': run.parameters, **projection_totals}, 'warnings': warnings, 'demographics': {'year': 2022, 'parishes': parish_rows}, 'parishes': parish_rows}
+    canton = db.get(Canton, campaign.canton_id)
+    current_process = db.get(ElectoralProcess, snapshot.electoral_process_id) if snapshot.electoral_process_id else None
+    return {'context': {'campaign_name': campaign.name, 'canton_name': canton.name if canton else str(campaign.canton_id), 'election_name': current_process.name if current_process else campaign.election_name}, 'snapshot': {'id': str(snapshot.id), 'snapshot_date': snapshot.snapshot_date, 'name': snapshot.name, **current_total}, 'historical': historical_totals, 'projection': {'model_code': run.model_code, 'model_version': run.model_version, 'parameters': run.parameters, **projection_totals}, 'warnings': warnings, 'demographics': {'year': 2022, 'parishes': parish_rows}, 'parishes': parish_rows}
 
 @router.get('/electoral-roll-snapshots', response_model=list[ElectoralRollSnapshotRead])
 def snapshots(source_id: UUID | None = None, process_id: UUID | None = None, snapshot_date: date | None = None, _: User = Depends(get_current_active_user), db: Session = Depends(get_db)):

@@ -1,15 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { apiToken, browserLogin } from './support/auth';
 
 test('los botones del informe ejecutivo se muestran sin mojibake', async ({
   page,
   request,
 }, testInfo) => {
-  const password = process.env.CURRENT_ELECTION_E2E_PASSWORD || 'admin';
-  const login = await request.post('/api/v1/auth/login', {
-    form: { username: 'admin', password },
-  });
-  expect(login.status()).toBe(200);
-  const token = (await login.json()).access_token as string;
+  const token = await apiToken(request);
   const headers = { Authorization: `Bearer ${token}` };
   const campaigns = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
@@ -26,11 +22,7 @@ test('los botones del informe ejecutivo se muestran sin mojibake', async ({
     }
   }
   expect(campaignId).not.toBe('');
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin');
-  await page.locator('input[type="password"]').fill(password);
-  await page.getByRole('button', { name: /Iniciar sesi/ }).click();
-  await expect(page).toHaveURL(/\/app/);
+  await browserLogin(page);
   await page.goto(`/app/campaigns/${campaignId}/current-election`);
   await expect(page.getByRole('button', { name: 'GENERAR INFORME PDF' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'GENERAR INFORME XLSX' })).toBeVisible();

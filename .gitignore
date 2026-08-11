@@ -44,4 +44,5 @@ Thumbs.db
 
 # Temporary
 *.tmp
-*.temp
+*.tempquality-artifacts/
+/quality-artifacts/

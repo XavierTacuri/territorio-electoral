@@ -1,30 +1,12 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
-
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
-
-async function token(request: APIRequestContext, username: string) {
-  const response = await request.post('/api/v1/auth/login', {
-    form: { username, password: password! },
-  });
-  expect(response.status()).toBe(200);
-  return (await response.json()).access_token as string;
-}
+import { test, expect } from '@playwright/test';
+import { apiToken, browserLogin, e2eUsers } from './support/auth';
 const auth = (accessToken: string) => ({ Authorization: `Bearer ${accessToken}` });
-
-async function browserLogin(page: Page, username: string) {
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill(username);
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill(password!);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/app/);
-}
 
 test('403 reales respetan campaña, territorio, alertas y administración', async ({
   page,
   request,
 }) => {
-  const adminToken = await token(request, 'admin_e2e');
+  const adminToken = await apiToken(request);
   const campaigns = await (
     await request.get('/api/v1/campaigns?page_size=100', { headers: auth(adminToken) })
   ).json();
@@ -56,9 +38,9 @@ test('403 reales respetan campaña, territorio, alertas y administración', asyn
   const activityTypes = await (
     await request.get('/api/v1/activity-types', { headers: auth(adminToken) })
   ).json();
-  const candidateToken = await token(request, 'candidate_e2e');
-  const coordinatorToken = await token(request, 'coordinator_e2e');
-  const analystToken = await token(request, 'analyst_e2e');
+  const candidateToken = await apiToken(request, e2eUsers.candidate);
+  const coordinatorToken = await apiToken(request, e2eUsers.coordinator);
+  const analystToken = await apiToken(request, e2eUsers.analyst);
 
   const notAssigned = await request.get(`/api/v1/campaigns/${unassigned.id}/activities`, {
     headers: auth(candidateToken),
@@ -94,7 +76,7 @@ test('403 reales respetan campaña, territorio, alertas y administración', asyn
     ).status(),
   ).toBe(403);
 
-  await browserLogin(page, 'analyst_e2e');
+  await browserLogin(page, e2eUsers.analyst);
   await page.goto('/app/admin/users');
   await expect(page).toHaveURL(/\/403$/);
   await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
@@ -106,7 +88,7 @@ test('404 frontend y recursos inexistentes son controlados', async ({ page, requ
   await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Volver al inicio' })).toBeVisible();
 
-  const adminToken = await token(request, 'admin_e2e');
+  const adminToken = await apiToken(request);
   const campaigns = await (
     await request.get('/api/v1/campaigns?page_size=100', { headers: auth(adminToken) })
   ).json();

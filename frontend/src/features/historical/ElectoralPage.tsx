@@ -447,7 +447,7 @@ export default function ElectoralPage() {
         title="Datos electorales"
         description="Resultados históricos oficiales, sin predicciones ni territorios favorables."
       />
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={2} mb={3}>
+      <Stack direction={{ xs: 'column', lg: 'row' }} gap={2} mb={3} sx={{ minWidth: 0 }}>
         <TextField
           select
           label="Proceso"
@@ -457,7 +457,8 @@ export default function ElectoralPage() {
             setContestId('');
             setParishId('');
           }}
-          sx={{ minWidth: 280 }}
+          fullWidth
+          sx={{ minWidth: 0, flex: 1 }}
         >
           <MenuItem value="">Seleccione</MenuItem>
           {processes.data?.map((process) => (
@@ -474,7 +475,8 @@ export default function ElectoralPage() {
             setContestId(event.target.value);
             setParishId('');
           }}
-          sx={{ minWidth: 280 }}
+          fullWidth
+          sx={{ minWidth: 0, flex: 1 }}
           disabled={!processId}
         >
           <MenuItem value="">Seleccione</MenuItem>
@@ -489,7 +491,8 @@ export default function ElectoralPage() {
           label="Parroquia"
           value={parishId}
           onChange={(event) => setParishId(event.target.value)}
-          sx={{ minWidth: 280 }}
+          fullWidth
+          sx={{ minWidth: 0, flex: 1 }}
           disabled={!contestId || geographies.isLoading}
         >
           <MenuItem value="">Todas</MenuItem>

@@ -1,14 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
-async function login(page: Page, user = 'admin_e2e') {
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill(user);
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill(password!);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/app/);
-}
+import { browserLogin } from './support/auth';
 async function selectCampaign(page: Page) {
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
@@ -16,14 +7,14 @@ async function selectCampaign(page: Page) {
   return page.url().match(/campaigns\/([^/]+)/)![1];
 }
 async function nav(page: Page, name: string) {
-  await page.getByRole('link', { name }).click();
+  await page.getByRole('link', { name, exact: true }).click();
 }
 
 test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) => {
   test.setTimeout(180000);
   const suffix = Date.now().toString();
   await test.step('01 Login ADMIN', async () => {
-    await login(page);
+    await browserLogin(page);
     await expect(page.getByText('Usuario E2E')).toBeVisible();
   });
   await test.step('02 Refresh coordinado', async () => {
@@ -44,8 +35,8 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     expect(status).toBe(200);
   });
   const id = await test.step('03 Selección de campaña', () => selectCampaign(page));
-  await test.step('04 Dashboard', async () =>
-    expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible());
+  await test.step('04 Dashboard ejecutivo', async () =>
+    expect(page.getByRole('heading', { level: 1, name: 'TERRITORIO ELECTORAL' })).toBeVisible());
   await test.step('05 Crear actividad', async () => {
     const title = 'Actividad Playwright ' + suffix;
     await nav(page, 'Actividades');
@@ -160,7 +151,7 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
   await test.step('18 Ejecución CSV explícita', async () =>
     expect(page.getByRole('button', { name: '2. Ejecutar' })).toBeDisabled());
   await test.step('19 Electoral', async () => {
-    await selectCampaign(page);
+    await page.goto(`/app/campaigns/${id}/dashboard`);
     await nav(page, 'Datos electorales');
     await expect(page.getByRole('heading', { name: 'Datos electorales' })).toBeVisible();
   });
@@ -195,13 +186,13 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
   });
   await test.step('25 Permisos candidato', async () => {
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
-    await login(page, 'candidate_e2e');
+    await browserLogin(page, 'candidate_e2e');
     await expect(page.getByText('Administración')).toHaveCount(0);
   });
   await test.step('26 Restricción coordinador', async () => {
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
-    await login(page, 'coordinator_e2e');
-    await selectCampaign(page);
+    await browserLogin(page, 'coordinator_e2e');
+    await page.goto(`/app/campaigns/${id}/dashboard`);
     await nav(page, 'Actividades');
     await expect(page.getByRole('heading', { name: 'Actividades' })).toBeVisible();
   });

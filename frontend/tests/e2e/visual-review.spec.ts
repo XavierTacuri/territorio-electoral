@@ -1,20 +1,17 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
-
-const password = process.env.E2E_USER_PASSWORD;
-if (!password) throw new Error('E2E_USER_PASSWORD es obligatorio');
+import { test, expect, type APIRequestContext } from '@playwright/test';
+import { apiToken, browserLogin } from './support/auth';
 const sizes = [
   { width: 320, height: 800 },
   { width: 375, height: 812 },
+  { width: 390, height: 844 },
   { width: 768, height: 1024 },
   { width: 1024, height: 768 },
+  { width: 1366, height: 768 },
   { width: 1440, height: 900 },
 ];
 
 async function adminData(request: APIRequestContext) {
-  const login = await request.post('/api/v1/auth/login', {
-    form: { username: 'admin_e2e', password: password! },
-  });
-  const access = (await login.json()).access_token as string;
+  const access = await apiToken(request);
   const headers = { Authorization: `Bearer ${access}` };
   const campaign = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
@@ -34,14 +31,6 @@ async function adminData(request: APIRequestContext) {
     publishedId: surveys.items.find((x: { status: string }) => x.status === 'PUBLISHED')
       .id as string,
   };
-}
-
-async function browserLogin(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo o nombre de usuario').fill('admin_e2e');
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill(password!);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/app/);
 }
 
 test('revisión visual completa sin desbordamiento horizontal', async ({
