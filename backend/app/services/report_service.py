@@ -82,7 +82,8 @@ class ReportService:
             if request.format.value=="PDF":ReportPDFService(settings.report_pdf_max_table_rows).render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             else:ReportExcelService().render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             stored_key,size,digest=self.storage.store(tmp_path,suffix[1:]);tmp_path=None
-            artifact=ReportArtifact(report_run_id=run.id,format=request.format.value,original_download_name=f"informe-ejecutivo-eleccion-actual-{request.report_date.strftime('%d-%m-%Y')}{suffix}",storage_key=stored_key,mime_type="application/pdf" if suffix==".pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",size_bytes=size,sha256=digest,expires_on=request.report_date+timedelta(days=settings.report_artifact_retention_days),is_available=True,is_active=True)
+            prefix="ficha-territorial" if request.template_code=="PARISH_TERRITORIAL_PROFILE" else "informe-ejecutivo-eleccion-actual"
+            artifact=ReportArtifact(report_run_id=run.id,format=request.format.value,original_download_name=f"{prefix}-{request.report_date.strftime('%d-%m-%Y')}{suffix}",storage_key=stored_key,mime_type="application/pdf" if suffix==".pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",size_bytes=size,sha256=digest,expires_on=request.report_date+timedelta(days=settings.report_artifact_retention_days),is_available=True,is_active=True)
             self.artifacts.add(artifact);run.status="COMPLETED";run.finished_at=datetime.now().astimezone();self.db.commit();return run
         except Exception as exc:
             if tmp_path and tmp_path.exists():tmp_path.unlink()

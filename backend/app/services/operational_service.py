@@ -200,3 +200,17 @@ class OperationalService:
         counts={s:sum(x.status==s for x in commitments) for s in ["PENDING","IN_PROGRESS","COMPLETED","CANCELLED"]};over=sum(bool(x.due_date and x.due_date<today and x.status in {"PENDING","IN_PROGRESS"}) for x in commitments)
         completed=sum(a.status=="COMPLETED" for a in acts);text=f"Durante el perÃ­odo se realizaron {completed} actividades. Existen {len(uncovered)} parroquias sin actividades realizadas y {over} compromisos vencidos."
         return OperationalSummaryRead(date_from=date_from,date_to=date_to,completed_activities=completed,planned_activities=sum(a.status=="PLANNED" for a in acts),cancelled_activities=sum(a.status=="CANCELLED" for a in acts),total_activities=len(acts),open_needs=sum(n.status!="DISCARDED" for n in needs),parishes_with_commitments=len({x.parish_id for x in commitments}),estimated_attendees=sum(x.estimated_attendees for x in summaries),activities_by_type=bytype,activities_by_parish=byparish,top_needs=top,needs_by_parish=needsbyparish,commitments=CommitmentStatusSummary(pending=counts["PENDING"],in_progress=counts["IN_PROGRESS"],completed=counts["COMPLETED"],cancelled=counts["CANCELLED"],overdue=over),uncovered_parishes=uncovered,summary_text=text)
+
+    def territory_summaries(self,campaign_id,user):
+        """All-time aggregated operational context for every accessible parish."""
+        campaign=self.campaign(campaign_id,user);roles={r.code for r in user.roles};broad=self.access.admin(user) or bool(roles.intersection({"CANDIDATE","CAMPAIGN_MANAGER","ANALYST"}))
+        allowed=lambda item: broad or self.territorial_access(user,campaign_id,item.parish_id,item.community_id,item.sector_id)
+        activities=[x for x in self.db.scalars(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign_id,TerritorialActivity.is_active.is_(True))) if allowed(x)]
+        needs=[x for x in self.db.scalars(select(CitizenNeed).where(CitizenNeed.campaign_id==campaign_id,CitizenNeed.is_active.is_(True))) if allowed(x)]
+        commitments=[x for x in self.db.scalars(select(Commitment).where(Commitment.campaign_id==campaign_id,Commitment.is_active.is_(True))) if allowed(x)]
+        parishes=list(self.db.scalars(select(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True)).order_by(Parish.name)))
+        result=[]
+        for parish in parishes:
+            pa=sorted((x for x in activities if x.parish_id==parish.id),key=lambda x:(x.activity_date,x.created_at),reverse=True);pn=sorted((x for x in needs if x.parish_id==parish.id),key=lambda x:x.created_at,reverse=True);pc=sorted((x for x in commitments if x.parish_id==parish.id),key=lambda x:x.created_at,reverse=True)
+            result.append({"parish_id":parish.id,"activities":len(pa),"needs_open":sum(x.status!="DISCARDED" for x in pn),"commitments_pending":sum(x.status in {"PENDING","IN_PROGRESS"} for x in pc),"commitments_completed":sum(x.status=="COMPLETED" for x in pc),"latest_activities":[{"id":str(x.id),"title":x.title,"date":x.activity_date,"status":x.status} for x in pa[:3]],"latest_needs":[{"id":str(x.id),"title":x.title,"status":x.status} for x in pn[:3]],"latest_commitments":[{"id":str(x.id),"title":x.title,"status":x.status,"due_date":x.due_date} for x in pc[:3]]})
+        return {"parishes":result}

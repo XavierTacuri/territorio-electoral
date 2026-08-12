@@ -767,6 +767,15 @@ export default function DashboardPage() {
               ABRIR ELECCIÓN ACTUAL
             </Button>
           </Stack>
+          {selectedParish && (
+            <Button
+              component={RouterLink}
+              to={executivePath(campaignId, `territories/${selectedParish.parish_id}`)}
+              sx={{ mt: 2 }}
+            >
+              VER FICHA TERRITORIAL
+            </Button>
+          )}
         </DialogContent>
       </Dialog>
     </>
