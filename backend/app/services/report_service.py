@@ -46,6 +46,7 @@ class ReportService:
         if assignments is not None and request.parish_id and request.parish_id not in parish_ids:raise PermissionError("Territorio fuera del alcance")
         return campaign,{"type":"CAMPAIGN" if assignments is None else "TERRITORIAL","user_id":str(user.id) if assignments is not None else None,"parish_ids":parish_ids,"community_ids":[],"sector_ids":[]}
     def _sections(self,data):
+        if "survey_study" in data:return self._survey_study_sections(data["survey_study"])
         if "current_election" in data:return self._current_election_sections(data["current_election"])
         sections=[];overview=data["overview"]
         sections.append({"title":"Resumen","text":overview.get("summary_text","Resumen agregado de campaña."),"headers":["Indicador","Valor","Unidad"],"rows":flatten_metrics(overview)})
@@ -63,6 +64,15 @@ class ReportService:
             if value:sections.append({"title":key.title(),"headers":["Elemento","Valor"],"rows":[[k,v] for k,v in value.items() if not isinstance(v,list)]})
         sections.append({"title":"Metodología","text":"Información agregada obtenida de los módulos autorizados. No se aplican predicciones, perfilamiento ni recomendaciones políticas.","headers":[],"rows":[]})
         return sections
+    def _survey_study_sections(self,s):
+        warning="Los resultados representan respuestas agregadas de una muestra y no constituyen resultados electorales oficiales ni garantía de comportamiento electoral futuro."
+        options={str(o["id"]):o for o in s["options"]};territories={str(t["id"]):t for t in s["territories"]}
+        results=[[options[str(r["option_id"])]["label"],r["percentage"],r["response_count"]] for r in s["results"]]
+        territorial=[[territories[str(r["study_territory_id"])].get("parish_name") or "Cantón",territories[str(r["study_territory_id"])]["sample_size"],options[str(r["option_id"])]["label"],r["percentage"],r["response_count"]] for r in s["results"]]
+        context={"report_kind":"ENCUESTA Y ESTUDIO TERRITORIAL","study_name":s["name"],"study_type":s["study_type"],"fieldwork_start_date":s["fieldwork_start_date"],"fieldwork_end_date":s["fieldwork_end_date"],"publication_date":s.get("publication_date")}
+        warnings=[[warning]]
+        if s["study_type"]=="EXIT_POLL":warnings.append(["Resultado de estudio de salida de urna. No corresponde al escrutinio oficial del Consejo Nacional Electoral."])
+        return [{"title":"Resumen","context":context,"text":warning,"headers":["Campo","Valor"],"rows":[["Nombre",s["name"]],["Tipo",s["study_type"]],["Fecha inicio",s["fieldwork_start_date"]],["Fecha fin",s["fieldwork_end_date"]],["Fecha publicación",s.get("publication_date")]]},{"title":"Metodología","headers":["Campo","Valor"],"rows":[["Universo",s["universe_description"]],["Muestra",s["sample_size_total"]],["Método de muestreo",s["sampling_method"]],["Método de recolección",s["collection_method"]],["Margen de error declarado",s.get("margin_of_error")],["Nivel de confianza",s.get("confidence_level")],["Encuestadora",s.get("pollster_name")],["Patrocinador",s.get("sponsor_name")]]},{"title":"Resultados","headers":["Opción","Porcentaje","Conteo"],"rows":results,"formats":[None,"percent","integer"]},{"title":"Resultados territoriales","headers":["Parroquia","Muestra","Opción","Porcentaje","Conteo"],"rows":territorial,"formats":[None,"integer",None,"percent","integer"]},{"title":"Comparación","text":"La comparación o tendencia solo se presenta cuando los estudios son metodológicamente comparables.","headers":[],"rows":[]},{"title":"Advertencias","headers":["Advertencia"],"rows":warnings},{"title":"Fuentes","headers":["Campo","Valor"],"rows":[["Quién realizó",s.get("pollster_name")],["Quién encargó",s.get("sponsor_name")],["Tipo de fuente",s["source_type"]],["URL",str(s["source_url"]) if s.get("source_url") else None]]}]
     def _current_election_sections(self,data):
         from app.reports.current_election import build_current_election_sections
         return build_current_election_sections(data)
@@ -82,7 +92,7 @@ class ReportService:
             if request.format.value=="PDF":ReportPDFService(settings.report_pdf_max_table_rows).render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             else:ReportExcelService().render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             stored_key,size,digest=self.storage.store(tmp_path,suffix[1:]);tmp_path=None
-            prefix="ficha-territorial" if request.template_code=="PARISH_TERRITORIAL_PROFILE" else "informe-ejecutivo-eleccion-actual"
+            prefix="estudio-territorial" if request.template_code=="SURVEY_STUDY_REPORT" else "ficha-territorial" if request.template_code=="PARISH_TERRITORIAL_PROFILE" else "informe-ejecutivo-eleccion-actual"
             artifact=ReportArtifact(report_run_id=run.id,format=request.format.value,original_download_name=f"{prefix}-{request.report_date.strftime('%d-%m-%Y')}{suffix}",storage_key=stored_key,mime_type="application/pdf" if suffix==".pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",size_bytes=size,sha256=digest,expires_on=request.report_date+timedelta(days=settings.report_artifact_retention_days),is_available=True,is_active=True)
             self.artifacts.add(artifact);run.status="COMPLETED";run.finished_at=datetime.now().astimezone();self.db.commit();return run
         except Exception as exc:

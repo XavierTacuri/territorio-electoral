@@ -16,6 +16,7 @@ from app.models.historical import DataImportJob, DataSource, DemographicIndicato
 from app.models.operational import CitizenNeed, Commitment, TerritorialActivity
 from app.models.reports import ReportRun, ReportTemplate
 from app.models.survey import Survey
+from app.models.survey_study import SurveyStudy,SurveyStudyTerritory,SurveyStudyOption,SurveyStudyResult
 from app.models.territory import Canton, Community, Parish, Province, Sector
 from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignUserAssign, TerritorialAssignmentCreate
@@ -111,6 +112,20 @@ def ensure_current_election_fixture(db, admin):
                 if not db.scalar(select(DemographicObservation).where(DemographicObservation.demographic_indicator_id==indicator.id,DemographicObservation.parish_id==parish.id,DemographicObservation.reference_year==2010)):
                     db.add(DemographicObservation(demographic_indicator_id=indicator.id,geography_level="PARISH",province_id=province.id,canton_id=canton.id,parish_id=parish.id,reference_year=2010,value=Decimal(value),source_id=source.id,import_job_id=job.id,is_official=True,is_active=True))
     db.flush()
+    return campaign,canton,parishes,process_by_year[2027]
+
+def ensure_survey_studies(db,admin,campaign,parishes,election_process):
+    specs=[("STUDY_E2E","Estudio territorial A","POLL","PUBLISHED",date(2026,9,1),None,(Decimal("0.40"),Decimal("0.35"),Decimal("0.25"))),("TRACKING_E2E","Tracking territorial B","TRACKING_POLL","PUBLISHED",date(2026,9,15),"TRACKING_SYNTHETIC",(Decimal("0.42"),Decimal("0.34"),Decimal("0.24"))),("EXIT_E2E","Exit poll sintético","EXIT_POLL","PUBLISHED",date(2026,10,1),None,(Decimal("0.41"),Decimal("0.36"),Decimal("0.23"))),("IMPORT_E2E","Estudio borrador para importación","POLL","DRAFT",date(2026,10,10),None,None)]
+    for code,name,kind,status,field_date,series,values in specs:
+        study=db.scalar(select(SurveyStudy).where(SurveyStudy.campaign_id==campaign.id,SurveyStudy.code==code))
+        if not study:
+            study=SurveyStudy(campaign_id=campaign.id,election_process_id=election_process.id if kind=="EXIT_POLL" else None,code=code,name=name,description="Estudio agregado totalmente sintético.",study_type=kind,status=status,fieldwork_start_date=field_date,fieldwork_end_date=field_date,publication_date=field_date if status=="PUBLISHED" else None,geography_level="PARISH",sample_size_total=300,universe_description="Electores del cantón sintético",sampling_method="Muestreo estratificado sintético",collection_method="Entrevista presencial agregada",confidence_level=Decimal("0.95"),margin_of_error=Decimal("0.048"),pollster_name="Instituto Sintético E2E",sponsor_name="Laboratorio E2E",source_type="SYNTHETIC_E2E",source_url="https://example.test/estudio-sintetico",is_official=False,study_series_code=series,question_code="VOTE_INTENTION",created_by_user_id=admin.id);db.add(study);db.flush()
+        if values and not study.options:
+            options=[SurveyStudyOption(study_id=study.id,code="ALFA",label="Opción Alfa",option_type="CANDIDATE",display_order=0),SurveyStudyOption(study_id=study.id,code="BETA",label="Opción Beta",option_type="CANDIDATE",display_order=1),SurveyStudyOption(study_id=study.id,code="UNDECIDED",label="Indecisos",option_type="UNDECIDED",display_order=2)];db.add_all(options);db.flush()
+            for parish in parishes:
+                territory=SurveyStudyTerritory(study_id=study.id,parish_id=parish.id,sample_size=100,margin_of_error=Decimal("0.08"));db.add(territory);db.flush()
+                db.add_all([SurveyStudyResult(study_id=study.id,study_territory_id=territory.id,option_id=option.id,response_count=int(value*100),percentage=value) for option,value in zip(options,values,strict=True)])
+    db.flush()
 
 def ensure_users(db, password):
     roles=RoleService(db); roles.initialize_roles(); result={}
@@ -129,7 +144,7 @@ def main():
     if not password: raise SystemExit("E2E_USER_PASSWORD es obligatorio")
     with SessionLocal() as db:
         users=ensure_users(db,password); admin=users["ADMIN"]
-        _,canton,parishes=seed_gualaceo(db); seed_catalogs(db); seed_reports_alerts(db); db.flush();ensure_current_election_fixture(db,admin)
+        _,canton,parishes=seed_gualaceo(db); seed_catalogs(db); seed_reports_alerts(db); db.flush();synthetic_campaign,_,synthetic_parishes,synthetic_process=ensure_current_election_fixture(db,admin);ensure_survey_studies(db,admin,synthetic_campaign,synthetic_parishes,synthetic_process)
         campaign=db.scalar(select(Campaign).where(Campaign.slug=="gualaceo-e2e-2027"))
         if not campaign: campaign=CampaignService(db).create(CampaignCreate(name="Gualaceo E2E 2027",slug="gualaceo-e2e-2027",canton_id=canton.id,office_type="MAYOR",election_name="Elecciones sintéticas 2027",election_date=date(2027,2,14),start_date=date(2026,1,1),status="ACTIVE"),admin)
         assignments=TerritorialAssignmentService(db)

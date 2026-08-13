@@ -18,6 +18,10 @@ const ActivityDetail = lazy(() => import('../features/operations/ActivityDetailP
 const Needs = lazy(() => import('../features/operations/NeedsPage'));
 const Commitments = lazy(() => import('../features/operations/CommitmentsPage'));
 const Surveys = lazy(() => import('../features/surveys/SurveysPage'));
+const Questionnaires = lazy(() => import('../features/surveys/QuestionnairesPage'));
+const StudyDetail = lazy(() => import('../features/survey-studies/StudyDetailPage'));
+const StudyCompare = lazy(() => import('../features/survey-studies/StudyComparePage'));
+const StudyImport = lazy(() => import('../features/survey-studies/StudyImportPage'));
 const SurveyBuilder = lazy(() => import('../features/surveys/SurveyBuilderPage'));
 const SurveyCapture = lazy(() => import('../features/surveys/SurveyCapturePage'));
 const SurveyResults = lazy(() => import('../features/surveys/SurveyResultsPage'));
@@ -96,6 +100,22 @@ export const router = createBrowserRouter([
           { path: campaign.slice(5) + '/needs', element: lazyElement(<Needs />) },
           { path: campaign.slice(5) + '/commitments', element: lazyElement(<Commitments />) },
           { path: campaign.slice(5) + '/surveys', element: lazyElement(<Surveys />) },
+          {
+            path: campaign.slice(5) + '/questionnaires',
+            element: lazyElement(<Questionnaires />),
+          },
+          {
+            path: campaign.slice(5) + '/survey-studies/compare',
+            element: lazyElement(<StudyCompare />),
+          },
+          {
+            path: campaign.slice(5) + '/survey-studies/import',
+            element: lazyElement(<StudyImport />),
+          },
+          {
+            path: campaign.slice(5) + '/survey-studies/:studyId',
+            element: lazyElement(<StudyDetail />),
+          },
           {
             path: campaign.slice(5) + '/surveys/:surveyId',
             element: lazyElement(<SurveyBuilder />),

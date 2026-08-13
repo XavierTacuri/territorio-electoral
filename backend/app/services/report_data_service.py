@@ -8,6 +8,12 @@ from sqlalchemy import select
 class ReportDataService:
     def __init__(self,db):self.dashboard=DashboardService(db)
     def collect(self,campaign_id,user,report_type,request,template_code=None):
+        if template_code == "SURVEY_STUDY_REPORT":
+            from app.services.survey_study_service import SurveyStudyService
+            if len(request.survey_ids)!=1: raise ValueError("El informe requiere exactamente un estudio")
+            service=SurveyStudyService(self.dashboard.db);study=service.get(request.survey_ids[0],user)
+            if study.campaign_id!=campaign_id:raise ValueError("Estudio fuera de la campaña")
+            return {"survey_study":service.read(study,True).model_dump(mode="python")}
         if template_code in {"CURRENT_ELECTION_EXECUTIVE", "PARISH_TERRITORIAL_PROFILE"}:
             from app.api.routes.participation import current_election_analysis
             analysis = current_election_analysis(campaign_id,user,self.dashboard.db)

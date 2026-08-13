@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     initial_admin_last_name: str = "Sistema"
     survey_submission_hmac_secret: str = "replace-with-secure-random-secret"
     survey_min_aggregate_responses: int = 5
+    survey_result_percentage_tolerance: float = 0.002
     data_import_max_file_mb: int = 100
     data_import_max_errors: int = 1000
     data_import_batch_size: int = 1000
@@ -87,6 +88,8 @@ class Settings(BaseSettings):
             raise ValueError("El rango de zoom del mapa es inválido")
         if self.survey_min_aggregate_responses < 3:
             raise ValueError("SURVEY_MIN_AGGREGATE_RESPONSES debe ser al menos 3")
+        if not 0 <= self.survey_result_percentage_tolerance <= 0.02:
+            raise ValueError("SURVEY_RESULT_PERCENTAGE_TOLERANCE debe estar entre 0 y 0.02")
         if self.app_env.lower() == "production" and self.survey_submission_hmac_secret.lower() in {"replace-with-secure-random-secret", "change-me", "secret", ""}:
             raise ValueError("SURVEY_SUBMISSION_HMAC_SECRET debe configurarse de forma segura en producci?n")
         if self.app_env.lower() == "production" and self.secret_key.lower() in {"replace-with-a-secure-secret-at-least-32-chars", "change-me", "secret"}:

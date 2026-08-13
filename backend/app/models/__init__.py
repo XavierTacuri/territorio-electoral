@@ -16,3 +16,4 @@ from app.models.historical import DataSource, DataImportJob, DataImportError, El
 from app.models.reports import ReportTemplate, ReportRun, ReportArtifact
 from app.models.alerts import AlertRule, OperationalAlert, AlertAcknowledgement
 from app.models.security import AuthSession, SecurityAuditEvent
+from app.models.survey_study import SurveyStudy, SurveyStudyTerritory, SurveyStudyOption, SurveyStudyResult
