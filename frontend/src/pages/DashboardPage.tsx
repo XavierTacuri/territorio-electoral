@@ -93,6 +93,10 @@ type OperationalSummary = {
   commitments: { pending: number; in_progress: number; completed: number; cancelled: number };
 };
 type MapStatus = 'loading' | 'success' | 'empty' | 'error';
+type RecentStudies = {
+  items: { id: string; name: string; fieldwork_end_date: string; sample_size_total: number }[];
+  total: number;
+};
 
 const integer = formatIntegerEsEc;
 const percent = formatPercentEsEc;
@@ -186,6 +190,14 @@ export default function DashboardPage() {
       ),
     enabled: !!campaignId,
     retry: 1,
+  });
+  const recentStudies = useQuery({
+    queryKey: ['recent-survey-studies', campaignId],
+    queryFn: () =>
+      apiRequest<RecentStudies>(
+        `/campaigns/${campaignId}/survey-studies?status=PUBLISHED&page=1&page_size=3`,
+      ),
+    enabled: !!campaignId,
   });
   const data = analysis.data;
   const onMapSelect = useCallback(
@@ -325,6 +337,38 @@ export default function DashboardPage() {
             <Metric label="CORTE DEL REGISTRO" value={formatDateEsEc(current.snapshot_date)} />
           </Grid>
         </Grid>
+      </DashboardCard>
+      <DashboardCard sx={{ mb: 2 }}>
+        <SectionTitle eyebrow="DESCRIPTIVO · ESTUDIOS PUBLICADOS">ESTUDIOS RECIENTES</SectionTitle>
+        <Grid container spacing={2} alignItems="center">
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Metric label="Estudios publicados" value={integer(recentStudies.data?.total ?? 0)} />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Metric
+              label="Último estudio"
+              value={recentStudies.data?.items[0]?.name ?? 'Sin estudios publicados'}
+              detail={
+                recentStudies.data?.items[0]
+                  ? formatDateEsEc(recentStudies.data.items[0].fieldwork_end_date)
+                  : undefined
+              }
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Metric
+              label="Muestra"
+              value={
+                recentStudies.data?.items[0]
+                  ? integer(recentStudies.data.items[0].sample_size_total)
+                  : '—'
+              }
+            />
+          </Grid>
+        </Grid>
+        <Button component={RouterLink} to={executivePath(campaignId, 'surveys')} sx={{ mt: 1 }}>
+          VER ENCUESTAS Y ESTUDIOS
+        </Button>
       </DashboardCard>
 
       {data.warnings.map((warning) => (

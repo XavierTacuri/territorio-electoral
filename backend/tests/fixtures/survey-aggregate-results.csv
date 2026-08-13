@@ -1,0 +1,4 @@
+study_code,territory_level,parish_dpa,option_code,option_label,option_type,response_count,percentage
+STUDY_E2E,PARISH,999901,ALFA,Opción Alfa,CANDIDATE,40,0.40
+STUDY_E2E,PARISH,999901,BETA,Opción Beta,CANDIDATE,35,0.35
+STUDY_E2E,PARISH,999901,UNDECIDED,Indecisos,UNDECIDED,25,0.25

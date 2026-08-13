@@ -44,8 +44,8 @@ class PDFRenderer:
         styles["Title"].fontName = bold; styles["Heading1"].fontName = bold; styles["Heading2"].fontName = bold
         cover = ParagraphStyle("Cover", parent=styles["Title"], alignment=TA_CENTER, fontSize=22, leading=28, textColor=colors.HexColor("#16324F"))
         subtitle = ParagraphStyle("Subtitle", parent=styles["Heading2"], alignment=TA_CENTER, fontName=bold)
-        story = [Spacer(1, 30 * mm), Paragraph("TERRITORIO ELECTORAL", cover), Spacer(1, 8 * mm), Paragraph("INFORME EJECUTIVO<br/>ELECCIÓN ACTUAL", subtitle)]
         context = sections[0].get("context", {}) if sections else {}
+        story = [Spacer(1, 30 * mm), Paragraph("TERRITORIO ELECTORAL", cover), Spacer(1, 8 * mm), Paragraph(str(context.get("report_kind","INFORME EJECUTIVO<br/>ELECCIÓN ACTUAL")), subtitle)]
         election = context.get("election_name")
         if election: story += [Spacer(1, 8 * mm), Paragraph(str(election), subtitle)]
         cover_rows = [
@@ -53,6 +53,8 @@ class PDFRenderer:
             ["Fecha del informe", report_date], ["Corte del registro electoral", context.get("snapshot_date")],
             ["Modelo", context.get("model_code")], ["Versión", context.get("model_version")],
         ]
+        if context.get("study_name"):
+            cover_rows=[["Estudio",context.get("study_name")],["Tipo",context.get("study_type")],["Campaña",campaign_name],["Inicio de campo",context.get("fieldwork_start_date")],["Fin de campo",context.get("fieldwork_end_date")],["Fecha publicación",context.get("publication_date")]]
         cover_table = Table([[Paragraph(str(k), styles["BodyText"]), Paragraph(display_value(v, "date" if isinstance(v, date) else None), styles["BodyText"])] for k, v in cover_rows], colWidths=[55 * mm, 90 * mm])
         cover_table.setStyle(TableStyle([("FONTNAME", (0, 0), (0, -1), bold), ("LINEBELOW", (0, 0), (-1, -1), .25, colors.HexColor("#CED7E0")), ("PADDING", (0, 0), (-1, -1), 7)]))
         story += [Spacer(1, 12 * mm), cover_table, PageBreak()]

@@ -13,7 +13,8 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
   const campaignId = await campaign(page);
   await test.step('encuesta completa y supresión', async () => {
     await page.getByRole('link', { name: 'Encuestas', exact: true }).click();
-    await page.getByRole('button', { name: 'Crear encuesta' }).click();
+    await page.getByRole('button', { name: 'Gestionar cuestionarios' }).click();
+    await page.getByRole('button', { name: 'Crear cuestionario' }).click();
     let dialog = page.getByRole('dialog');
     await dialog.getByLabel('Título').fill('Encuesta profunda ' + suffix);
     await dialog.getByLabel('Slug').fill('encuesta-profunda-' + suffix);

@@ -7,5 +7,7 @@
 'CANONICAL_DEMOGRAPHIC_INDICATOR':['indicator_code','name','description','category','unit','value_type'],
 'CANONICAL_DEMOGRAPHIC_OBSERVATION':['indicator_code','reference_year','geography_level','province_dpa','canton_dpa','parish_dpa','value','numerator','denominator'],
 'CANONICAL_ELECTORAL_ROLL_SNAPSHOT':['snapshot_date','process_code','geography_level','province_dpa','canton_dpa','parish_dpa','registered_voters','male_voters','female_voters','electoral_zones','juntas']}
+PROFILES['CANONICAL_SURVEY_AGGREGATE_RESULT']=['study_code','territory_level','parish_dpa','option_code','option_label','option_type','response_count','percentage']
 DATASET_PROFILE={'CNE_TURNOUT':'CANONICAL_ELECTORAL_TURNOUT','CNE_ELECTORAL_RESULTS':'CANONICAL_ELECTORAL_CANDIDATE_RESULT','CNE_CANDIDATES':'CANONICAL_ELECTORAL_CANDIDATE','CNE_POLITICAL_ORGANIZATIONS':'CANONICAL_POLITICAL_ORGANIZATION','CNE_ELECTORAL_ROLL_SNAPSHOT':'CANONICAL_ELECTORAL_ROLL_SNAPSHOT','INEC_DEMOGRAPHIC_INDICATORS':'CANONICAL_DEMOGRAPHIC_INDICATOR'}
-FORBIDDEN_HEADERS={'cedula','identificacion','nombres','apellidos','telefono','correo','email','direccion','fecha_nacimiento','persona_id','hogar_id','ip_address'}
+DATASET_PROFILE['SURVEY_AGGREGATE_RESULTS']='CANONICAL_SURVEY_AGGREGATE_RESULT'
+FORBIDDEN_HEADERS={'cedula','identificacion','nombres','apellidos','telefono','correo','email','direccion','fecha_nacimiento','persona_id','hogar_id','ip_address','respondent_name','national_id','phone','address','latitude','longitude','device_id','individual_vote_choice'}

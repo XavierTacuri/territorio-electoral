@@ -98,7 +98,8 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
   });
   await test.step('11 Crear encuesta', async () => {
     await page.goto(`/app/campaigns/${id}/surveys`);
-    await page.getByRole('button', { name: 'Crear encuesta' }).click();
+    await page.getByRole('button', { name: 'Gestionar cuestionarios' }).click();
+    await page.getByRole('button', { name: 'Crear cuestionario' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Título').fill('Encuesta Playwright ' + suffix);
     await dialog.getByLabel('Slug').fill('encuesta-playwright-' + suffix);
@@ -138,11 +139,12 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     await expect(page.getByText('PUBLISHED')).toBeVisible();
   });
   await test.step('15 Captura anónima', async () => {
-    await page.goto(`/app/campaigns/${id}/surveys`);
+    await page.goto(`/app/campaigns/${id}/questionnaires`);
     await expect(page.getByText('Encuesta publicada E2E')).toBeVisible();
   });
   await test.step('16 Resultados agregados', async () => {
-    await expect(page.getByRole('heading', { name: 'Encuestas' })).toBeVisible();
+    await page.goto(`/app/campaigns/${id}/surveys`);
+    await expect(page.getByRole('heading', { name: 'ENCUESTAS Y ESTUDIOS' })).toBeVisible();
   });
   await test.step('17 Validar CSV', async () => {
     await page.goto('/app/admin/data-imports');

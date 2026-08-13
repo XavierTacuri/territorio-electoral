@@ -85,6 +85,16 @@ type Operation = {
   latest_needs: { id: string; title: string; status: string }[];
   latest_commitments: { id: string; title: string; status: string; due_date?: string }[];
 };
+type PublishedStudies = {
+  items: {
+    id: string;
+    name: string;
+    fieldwork_end_date: string;
+    sample_size_total: number;
+    pollster_name?: string;
+    territories?: { parish_id?: number }[];
+  }[];
+};
 
 const integer = formatIntegerEsEc;
 const percent = formatPercentEsEc;
@@ -187,7 +197,16 @@ export default function TerritorialIntelligencePage() {
     enabled: !!campaignId,
     retry: 1,
   });
+  const studies = useQuery({
+    queryKey: ['territory-survey-studies', campaignId, parishId],
+    queryFn: () =>
+      apiRequest<PublishedStudies>(
+        `/campaigns/${campaignId}/survey-studies?status=PUBLISHED&page=1&page_size=100&parish_id=${parishId}`,
+      ),
+    enabled: !!campaignId && !!parishId,
+  });
   const selected = analysis.data?.parishes.find((item) => String(item.parish_id) === parishId);
+  const parishStudies = selected ? (studies.data?.items ?? []) : [];
   const operationByParish = useMemo(
     () => new Map((operation.data?.parishes ?? []).map((item) => [item.parish_id, item])),
     [operation.data],
@@ -277,16 +296,45 @@ export default function TerritorialIntelligencePage() {
           Seleccione una parroquia para abrir su ficha territorial completa.
         </Alert>
       ) : (
-        <TerritoryProfile
-          parish={selected}
-          data={data}
-          operation={operationByParish.get(selected.parish_id)}
-          operationError={operation.isError}
-          campaignId={campaignId}
-          onSelectId={(id) => select(data.parishes.find((p) => p.parish_id === id) ?? null)}
-          reportStatus={reportStatus}
-          generate={generate}
-        />
+        <>
+          <TerritoryProfile
+            parish={selected}
+            data={data}
+            operation={operationByParish.get(selected.parish_id)}
+            operationError={operation.isError}
+            campaignId={campaignId}
+            onSelectId={(id) => select(data.parishes.find((p) => p.parish_id === id) ?? null)}
+            reportStatus={reportStatus}
+            generate={generate}
+          />
+          <Box sx={{ mt: 2 }}>
+            <Card title="ENCUESTAS Y ESTUDIOS" eyebrow="RESULTADOS AGREGADOS PUBLICADOS">
+              {parishStudies.length === 0 ? (
+                <Alert severity="info">Sin estudios publicados para esta parroquia.</Alert>
+              ) : (
+                <Stack spacing={2}>
+                  {parishStudies.slice(0, 3).map((study) => (
+                    <Box key={study.id}>
+                      <Typography fontWeight={700}>{study.name}</Typography>
+                      <Typography variant="body2">
+                        Fecha: {formatDateEsEc(study.fieldwork_end_date)} · Muestra:{' '}
+                        {integer(study.sample_size_total)} ·{' '}
+                        {study.pollster_name || 'Responsable no declarado'}
+                      </Typography>
+                      <Button
+                        onClick={() =>
+                          navigate(`/app/campaigns/${campaignId}/survey-studies/${study.id}`)
+                        }
+                      >
+                        VER ESTUDIO
+                      </Button>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Card>
+          </Box>
+        </>
       )}
       <Box sx={{ mt: 2 }}>
         <Comparison
