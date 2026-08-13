@@ -82,9 +82,10 @@ test('revisión visual completa sin desbordamiento horizontal', async ({
       }, route);
       await expect(page.locator('main').first()).toBeVisible();
       await expect(page.getByText(/Cargando informaci/)).toHaveCount(0, { timeout: 15000 });
-      const overflow = await page.evaluate(() => {
-        if (document.documentElement.scrollWidth <= window.innerWidth + 1) return [];
-        return [...document.querySelectorAll('body *')]
+      const layout = await page.evaluate(() => {
+        const clientWidth = document.documentElement.clientWidth;
+        const scrollWidth = document.documentElement.scrollWidth;
+        const overflowing = [...document.querySelectorAll('body *')]
           .map((element) => {
             const rect = element.getBoundingClientRect();
             return {
@@ -96,10 +97,14 @@ test('revisión visual completa sin desbordamiento horizontal', async ({
               width: Math.round(rect.width),
             };
           })
-          .filter((x) => x.right > window.innerWidth + 1 && x.left >= 0)
+          .filter((x) => x.right > clientWidth && x.left >= 0)
           .slice(0, 12);
+        return { clientWidth, scrollWidth, overflowing };
       });
-      expect(overflow, `${name} ${size.width}x${size.height} excede el viewport`).toEqual([]);
+      expect(
+        layout.scrollWidth,
+        `${name} ${route} ${size.width}x${size.height}: scrollWidth=${layout.scrollWidth}, clientWidth=${layout.clientWidth}, overflowing=${JSON.stringify(layout.overflowing)}`,
+      ).toBeLessThanOrEqual(layout.clientWidth);
       await page.screenshot({
         path: testInfo.outputPath(`${name.replace('/', '')}-${size.width}x${size.height}.png`),
         fullPage: true,

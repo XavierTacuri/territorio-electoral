@@ -124,13 +124,19 @@ export default function SurveysPage() {
           </Stack>
         }
       />
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        flexWrap="wrap"
+        useFlexGap
+        sx={{ mb: 3, minWidth: 0 }}
+      >
         <TextField
           select
           label="Tipo"
           value={studyType}
           onChange={(e) => setStudyType(e.target.value)}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 180, flex: '1 1 180px' }}
         >
           <MenuItem value="">Todos</MenuItem>
           {Object.entries(typeLabel).map(([v, l]) => (
@@ -143,7 +149,7 @@ export default function SurveysPage() {
           label="Territorio"
           value={territory}
           onChange={(e) => setTerritory(e.target.value)}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 180, flex: '1 1 180px' }}
         />
         <TextField
           type="date"
@@ -151,14 +157,14 @@ export default function SurveysPage() {
           value={fieldworkDate}
           onChange={(e) => setFieldworkDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 180, flex: '1 1 180px' }}
         />
         <TextField
           select
           label="Estado"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: 180, flex: '1 1 180px' }}
         >
           <MenuItem value="">Todos</MenuItem>
           {Object.entries(statusLabel).map(([v, l]) => (
