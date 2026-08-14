@@ -45,7 +45,7 @@ def activities(campaign_id:UUID,response:Response,cluster:bool=True,f:MapFilters
 @router.get('/operational-coverage',response_model=GeoJSONFeatureCollectionRead)
 def coverage(campaign_id:UUID,response:Response,metric:str=Query('COMPLETED_ACTIVITIES'),f:MapFilters=Depends(filters),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):private(response);return call(lambda:MapService(db).thematic(campaign_id,user,f,'OPERATIONAL_COVERAGE',metric))
 @router.get('/needs',response_model=GeoJSONFeatureCollectionRead)
-def needs(campaign_id:UUID,response:Response,metric:str=Query('NEED_COUNT'),f:MapFilters=Depends(filters),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):private(response);return call(lambda:MapService(db).thematic(campaign_id,user,f,'NEEDS',metric))
+def needs(campaign_id:UUID,response:Response,metric:str=Query('NEED_COUNT'),need_category_code:str|None=None,f:MapFilters=Depends(filters),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):private(response);return call(lambda:MapService(db).thematic(campaign_id,user,f,'NEEDS',metric,need_category_code))
 @router.get('/commitments',response_model=GeoJSONFeatureCollectionRead)
 def commitments(campaign_id:UUID,response:Response,metric:str=Query('PENDING_COMMITMENTS'),f:MapFilters=Depends(filters),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):private(response);return call(lambda:MapService(db).thematic(campaign_id,user,f,'COMMITMENTS',metric))
 @router.get('/surveys',response_model=GeoJSONFeatureCollectionRead)

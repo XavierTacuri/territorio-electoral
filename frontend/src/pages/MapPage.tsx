@@ -4,12 +4,14 @@ import {
   Box,
   Chip,
   FormControlLabel,
+  MenuItem,
   Paper,
   Stack,
   Switch,
+  TextField,
   Typography,
 } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { PageHeader } from '../components/layout/PageHeader';
 type GeoJSON = { type: 'FeatureCollection'; features: any[] };
@@ -23,9 +25,12 @@ const LAYERS = [
 export default function MapPage() {
   const { campaignId = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const container = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState<string[]>(['boundaries?level=PARISH']);
   const [error, setError] = useState('');
+  const [category, setCategory] = useState('');
+  const operational = location.pathname.includes('/operations/map');
   const style = import.meta.env.VITE_MAP_STYLE_URL || '/map-style.json';
   useEffect(() => {
     if (!style || !container.current) return;
@@ -34,13 +39,19 @@ export default function MapPage() {
     import('maplibre-gl')
       .then(({ Map, NavigationControl }) => {
         if (!container.current || cancelled) return;
-        map = new Map({ container: container.current, style, center: [-78.78, -2.89], zoom: 10 });
+        map = new Map({
+          container: container.current,
+          style,
+          center: [-78.78, -2.89],
+          zoom: 10,
+          scrollZoom: false,
+        });
         map.addControl(new NavigationControl(), 'top-right');
         map.on('load', async () => {
           for (const [path, , kind] of LAYERS.filter((x) => enabled.includes(x[0]))) {
             try {
               const data = await apiRequest<GeoJSON>(
-                `/campaigns/${campaignId}/map/${path}${path.includes('?') ? '&' : '?'}limit=5000`,
+                `/campaigns/${campaignId}/map/${path}${path.includes('?') ? '&' : '?'}limit=5000${path === 'needs' && category ? `&need_category_code=${category}` : ''}`,
               );
               const id = 'te-' + path.replace(/[^a-z]/gi, '-');
               map?.addSource(id, { type: 'geojson', data, cluster: kind === 'circle' });
@@ -80,6 +91,12 @@ export default function MapPage() {
                   if (parishId) navigate(`/app/campaigns/${campaignId}/territories/${parishId}`);
                 });
               }
+              if (path === 'needs')
+                map?.on('click', id, (event) => {
+                  const parishId = event.features?.[0]?.properties?.resource_id;
+                  if (parishId)
+                    navigate(`/app/campaigns/${campaignId}/needs?parish_id=${parishId}`);
+                });
             } catch {
               setError('Una o más capas no pudieron cargarse.');
             }
@@ -91,14 +108,35 @@ export default function MapPage() {
       cancelled = true;
       map?.remove();
     };
-  }, [style, campaignId, enabled, navigate]);
+  }, [style, campaignId, enabled, navigate, category]);
   return (
     <>
       <PageHeader
-        title="Mapas territoriales"
+        title={operational ? 'Mapa operacional' : 'Mapas territoriales'}
         description="Geometrías oficiales y datos agregados; nunca ubicaciones individuales."
       />
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        {operational && (
+          <TextField
+            select
+            label="Categoría de necesidades"
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setEnabled((v) => (v.includes('needs') ? v : [...v, 'needs']));
+            }}
+            sx={{ minWidth: 260, mb: 2 }}
+          >
+            <MenuItem value="">Todas las categorías</MenuItem>
+            <MenuItem value="ROADS">Vialidad</MenuItem>
+            <MenuItem value="DRINKING_WATER">Agua y saneamiento</MenuItem>
+            <MenuItem value="SECURITY">Seguridad</MenuItem>
+            <MenuItem value="HEALTH">Salud</MenuItem>
+            <MenuItem value="EDUCATION">Educación</MenuItem>
+            <MenuItem value="ENVIRONMENT">Ambiente</MenuItem>
+            <MenuItem value="CONNECTIVITY">Conectividad</MenuItem>
+          </TextField>
+        )}
         <Stack direction={{ xs: 'column', md: 'row' }} flexWrap="wrap">
           {LAYERS.map(([path, name]) => (
             <FormControlLabel

@@ -11,6 +11,11 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
 import { formatDateOnly } from '../../lib/dates';
 import { ActivityForm, type ActivityFormValue } from './ActivityForm';
+import {
+  APPROVAL_STATUS_LABELS,
+  EXECUTION_STATUS_LABELS,
+  operationStatusLabel,
+} from './statusLabels';
 import type { Activity, Catalog, Page, Parish } from './types';
 export default function ActivitiesPage() {
   const { campaignId = '' } = useParams();
@@ -18,13 +23,15 @@ export default function ActivitiesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [approval, setApproval] = useState('');
   const [editing, setEditing] = useState<Activity | null>(null);
   const [open, setOpen] = useState(false);
   const params = new URLSearchParams({ page: String(page), page_size: '20' });
   if (search) params.set('search', search);
   if (status) params.set('status', status);
+  if (approval) params.set('approval_status', approval);
   const list = useQuery({
-    queryKey: ['campaign', campaignId, 'activities', page, search, status],
+    queryKey: ['campaign', campaignId, 'activities', page, search, status, approval],
     queryFn: ({ signal }) =>
       apiRequest<Page<Activity>>('/campaigns/' + campaignId + '/activities?' + params, { signal }),
   });
@@ -42,11 +49,7 @@ export default function ActivitiesPage() {
         '/campaigns/' + campaignId + '/activities' + (editing ? '/' + editing.id : ''),
         {
           method: editing ? 'PATCH' : 'POST',
-          body: JSON.stringify({
-            ...value,
-            latitude: value.latitude === '' ? null : value.latitude,
-            longitude: value.longitude === '' ? null : value.longitude,
-          }),
+          body: JSON.stringify(value),
         },
       ),
     onSuccess: () =>
@@ -90,9 +93,26 @@ export default function ActivitiesPage() {
           sx={{ minWidth: 180 }}
         >
           <MenuItem value="">Todos</MenuItem>
-          {['PLANNED', 'COMPLETED', 'CANCELLED'].map((x) => (
-            <MenuItem key={x} value={x}>
-              {x}
+          {Object.entries(EXECUTION_STATUS_LABELS).map(([value, label]) => (
+            <MenuItem key={value} value={value}>
+              {label}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          label="Aprobación"
+          value={approval}
+          onChange={(e) => {
+            setApproval(e.target.value);
+            setPage(1);
+          }}
+          sx={{ minWidth: 220 }}
+        >
+          <MenuItem value="">Todas</MenuItem>
+          {Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => (
+            <MenuItem key={value} value={value}>
+              {label}
             </MenuItem>
           ))}
         </TextField>
@@ -107,7 +127,16 @@ export default function ActivitiesPage() {
           columns={[
             { key: 'title', label: 'Título', render: (x) => <>{x.title}</> },
             { key: 'date', label: 'Fecha', render: (x) => formatDateOnly(x.activity_date) },
-            { key: 'status', label: 'Estado', render: (x) => <StatusBadge value={x.status} /> },
+            {
+              key: 'status',
+              label: 'Estado',
+              render: (x) => <StatusBadge value={operationStatusLabel(x.status)} />,
+            },
+            {
+              key: 'approval',
+              label: 'Aprobación',
+              render: (x) => <StatusBadge value={operationStatusLabel(x.approval_status)} />,
+            },
             { key: 'parish', label: 'Parroquia', render: (x) => x.parish_id },
           ]}
           onView={(x) => navigate('/app/campaigns/' + campaignId + '/activities/' + x.id)}

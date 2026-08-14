@@ -57,10 +57,10 @@ def create_activity(cid:UUID,data:TerritorialActivityCreate,user:User=Depends(ge
     try:return OperationalService(db).create_activity(cid,data,user)
     except Exception as e:raise fail(e)
 @router.get("/campaigns/{cid}/activities",response_model=TerritorialActivityListResponse)
-def activities(cid:UUID,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),search:str|None=None,activity_type_code:str|None=None,status:ActivityStatus|None=None,parish_id:int|None=None,community_id:UUID|None=None,sector_id:UUID|None=None,responsible_user_id:UUID|None=None,date_from:date|None=None,date_to:date|None=None,include_inactive:bool=False,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+def activities(cid:UUID,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),search:str|None=None,activity_type_code:str|None=None,status:ActivityStatus|None=None,approval_status:ApprovalStatus|None=None,parish_id:int|None=None,community_id:UUID|None=None,sector_id:UUID|None=None,responsible_user_id:UUID|None=None,date_from:date|None=None,date_to:date|None=None,include_inactive:bool=False,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     if date_from and date_to and date_from>date_to:raise HTTPException(400,"Rango inválido")
     if include_inactive and not admin(user):raise HTTPException(403,"Permisos insuficientes")
-    try:return OperationalService(db).list_activities(cid,user,page,page_size,search=search,activity_type_code=activity_type_code,status=status,parish_id=parish_id,community_id=community_id,sector_id=sector_id,responsible_user_id=responsible_user_id,date_from=date_from,date_to=date_to,include_inactive=include_inactive)
+    try:return OperationalService(db).list_activities(cid,user,page,page_size,search=search,activity_type_code=activity_type_code,status=status,approval_status=approval_status,parish_id=parish_id,community_id=community_id,sector_id=sector_id,responsible_user_id=responsible_user_id,date_from=date_from,date_to=date_to,include_inactive=include_inactive)
     except Exception as e:raise fail(e)
 @router.get("/campaigns/{cid}/activities/{id}",response_model=TerritorialActivityRead)
 def activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
@@ -69,6 +69,18 @@ def activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Sess
 @router.patch("/campaigns/{cid}/activities/{id}",response_model=TerritorialActivityRead)
 def update_activity(cid:UUID,id:UUID,data:TerritorialActivityUpdate,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).update_activity(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/submit-for-approval",response_model=TerritorialActivityRead)
+def submit_activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).submit_activity(cid,id,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/approve",response_model=TerritorialActivityRead)
+def approve_activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).approve_activity(cid,id,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/reject",response_model=TerritorialActivityRead)
+def reject_activity(cid:UUID,id:UUID,data:ActivityRejectRequest,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).reject_activity(cid,id,user,data.rejection_reason)
     except Exception as e:raise fail(e)
 @router.delete("/campaigns/{cid}/activities/{id}",status_code=204)
 def deactivate_activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
@@ -86,6 +98,10 @@ def get_participants(cid:UUID,aid:UUID,user:User=Depends(get_current_active_user
 def create_need(cid:UUID,aid:UUID,data:CitizenNeedCreate,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).create_need(cid,aid,data,user)
     except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/needs",response_model=CitizenNeedRead,status_code=201)
+def create_direct_need(cid:UUID,data:CitizenNeedCreate,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).create_need(cid,None,data,user)
+    except Exception as e:raise fail(e)
 @router.get("/campaigns/{cid}/activities/{aid}/needs",response_model=CitizenNeedListResponse)
 def activity_needs(cid:UUID,aid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).needs(cid,user,activity_id=aid)
@@ -102,6 +118,22 @@ def need(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=
 @router.patch("/campaigns/{cid}/needs/{id}",response_model=CitizenNeedRead)
 def update_need(cid:UUID,id:UUID,data:CitizenNeedUpdate,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).update_need(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/needs/{id}/start-review",response_model=CitizenNeedRead)
+def review_need(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).review_need(cid,id,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/needs/{id}/validate",response_model=CitizenNeedRead)
+def validate_need(cid:UUID,id:UUID,data:NeedValidationRequest,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).validate_need(cid,id,user,data.validation_notes)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/activities/{id}/history")
+def activity_history(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).history(cid,"TerritorialActivity",id,user)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/needs/{id}/history")
+def need_history(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).history(cid,"CitizenNeed",id,user)
     except Exception as e:raise fail(e)
 @router.delete("/campaigns/{cid}/needs/{id}",status_code=204)
 def delete_need(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
@@ -155,4 +187,12 @@ def summary(cid:UUID,date_from:date|None=None,date_to:date|None=None,user:User=D
 @router.get("/campaigns/{cid}/territories/summary")
 def territory_summaries(cid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).territory_summaries(cid,user)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/operations/summary")
+def operations_summary(cid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).operations_overview(cid,user)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/operations/agenda")
+def operations_agenda(cid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).agenda(cid,user)
     except Exception as e:raise fail(e)

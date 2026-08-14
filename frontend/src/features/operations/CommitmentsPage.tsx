@@ -25,6 +25,7 @@ import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
 import { formatDateOnly, todayDateOnly } from '../../lib/dates';
+import { operationStatusLabel } from './statusLabels';
 import type { Commitment, Page, Parish } from './types';
 type Form = {
   title: string;
@@ -150,7 +151,7 @@ export default function CommitmentsPage() {
           <MenuItem value="">Todos</MenuItem>
           {['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((x) => (
             <MenuItem key={x} value={x}>
-              {x}
+              {operationStatusLabel(x)}
             </MenuItem>
           ))}
         </TextField>
@@ -201,7 +202,11 @@ export default function CommitmentsPage() {
               label: 'Prioridad',
               render: (x) => <StatusBadge value={x.priority} />,
             },
-            { key: 'status', label: 'Estado', render: (x) => <StatusBadge value={x.status} /> },
+            {
+              key: 'status',
+              label: 'Estado',
+              render: (x) => <StatusBadge value={operationStatusLabel(x.status)} />,
+            },
           ]}
           onEdit={async (x) => {
             setEditing(
@@ -234,7 +239,7 @@ export default function CommitmentsPage() {
             <TextField select label="Estado" defaultValue="PENDING" {...register('status')}>
               {['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((x) => (
                 <MenuItem key={x} value={x}>
-                  {x}
+                  {operationStatusLabel(x)}
                 </MenuItem>
               ))}
             </TextField>

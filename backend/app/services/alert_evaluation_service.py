@@ -1,22 +1,34 @@
 import hashlib
-from datetime import date
+from datetime import date,timedelta
 from sqlalchemy import func,select
 from app.core.config import settings
 from app.models.alerts import AlertRule,OperationalAlert
 from app.models.historical import DataImportJob,DataSource,DemographicObservation,ElectoralCandidateResult,ElectoralContest,ElectoralGeography,ElectoralTurnout
-from app.models.operational import ActivityEvidence,ActivityParticipantSummary,Commitment,TerritorialActivity
+from app.models.operational import ActivityEvidence,ActivityParticipantSummary,CitizenNeed,Commitment,TerritorialActivity
 from app.models.survey import Survey,SurveyResponse
 from app.models.territory import Canton,Parish
 
 class AlertEvaluationService:
     TITLES={
+      "ACTIVITY_UPCOMING":("Actividad próxima","Existe una actividad aprobada próxima."),"COMMITMENT_DUE_SOON":("Compromiso próximo a vencer","Existe un compromiso activo próximo a vencer."),"CRITICAL_NEED_UNASSIGNED":("Necesidad crítica sin responsable","Existe una necesidad crítica abierta sin responsable."),"NEED_REVIEW_STALE":("Necesidad demasiado tiempo en revisión","Existe una necesidad que requiere actualización de revisión."),
       "OVERDUE_COMMITMENT":("Compromiso vencido","Existe un compromiso pendiente cuya fecha límite fue superada."),"COMMITMENT_WITHOUT_RESPONSIBLE":("Compromiso sin responsable","Existe un compromiso activo sin responsable asignado."),"COMMITMENT_WITHOUT_DUE_DATE":("Compromiso sin fecha límite","Existe un compromiso activo sin fecha límite."),"PAST_PLANNED_ACTIVITY":("Actividad planificada con fecha pasada","Existe una actividad planificada cuya fecha ya pasó."),"ACTIVITY_WITHOUT_RESPONSIBLE":("Actividad sin responsable","Existe una actividad activa sin responsable asignado."),"ACTIVITY_WITHOUT_LOCATION":("Actividad sin ubicación","Existe una actividad activa sin ubicación geográfica."),"ACTIVITY_WITHOUT_PARTICIPANT_SUMMARY":("Actividad sin resumen de participantes","Existe una actividad completada sin resumen agregado de participantes."),"TERRITORY_WITHOUT_COMPLETED_ACTIVITY":("Territorio sin actividad completada","Un territorio autorizado no registra actividades completadas en el período configurado."),"SURVEY_WITHOUT_RESPONSES":("Encuesta sin respuestas","Existe una encuesta publicada sin respuestas válidas."),"SURVEY_LOW_SAMPLE":("Encuesta con muestra baja","Una encuesta tiene menos respuestas válidas que el mínimo configurado."),"SURVEY_PRIVACY_SUPPRESSED":("Resultado suprimido por privacidad","Existen segmentos de encuesta bajo el umbral mínimo de privacidad."),"FAILED_DATA_IMPORT":("Importación fallida","Existe una importación de datos que terminó con error."),"UNMAPPED_ELECTORAL_GEOGRAPHY":("Geografía electoral sin mapear","Existe una geografía electoral sin correspondencia territorial."),"CONTEST_WITHOUT_RESULTS":("Contienda sin resultados","Existe una contienda electoral sin resultados importados."),"CONTEST_WITHOUT_TURNOUT":("Contienda sin participación","Existe una contienda electoral sin participación importada."),"MISSING_CANTON_GEOMETRY":("Geometría cantonal faltante","El cantón de la campaña no dispone de geometría."),"MISSING_PARISH_GEOMETRY":("Geometría parroquial faltante","Existe una parroquia activa sin geometría."),"INVALID_GEOMETRY":("Geometría inválida","Existen geometrías que requieren revisión técnica."),"INACTIVE_DATA_SOURCE":("Fuente de datos inactiva","Existe una fuente oficial inactiva."),"STALE_DEMOGRAPHIC_DATA":("Datos demográficos antiguos","Las observaciones demográficas disponibles superan la antigüedad configurada."),"MISSING_DEMOGRAPHIC_INDICATOR":("Indicador demográfico faltante","No existen observaciones demográficas agregadas para el ámbito de la campaña.")}
     def __init__(self,db):self.db=db
     def _item(self,rule,resource_type,resource_id,parish_id,evidence):
         title,message=self.TITLES[rule.condition_type];raw=f"{rule.code}|{resource_type}|{resource_id or parish_id or 'campaign'}";return {"fingerprint":hashlib.sha256(raw.encode()).hexdigest(),"title":title,"message":message,"resource_type":resource_type,"resource_id":resource_id,"parish_id":parish_id,"evidence":evidence}
     def evaluate_rule(self,rule,campaign,as_of):
         c=rule.condition_type;items=[]
-        if c in {"OVERDUE_COMMITMENT","COMMITMENT_WITHOUT_RESPONSIBLE","COMMITMENT_WITHOUT_DUE_DATE"}:
+        if c=="ACTIVITY_UPCOMING":
+            days=int(rule.configuration.get("days_ahead",7));q=select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign.id,TerritorialActivity.approval_status=="APPROVED",TerritorialActivity.status=="PLANNED",TerritorialActivity.activity_date.between(as_of,as_of+timedelta(days=days)),TerritorialActivity.is_active.is_(True))
+            for x in self.db.scalars(q):items.append(self._item(rule,"ACTIVITY",x.id,x.parish_id,{"activity_date":x.activity_date.isoformat(),"days_until":(x.activity_date-as_of).days}))
+        elif c=="COMMITMENT_DUE_SOON":
+            days=int(rule.configuration.get("days_ahead",7));q=select(Commitment).where(Commitment.campaign_id==campaign.id,Commitment.status.in_(["PENDING","IN_PROGRESS"]),Commitment.due_date.between(as_of,as_of+timedelta(days=days)),Commitment.is_active.is_(True))
+            for x in self.db.scalars(q):items.append(self._item(rule,"COMMITMENT",x.id,x.parish_id,{"due_date":x.due_date.isoformat(),"days_until":(x.due_date-as_of).days}))
+        elif c in {"CRITICAL_NEED_UNASSIGNED","NEED_REVIEW_STALE"}:
+            q=select(CitizenNeed).where(CitizenNeed.campaign_id==campaign.id,CitizenNeed.is_active.is_(True))
+            if c=="CRITICAL_NEED_UNASSIGNED":q=q.where(CitizenNeed.urgency=="CRITICAL",CitizenNeed.assigned_to_user_id.is_(None),CitizenNeed.status.in_(["REPORTED","UNDER_REVIEW","VALIDATED"]))
+            else:q=q.where(CitizenNeed.status=="UNDER_REVIEW",CitizenNeed.updated_at<as_of-timedelta(days=int(rule.configuration.get("days_in_review",7))))
+            for x in self.db.scalars(q):items.append(self._item(rule,"NEED",x.id,x.parish_id,{"status":x.status,"urgency":x.urgency}))
+        elif c in {"OVERDUE_COMMITMENT","COMMITMENT_WITHOUT_RESPONSIBLE","COMMITMENT_WITHOUT_DUE_DATE"}:
             q=select(Commitment).where(Commitment.campaign_id==campaign.id,Commitment.is_active.is_(True))
             if c=="OVERDUE_COMMITMENT":q=q.where(Commitment.due_date<as_of,Commitment.status.in_(["PENDING","IN_PROGRESS"]))
             elif c=="COMMITMENT_WITHOUT_RESPONSIBLE":q=q.where(Commitment.responsible_user_id.is_(None),Commitment.status.in_(["PENDING","IN_PROGRESS"]))
