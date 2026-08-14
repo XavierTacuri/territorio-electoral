@@ -15,23 +15,17 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '../../api/errors';
 import { todayDateOnly } from '../../lib/dates';
+import { EXECUTION_STATUS_LABELS } from './statusLabels';
 import type { Activity, Catalog, Parish } from './types';
-const schema = z
-  .object({
-    activity_type_code: z.string().min(1),
-    title: z.string().trim().min(3).max(220),
-    description: z.string().optional(),
-    activity_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    status: z.enum(['PLANNED', 'COMPLETED', 'CANCELLED']),
-    parish_id: z.coerce.number().int().positive(),
-    location_name: z.string().optional(),
-    latitude: z.union([z.coerce.number().min(-90).max(90), z.literal('')]).optional(),
-    longitude: z.union([z.coerce.number().min(-180).max(180), z.literal('')]).optional(),
-  })
-  .refine((x) => (x.latitude === '') === (x.longitude === ''), {
-    message: 'Latitud y longitud deben enviarse juntas',
-    path: ['latitude'],
-  });
+const schema = z.object({
+  activity_type_code: z.string().min(1),
+  title: z.string().trim().min(3).max(220),
+  description: z.string().optional(),
+  activity_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  status: z.enum(['PLANNED', 'COMPLETED', 'CANCELLED']),
+  parish_id: z.coerce.number().int().positive(),
+  location_name: z.string().optional(),
+});
 export type ActivityFormValue = z.infer<typeof schema>;
 export function ActivityForm({
   open,
@@ -65,8 +59,6 @@ export function ActivityForm({
       status: 'PLANNED',
       parish_id: 0,
       location_name: '',
-      latitude: '',
-      longitude: '',
     },
   });
   useEffect(() => {
@@ -81,8 +73,6 @@ export function ActivityForm({
               status: activity.status as ActivityFormValue['status'],
               parish_id: activity.parish_id,
               location_name: activity.location_name ?? '',
-              latitude: activity.latitude ?? '',
-              longitude: activity.longitude ?? '',
             }
           : {
               activity_type_code: types[0]?.code ?? '',
@@ -92,8 +82,6 @@ export function ActivityForm({
               status: 'PLANNED',
               parish_id: parishes[0]?.id ?? 0,
               location_name: '',
-              latitude: '',
-              longitude: '',
             },
       );
     setServerError('');
@@ -135,9 +123,9 @@ export function ActivityForm({
               control={control}
               render={({ field }) => (
                 <TextField {...field} select fullWidth label="Estado">
-                  {['PLANNED', 'COMPLETED', 'CANCELLED'].map((x) => (
-                    <MenuItem key={x} value={x}>
-                      {x}
+                  {Object.entries(EXECUTION_STATUS_LABELS).map(([value, label]) => (
+                    <MenuItem key={value} value={value}>
+                      {label}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -193,19 +181,6 @@ export function ActivityForm({
               fullWidth
               label="Nombre de ubicación (opcional)"
             />
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <TextField
-              {...register('latitude')}
-              fullWidth
-              type="number"
-              label="Latitud"
-              error={!!errors.latitude}
-              helperText={errors.latitude?.message}
-            />
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <TextField {...register('longitude')} fullWidth type="number" label="Longitud" />
           </Grid>
         </Grid>
       </DialogContent>

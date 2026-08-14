@@ -13,6 +13,13 @@ export type Activity = {
   description?: string | null;
   activity_date: string;
   status: string;
+  approval_status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
+  start_time?: string | null;
+  end_time?: string | null;
+  rejection_reason?: string | null;
+  submitted_for_approval_at?: string | null;
+  submitted_by_user_id?: string | null;
+  created_by_user_id: string;
   parish_id: number;
   community_id?: string | null;
   sector_id?: string | null;
@@ -25,12 +32,20 @@ export type Activity = {
 export type Need = {
   id: string;
   campaign_id?: string;
-  activity_id: string;
+  activity_id?: string | null;
   need_category_id: number;
   title: string;
   description?: string | null;
   mentions_count: number;
   priority: string;
+  urgency: string;
+  source_type: string;
+  reported_date: string;
+  assigned_to_user_id?: string | null;
+  scope: string;
+  validation_notes?: string | null;
+  validated_by_user_id?: string | null;
+  validated_at?: string | null;
   status: string;
   parish_id: number;
   community_id?: string | null;
@@ -41,6 +56,7 @@ export type Commitment = {
   id: string;
   campaign_id: string;
   activity_id?: string | null;
+  need_id?: string | null;
   title: string;
   description?: string | null;
   priority: string;

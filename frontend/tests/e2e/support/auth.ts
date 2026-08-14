@@ -10,6 +10,8 @@ export const e2eUsers = {
   coordinator: 'coordinator_e2e',
   analyst: 'analyst_e2e',
   candidate: 'candidate_e2e',
+  delegateA: 'delegate_e2e_a',
+  delegateB: 'delegate_e2e_b',
 } as const;
 
 export async function apiToken(request: APIRequestContext, username = e2eUsers.admin) {

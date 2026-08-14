@@ -38,7 +38,7 @@ from app.services.role_service import RoleService
 from app.services.survey_service import SurveyService
 from app.services.territorial_assignment_service import TerritorialAssignmentService
 
-USERS = [("admin-e2e@example.com", "admin_e2e", "ADMIN"), ("manager-e2e@example.com", "manager_e2e", "CAMPAIGN_MANAGER"), ("coordinator-e2e@example.com", "coordinator_e2e", "TERRITORIAL_COORDINATOR"), ("analyst-e2e@example.com", "analyst_e2e", "ANALYST"), ("candidate-e2e@example.com", "candidate_e2e", "CANDIDATE")]
+USERS = [("admin-e2e@example.com", "admin_e2e", "ADMIN"), ("manager-e2e@example.com", "manager_e2e", "CAMPAIGN_MANAGER"), ("coordinator-e2e@example.com", "coordinator_e2e", "TERRITORIAL_COORDINATOR"), ("delegate-a-e2e@example.com", "delegate_e2e_a", "TERRITORIAL_COORDINATOR"), ("delegate-b-e2e@example.com", "delegate_e2e_b", "TERRITORIAL_COORDINATOR"), ("analyst-e2e@example.com", "analyst_e2e", "ANALYST"), ("candidate-e2e@example.com", "candidate_e2e", "CANDIDATE")]
 
 def ensure_current_election_fixture(db, admin):
     """Create a small deterministic territory used only by portable current-election E2E tests."""
@@ -135,7 +135,8 @@ def ensure_users(db, password):
             user=User(email=email,username=username,first_name="Usuario",last_name="E2E",hashed_password=hash_password(password),is_active=True,is_superuser=code=="ADMIN",roles=[role]); db.add(user); db.flush()
         else:
             user.email=email; user.hashed_password=hash_password(password); user.is_active=True; user.roles=[role]
-        result[code]=user
+        result[username]=user
+        result.setdefault(code,user)
     return result
 
 def main():
@@ -145,6 +146,22 @@ def main():
     with SessionLocal() as db:
         users=ensure_users(db,password); admin=users["ADMIN"]
         _,canton,parishes=seed_gualaceo(db); seed_catalogs(db); seed_reports_alerts(db); db.flush();synthetic_campaign,_,synthetic_parishes,synthetic_process=ensure_current_election_fixture(db,admin);ensure_survey_studies(db,admin,synthetic_campaign,synthetic_parishes,synthetic_process)
+        synthetic_assignments=TerritorialAssignmentService(db)
+        for username in ("manager_e2e","delegate_e2e_a","delegate_e2e_b"):
+            member=users[username]
+            if not db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==synthetic_campaign.id,CampaignUser.user_id==member.id)):synthetic_assignments.assign_user(synthetic_campaign.id,CampaignUserAssign(user_id=member.id),admin)
+        for username,parish in (("delegate_e2e_a",synthetic_parishes[0]),("delegate_e2e_b",synthetic_parishes[1])):
+            member=users[username]
+            if not db.scalar(select(TerritorialAssignment).where(TerritorialAssignment.campaign_id==synthetic_campaign.id,TerritorialAssignment.user_id==member.id,TerritorialAssignment.parish_id==parish.id)):synthetic_assignments.create(synthetic_campaign.id,TerritorialAssignmentCreate(user_id=member.id,parish_id=parish.id),admin)
+        synthetic_op=OperationalService(db,today_provider=lambda:date(2026,8,13))
+        synthetic_activity=db.scalar(select(TerritorialActivity).where(TerritorialActivity.campaign_id==synthetic_campaign.id,TerritorialActivity.title=="Asamblea territorial sintética"))
+        if not synthetic_activity:synthetic_activity=synthetic_op.create_activity(synthetic_campaign.id,TerritorialActivityCreate(activity_type_code="ASSEMBLY",title="Asamblea territorial sintética",description="Actividad comunitaria agregada sintética.",activity_date=date(2026,8,20),status="PLANNED",parish_id=synthetic_parishes[0].id),users["manager_e2e"])
+        synthetic_need=db.scalar(select(CitizenNeed).where(CitizenNeed.campaign_id==synthetic_campaign.id,CitizenNeed.title=="Mantenimiento de vía principal sintética"))
+        if not synthetic_need:
+            synthetic_need=synthetic_op.create_need(synthetic_campaign.id,synthetic_activity.id,CitizenNeedCreate(need_category_code="ROADS",title="Mantenimiento de vía principal sintética",description="Registro comunitario agregado sintético.",priority="HIGH",urgency="HIGH",source_type="CAMPAIGN_ACTIVITY",reported_date=date(2026,8,20),scope="PARISH"),users["delegate_e2e_a"])
+            synthetic_op.review_need(synthetic_campaign.id,synthetic_need.id,users["manager_e2e"]);synthetic_op.validate_need(synthetic_campaign.id,synthetic_need.id,users["manager_e2e"],"Validación sintética E2E")
+        synthetic_commitment=db.scalar(select(Commitment).where(Commitment.campaign_id==synthetic_campaign.id,Commitment.title=="Revisar propuesta técnica sintética"))
+        if not synthetic_commitment:synthetic_op.create_commitment(synthetic_campaign.id,CommitmentCreate(need_id=synthetic_need.id,activity_id=synthetic_activity.id,title="Revisar propuesta técnica sintética",priority="HIGH",status="PENDING",due_date=date(2026,8,27),parish_id=synthetic_parishes[0].id),users["manager_e2e"])
         campaign=db.scalar(select(Campaign).where(Campaign.slug=="gualaceo-e2e-2027"))
         if not campaign: campaign=CampaignService(db).create(CampaignCreate(name="Gualaceo E2E 2027",slug="gualaceo-e2e-2027",canton_id=canton.id,office_type="MAYOR",election_name="Elecciones sintéticas 2027",election_date=date(2027,2,14),start_date=date(2026,1,1),status="ACTIVE"),admin)
         assignments=TerritorialAssignmentService(db)

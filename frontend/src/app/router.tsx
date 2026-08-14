@@ -17,6 +17,10 @@ const Activities = lazy(() => import('../features/operations/ActivitiesPage'));
 const ActivityDetail = lazy(() => import('../features/operations/ActivityDetailPage'));
 const Needs = lazy(() => import('../features/operations/NeedsPage'));
 const Commitments = lazy(() => import('../features/operations/CommitmentsPage'));
+const Operations = lazy(() => import('../features/operations/OperationsPage'));
+const Approvals = lazy(() => import('../features/operations/ApprovalsPage'));
+const Agenda = lazy(() => import('../features/operations/AgendaPage'));
+const NeedDetail = lazy(() => import('../features/operations/NeedDetailPage'));
 const Surveys = lazy(() => import('../features/surveys/SurveysPage'));
 const Questionnaires = lazy(() => import('../features/surveys/QuestionnairesPage'));
 const StudyDetail = lazy(() => import('../features/survey-studies/StudyDetailPage'));
@@ -98,7 +102,12 @@ export const router = createBrowserRouter([
             element: lazyElement(<ActivityDetail />),
           },
           { path: campaign.slice(5) + '/needs', element: lazyElement(<Needs />) },
+          { path: campaign.slice(5) + '/needs/:needId', element: lazyElement(<NeedDetail />) },
           { path: campaign.slice(5) + '/commitments', element: lazyElement(<Commitments />) },
+          { path: campaign.slice(5) + '/operations', element: lazyElement(<Operations />) },
+          { path: campaign.slice(5) + '/approvals', element: lazyElement(<Approvals />) },
+          { path: campaign.slice(5) + '/operations/agenda', element: lazyElement(<Agenda />) },
+          { path: campaign.slice(5) + '/operations/map', element: lazyElement(<Map />) },
           { path: campaign.slice(5) + '/surveys', element: lazyElement(<Surveys />) },
           {
             path: campaign.slice(5) + '/questionnaires',

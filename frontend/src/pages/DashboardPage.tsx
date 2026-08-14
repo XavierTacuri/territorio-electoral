@@ -82,15 +82,20 @@ type Analysis = {
   parishes: Parish[];
 };
 type OperationalSummary = {
-  total_activities: number;
-  open_needs: number;
-  completed_activities: number;
-  planned_activities: number;
-  cancelled_activities: number;
-  activities_by_parish: { parish_id: number }[];
-  needs_by_parish: { parish_id: number }[];
-  parishes_with_commitments: number;
-  commitments: { pending: number; in_progress: number; completed: number; cancelled: number };
+  activities?: { upcoming: number; pending_approval: number; completed: number };
+  needs?: { open: number; under_review: number; validated: number; critical_unassigned: number };
+  commitments: { pending: number; in_progress: number; overdue: number; completed: number };
+  coverage?: {
+    total_parishes: number;
+    with_activities: number;
+    with_needs: number;
+    with_commitments: number;
+  };
+  total_activities?: number;
+  open_needs?: number;
+  activities_by_parish?: { parish_id: number }[];
+  needs_by_parish?: { parish_id: number }[];
+  parishes_with_commitments?: number;
 };
 type MapStatus = 'loading' | 'success' | 'empty' | 'error';
 type RecentStudies = {
@@ -184,10 +189,7 @@ export default function DashboardPage() {
   const operation = useQuery({
     queryKey: ['campaign', campaignId, 'operational-summary', 'campaign-to-date'],
     queryFn: ({ signal }) =>
-      apiRequest<OperationalSummary>(
-        `/campaigns/${campaignId}/operational-summary?date_from=2000-01-01&date_to=${todayDateOnly()}`,
-        { signal },
-      ),
+      apiRequest<OperationalSummary>(`/campaigns/${campaignId}/operations/summary`, { signal }),
     enabled: !!campaignId,
     retry: 1,
   });
@@ -287,7 +289,7 @@ export default function DashboardPage() {
         <Box sx={{ mt: 2 }}>
           {operation.isLoading && <Skeleton variant="rounded" height={180} />}
           {operation.isSuccess && (
-            <OperationalBlock operation={operation.data} campaignId={campaignId} parishCount={9} />
+            <OperationalBlock operation={operation.data} campaignId={campaignId} />
           )}
         </Box>
       </>
@@ -721,11 +723,7 @@ export default function DashboardPage() {
             </DashboardCard>
           )}
           {operation.isSuccess && (
-            <OperationalBlock
-              operation={operation.data}
-              campaignId={campaignId}
-              parishCount={data.parishes.length}
-            />
+            <OperationalBlock operation={operation.data} campaignId={campaignId} />
           )}
         </Grid>
       </Grid>
@@ -829,31 +827,43 @@ export default function DashboardPage() {
 function OperationalBlock({
   operation,
   campaignId,
-  parishCount,
 }: {
   operation: OperationalSummary;
   campaignId: string;
-  parishCount: number;
 }) {
   const pending = operation.commitments.pending + operation.commitments.in_progress;
+  const activities = operation.activities ?? {
+    upcoming: operation.total_activities ?? 0,
+    pending_approval: 0,
+    completed: 0,
+  };
+  const needs = operation.needs ?? {
+    open: operation.open_needs ?? 0,
+    under_review: 0,
+    validated: 0,
+    critical_unassigned: 0,
+  };
+  const coverage = operation.coverage ?? {
+    total_parishes: 9,
+    with_activities: operation.activities_by_parish?.length ?? 0,
+    with_needs: operation.needs_by_parish?.length ?? 0,
+    with_commitments: operation.parishes_with_commitments ?? 0,
+  };
   return (
     <DashboardCard>
       <SectionTitle>OPERACIÓN TERRITORIAL</SectionTitle>
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Metric label="Actividades" value={integer(operation.total_activities)} />
+          <Metric label="Actividades próximas" value={integer(activities.upcoming)} />
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Metric label="Necesidades abiertas" value={integer(operation.open_needs)} />
+          <Metric label="Pendientes de aprobación" value={integer(activities.pending_approval)} />
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
           <Metric label="Compromisos pendientes" value={integer(pending)} />
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Metric
-            label="Compromisos completados"
-            value={integer(operation.commitments.completed)}
-          />
+          <Metric label="Necesidades abiertas" value={integer(needs.open)} />
         </Grid>
       </Grid>
       <Typography component="h3" variant="h3" sx={{ mt: 2, mb: 1 }}>
@@ -863,23 +873,26 @@ function OperationalBlock({
         <Grid size={{ xs: 12, sm: 4 }}>
           <Metric
             label="Parroquias con actividad registrada"
-            value={`${operation.activities_by_parish.length} de ${parishCount}`}
+            value={`${coverage.with_activities} de ${coverage.total_parishes}`}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Metric
             label="Parroquias con necesidades abiertas"
-            value={`${operation.needs_by_parish.length} de ${parishCount}`}
+            value={`${coverage.with_needs} de ${coverage.total_parishes}`}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Metric
             label="Parroquias con compromisos"
-            value={`${operation.parishes_with_commitments} de ${parishCount}`}
+            value={`${coverage.with_commitments} de ${coverage.total_parishes}`}
           />
         </Grid>
       </Grid>
       <Stack direction="row" gap={1} sx={{ mt: 1 }} flexWrap="wrap">
+        <Button component={RouterLink} to={executivePath(campaignId, 'operations')}>
+          VER OPERACIÓN TERRITORIAL
+        </Button>
         <Button component={RouterLink} to={executivePath(campaignId, 'activities')}>
           ACTIVIDADES
         </Button>

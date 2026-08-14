@@ -41,8 +41,20 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     const title = 'Actividad Playwright ' + suffix;
     await nav(page, 'Actividades');
     await page.getByRole('button', { name: 'Crear actividad' }).click();
+    await expect(page.getByLabel('Latitud')).toHaveCount(0);
+    await expect(page.getByLabel('Longitud')).toHaveCount(0);
+    await expect(page.getByRole('dialog').getByLabel('Estado')).toHaveText('Planificada');
+    await expect(page.getByText('PLANNED', { exact: true })).toHaveCount(0);
     await page.getByLabel('Título').fill(title);
+    await page.getByLabel('Nombre de ubicación (opcional)').fill('Casa comunal');
+    const createRequest = page.waitForRequest(
+      (request) => request.method() === 'POST' && /\/activities$/.test(request.url()),
+    );
     await page.getByRole('button', { name: 'Guardar' }).click();
+    const createPayload = (await createRequest).postDataJSON();
+    expect(createPayload.status).toBe('PLANNED');
+    expect(createPayload).not.toHaveProperty('latitude');
+    expect(createPayload).not.toHaveProperty('longitude');
     await expect(page.getByText(title)).toBeVisible();
   });
   await test.step('06 Editar actividad', async () => {
@@ -51,8 +63,15 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
       .getByRole('button', { name: /Editar actividades/ })
       .first()
       .click();
+    await expect(page.getByLabel('Latitud')).toHaveCount(0);
+    await expect(page.getByLabel('Longitud')).toHaveCount(0);
     await page.getByLabel('Título').fill(title);
+    const editRequest = page.waitForRequest(
+      (request) => request.method() === 'PATCH' && /\/activities\/[^/]+$/.test(request.url()),
+    );
     await page.getByRole('button', { name: 'Guardar' }).click();
+    expect((await editRequest).postDataJSON()).not.toHaveProperty('latitude');
+    expect((await editRequest).postDataJSON()).not.toHaveProperty('longitude');
     await expect(page.getByText(title)).toBeVisible();
   });
   await test.step('07 Participantes agregados', async () => {
@@ -92,9 +111,9 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
       .click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Estado').click();
-    await page.getByRole('option', { name: 'COMPLETED' }).click();
+    await page.getByRole('option', { name: 'Completada' }).click();
     await dialog.getByRole('button', { name: 'Guardar' }).click();
-    await expect(page.getByText('COMPLETED').first()).toBeVisible();
+    await expect(page.getByText('Completada').first()).toBeVisible();
   });
   await test.step('11 Crear encuesta', async () => {
     await page.goto(`/app/campaigns/${id}/surveys`);

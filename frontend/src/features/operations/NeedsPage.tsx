@@ -14,14 +14,14 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
 import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
-import type { Activity, Catalog, Need, Page } from './types';
+import type { Activity, Catalog, Need, Page, Parish } from './types';
 type NeedForm = {
   activity_id: string;
   need_category_code: string;
@@ -30,9 +30,19 @@ type NeedForm = {
   mentions_count: number;
   priority: string;
   status: string;
+  parish_id: number;
+  source_type: string;
+  reported_date: string;
+  urgency: string;
+  scope: string;
+  local_sector_description: string;
+  evidence_notes: string;
 };
 export default function NeedsPage() {
   const { campaignId = '' } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [parishFilter, setParishFilter] = useState(searchParams.get('parish_id') ?? '');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
@@ -44,8 +54,9 @@ export default function NeedsPage() {
   if (status) params.set('status', status);
   if (priority) params.set('priority', priority);
   if (search) params.set('search', search);
+  if (parishFilter) params.set('parish_id', parishFilter);
   const list = useQuery({
-    queryKey: ['campaign', campaignId, 'needs', page, status, priority, search],
+    queryKey: ['campaign', campaignId, 'needs', page, status, priority, search, parishFilter],
     queryFn: ({ signal }) =>
       apiRequest<Page<Need>>('/campaigns/' + campaignId + '/needs?' + params, { signal }),
   });
@@ -58,6 +69,10 @@ export default function NeedsPage() {
     queryFn: () =>
       apiRequest<Page<Activity>>('/campaigns/' + campaignId + '/activities?page_size=100'),
   });
+  const parishes = useQuery({
+    queryKey: ['parishes'],
+    queryFn: () => apiRequest<Parish[]>('/parishes'),
+  });
   const {
     register,
     handleSubmit,
@@ -69,7 +84,7 @@ export default function NeedsPage() {
       reset(
         editing
           ? {
-              activity_id: editing.activity_id,
+              activity_id: editing.activity_id ?? '',
               need_category_code:
                 categories.data?.find((x) => x.id === editing.need_category_id)?.code ?? '',
               title: editing.title,
@@ -77,6 +92,13 @@ export default function NeedsPage() {
               mentions_count: editing.mentions_count,
               priority: editing.priority,
               status: editing.status,
+              parish_id: editing.parish_id,
+              source_type: editing.source_type,
+              reported_date: editing.reported_date,
+              urgency: editing.urgency,
+              scope: editing.scope,
+              local_sector_description: '',
+              evidence_notes: '',
             }
           : {
               activity_id: activities.data?.items[0]?.id ?? '',
@@ -85,17 +107,26 @@ export default function NeedsPage() {
               description: '',
               mentions_count: 1,
               priority: 'MEDIUM',
-              status: 'IDENTIFIED',
+              status: 'REPORTED',
+              parish_id: parishes.data?.[0]?.id ?? 0,
+              source_type: 'OTHER',
+              reported_date: new Date().toISOString().slice(0, 10),
+              urgency: 'MEDIUM',
+              scope: 'PARISH',
+              local_sector_description: '',
+              evidence_notes: '',
             },
       );
     setError('');
-  }, [open, editing, categories.data, activities.data, reset]);
+  }, [open, editing, categories.data, activities.data, parishes.data, reset]);
   const save = useMutation({
     mutationFn: (v: NeedForm) =>
       apiRequest<Need>(
         editing
           ? '/campaigns/' + campaignId + '/needs/' + editing.id
-          : '/campaigns/' + campaignId + '/activities/' + v.activity_id + '/needs',
+          : v.activity_id
+            ? '/campaigns/' + campaignId + '/activities/' + v.activity_id + '/needs'
+            : '/campaigns/' + campaignId + '/needs',
         {
           method: editing ? 'PATCH' : 'POST',
           body: JSON.stringify(
@@ -106,7 +137,6 @@ export default function NeedsPage() {
                   description: v.description || null,
                   mentions_count: Number(v.mentions_count),
                   priority: v.priority,
-                  status: v.status,
                 }
               : {
                   need_category_code: v.need_category_code,
@@ -114,7 +144,14 @@ export default function NeedsPage() {
                   description: v.description || null,
                   mentions_count: Number(v.mentions_count),
                   priority: v.priority,
-                  status: v.status,
+                  status: 'REPORTED',
+                  parish_id: Number(v.parish_id),
+                  source_type: v.source_type,
+                  reported_date: v.reported_date,
+                  urgency: v.urgency,
+                  scope: v.scope,
+                  local_sector_description: v.scope === 'LOCAL' ? v.local_sector_description : null,
+                  evidence_notes: v.evidence_notes || null,
                 },
           ),
         },
@@ -140,6 +177,20 @@ export default function NeedsPage() {
         }
       />
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
+        <TextField
+          select
+          label="Parroquia"
+          value={parishFilter}
+          onChange={(e) => setParishFilter(e.target.value)}
+          sx={{ minWidth: 190 }}
+        >
+          <MenuItem value="">Todas</MenuItem>
+          {parishes.data?.map((x) => (
+            <MenuItem key={x.id} value={String(x.id)}>
+              {x.name}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField label="Buscar" value={search} onChange={(e) => setSearch(e.target.value)} />
         <TextField
           select
@@ -163,7 +214,7 @@ export default function NeedsPage() {
           sx={{ minWidth: 190 }}
         >
           <MenuItem value="">Todos</MenuItem>
-          {['IDENTIFIED', 'UNDER_REVIEW', 'INCLUDED_IN_PLAN', 'DISCARDED'].map((x) => (
+          {['REPORTED', 'UNDER_REVIEW', 'VALIDATED', 'IN_PLAN', 'CLOSED', 'ARCHIVED'].map((x) => (
             <MenuItem key={x} value={x}>
               {x}
             </MenuItem>
@@ -187,10 +238,7 @@ export default function NeedsPage() {
             },
             { key: 'status', label: 'Estado', render: (x) => <StatusBadge value={x.status} /> },
           ]}
-          onView={async (x) => {
-            setEditing(await apiRequest<Need>('/campaigns/' + campaignId + '/needs/' + x.id));
-            setOpen(true);
-          }}
+          onView={(x) => navigate(`/app/campaigns/${campaignId}/needs/${x.id}`)}
           onEdit={async (x) => {
             setEditing(await apiRequest<Need>('/campaigns/' + campaignId + '/needs/' + x.id));
             setOpen(true);
@@ -211,11 +259,27 @@ export default function NeedsPage() {
             {!editing && (
               <TextField
                 select
-                label="Actividad"
+                label="Parroquia"
+                defaultValue=""
+                {...register('parish_id', { valueAsNumber: true })}
+                InputLabelProps={{ shrink: true }}
+              >
+                {parishes.data?.map((x) => (
+                  <MenuItem key={x.id} value={x.id}>
+                    {x.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            {!editing && (
+              <TextField
+                select
+                label="Actividad relacionada (opcional)"
                 defaultValue=""
                 {...register('activity_id')}
                 InputLabelProps={{ shrink: true }}
               >
+                <MenuItem value="">Registro directo</MenuItem>
                 {activities.data?.items.map((x) => (
                   <MenuItem key={x.id} value={x.id}>
                     {x.title}
@@ -250,13 +314,48 @@ export default function NeedsPage() {
                 </MenuItem>
               ))}
             </TextField>
-            <TextField select label="Estado" defaultValue="IDENTIFIED" {...register('status')}>
-              {['IDENTIFIED', 'UNDER_REVIEW', 'INCLUDED_IN_PLAN', 'DISCARDED'].map((x) => (
-                <MenuItem key={x} value={x}>
-                  {x}
-                </MenuItem>
-              ))}
-            </TextField>
+            {!editing && (
+              <>
+                <TextField select label="Origen" defaultValue="OTHER" {...register('source_type')}>
+                  {[
+                    'ASSEMBLY',
+                    'COMMUNITY_MEETING',
+                    'FIELD_VISIT',
+                    'CAMPAIGN_ACTIVITY',
+                    'CITIZEN_REPORT',
+                    'TEAM_REPORT',
+                    'OTHER',
+                  ].map((x) => (
+                    <MenuItem key={x} value={x}>
+                      {x}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  type="date"
+                  label="Fecha"
+                  InputLabelProps={{ shrink: true }}
+                  {...register('reported_date')}
+                />
+                <TextField select label="Urgencia" defaultValue="MEDIUM" {...register('urgency')}>
+                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
+                    <MenuItem key={x} value={x}>
+                      {x}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField select label="Alcance" defaultValue="PARISH" {...register('scope')}>
+                  <MenuItem value="LOCAL">Sector/local</MenuItem>
+                  <MenuItem value="PARISH">Parroquial</MenuItem>
+                  <MenuItem value="CANTON">Cantonal</MenuItem>
+                </TextField>
+                <TextField
+                  label="Sector (si el alcance es local)"
+                  {...register('local_sector_description')}
+                />
+                <TextField multiline label="Evidencia o notas" {...register('evidence_notes')} />
+              </>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>

@@ -19,7 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -79,10 +79,14 @@ type Operation = {
   parish_id: number;
   activities: number;
   needs_open: number;
+  needs_under_review: number;
+  needs_validated: number;
+  commitments_related: number;
+  needs_by_category: { category: string; count: number }[];
   commitments_pending: number;
   commitments_completed: number;
   latest_activities: { id: string; title: string; date: string; status: string }[];
-  latest_needs: { id: string; title: string; status: string }[];
+  latest_needs: { id: string; title: string; status: string; date: string; category: string }[];
   latest_commitments: { id: string; title: string; status: string; due_date?: string }[];
 };
 type PublishedStudies = {
@@ -646,6 +650,24 @@ function TerritoryProfile({
                   </Grid>
                   <Grid size={{ xs: 6, md: 3 }}>
                     <Metric
+                      label="En revisión"
+                      value={integer(operation?.needs_under_review ?? 0)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, md: 3 }}>
+                    <Metric
+                      label="Necesidades validadas"
+                      value={integer(operation?.needs_validated ?? 0)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, md: 3 }}>
+                    <Metric
+                      label="Compromisos relacionados"
+                      value={integer(operation?.commitments_related ?? 0)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, md: 3 }}>
+                    <Metric
                       label="Necesidades abiertas"
                       value={integer(operation?.needs_open ?? 0)}
                     />
@@ -663,6 +685,21 @@ function TerritoryProfile({
                     />
                   </Grid>
                 </Grid>
+                <Typography variant="h3" sx={{ mt: 2 }}>
+                  Necesidades por categoría
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {operation?.needs_by_category?.map((x) => (
+                    <Chip key={x.category} label={`${x.category}: ${x.count}`} />
+                  ))}
+                </Stack>
+                <Button
+                  component={RouterLink}
+                  to={`/app/campaigns/${campaignId}/needs?parish_id=${parish.parish_id}`}
+                  sx={{ mt: 2 }}
+                >
+                  VER NECESIDADES DE ESTA PARROQUIA
+                </Button>
                 <Grid container spacing={2} sx={{ mt: 2 }}>
                   {[
                     ['Últimas actividades', operation?.latest_activities],

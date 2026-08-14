@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Button,
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
+import { operationStatusLabel } from './statusLabels';
 import type { Activity, Catalog, Need, Page } from './types';
 type Participants = {
   estimated_attendees: number;
@@ -92,7 +94,7 @@ export default function ActivityDetailPage() {
       description: '',
       mentions_count: 1,
       priority: 'MEDIUM',
-      status: 'IDENTIFIED',
+      status: 'REPORTED',
     },
   });
   const evidenceForm = useForm<{
@@ -139,20 +141,40 @@ export default function ActivityDetailPage() {
           </Button>
         }
       />
+      {item.approval_status === 'REJECTED' && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Actividad rechazada. Motivo: {item.rejection_reason}
+        </Alert>
+      )}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+        {(item.approval_status === 'DRAFT' || item.approval_status === 'REJECTED') && (
+          <Button
+            variant="contained"
+            onClick={() =>
+              mutate.mutateAsync({
+                path: `/campaigns/${campaignId}/activities/${activityId}/submit-for-approval`,
+                body: {},
+              })
+            }
+          >
+            {' '}
+            {item.approval_status === 'REJECTED'
+              ? 'Reenviar a aprobación'
+              : 'Enviar a aprobación'}{' '}
+          </Button>
+        )}
+        <StatusBadge value={operationStatusLabel(item.approval_status)} />
+        <StatusBadge value={operationStatusLabel(item.status)} />
+      </Stack>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1}>
-                <StatusBadge value={item.status} />
+                <StatusBadge value={operationStatusLabel(item.status)} />
                 <Typography>{item.description || 'Sin descripción'}</Typography>
                 <Typography>Parroquia: {item.parish_id}</Typography>
                 <Typography>Ubicación: {item.location_name || 'No registrada'}</Typography>
-                {item.latitude != null && item.longitude != null && (
-                  <Typography>
-                    Coordenadas: {item.latitude}, {item.longitude}
-                  </Typography>
-                )}
               </Stack>
             </CardContent>
           </Card>
@@ -306,7 +328,13 @@ export default function ActivityDetailPage() {
             onClick={needForm.handleSubmit((body) =>
               mutate.mutateAsync({
                 path: '/campaigns/' + campaignId + '/activities/' + activityId + '/needs',
-                body,
+                body: {
+                  ...body,
+                  source_type: 'CAMPAIGN_ACTIVITY',
+                  reported_date: item.activity_date,
+                  urgency: body.priority,
+                  scope: 'PARISH',
+                },
               }),
             )}
           >

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.campaign import Campaign
 from app.models.historical import DataSource,DemographicIndicator,DemographicObservation,ElectoralContest,ElectoralGeography,ElectoralProcess,ElectoralTurnout,ElectoralCandidateResult,ElectoralRollSnapshot,ElectoralRollSnapshotEntry,ParticipationProjectionRun,ParticipationProjectionResult
-from app.models.operational import ActivityEvidence,ActivityParticipantSummary,CitizenNeed,Commitment,TerritorialActivity
+from app.models.operational import ActivityEvidence,ActivityParticipantSummary,CitizenNeed,Commitment,NeedCategory,TerritorialActivity
 from app.models.survey import Survey,SurveyResponse
 from app.models.territory import Canton,Community,Parish,Sector
 from app.models.user import User
@@ -72,10 +72,13 @@ class MapService:
    for activity,code,attendees,needs,commitments,geometry in self.repo.activity_points(campaign.id,period.date_from,period.date_to,scope.parish_ids,bbox)[:limit]:
     features.append(self.geojson.feature(activity.id,geometry,{"resource_id":str(activity.id),"resource_type":"ACTIVITY","name":activity.title,"activity_date":activity.activity_date.isoformat(),"status":activity.status,"activity_type":code,"parish_id":activity.parish_id,"estimated_attendees":attendees,"needs_count":needs,"commitments_count":commitments,"campaign_id":str(campaign.id),"geometry_source":"ACTIVITY_LOCATION","geometry_quality":"VALID"}))
   return self.geojson.collection(features,bbox,"AVAILABLE" if features else "MISSING",total-located,metadata={"activities_without_location":total-located,"clustered":cluster,"returned_features":len(features),"period":period.model_dump(mode="json")})
- def thematic(self,campaign_id,user,filters,layer,metric):
+ def thematic(self,campaign_id,user,filters,layer,metric,need_category_code=None):
   if metric not in self.metrics(layer):raise BusinessRuleError('Métrica geográfica desconocida')
   campaign,period,scope,tolerance,limit=self.context(campaign_id,user,filters);rows=self.repo.geometry_rows(Parish,Parish.geometry,scope.parish_ids,filters.simplify,tolerance,filters.bbox.as_list() if filters.bbox else None)[:limit];dash=DashboardService(self.db,self.today_provider);territories={x["id"]:x for x in dash.territories(campaign.id,user,self.filter.dashboard_filters(filters),"PARISH",1,100)["items"]};need_map={};commitment_map={};features=[]
-  if layer=="NEEDS":need_map={r[0]:r[1:] for r in self.db.execute(select(CitizenNeed.parish_id,func.count(CitizenNeed.id),func.coalesce(func.sum(CitizenNeed.mentions_count),0),func.count().filter(CitizenNeed.priority=='HIGH'),func.count().filter(CitizenNeed.priority=='CRITICAL')).join(TerritorialActivity).where(CitizenNeed.campaign_id==campaign.id,CitizenNeed.parish_id.in_(scope.parish_ids),CitizenNeed.is_active.is_(True),TerritorialActivity.activity_date.between(period.date_from,period.date_to)).group_by(CitizenNeed.parish_id))}
+  if layer=="NEEDS":
+   q=select(CitizenNeed.parish_id,func.count(CitizenNeed.id),func.coalesce(func.sum(CitizenNeed.mentions_count),0),func.count().filter(CitizenNeed.priority=='HIGH'),func.count().filter(CitizenNeed.priority=='CRITICAL')).where(CitizenNeed.campaign_id==campaign.id,CitizenNeed.parish_id.in_(scope.parish_ids),CitizenNeed.is_active.is_(True),CitizenNeed.reported_date.between(period.date_from,period.date_to))
+   if need_category_code:q=q.where(CitizenNeed.need_category_id==select(NeedCategory.id).where(NeedCategory.code==need_category_code).scalar_subquery())
+   need_map={r[0]:r[1:] for r in self.db.execute(q.group_by(CitizenNeed.parish_id))}
   if layer=="COMMITMENTS":commitment_map={r[0]:r[1:] for r in self.db.execute(select(Commitment.parish_id,func.count().filter(Commitment.status=='PENDING'),func.count().filter(Commitment.status=='IN_PROGRESS'),func.count().filter(Commitment.status=='COMPLETED'),func.count().filter(Commitment.due_date<period.date_to,Commitment.status.in_(['PENDING','IN_PROGRESS']))).where(Commitment.campaign_id==campaign.id,Commitment.parish_id.in_(scope.parish_ids),Commitment.is_active.is_(True)).group_by(Commitment.parish_id))}
   for parish,geometry in rows:
    values=territories.get(parish.id,{});value=None;extra={}
