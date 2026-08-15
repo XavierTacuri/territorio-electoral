@@ -12,7 +12,7 @@ export default function StudyComparePage() {
   const ids =
     new URLSearchParams(useLocation().search).get('ids')?.split(',').filter(Boolean) ?? [];
   const q = useQuery({
-    queryKey: ['survey-compare', ids],
+    queryKey: ['survey-compare', campaignId, ids],
     queryFn: () =>
       apiRequest<Comparison>(
         `/campaigns/${campaignId}/survey-analysis?${ids.map((x) => 'study_ids=' + x).join('&')}`,

@@ -20,6 +20,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
+import { useCampaign } from '../../app/CampaignProvider';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { todayDateOnly } from '../../lib/dates';
@@ -48,6 +49,7 @@ const submissionKey = () => {
 };
 export default function SurveyCapturePage() {
   const { campaignId = '', surveyId = '' } = useParams();
+  const { active } = useCampaign();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const survey = useQuery({
@@ -55,8 +57,10 @@ export default function SurveyCapturePage() {
     queryFn: () => apiRequest<Survey>('/campaigns/' + campaignId + '/surveys/' + surveyId),
   });
   const parishes = useQuery({
-    queryKey: ['parishes'],
-    queryFn: () => apiRequest<{ id: number; name: string }[]>('/parishes'),
+    queryKey: ['parishes', active?.canton_id],
+    queryFn: () =>
+      apiRequest<{ id: number; name: string }[]>('/parishes?canton_id=' + active!.canton_id),
+    enabled: Boolean(active?.canton_id),
   });
   const {
     control,

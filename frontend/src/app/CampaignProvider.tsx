@@ -1,13 +1,29 @@
 import { createContext, useContext, useMemo, useState } from 'react';
-import { queryClient } from './queryClient';
-type Campaign = { id: string; name: string; slug?: string };
-type Value = { active: Campaign | null; setActive: (campaign: Campaign | null) => void };
+import { useQueryClient } from '@tanstack/react-query';
+export type ActiveCampaign = {
+  id: string;
+  name: string;
+  slug?: string;
+  canton_id: number;
+  canton_name?: string | null;
+  province_id?: number | null;
+  province_name?: string | null;
+  office_type: string;
+  election_name: string;
+  election_date: string;
+  status: string;
+};
+type Value = {
+  active: ActiveCampaign | null;
+  setActive: (campaign: ActiveCampaign | null) => void;
+};
 const CampaignContext = createContext<Value | null>(null);
 export function CampaignProvider({ children }: { children: React.ReactNode }) {
-  const [active, setValue] = useState<Campaign | null>(() => {
+  const queryClient = useQueryClient();
+  const [active, setValue] = useState<ActiveCampaign | null>(() => {
     try {
       const stored = sessionStorage.getItem('territorio.activeCampaign');
-      return stored ? (JSON.parse(stored) as Campaign) : null;
+      return stored ? (JSON.parse(stored) as ActiveCampaign) : null;
     } catch {
       return null;
     }
@@ -15,14 +31,14 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       active,
-      setActive: (campaign: Campaign | null) => {
+      setActive: (campaign: ActiveCampaign | null) => {
         setValue(campaign);
         if (campaign) sessionStorage.setItem('territorio.activeCampaign', JSON.stringify(campaign));
         else sessionStorage.removeItem('territorio.activeCampaign');
-        queryClient.removeQueries({ queryKey: ['campaign'] });
+        queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'campaigns' });
       },
     }),
-    [active],
+    [active, queryClient],
   );
   return <CampaignContext.Provider value={value}>{children}</CampaignContext.Provider>;
 }

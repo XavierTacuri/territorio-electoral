@@ -22,6 +22,9 @@ export type CampaignSummary = {
   name: string;
   slug: string;
   canton_id: number;
+  canton_name?: string | null;
+  province_id?: number | null;
+  province_name?: string | null;
   office_type: OfficeType;
   election_name: string;
   election_date: string;

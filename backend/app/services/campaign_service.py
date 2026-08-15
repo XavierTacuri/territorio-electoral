@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.campaign import Campaign
-from app.models.territory import Canton
+from app.models.territory import Canton,Province
 from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignListResponse, CampaignSummary, CampaignUpdate
 from app.services.campaign_access_service import CampaignAccessService
@@ -29,8 +29,9 @@ class CampaignService:
         if office_type:filters.append(Campaign.office_type==office_type)
         if is_active is not None:filters.append(Campaign.is_active.is_(is_active))
         total=self.db.scalar(select(func.count()).select_from(Campaign).where(*filters)) or 0
-        items=list(self.db.scalars(select(Campaign).where(*filters).order_by(Campaign.election_date,Campaign.slug).offset((page-1)*size).limit(size)))
-        return CampaignListResponse(items=[CampaignSummary.model_validate(x) for x in items],page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
+        rows=list(self.db.execute(select(Campaign,Canton,Province).join(Canton,Canton.id==Campaign.canton_id).join(Province,Province.id==Canton.province_id).where(*filters).order_by(Campaign.election_date,Campaign.slug).offset((page-1)*size).limit(size)))
+        items=[CampaignSummary.model_validate({**{column.name:getattr(campaign,column.name) for column in campaign.__table__.columns},"canton_name":canton.name,"province_id":province.id,"province_name":province.name}) for campaign,canton,province in rows]
+        return CampaignListResponse(items=items,page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
     def get(self,id:UUID,user:User):return self.access.require_access(id,user)
     def update(self,id:UUID,data:CampaignUpdate,actor:User):
         obj=self.access.require_access(id,actor)

@@ -20,9 +20,10 @@ router = APIRouter(tags=['participation'])
 def current_election_analysis(campaign_id: UUID, user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
     campaign = db.get(Campaign, campaign_id)
     if not campaign: raise HTTPException(404, 'Campaña inexistente')
-    CampaignAccessService(db).require_access(campaign_id, user)
-    snapshot = db.scalar(select(ElectoralRollSnapshot).where(ElectoralRollSnapshot.is_final.is_(True)).order_by(ElectoralRollSnapshot.snapshot_date.desc()))
+    try: CampaignAccessService(db).require_access(campaign_id, user)
+    except PermissionError as exc: raise HTTPException(403, str(exc)) from exc
     run = db.scalar(select(ParticipationProjectionRun).where(ParticipationProjectionRun.campaign_id == campaign_id).order_by(ParticipationProjectionRun.created_at.desc()))
+    snapshot = db.get(ElectoralRollSnapshot, run.snapshot_id) if run else None
     if not snapshot or not run: raise HTTPException(404, 'Datos de elección actual incompletos')
     entries = list(db.scalars(select(ElectoralRollSnapshotEntry).where(ElectoralRollSnapshotEntry.snapshot_id == snapshot.id, ElectoralRollSnapshotEntry.geography_level == 'PARISH', ElectoralRollSnapshotEntry.canton_id == campaign.canton_id)))
     parish_ids = [e.parish_id for e in entries if e.parish_id is not None]
@@ -98,7 +99,9 @@ def create_projection(campaign_id: UUID, snapshot_id: UUID, process_ids: list[UU
     except (BusinessRuleError, NotFoundError) as exc: raise HTTPException(400 if isinstance(exc, BusinessRuleError) else 404, str(exc))
 
 @router.get('/campaigns/{campaign_id}/participation-projections/latest')
-def latest_projection(campaign_id: UUID, _: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+def latest_projection(campaign_id: UUID, user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    try: CampaignAccessService(db).require_access(campaign_id, user)
+    except PermissionError as exc: raise HTTPException(403, str(exc)) from exc
     run = ParticipationProjectionService(db).latest(campaign_id)
     if not run: raise HTTPException(404, 'Proyección inexistente')
     return {'run': ParticipationProjectionRunRead.model_validate(run), 'results': [ParticipationProjectionResultRead.model_validate(x) for x in ParticipationProjectionService(db).results(run.id)]}

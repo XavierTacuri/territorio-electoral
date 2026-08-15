@@ -40,7 +40,9 @@ class TerritoryAIEvidenceRetriever:
         return out
     def _cne(self,cid,user,plan,pids,question):
         campaign=self.db.get(Campaign,cid)
+        run=self.db.scalar(select(ParticipationProjectionRun).where(ParticipationProjectionRun.campaign_id==cid).order_by(ParticipationProjectionRun.created_at.desc()))
         q=select(ElectoralRollSnapshotEntry,ElectoralRollSnapshot,DataSource,Parish).join(ElectoralRollSnapshot,ElectoralRollSnapshot.id==ElectoralRollSnapshotEntry.snapshot_id).join(DataSource,DataSource.id==ElectoralRollSnapshot.source_id).outerjoin(Parish,Parish.id==ElectoralRollSnapshotEntry.parish_id).where(ElectoralRollSnapshot.status.in_(["PUBLISHED","VALIDATED","IMPORTED"]),ElectoralRollSnapshotEntry.geography_level=="PARISH",ElectoralRollSnapshotEntry.canton_id==campaign.canton_id)
+        if run:q=q.where(ElectoralRollSnapshotEntry.snapshot_id==run.snapshot_id)
         if pids is not None:q=q.where(ElectoralRollSnapshotEntry.parish_id.in_(pids))
         rows=self.db.execute(q.order_by(ElectoralRollSnapshot.snapshot_date.desc())).all();latest={}
         for entry,snapshot,source,parish in rows:latest.setdefault(entry.parish_id,(entry,snapshot,source,parish))

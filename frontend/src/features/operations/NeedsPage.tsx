@@ -17,6 +17,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
+import { useCampaign } from '../../app/CampaignProvider';
 import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -40,6 +41,7 @@ type NeedForm = {
 };
 export default function NeedsPage() {
   const { campaignId = '' } = useParams();
+  const { active } = useCampaign();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [parishFilter, setParishFilter] = useState(searchParams.get('parish_id') ?? '');
@@ -70,8 +72,9 @@ export default function NeedsPage() {
       apiRequest<Page<Activity>>('/campaigns/' + campaignId + '/activities?page_size=100'),
   });
   const parishes = useQuery({
-    queryKey: ['parishes'],
-    queryFn: () => apiRequest<Parish[]>('/parishes'),
+    queryKey: ['parishes', active?.canton_id],
+    queryFn: () => apiRequest<Parish[]>('/parishes?canton_id=' + active!.canton_id),
+    enabled: Boolean(active?.canton_id),
   });
   const {
     register,

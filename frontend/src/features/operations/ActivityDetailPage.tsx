@@ -48,7 +48,7 @@ export default function ActivityDetailPage() {
     queryFn: () => apiRequest<Activity>('/campaigns/' + campaignId + '/activities/' + activityId),
   });
   const participants = useQuery({
-    queryKey: ['activity', activityId, 'participants'],
+    queryKey: ['activity', campaignId, activityId, 'participants'],
     queryFn: () =>
       apiRequest<Participants>(
         '/campaigns/' + campaignId + '/activities/' + activityId + '/participant-summary',
@@ -56,12 +56,12 @@ export default function ActivityDetailPage() {
     retry: false,
   });
   const needs = useQuery({
-    queryKey: ['activity', activityId, 'needs'],
+    queryKey: ['activity', campaignId, activityId, 'needs'],
     queryFn: () =>
       apiRequest<Page<Need>>('/campaigns/' + campaignId + '/activities/' + activityId + '/needs'),
   });
   const evidence = useQuery({
-    queryKey: ['activity', activityId, 'evidence'],
+    queryKey: ['activity', campaignId, activityId, 'evidence'],
     queryFn: () =>
       apiRequest<Evidence[]>(
         '/campaigns/' + campaignId + '/activities/' + activityId + '/evidence',
@@ -123,7 +123,7 @@ export default function ActivityDetailPage() {
       body: unknown;
     }) => apiRequest(path, { method, body: JSON.stringify(body) }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['activity', activityId] });
+      queryClient.invalidateQueries({ queryKey: ['activity', campaignId, activityId] });
       setDialog(null);
     },
   });
