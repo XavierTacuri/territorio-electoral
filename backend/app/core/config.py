@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     alert_max_open_per_campaign: int = 1000
     alert_default_inactivity_days: int = 14
     alert_default_data_stale_days: int = 365
+    public_fetch_timeout_seconds: int = 15
+    public_fetch_max_bytes: int = 5000000
+    public_fetch_user_agent: str = "TerritorioElectoral-PublicIntelligence/2.5"
+    public_fetch_allow_private_hosts: bool = False
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     @model_validator(mode="after")

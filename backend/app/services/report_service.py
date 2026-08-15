@@ -48,6 +48,7 @@ class ReportService:
     def _sections(self,data):
         if "survey_study" in data:return self._survey_study_sections(data["survey_study"])
         if "current_election" in data:return self._current_election_sections(data["current_election"])
+        if "public_intelligence" in data:return self._public_intelligence_sections(data["public_intelligence"])
         sections=[];overview=data["overview"]
         sections.append({"title":"Resumen","text":overview.get("summary_text","Resumen agregado de campaña."),"headers":["Indicador","Valor","Unidad"],"rows":flatten_metrics(overview)})
         detail=data.get("detail")
@@ -64,6 +65,39 @@ class ReportService:
             if value:sections.append({"title":key.title(),"headers":["Elemento","Valor"],"rows":[[k,v] for k,v in value.items() if not isinstance(v,list)]})
         sections.append({"title":"Metodología","text":"Información agregada obtenida de los módulos autorizados. No se aplican predicciones, perfilamiento ni recomendaciones políticas.","headers":[],"rows":[]})
         return sections
+    def _public_intelligence_sections(self,data):
+        summary=data["summary"]
+        publications=data["publications"]
+        return [
+            {"title":"Resumen","headers":["Indicador","Valor"],"rows":[
+                ["Fuentes activas",summary["active_sources"]],
+                ["Fuentes oficiales",summary["official_sources"]],
+                ["Publicaciones últimas 24 h",summary["items_last_24h"]],
+                ["Publicaciones últimos 7 días",summary["items_last_7_days"]],
+                ["Fuentes con error",summary["sources_with_error"]],
+                ["Última actualización",summary.get("last_update")],
+            ]},
+            {"title":"Fuentes","headers":["Fuente","Publisher","Tipo","Oficial","URL","Último éxito"],"rows":[
+                [source["name"],source["publisher"],source["source_type"],"Sí" if source["official"] else "No",source["base_url"],source.get("last_success_at")]
+                for source in data["sources"]
+            ]},
+            {"title":"Publicaciones","headers":["Título","Publisher","Fuente","Publicado","Tipo","URL","Resumen"],"rows":[
+                [item["title"],item["publisher"],item["source_name"],item.get("published_at"),item["item_type"],item["url"],item.get("summary")]
+                for item in publications
+            ]},
+            {"title":"Temas","headers":["Publicación","Tema"],"rows":[
+                [item["title"],topic["name"]] for item in publications for topic in item["topics"]
+            ]},
+            {"title":"Territorios","headers":["Publicación","Parroquia","Método","Confianza geográfica"],"rows":[
+                [item["title"],territory["name"],territory["association_method"],territory.get("confidence")]
+                for item in publications for territory in item["territories"]
+            ]},
+            {"title":"Actualizaciones","headers":["Publicación","Consultado","Cambio detectado"],"rows":[
+                [item["title"],revision["fetched_at"],"Sí" if revision["change_detected"] else "No"]
+                for item in publications for revision in item["revisions"]
+            ]},
+            {"title":"Metodología","text":data["methodology"],"headers":[],"rows":[]},
+        ]
     def _survey_study_sections(self,s):
         warning="Los resultados representan respuestas agregadas de una muestra y no constituyen resultados electorales oficiales ni garantía de comportamiento electoral futuro."
         options={str(o["id"]):o for o in s["options"]};territories={str(t["id"]):t for t in s["territories"]}
@@ -92,7 +126,7 @@ class ReportService:
             if request.format.value=="PDF":ReportPDFService(settings.report_pdf_max_table_rows).render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             else:ReportExcelService().render(tmp_path,request.title,campaign.name,request.report_date,(request.date_from,request.date_to),sections)
             stored_key,size,digest=self.storage.store(tmp_path,suffix[1:]);tmp_path=None
-            prefix="estudio-territorial" if request.template_code=="SURVEY_STUDY_REPORT" else "ficha-territorial" if request.template_code=="PARISH_TERRITORIAL_PROFILE" else "informe-ejecutivo-eleccion-actual"
+            prefix="estudio-territorial" if request.template_code=="SURVEY_STUDY_REPORT" else "ficha-territorial" if request.template_code=="PARISH_TERRITORIAL_PROFILE" else "inteligencia-publica" if request.template_code=="PUBLIC_INTELLIGENCE_REPORT" else "informe-ejecutivo-eleccion-actual"
             artifact=ReportArtifact(report_run_id=run.id,format=request.format.value,original_download_name=f"{prefix}-{request.report_date.strftime('%d-%m-%Y')}{suffix}",storage_key=stored_key,mime_type="application/pdf" if suffix==".pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",size_bytes=size,sha256=digest,expires_on=request.report_date+timedelta(days=settings.report_artifact_retention_days),is_available=True,is_active=True)
             self.artifacts.add(artifact);run.status="COMPLETED";run.finished_at=datetime.now().astimezone();self.db.commit();return run
         except Exception as exc:

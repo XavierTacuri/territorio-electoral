@@ -209,6 +209,23 @@ export default function TerritorialIntelligencePage() {
       ),
     enabled: !!campaignId && !!parishId,
   });
+  const publicItems = useQuery({
+    queryKey: ['territory-public-items', campaignId, parishId],
+    queryFn: () =>
+      apiRequest<{
+        items: {
+          id: string;
+          title: string;
+          source_name: string;
+          published_at?: string | null;
+          topics: { name: string }[];
+        }[];
+      }>(
+        `/campaigns/${campaignId}/public-intelligence/items?parish_id=${parishId}&page=1&page_size=5`,
+      ),
+    enabled: !!campaignId && !!parishId,
+    retry: 1,
+  });
   const selected = analysis.data?.parishes.find((item) => String(item.parish_id) === parishId);
   const parishStudies = selected ? (studies.data?.items ?? []) : [];
   const operationByParish = useMemo(
@@ -310,6 +327,8 @@ export default function TerritorialIntelligencePage() {
             onSelectId={(id) => select(data.parishes.find((p) => p.parish_id === id) ?? null)}
             reportStatus={reportStatus}
             generate={generate}
+            publicItems={publicItems.data?.items}
+            publicItemsError={publicItems.isError}
           />
           <Box sx={{ mt: 2 }}>
             <Card title="ENCUESTAS Y ESTUDIOS" eyebrow="RESULTADOS AGREGADOS PUBLICADOS">
@@ -361,6 +380,8 @@ function TerritoryProfile({
   onSelectId,
   reportStatus,
   generate,
+  publicItems,
+  publicItemsError,
 }: {
   parish: Parish;
   data: Analysis;
@@ -370,6 +391,14 @@ function TerritoryProfile({
   onSelectId: (id: number) => void;
   reportStatus: string;
   generate: (format: 'PDF' | 'XLSX') => Promise<void>;
+  publicItems?: {
+    id: string;
+    title: string;
+    source_name: string;
+    published_at?: string | null;
+    topics: { name: string }[];
+  }[];
+  publicItemsError: boolean;
 }) {
   const totalPopulation = parish.demographics.POP_TOTAL ?? 0;
   const history = [
@@ -723,6 +752,44 @@ function TerritoryProfile({
                 </Grid>
               </>
             )}
+          </Card>
+        </Grid>
+        <Grid size={12}>
+          <Card title="INFORMACIÓN PÚBLICA RECIENTE">
+            {publicItemsError ? (
+              <Alert severity="warning">
+                No fue posible cargar la información pública; el resto de la ficha permanece
+                disponible.
+              </Alert>
+            ) : !publicItems?.length ? (
+              <Typography color="text.secondary">
+                No hay publicaciones públicas asociadas a esta parroquia.
+              </Typography>
+            ) : (
+              publicItems.map((item) => (
+                <Stack
+                  key={item.id}
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={1}
+                  sx={{ py: 1 }}
+                >
+                  <Typography fontWeight={700}>{item.title}</Typography>
+                  <Typography color="text.secondary">
+                    {item.source_name} ·{' '}
+                    {item.published_at
+                      ? formatDateEsEc(item.published_at.slice(0, 10))
+                      : 'Sin fecha'}{' '}
+                    · {item.topics[0]?.name ?? 'Sin tema'}
+                  </Typography>
+                </Stack>
+              ))
+            )}
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/public-intelligence?parish_id=${parish.parish_id}`}
+            >
+              VER INTELIGENCIA PÚBLICA DE ESTA PARROQUIA
+            </Button>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, lg: 7 }}>

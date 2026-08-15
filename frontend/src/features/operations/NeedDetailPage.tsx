@@ -22,6 +22,7 @@ import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
 import type { Commitment, Need, Page, Parish } from './types';
+import type { PublicItem } from '../public-intelligence/types';
 type History = {
   id: string;
   event_type: string;
@@ -58,6 +59,11 @@ export default function NeedDetailPage() {
   const parishes = useQuery({
     queryKey: ['parishes'],
     queryFn: () => apiRequest<Parish[]>('/parishes'),
+  });
+  const publicItems = useQuery({
+    queryKey: ['need-public-items', campaignId, needId],
+    queryFn: () =>
+      apiRequest<PublicItem[]>(`/campaigns/${campaignId}/needs/${needId}/public-intelligence`),
   });
   const action = useMutation({
     mutationFn: ({ path, body }: { path: string; body?: unknown }) =>
@@ -116,6 +122,30 @@ export default function NeedDetailPage() {
           </Card>
         </Grid>
       </Grid>
+      <Typography variant="h2" sx={{ mt: 3 }}>
+        Fuentes públicas relacionadas
+      </Typography>
+      {!publicItems.data?.length && (
+        <Typography color="text.secondary">
+          No existen fuentes públicas vinculadas manualmente.
+        </Typography>
+      )}
+      {publicItems.data?.map((item) => (
+        <Card variant="outlined" key={item.id} sx={{ mt: 1 }}>
+          <CardContent>
+            <Typography fontWeight={700}>{item.title}</Typography>
+            <Typography>
+              {item.source_name} · {item.publisher}
+            </Typography>
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/public-intelligence/${item.id}`}
+            >
+              Ver fuente pública
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ my: 2 }}>
         {['REPORTED', 'IDENTIFIED'].includes(n.status) && (
           <Button

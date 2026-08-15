@@ -30,7 +30,7 @@ def phase9_context(db,admin):
 
 
 def test_seed_reports_and_alerts_is_idempotent(db):
-    assert seed(db)==(13,28);db.commit();assert seed(db)==(13,28);db.commit()
+    assert seed(db)==(14,32);db.commit();assert seed(db)==(14,32);db.commit()
     assert len(list(db.scalars(select(ReportTemplate))))==len(TEMPLATE_NAMES)
     assert len(list(db.scalars(select(AlertRule))))==len(RULES)
 
@@ -96,7 +96,7 @@ def test_report_and_alert_http_require_auth(client,phase9_context):
 
 def test_template_http_and_alert_evaluation(client,admin_headers,phase9_context):
     campaign,_=phase9_context
-    templates=client.get("/api/v1/report-templates",headers=admin_headers);assert templates.status_code==200 and len(templates.json())==13
+    templates=client.get("/api/v1/report-templates",headers=admin_headers);assert templates.status_code==200 and len(templates.json())==14
     assert "PARISH_TERRITORIAL_PROFILE" in {item["code"] for item in templates.json()}
     evaluated=client.post(f"/api/v1/campaigns/{campaign.id}/alerts/evaluate",headers=admin_headers,json={"rule_codes":["OVERDUE_COMMITMENT"],"as_of_date":"2026-08-03"});assert evaluated.status_code==200
     body=evaluated.text;assert "created_at" not in body and "updated_at" not in body
