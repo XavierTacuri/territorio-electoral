@@ -1,6 +1,6 @@
 import { Alert, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -22,6 +22,14 @@ export default function PublicItemDetailPage() {
       <PageHeader
         title="INTELIGENCIA PÚBLICA — DETALLE"
         description="Referencia documental trazable y fechada."
+        action={
+          <Button
+            component={RouterLink}
+            to={`/app/campaigns/${campaignId}/territory-ai?public_item_id=${itemId}&question=${encodeURIComponent(`Resume la publicación ${x.title}`)}`}
+          >
+            Preguntar sobre esta publicación
+          </Button>
+        }
       />
       <Card variant="outlined">
         <CardContent>

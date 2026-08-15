@@ -38,6 +38,7 @@ export function AppShell() {
     ['Campañas', '/app/campaigns'],
     ['Inteligencia territorial', selectedId ? base + '/territories' : '/app/campaigns'],
     ['Inteligencia pública', selectedId ? base + '/public-intelligence' : '/app/campaigns'],
+    ['Territorio IA · PRO', selectedId ? base + '/territory-ai' : '/app/campaigns'],
     ['Operación territorial', selectedId ? base + '/operations' : '/app/campaigns'],
     ['Actividades', selectedId ? base + '/activities' : '/app/campaigns'],
     ['Necesidades', selectedId ? base + '/needs' : '/app/campaigns'],
@@ -54,6 +55,7 @@ export function AppShell() {
     ['Roles', '/app/admin/roles'],
     ['Asignaciones', '/app/admin/assignments'],
     ['Fuentes de datos', '/app/admin/data-sources'],
+    ['Licencia y funcionalidades', '/app/admin/feature-entitlements'],
   ];
   const officialDataItems = [
     ['Importar CNE', '/app/admin/official-data/cne'],

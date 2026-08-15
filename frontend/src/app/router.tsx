@@ -52,6 +52,8 @@ const AdminSources = lazy(() => import('../features/admin/SourcesPage'));
 const AdminTemplates = lazy(() => import('../features/admin/TemplatesPage'));
 const AdminAudit = lazy(() => import('../features/admin/AuditPage'));
 const AdminAssignments = lazy(() => import('../features/admin/AssignmentsPage'));
+const TerritoryAi = lazy(() => import('../features/territory-ai/TerritoryAiPage'));
+const FeatureEntitlements = lazy(() => import('../features/admin/FeatureEntitlementsPage'));
 const lazyElement = (node: React.ReactNode) => (
   <Suspense fallback={<LoadingSkeleton />}>{node}</Suspense>
 );
@@ -158,6 +160,7 @@ export const router = createBrowserRouter([
           { path: campaign.slice(5) + '/maps', element: lazyElement(<Map />) },
           { path: campaign.slice(5) + '/reports', element: lazyElement(<Reports />) },
           { path: campaign.slice(5) + '/alerts', element: lazyElement(<Alerts />) },
+          { path: campaign.slice(5) + '/territory-ai', element: lazyElement(<TerritoryAi />) },
           moduleRoute(
             campaign.slice(5) + '/alerts/:alertId',
             'Detalle de alerta',
@@ -221,6 +224,12 @@ export const router = createBrowserRouter([
           {
             path: 'admin/security-audit',
             element: <RoleGuard check={canManageUsers}>{lazyElement(<AdminAudit />)}</RoleGuard>,
+          },
+          {
+            path: 'admin/feature-entitlements',
+            element: (
+              <RoleGuard check={canManageUsers}>{lazyElement(<FeatureEntitlements />)}</RoleGuard>
+            ),
           },
         ],
       },

@@ -282,6 +282,16 @@ export default function TerritorialIntelligencePage() {
       <PageHeader
         title="INTELIGENCIA TERRITORIAL"
         description="Ficha, contexto y operación agregada por parroquia."
+        action={
+          selected ? (
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/territory-ai?parish_id=${selected.parish_id}&question=${encodeURIComponent(`Resume ${selected.name}`)}`}
+            >
+              Preguntar sobre esta parroquia
+            </Button>
+          ) : undefined
+        }
       />
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
