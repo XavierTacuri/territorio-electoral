@@ -21,6 +21,10 @@ const Operations = lazy(() => import('../features/operations/OperationsPage'));
 const Approvals = lazy(() => import('../features/operations/ApprovalsPage'));
 const Agenda = lazy(() => import('../features/operations/AgendaPage'));
 const NeedDetail = lazy(() => import('../features/operations/NeedDetailPage'));
+const PublicIntelligence = lazy(
+  () => import('../features/public-intelligence/PublicIntelligencePage'),
+);
+const PublicItemDetail = lazy(() => import('../features/public-intelligence/PublicItemDetailPage'));
 const Surveys = lazy(() => import('../features/surveys/SurveysPage'));
 const Questionnaires = lazy(() => import('../features/surveys/QuestionnairesPage'));
 const StudyDetail = lazy(() => import('../features/survey-studies/StudyDetailPage'));
@@ -108,6 +112,14 @@ export const router = createBrowserRouter([
           { path: campaign.slice(5) + '/approvals', element: lazyElement(<Approvals />) },
           { path: campaign.slice(5) + '/operations/agenda', element: lazyElement(<Agenda />) },
           { path: campaign.slice(5) + '/operations/map', element: lazyElement(<Map />) },
+          {
+            path: campaign.slice(5) + '/public-intelligence',
+            element: lazyElement(<PublicIntelligence />),
+          },
+          {
+            path: campaign.slice(5) + '/public-intelligence/:itemId',
+            element: lazyElement(<PublicItemDetail />),
+          },
           { path: campaign.slice(5) + '/surveys', element: lazyElement(<Surveys />) },
           {
             path: campaign.slice(5) + '/questionnaires',

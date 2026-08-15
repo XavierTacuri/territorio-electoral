@@ -1,0 +1,78 @@
+export type PublicSource = {
+  id: string;
+  campaign_id: string;
+  code: string;
+  name: string;
+  publisher: string;
+  source_type: string;
+  base_url: string;
+  feed_url?: string | null;
+  api_url?: string | null;
+  official: boolean;
+  active: boolean;
+  retrieval_method: string;
+  jurisdiction?: string | null;
+  refresh_interval_minutes?: number | null;
+  terms_notes?: string | null;
+  license_notes?: string | null;
+  last_fetch_at?: string | null;
+  last_success_at?: string | null;
+  consecutive_failures: number;
+  items_last_fetch: number;
+};
+export type FetchRun = {
+  id: string;
+  started_at: string;
+  finished_at?: string | null;
+  status: string;
+  items_discovered: number;
+  items_created: number;
+  items_updated: number;
+  items_unchanged: number;
+  items_failed: number;
+  error_summary?: string | null;
+  trigger_type: string;
+};
+export type PublicItem = {
+  id: string;
+  source_id: string;
+  source_name: string;
+  source_url: string;
+  publisher: string;
+  official: boolean;
+  title: string;
+  summary?: string | null;
+  item_type: string;
+  url: string;
+  canonical_url: string;
+  published_at?: string | null;
+  fetched_at: string;
+  author?: string | null;
+  content_excerpt?: string | null;
+  status: string;
+  topics: { code: string; name: string }[];
+  territories: {
+    parish_id: number;
+    name: string;
+    association_method: string;
+    confidence?: number | null;
+  }[];
+  revisions: { fetched_at: string; change_detected: boolean; content_hash: string }[];
+};
+export type ItemPage = {
+  items: PublicItem[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+export type PublicSummary = {
+  active_sources: number;
+  official_sources: number;
+  items_last_24h: number;
+  items_last_7_days: number;
+  new_documents: number;
+  sources_with_error: number;
+  last_update?: string | null;
+  latest_items: PublicItem[];
+};

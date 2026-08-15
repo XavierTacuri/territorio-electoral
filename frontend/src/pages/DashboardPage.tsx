@@ -143,7 +143,15 @@ function DashboardSkeleton() {
   );
 }
 
-function Metric({ label, value, detail }: { label: string; value: string; detail?: string }) {
+function Metric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail?: string;
+}) {
   return (
     <Box>
       <Typography variant="caption" color="text.secondary">
@@ -200,6 +208,18 @@ export default function DashboardPage() {
         `/campaigns/${campaignId}/survey-studies?status=PUBLISHED&page=1&page_size=3`,
       ),
     enabled: !!campaignId,
+  });
+  const publicIntelligence = useQuery({
+    queryKey: ['public-summary', campaignId],
+    queryFn: () =>
+      apiRequest<{
+        items_last_24h: number;
+        items_last_7_days: number;
+        sources_with_error: number;
+        latest_items: { id: string; title: string; source_name: string }[];
+      }>(`/campaigns/${campaignId}/public-intelligence/summary`),
+    enabled: !!campaignId,
+    retry: 1,
   });
   const data = analysis.data;
   const onMapSelect = useCallback(
@@ -339,6 +359,43 @@ export default function DashboardPage() {
             <Metric label="CORTE DEL REGISTRO" value={formatDateEsEc(current.snapshot_date)} />
           </Grid>
         </Grid>
+      </DashboardCard>
+      <DashboardCard sx={{ mb: 2 }}>
+        <SectionTitle eyebrow="DESCRIPTIVO · FUENTES TRAZABLES">INTELIGENCIA PÚBLICA</SectionTitle>
+        {publicIntelligence.isError ? (
+          <Alert severity="warning">No fue posible cargar la inteligencia pública.</Alert>
+        ) : (
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Metric label="Últimas 24 h" value={publicIntelligence.data?.items_last_24h ?? 0} />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Metric
+                label="Últimos 7 días"
+                value={publicIntelligence.data?.items_last_7_days ?? 0}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Metric
+                label="Fuentes con errores"
+                value={publicIntelligence.data?.sources_with_error ?? 0}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <Metric
+                label="Última publicación"
+                value={publicIntelligence.data?.latest_items[0]?.title ?? 'Sin publicaciones'}
+              />
+            </Grid>
+          </Grid>
+        )}
+        <Button
+          component={RouterLink}
+          to={executivePath(campaignId, 'public-intelligence')}
+          sx={{ mt: 1 }}
+        >
+          VER INTELIGENCIA PÚBLICA
+        </Button>
       </DashboardCard>
       <DashboardCard sx={{ mb: 2 }}>
         <SectionTitle eyebrow="DESCRIPTIVO · ESTUDIOS PUBLICADOS">ESTUDIOS RECIENTES</SectionTitle>

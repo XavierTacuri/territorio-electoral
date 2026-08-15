@@ -17,6 +17,7 @@ from app.api.routes.alerts import router as alerts_router
 from app.api.routes.security import router as security_router
 from app.api.routes.participation import router as participation_router
 from app.api.routes.survey_studies import router as survey_studies_router
+from app.api.routes.public_intelligence import router as public_intelligence_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -39,3 +40,4 @@ api_router.include_router(alerts_router)
 api_router.include_router(security_router)
 api_router.include_router(participation_router)
 api_router.include_router(survey_studies_router)
+api_router.include_router(public_intelligence_router)

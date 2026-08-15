@@ -30,6 +30,7 @@ services:
       BROWSER_ALLOWED_ORIGINS: http://localhost:15173
       TRUSTED_HOSTS: localhost,127.0.0.1,api
       REPORT_OUTPUT_DIR: /app/generated-reports
+      PUBLIC_FETCH_ALLOW_PRIVATE_HOSTS: "true"
     ports:
       - "18000:8000"
     volumes:
@@ -37,11 +38,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      public-fixture:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
       interval: 5s
       timeout: 3s
       retries: 20
+
+  public-fixture:
+    image: python:3.12-alpine
+    command: ["python", "-m", "http.server", "8080", "--directory", "/fixtures"]
+    volumes:
+      - ./backend/tests/fixtures/public_http:/fixtures:ro
 
   frontend:
     build: ./frontend

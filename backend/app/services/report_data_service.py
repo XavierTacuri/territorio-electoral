@@ -8,6 +8,10 @@ from sqlalchemy import select
 class ReportDataService:
     def __init__(self,db):self.dashboard=DashboardService(db)
     def collect(self,campaign_id,user,report_type,request,template_code=None):
+        if template_code == "PUBLIC_INTELLIGENCE_REPORT":
+            from app.services.public_intelligence_service import PublicIntelligenceService
+            service=PublicIntelligenceService(self.dashboard.db)
+            return {"public_intelligence":{"summary":service.summary(campaign_id,user).model_dump(mode="json"),"sources":[{"name":x.name,"publisher":x.publisher,"source_type":x.source_type,"official":x.official,"base_url":x.base_url,"last_success_at":x.last_success_at} for x in service.sources(campaign_id,user)],"publications":[x.model_dump(mode="json") for x in service.items(campaign_id,user,1,500,date_from=request.date_from,date_to=request.date_to).items],"methodology":"Monitoreo descriptivo con provenance; no mide favorabilidad, persuasión ni impacto electoral."}}
         if template_code == "SURVEY_STUDY_REPORT":
             from app.services.survey_study_service import SurveyStudyService
             if len(request.survey_ids)!=1: raise ValueError("El informe requiere exactamente un estudio")

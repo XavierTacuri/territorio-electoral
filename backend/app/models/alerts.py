@@ -14,7 +14,7 @@ JSON_VALUE = JSON().with_variant(JSONB, "postgresql")
 class AlertRule(Base):
     __tablename__ = "alert_rules"
     __table_args__ = (
-        CheckConstraint("module IN ('OPERATIONS','COMMITMENTS','SURVEYS','DATA_IMPORTS','ELECTORAL_DATA','DEMOGRAPHICS','GEOMETRY','DATA_QUALITY')", name="module"),
+        CheckConstraint("module IN ('OPERATIONS','COMMITMENTS','SURVEYS','DATA_IMPORTS','ELECTORAL_DATA','DEMOGRAPHICS','GEOMETRY','DATA_QUALITY','PUBLIC_INTELLIGENCE')", name="module"),
         CheckConstraint("default_severity IN ('INFO','WARNING','CRITICAL')", name="severity"),
         Index("ix_alert_rules_code", "code", unique=True),
         Index("ix_alert_rules_module", "module"),
