@@ -87,9 +87,17 @@ export default function NeedDetailPage() {
         title="Necesidad territorial"
         description={n.title}
         action={
-          <Button component={RouterLink} to={`/app/campaigns/${campaignId}/needs`}>
-            Volver
-          </Button>
+          <Stack direction="row">
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/territory-ai?need_id=${needId}&question=${encodeURIComponent(`Resume la necesidad ${n.title}`)}`}
+            >
+              Preguntar sobre este registro
+            </Button>
+            <Button component={RouterLink} to={`/app/campaigns/${campaignId}/needs`}>
+              Volver
+            </Button>
+          </Stack>
         }
       />
       <Grid container spacing={2}>

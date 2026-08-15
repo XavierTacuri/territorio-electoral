@@ -336,7 +336,18 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="TERRITORIO ELECTORAL" description="Dashboard ejecutivo de campaña" />
+      <PageHeader
+        title="TERRITORIO ELECTORAL"
+        description="Dashboard ejecutivo de campaña"
+        action={
+          <Button
+            component={RouterLink}
+            to={`/app/campaigns/${campaignId}/territory-ai?question=${encodeURIComponent('Resume el estado de la campaña')}`}
+          >
+            Preguntar a Territorio IA
+          </Button>
+        }
+      />
       {message && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {message}

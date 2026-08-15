@@ -63,6 +63,8 @@ class Settings(BaseSettings):
     public_fetch_max_bytes: int = 5000000
     public_fetch_user_agent: str = "TerritorioElectoral-PublicIntelligence/2.5"
     public_fetch_allow_private_hosts: bool = False
+    territory_ai_provider: str = "unavailable"
+    territory_ai_rate_limit_per_minute: int = 20
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     @model_validator(mode="after")
@@ -92,6 +94,11 @@ class Settings(BaseSettings):
             raise ValueError("El rango de zoom del mapa es inválido")
         if self.survey_min_aggregate_responses < 3:
             raise ValueError("SURVEY_MIN_AGGREGATE_RESPONSES debe ser al menos 3")
+        if self.territory_ai_rate_limit_per_minute <= 0:
+            raise ValueError("TERRITORY_AI_RATE_LIMIT_PER_MINUTE debe ser positivo")
+        self.territory_ai_provider = self.territory_ai_provider.strip().lower()
+        if self.territory_ai_provider not in {"unavailable", "fake"}:
+            raise ValueError("TERRITORY_AI_PROVIDER debe ser unavailable o fake")
         if not 0 <= self.survey_result_percentage_tolerance <= 0.02:
             raise ValueError("SURVEY_RESULT_PERCENTAGE_TOLERANCE debe estar entre 0 y 0.02")
         if self.app_env.lower() == "production" and self.survey_submission_hmac_secret.lower() in {"replace-with-secure-random-secret", "change-me", "secret", ""}:

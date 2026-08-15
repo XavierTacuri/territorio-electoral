@@ -136,9 +136,17 @@ export default function ActivityDetailPage() {
         title={item.title}
         description={'Actividad del ' + formatDateOnly(item.activity_date)}
         action={
-          <Button component={RouterLink} to={'/app/campaigns/' + campaignId + '/activities'}>
-            Volver
-          </Button>
+          <Stack direction="row">
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/territory-ai?activity_id=${activityId}&question=${encodeURIComponent(`Resume la actividad ${item.title}`)}`}
+            >
+              Preguntar sobre este registro
+            </Button>
+            <Button component={RouterLink} to={'/app/campaigns/' + campaignId + '/activities'}>
+              Volver
+            </Button>
+          </Stack>
         }
       />
       {item.approval_status === 'REJECTED' && (

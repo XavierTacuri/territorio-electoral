@@ -89,6 +89,12 @@ export default function StudyDetailPage() {
         description="Lectura descriptiva de resultados agregados; no constituye pronóstico electoral."
         action={
           <Stack direction="row" flexWrap="wrap">
+            <Button
+              component="a"
+              href={`/app/campaigns/${campaignId}/territory-ai?study_id=${studyId}&question=${encodeURIComponent(`Resume el estudio ${s.name}`)}`}
+            >
+              Preguntar sobre este estudio
+            </Button>
             <Button onClick={() => report.mutate('PDF')}>PDF</Button>
             <Button onClick={() => report.mutate('XLSX')}>XLSX</Button>
             {s.status === 'DRAFT' && (
