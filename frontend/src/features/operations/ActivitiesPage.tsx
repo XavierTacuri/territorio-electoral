@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
+import { useCampaign } from '../../app/CampaignProvider';
 import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -19,6 +20,7 @@ import {
 import type { Activity, Catalog, Page, Parish } from './types';
 export default function ActivitiesPage() {
   const { campaignId = '' } = useParams();
+  const { active } = useCampaign();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -40,8 +42,9 @@ export default function ActivitiesPage() {
     queryFn: () => apiRequest<Catalog[]>('/activity-types'),
   });
   const parishes = useQuery({
-    queryKey: ['parishes'],
-    queryFn: () => apiRequest<Parish[]>('/parishes'),
+    queryKey: ['parishes', active?.canton_id],
+    queryFn: () => apiRequest<Parish[]>('/parishes?canton_id=' + active!.canton_id),
+    enabled: Boolean(active?.canton_id),
   });
   const save = useMutation({
     mutationFn: (value: ActivityFormValue) =>

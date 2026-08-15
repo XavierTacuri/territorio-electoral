@@ -17,6 +17,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
+import { useCampaign } from '../../app/CampaignProvider';
 import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -41,24 +42,26 @@ const source: Record<string, string> = {
 };
 export default function NeedDetailPage() {
   const { campaignId = '', needId = '' } = useParams();
+  const { active } = useCampaign();
   const [commit, setCommit] = useState(false);
   const [title, setTitle] = useState('');
   const need = useQuery({
-    queryKey: ['need', needId],
+    queryKey: ['need', campaignId, needId],
     queryFn: () => apiRequest<Need>(`/campaigns/${campaignId}/needs/${needId}`),
   });
   const history = useQuery({
-    queryKey: ['need-history', needId],
+    queryKey: ['need-history', campaignId, needId],
     queryFn: () => apiRequest<History>(`/campaigns/${campaignId}/needs/${needId}/history`),
   });
   const commitments = useQuery({
-    queryKey: ['need-commitments', needId],
+    queryKey: ['need-commitments', campaignId, needId],
     queryFn: () =>
       apiRequest<Page<Commitment>>(`/campaigns/${campaignId}/commitments?page_size=100`),
   });
   const parishes = useQuery({
-    queryKey: ['parishes'],
-    queryFn: () => apiRequest<Parish[]>('/parishes'),
+    queryKey: ['parishes', active?.canton_id],
+    queryFn: () => apiRequest<Parish[]>('/parishes?canton_id=' + active!.canton_id),
+    enabled: Boolean(active?.canton_id),
   });
   const publicItems = useQuery({
     queryKey: ['need-public-items', campaignId, needId],
@@ -73,8 +76,8 @@ export default function NeedDetailPage() {
       }),
     onSuccess: async () => {
       setCommit(false);
-      await queryClient.invalidateQueries({ queryKey: ['need', needId] });
-      await queryClient.invalidateQueries({ queryKey: ['need-history', needId] });
+      await queryClient.invalidateQueries({ queryKey: ['need', campaignId, needId] });
+      await queryClient.invalidateQueries({ queryKey: ['need-history', campaignId, needId] });
     },
   });
   if (need.isLoading) return <LoadingSkeleton />;

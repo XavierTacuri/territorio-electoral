@@ -35,7 +35,7 @@ export default function StudyDetailPage() {
   const [tab, setTab] = useState(0);
   const [territory, setTerritory] = useState('');
   const query = useQuery({
-    queryKey: ['survey-study', studyId],
+    queryKey: ['survey-study', campaignId, studyId],
     queryFn: () => apiRequest<Study>(`/survey-studies/${studyId}`),
   });
   const action = useMutation({

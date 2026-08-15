@@ -43,6 +43,15 @@ from app.services.feature_entitlement_service import FeatureEntitlementService
 
 USERS = [("admin-e2e@example.com", "admin_e2e", "ADMIN"), ("manager-e2e@example.com", "manager_e2e", "CAMPAIGN_MANAGER"), ("coordinator-e2e@example.com", "coordinator_e2e", "TERRITORIAL_COORDINATOR"), ("delegate-a-e2e@example.com", "delegate_e2e_a", "TERRITORIAL_COORDINATOR"), ("delegate-b-e2e@example.com", "delegate_e2e_b", "TERRITORIAL_COORDINATOR"), ("analyst-e2e@example.com", "analyst_e2e", "ANALYST"), ("candidate-e2e@example.com", "candidate_e2e", "CANDIDATE")]
 
+def ensure_homonymous_parish(db,canton,suffix):
+    """Exercise identity by hierarchy: the same display name may exist in different cantons."""
+    dpa=f"{canton.dpa_code}{suffix}"
+    parish=db.scalar(select(Parish).where(Parish.dpa_code==dpa))
+    if not parish:
+        parish=Parish(canton_id=canton.id,code=suffix,dpa_code=dpa,name="Centro",parish_type="URBAN")
+        db.add(parish);db.flush()
+    return parish
+
 def ensure_current_election_fixture(db, admin):
     """Create a small deterministic territory used only by portable current-election E2E tests."""
     province=db.scalar(select(Province).where(Province.code=="99"))
@@ -165,7 +174,8 @@ def main():
     if not password: raise SystemExit("E2E_USER_PASSWORD es obligatorio")
     with SessionLocal() as db:
         users=ensure_users(db,password); admin=users["ADMIN"]
-        _,canton,parishes=seed_gualaceo(db); seed_catalogs(db); seed_reports_alerts(db); db.flush();synthetic_campaign,_,synthetic_parishes,synthetic_process=ensure_current_election_fixture(db,admin);ensure_survey_studies(db,admin,synthetic_campaign,synthetic_parishes,synthetic_process)
+        _,canton,parishes=seed_gualaceo(db); seed_catalogs(db); seed_reports_alerts(db); db.flush();synthetic_campaign,synthetic_canton,synthetic_parishes,synthetic_process=ensure_current_election_fixture(db,admin);ensure_survey_studies(db,admin,synthetic_campaign,synthetic_parishes,synthetic_process)
+        ensure_homonymous_parish(db,canton,"98");ensure_homonymous_parish(db,synthetic_canton,"98")
         synthetic_assignments=TerritorialAssignmentService(db)
         for username in ("manager_e2e","delegate_e2e_a","delegate_e2e_b"):
             member=users[username]

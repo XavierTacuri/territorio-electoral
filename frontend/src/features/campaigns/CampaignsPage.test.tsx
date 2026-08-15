@@ -59,6 +59,19 @@ const campaign = {
   description: null,
   candidate: null,
   is_active: true,
+  canton_name: 'Gualaceo',
+  province_id: 1,
+  province_name: 'Azuay',
+};
+const campaignBeta = {
+  ...campaign,
+  id: 'campaign-2',
+  name: 'CampaÃ±a Beta',
+  slug: 'campana-beta',
+  canton_id: 201,
+  canton_name: 'Guaranda',
+  province_id: 2,
+  province_name: 'BolÃ­var',
 };
 let campaigns: (typeof campaign)[] = [];
 let postStatus = 201;
@@ -137,7 +150,7 @@ function renderRoutes(path: string, page: React.ReactNode, selector = false) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return render(
+  const result = render(
     <QueryClientProvider client={client}>
       <CampaignProvider>
         <MemoryRouter initialEntries={[path]}>
@@ -155,12 +168,14 @@ function renderRoutes(path: string, page: React.ReactNode, selector = false) {
                 </>
               }
             />
+            <Route path="/app/campaigns/:campaignId/activities" element={<Location />} />
             <Route path="/403" element={<div>Acceso denegado</div>} />
           </Routes>
         </MemoryRouter>
       </CampaignProvider>
     </QueryClientProvider>,
   );
+  return { ...result, client };
 }
 async function choose(label: string, option: string) {
   await userEvent.click(screen.getByLabelText(label));
@@ -289,5 +304,21 @@ describe('módulo de campañas', () => {
     handlers();
     renderRoutes('/app/campaigns/new', <CampaignFormPage />);
     expect(await screen.findByText('Acceso denegado')).toBeVisible();
+  });
+  it('cambia de campaÃ±a, conserva el mÃ³dulo y elimina el cache anterior', async () => {
+    campaigns = [campaign, campaignBeta];
+    handlers();
+    const { client } = renderRoutes('/app/campaigns/campaign-1/activities', <div />, true);
+    await userEvent.click(screen.getByRole('combobox'));
+    const betaOption = await screen.findByRole('option', { name: /Beta/ });
+    client.setQueryData(['private-a', campaign.id], { value: 'A' });
+    await userEvent.click(betaOption);
+    await waitFor(() =>
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        '/app/campaigns/campaign-2/activities',
+      ),
+    );
+    expect(client.getQueryData(['private-a', campaign.id])).toBeUndefined();
+    expect(screen.getByRole('combobox')).toHaveTextContent(campaignBeta.name);
   });
 });
