@@ -8,11 +8,18 @@ export class ErrorBoundary extends React.Component<
   static getDerivedStateFromError(error: Error) {
     return { failed: true, error };
   }
+  private retry = () => this.setState({ failed: false, error: undefined });
   render() {
     if (this.state.failed)
       return (
         <>
-          <ErrorPage />
+          <ErrorPage message="No pudimos cargar esta sección." />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+            <button type="button" onClick={this.retry}>
+              Reintentar
+            </button>
+            <a href="/app">Volver al inicio</a>
+          </div>
           {import.meta.env.DEV && <pre>{this.state.error?.stack}</pre>}
         </>
       );
