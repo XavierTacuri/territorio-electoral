@@ -6,6 +6,8 @@ Inicio rápido: docker compose up --build -d inicia backend; docker compose --pr
 
 Las credenciales de desarrollo se proporcionan solo mediante variables. Las fechas funcionales usan YYYY-MM-DD y se visualizan DD/MM/AAAA en America/Guayaquil. Solo se procesan datos territoriales y encuestas anónimas agregadas; no hay identificación, predicción, perfilamiento ni recomendaciones políticas.
 
+Regla de interfaz: todo contenido visible al usuario debe estar en español. El código interno, los payloads de API y los enums persistidos pueden permanecer en inglés, pero la capa de presentación debe convertirlos en etiquetas y mensajes amigables. Los errores técnicos nunca deben mostrarse directamente y todo enum nuevo necesita un label en español antes de aparecer en la interfaz.
+
 Backend de Territorio Electoral para gestión territorial de campañas cantonales de Ecuador. Esta fase incorpora usuarios, roles, autenticación JWT y administración básica; no incluye frontend ni módulos electorales.
 
 ## Requisitos y configuración

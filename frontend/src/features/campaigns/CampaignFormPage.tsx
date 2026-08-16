@@ -16,6 +16,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { ApiError } from '../../api/errors';
 import { useCampaign } from '../../app/CampaignProvider';
+import { useOptionalOrganization } from '../../app/OrganizationProvider';
 import { useAuth } from '../../auth/AuthProvider';
 import { canAdministerCampaigns } from '../../auth/permissions';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -62,6 +63,7 @@ export default function CampaignFormPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { setActive } = useCampaign();
+  const activeOrganization = useOptionalOrganization()?.activeOrganization ?? null;
   const { user } = useAuth();
   const [error, setError] = useState('');
   const [slugEdited, setSlugEdited] = useState(false);
@@ -117,7 +119,10 @@ export default function CampaignFormPage() {
     mutationFn: (values: CampaignFormValues) =>
       apiRequest<CampaignSummary>(editing ? `/campaigns/${campaignId}` : '/campaigns', {
         method: editing ? 'PATCH' : 'POST',
-        body: JSON.stringify(toCampaignPayload(values, editing)),
+        body: JSON.stringify({
+          ...toCampaignPayload(values, editing),
+          ...(!editing && activeOrganization ? { organization_id: activeOrganization.id } : {}),
+        }),
       }),
     onSuccess: async (created) => {
       setError('');
@@ -151,7 +156,10 @@ export default function CampaignFormPage() {
     },
   });
 
-  if (!canAdministerCampaigns(user)) return <Navigate to="/403" replace />;
+  const canCreateInOrganization =
+    activeOrganization?.current_role === 'OWNER' || activeOrganization?.current_role === 'ADMIN';
+  if (!canAdministerCampaigns(user) && !canCreateInOrganization)
+    return <Navigate to="/403" replace />;
   if (editing && (campaign.isLoading || campaignCanton.isLoading)) return <LoadingSkeleton />;
   return (
     <>

@@ -19,6 +19,7 @@ from app.api.routes.participation import router as participation_router
 from app.api.routes.survey_studies import router as survey_studies_router
 from app.api.routes.public_intelligence import router as public_intelligence_router
 from app.api.routes.entitlements import router as entitlements_router
+from app.api.routes.organizations import router as organizations_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -43,3 +44,4 @@ api_router.include_router(participation_router)
 api_router.include_router(survey_studies_router)
 api_router.include_router(public_intelligence_router)
 api_router.include_router(entitlements_router)
+api_router.include_router(organizations_router)

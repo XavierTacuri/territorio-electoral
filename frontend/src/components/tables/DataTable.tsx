@@ -22,6 +22,7 @@ export function DataTable<T extends { id: string }>({
   onView,
   onEdit,
   label,
+  emptyTitle,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -29,9 +30,10 @@ export function DataTable<T extends { id: string }>({
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   label: string;
+  emptyTitle?: string;
 }) {
   if (loading) return <LoadingSkeleton />;
-  if (!rows.length) return <EmptyState />;
+  if (!rows.length) return <EmptyState title={emptyTitle} />;
   return (
     <TableContainer
       component={Paper}
