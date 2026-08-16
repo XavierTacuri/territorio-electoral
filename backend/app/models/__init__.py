@@ -20,3 +20,4 @@ from app.models.survey_study import SurveyStudy, SurveyStudyTerritory, SurveyStu
 from app.models.public_intelligence import PublicSource, PublicIntelligenceItem, PublicItemRevision, PublicSourceFetchRun, PublicTopic, PublicItemTopic, PublicItemTerritory, PublicItemNeedLink
 from app.models.entitlement import CampaignFeatureEntitlement, AiUsageEvent
 from app.models.territory_ai import TerritoryAIConversation, TerritoryAIMessage
+from app.models.organization import Organization, OrganizationMembership, OrganizationSubscription  # noqa: F401

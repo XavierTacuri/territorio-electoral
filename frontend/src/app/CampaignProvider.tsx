@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 export type ActiveCampaign = {
   id: string;
+  organization_id: string;
   name: string;
   slug?: string;
   canton_id: number;

@@ -14,24 +14,25 @@ from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundErro
 from app.services.territorial_assignment_service import TerritorialAssignmentService
 router=APIRouter(prefix="/campaigns",tags=["campaigns"])
 def fail(e):
+    if hasattr(e,"code"):return HTTPException(getattr(e,"status_code",403),detail={"code":e.code,"message":e.message})
     if isinstance(e,PermissionError):return HTTPException(403,str(e))
     if isinstance(e,NotFoundError):return HTTPException(404,str(e))
     if isinstance(e,ConflictError):return HTTPException(409,str(e))
     return HTTPException(400,str(e))
 @router.post("",response_model=CampaignSummary,status_code=201)
-def create(data:CampaignCreate,actor:User=Depends(require_admin),db:Session=Depends(get_db)):
+def create(data:CampaignCreate,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return CampaignService(db).create(data,actor)
     except Exception as e:raise fail(e)
 @router.get("",response_model=CampaignListResponse)
-def listing(page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),canton_id:int|None=None,status:CampaignStatus|None=None,office_type:OfficeType|None=None,is_active:bool|None=None,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
-    return CampaignService(db).list(actor,page,page_size,canton_id,status,office_type,is_active)
+def listing(page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),canton_id:int|None=None,status:CampaignStatus|None=None,office_type:OfficeType|None=None,is_active:bool|None=None,organization_id:UUID|None=None,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    return CampaignService(db).list(actor,page,page_size,canton_id,status,office_type,is_active,organization_id)
 @router.get("/{campaign_id}",response_model=CampaignRead)
 def get(campaign_id:UUID,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:
         campaign=CampaignService(db).get(campaign_id,actor);candidate=db.scalar(select(Candidate).where(Candidate.campaign_id==campaign_id)); data=CampaignSummary.model_validate(campaign).model_dump();data.update(start_date=campaign.start_date,end_date=campaign.end_date,description=campaign.description,candidate=candidate);return data
     except Exception as e:raise fail(e)
 @router.patch("/{campaign_id}",response_model=CampaignSummary)
-def update(campaign_id:UUID,data:CampaignUpdate,actor:User=Depends(require_admin),db:Session=Depends(get_db)):
+def update(campaign_id:UUID,data:CampaignUpdate,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return CampaignService(db).update(campaign_id,data,actor)
     except Exception as e:raise fail(e)
 @router.post("/{campaign_id}/candidate",response_model=CandidateRead,status_code=201)

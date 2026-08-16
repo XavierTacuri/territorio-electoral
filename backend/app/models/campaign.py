@@ -7,10 +7,11 @@ from app.db.base import Base
 
 class Campaign(Base):
     __tablename__ = "campaigns"
-    __table_args__ = (CheckConstraint("office_type IN ('MAYOR','URBAN_COUNCILOR','RURAL_COUNCILOR','PARISH_BOARD')", name="office_type"), CheckConstraint("status IN ('DRAFT','ACTIVE','COMPLETED','ARCHIVED')", name="status"), CheckConstraint("start_date IS NULL OR end_date IS NULL OR start_date <= end_date", name="date_range"), CheckConstraint("start_date IS NULL OR election_date >= start_date", name="election_after_start"), Index("ix_campaigns_slug", "slug", unique=True), Index("ix_campaigns_canton_id", "canton_id"))
+    __table_args__ = (CheckConstraint("office_type IN ('MAYOR','URBAN_COUNCILOR','RURAL_COUNCILOR','PARISH_BOARD')", name="office_type"), CheckConstraint("status IN ('DRAFT','ACTIVE','COMPLETED','ARCHIVED')", name="status"), CheckConstraint("start_date IS NULL OR end_date IS NULL OR start_date <= end_date", name="date_range"), CheckConstraint("start_date IS NULL OR election_date >= start_date", name="election_after_start"), Index("ix_campaigns_slug", "slug", unique=True), Index("ix_campaigns_canton_id", "canton_id"), Index("ix_campaigns_organization_id", "organization_id"))
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(180), nullable=False)
     slug: Mapped[str] = mapped_column(String(180), nullable=False)
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False, default=lambda: UUID("00000000-0000-0000-0000-000000002801"))
     canton_id: Mapped[int] = mapped_column(ForeignKey("cantons.id", ondelete="RESTRICT"), nullable=False)
     office_type: Mapped[str] = mapped_column(String(30), nullable=False)
     election_name: Mapped[str] = mapped_column(String(180), nullable=False)

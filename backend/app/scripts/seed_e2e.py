@@ -14,6 +14,7 @@ from app.models.assignments import CampaignUser, TerritorialAssignment
 from app.models.campaign import Campaign
 from app.models.historical import DataImportJob, DataSource, DemographicIndicator, DemographicObservation, ElectoralContest, ElectoralGeography, ElectoralProcess, ElectoralRollSnapshot, ElectoralRollSnapshotEntry, ElectoralTurnout, ParticipationProjectionResult, ParticipationProjectionRun
 from app.models.operational import CitizenNeed, Commitment, TerritorialActivity
+from app.models.organization import Organization, OrganizationMembership, OrganizationSubscription
 from app.models.public_intelligence import PublicIntelligenceItem,PublicItemTerritory,PublicSource
 from app.models.reports import ReportRun, ReportTemplate
 from app.models.survey import Survey
@@ -41,7 +42,69 @@ from app.services.territorial_assignment_service import TerritorialAssignmentSer
 from app.schemas.entitlement import EntitlementType,EntitlementUpsert,FeatureCode
 from app.services.feature_entitlement_service import FeatureEntitlementService
 
-USERS = [("admin-e2e@example.com", "admin_e2e", "ADMIN"), ("manager-e2e@example.com", "manager_e2e", "CAMPAIGN_MANAGER"), ("coordinator-e2e@example.com", "coordinator_e2e", "TERRITORIAL_COORDINATOR"), ("delegate-a-e2e@example.com", "delegate_e2e_a", "TERRITORIAL_COORDINATOR"), ("delegate-b-e2e@example.com", "delegate_e2e_b", "TERRITORIAL_COORDINATOR"), ("analyst-e2e@example.com", "analyst_e2e", "ANALYST"), ("candidate-e2e@example.com", "candidate_e2e", "CANDIDATE")]
+USERS = [("admin-e2e@example.com", "admin_e2e", "ADMIN"), ("platform-admin@example.test", "platform_admin", "ADMIN"), ("alpha-owner@example.test", "alpha_owner", "CAMPAIGN_MANAGER"), ("alpha-manager@example.test", "alpha_manager", "CAMPAIGN_MANAGER"), ("beta-owner@example.test", "beta_owner", "CAMPAIGN_MANAGER"), ("limit-owner@example.test", "limit_owner", "ANALYST"), ("cross-org@example.test", "cross_org_user", "ANALYST"), ("manager-e2e@example.com", "manager_e2e", "CAMPAIGN_MANAGER"), ("coordinator-e2e@example.com", "coordinator_e2e", "TERRITORIAL_COORDINATOR"), ("delegate-a-e2e@example.com", "delegate_e2e_a", "TERRITORIAL_COORDINATOR"), ("delegate-b-e2e@example.com", "delegate_e2e_b", "TERRITORIAL_COORDINATOR"), ("analyst-e2e@example.com", "analyst_e2e", "ANALYST"), ("candidate-e2e@example.com", "candidate_e2e", "CANDIDATE")]
+
+def ensure_saas_organizations(db,users,alpha_campaign,beta_campaign):
+    """Two deterministic commercial tenants layered over the V2.7 campaign fixtures."""
+    alpha=db.scalar(select(Organization).where(Organization.slug=="organization-alpha"))
+    if not alpha:
+        alpha=Organization(name="Organization Alpha",slug="organization-alpha",country="EC",timezone="America/Guayaquil");db.add(alpha);db.flush()
+    beta=db.scalar(select(Organization).where(Organization.slug=="organization-beta"))
+    if not beta:
+        beta=Organization(name="Organization Beta",slug="organization-beta",country="EC",timezone="America/Guayaquil");db.add(beta);db.flush()
+    user_limit=db.scalar(select(Organization).where(Organization.slug=="organization-user-limit"))
+    if not user_limit:
+        user_limit=Organization(name="Organization User Limit",slug="organization-user-limit",country="EC",timezone="America/Guayaquil");db.add(user_limit);db.flush()
+    for organization,plan,max_campaigns,max_users in ((alpha,"PRO",5,10),(beta,"STANDARD",1,5)):
+        subscription=db.scalar(select(OrganizationSubscription).where(OrganizationSubscription.organization_id==organization.id))
+        if not subscription:
+            subscription=OrganizationSubscription(organization_id=organization.id,plan_code=plan,status="ACTIVE",max_campaigns=max_campaigns,max_users=max_users);db.add(subscription)
+        else:
+            subscription.plan_code=plan;subscription.status="ACTIVE";subscription.max_campaigns=max_campaigns;subscription.max_users=max_users
+    limit_subscription=db.scalar(select(OrganizationSubscription).where(OrganizationSubscription.organization_id==user_limit.id))
+    if not limit_subscription:
+        db.add(OrganizationSubscription(organization_id=user_limit.id,plan_code="STANDARD",status="ACTIVE",max_campaigns=1,max_users=1))
+    else:
+        limit_subscription.plan_code="STANDARD";limit_subscription.status="ACTIVE";limit_subscription.max_campaigns=1;limit_subscription.max_users=1
+    alpha_campaign.organization_id=alpha.id;beta_campaign.organization_id=beta.id
+    # Remove memberships that the legacy "all users" fixture may have created
+    # before these explicit SaaS personas existed.
+    for username in ("alpha_owner","alpha_manager","beta_owner","cross_org_user"):
+        stale=list(db.scalars(select(OrganizationMembership).where(OrganizationMembership.user_id==users[username].id,~OrganizationMembership.organization_id.in_((alpha.id,beta.id)))))
+        for membership in stale:db.delete(membership)
+    for username in ("alpha_owner","alpha_manager"):
+        stale_campaign=db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==beta_campaign.id,CampaignUser.user_id==users[username].id))
+        if stale_campaign:db.delete(stale_campaign)
+        stale_membership=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==beta.id,OrganizationMembership.user_id==users[username].id))
+        if stale_membership:db.delete(stale_membership)
+    stale_beta_alpha=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==alpha.id,OrganizationMembership.user_id==users["beta_owner"].id))
+    if stale_beta_alpha:db.delete(stale_beta_alpha)
+    for campaign in (alpha_campaign,beta_campaign):
+        if not db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==campaign.id,CampaignUser.user_id==users["cross_org_user"].id)):
+            db.add(CampaignUser(campaign_id=campaign.id,user_id=users["cross_org_user"].id,assigned_by_user_id=users["ADMIN"].id,is_active=True))
+    membership_specs=((alpha,"alpha_owner","OWNER"),(alpha,"alpha_manager","ADMIN"),(alpha,"cross_org_user","MEMBER"),(beta,"beta_owner","OWNER"),(beta,"cross_org_user","MEMBER"))
+    for organization,username,role in membership_specs:
+        member=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==organization.id,OrganizationMembership.user_id==users[username].id))
+        if not member:db.add(OrganizationMembership(organization_id=organization.id,user_id=users[username].id,organization_role=role,status="ACTIVE"))
+        else:member.organization_role=role;member.status="ACTIVE"
+    stale_limit_owner=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==user_limit.id,OrganizationMembership.user_id==users["beta_owner"].id))
+    if stale_limit_owner:db.delete(stale_limit_owner)
+    limit_owner=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==user_limit.id,OrganizationMembership.user_id==users["limit_owner"].id))
+    if not limit_owner:db.add(OrganizationMembership(organization_id=user_limit.id,user_id=users["limit_owner"].id,organization_role="OWNER",status="ACTIVE"))
+    else:limit_owner.organization_role="OWNER";limit_owner.status="ACTIVE"
+    for username in ("manager_e2e","delegate_e2e_a","delegate_e2e_b"):
+        member=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==alpha.id,OrganizationMembership.user_id==users[username].id))
+        if not member:db.add(OrganizationMembership(organization_id=alpha.id,user_id=users[username].id,organization_role="MEMBER",status="ACTIVE"))
+    for username in ("manager_e2e","coordinator_e2e","analyst_e2e","candidate_e2e"):
+        member=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==beta.id,OrganizationMembership.user_id==users[username].id))
+        if not member:db.add(OrganizationMembership(organization_id=beta.id,user_id=users[username].id,organization_role="MEMBER",status="ACTIVE"))
+    db.flush()
+    return alpha,beta
+
+def ensure_initial_membership(db,campaign,user):
+    member=db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==campaign.organization_id,OrganizationMembership.user_id==user.id))
+    if not member:
+        db.add(OrganizationMembership(organization_id=campaign.organization_id,user_id=user.id,organization_role="MEMBER",status="ACTIVE"));db.flush()
 
 def ensure_homonymous_parish(db,canton,suffix):
     """Exercise identity by hierarchy: the same display name may exist in different cantons."""
@@ -180,6 +243,7 @@ def main():
         for username in ("manager_e2e","delegate_e2e_a","delegate_e2e_b"):
             member=users[username]
             if not db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==synthetic_campaign.id,CampaignUser.user_id==member.id)):synthetic_assignments.assign_user(synthetic_campaign.id,CampaignUserAssign(user_id=member.id),admin)
+            ensure_initial_membership(db,synthetic_campaign,member)
         for username,parish in (("delegate_e2e_a",synthetic_parishes[0]),("delegate_e2e_b",synthetic_parishes[1])):
             member=users[username]
             if not db.scalar(select(TerritorialAssignment).where(TerritorialAssignment.campaign_id==synthetic_campaign.id,TerritorialAssignment.user_id==member.id,TerritorialAssignment.parish_id==parish.id)):synthetic_assignments.create(synthetic_campaign.id,TerritorialAssignmentCreate(user_id=member.id,parish_id=parish.id),admin)
@@ -195,10 +259,12 @@ def main():
         campaign=db.scalar(select(Campaign).where(Campaign.slug=="gualaceo-e2e-2027"))
         if not campaign: campaign=CampaignService(db).create(CampaignCreate(name="Gualaceo E2E 2027",slug="gualaceo-e2e-2027",canton_id=canton.id,office_type="MAYOR",election_name="Elecciones sintéticas 2027",election_date=date(2027,2,14),start_date=date(2026,1,1),status="ACTIVE"),admin)
         assignments=TerritorialAssignmentService(db)
-        for user in users.values():
+        for username in ("admin_e2e","manager_e2e","coordinator_e2e","delegate_e2e_a","delegate_e2e_b","analyst_e2e","candidate_e2e","beta_owner","cross_org_user"):
+            user=users[username]
             member=db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==campaign.id,CampaignUser.user_id==user.id))
             if not member: assignments.assign_user(campaign.id,CampaignUserAssign(user_id=user.id),admin)
             elif not member.is_active: member.is_active=True
+            ensure_initial_membership(db,campaign,user)
         community=db.scalar(select(Community).where(Community.parish_id==parishes[0].id,Community.code=="E2E_COMMUNITY"))
         if not community:
             community=Community(parish_id=parishes[0].id,name="Comunidad sintetica E2E",code="E2E_COMMUNITY",is_official=False,is_active=True); db.add(community); db.flush()
@@ -241,6 +307,7 @@ def main():
         fingerprint=sha256(f"e2e:{campaign.id}".encode()).hexdigest()
         if not db.scalar(select(OperationalAlert).where(OperationalAlert.campaign_id==campaign.id,OperationalAlert.fingerprint==fingerprint)): db.add(OperationalAlert(alert_rule_id=rule.id,campaign_id=campaign.id,severity="INFO",status="OPEN",title="Alerta sintética E2E",message="Actividad agregada sin ubicación opcional.",detected_date=date(2026,8,3),last_seen_date=date(2026,8,3),parish_id=parishes[0].id,fingerprint=fingerprint,evidence={"count":1},is_active=True))
         ensure_territory_ai(db,admin,synthetic_campaign,campaign)
+        ensure_saas_organizations(db,users,synthetic_campaign,campaign)
         db.commit()
     print("Seed E2E sintético e idempotente completado")
 

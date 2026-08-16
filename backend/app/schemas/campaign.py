@@ -10,7 +10,7 @@ def clean(v:str)->str:
     if not v: raise ValueError("El valor no puede estar vacío")
     return v
 class CampaignCreate(BaseModel):
-    name:str; slug:str; canton_id:int; office_type:OfficeType; election_name:str; election_date:date; start_date:date|None=None; end_date:date|None=None; status:CampaignStatus=CampaignStatus.DRAFT; description:str|None=None; is_active:bool=True
+    name:str; slug:str; canton_id:int; organization_id:UUID|None=None; office_type:OfficeType; election_name:str; election_date:date; start_date:date|None=None; end_date:date|None=None; status:CampaignStatus=CampaignStatus.DRAFT; description:str|None=None; is_active:bool=True
     model_config=ConfigDict(extra="forbid")
     _names=field_validator("name","election_name")(clean)
     @field_validator("slug")
@@ -28,7 +28,7 @@ class CampaignUpdate(BaseModel):
     name:str|None=None; slug:str|None=None; office_type:OfficeType|None=None; election_name:str|None=None; election_date:date|None=None; start_date:date|None=None; end_date:date|None=None; status:CampaignStatus|None=None; description:str|None=None; is_active:bool|None=None
     model_config=ConfigDict(extra="forbid")
 class CampaignSummary(BaseModel):
-    id:UUID; name:str; slug:str; canton_id:int; canton_name:str|None=None; province_id:int|None=None; province_name:str|None=None; office_type:OfficeType; election_name:str; election_date:date; status:CampaignStatus; is_active:bool
+    id:UUID; name:str; slug:str; organization_id:UUID; canton_id:int; canton_name:str|None=None; province_id:int|None=None; province_name:str|None=None; office_type:OfficeType; election_name:str; election_date:date; status:CampaignStatus; is_active:bool
     model_config=ConfigDict(from_attributes=True)
 class CampaignRead(CampaignSummary):
     start_date:date|None; end_date:date|None; description:str|None; candidate:"CandidateRead|None"=None

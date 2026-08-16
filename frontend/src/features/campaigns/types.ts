@@ -19,6 +19,7 @@ export type Candidate = {
 };
 export type CampaignSummary = {
   id: string;
+  organization_id: string;
   name: string;
   slug: string;
   canton_id: number;

@@ -54,6 +54,12 @@ const AdminAudit = lazy(() => import('../features/admin/AuditPage'));
 const AdminAssignments = lazy(() => import('../features/admin/AssignmentsPage'));
 const TerritoryAi = lazy(() => import('../features/territory-ai/TerritoryAiPage'));
 const FeatureEntitlements = lazy(() => import('../features/admin/FeatureEntitlementsPage'));
+const Organizations = lazy(() => import('../features/admin/OrganizationsPage'));
+const OrganizationCreate = lazy(() => import('../features/organizations/OrganizationCreatePage'));
+const OrganizationOnboarding = lazy(
+  () => import('../features/organizations/OrganizationOnboardingPage'),
+);
+const OrganizationDetail = lazy(() => import('../features/organizations/OrganizationDetailPage'));
 const lazyElement = (node: React.ReactNode) => (
   <Suspense fallback={<LoadingSkeleton />}>{node}</Suspense>
 );
@@ -167,6 +173,34 @@ export const router = createBrowserRouter([
             'Evidencia e historial de acciones.',
             (id) => '/campaigns/' + id + '/alerts?page=1&page_size=20',
           ),
+          {
+            path: 'organization',
+            element: lazyElement(<OrganizationDetail />),
+          },
+          {
+            path: 'admin/organizations',
+            element: <RoleGuard check={canManageUsers}>{lazyElement(<Organizations />)}</RoleGuard>,
+          },
+          {
+            path: 'admin/organizations/new',
+            element: (
+              <RoleGuard check={canManageUsers}>{lazyElement(<OrganizationCreate />)}</RoleGuard>
+            ),
+          },
+          {
+            path: 'admin/organizations/onboarding',
+            element: (
+              <RoleGuard check={canManageUsers}>
+                {lazyElement(<OrganizationOnboarding />)}
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'admin/organizations/:organizationId',
+            element: (
+              <RoleGuard check={canManageUsers}>{lazyElement(<OrganizationDetail />)}</RoleGuard>
+            ),
+          },
           {
             path: 'admin/users',
             element: <RoleGuard check={canManageUsers}>{lazyElement(<AdminUsers />)}</RoleGuard>,

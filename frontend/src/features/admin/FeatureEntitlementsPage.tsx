@@ -3,6 +3,7 @@ import { Alert, Button, MenuItem, Paper, Stack, TextField, Typography } from '@m
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
+import { entitlementStatusLabels, entitlementTypeLabels, labelFor } from '../../lib/labels';
 type Feature = {
   enabled: boolean;
   entitlement_type: 'LICENSE' | 'TRIAL' | 'ADMIN_OVERRIDE';
@@ -48,9 +49,11 @@ export default function FeatureEntitlementsPage() {
             value={type}
             onChange={(e) => setType(e.target.value as Feature['entitlement_type'])}
           >
-            <MenuItem value="LICENSE">Licencia</MenuItem>
-            <MenuItem value="TRIAL">Prueba</MenuItem>
-            <MenuItem value="ADMIN_OVERRIDE">Excepción administrativa</MenuItem>
+            {Object.entries(entitlementTypeLabels).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
             type="datetime-local"
@@ -68,7 +71,9 @@ export default function FeatureEntitlementsPage() {
           <Paper key={c.campaign_id} sx={{ p: 3 }}>
             <Typography variant="h6">{c.campaign_name}</Typography>
             <Typography>Plan informativo: {c.commercial_plan}</Typography>
-            <Typography>Territorio IA: {f?.status ?? 'No habilitada'}</Typography>
+            <Typography>
+              Estado: {f ? labelFor(entitlementStatusLabels, f.status) : 'No habilitada'}
+            </Typography>
             <Typography color="text.secondary">
               Vigencia:{' '}
               {f?.expires_at ? new Date(f.expires_at).toLocaleString() : 'Sin vencimiento'}

@@ -20,6 +20,7 @@ import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { canManageUsers } from '../auth/permissions';
 import { CampaignSelector } from '../components/navigation/CampaignSelector';
+import { OrganizationSelector } from '../components/navigation/OrganizationSelector';
 import { RoleBadge } from '../components/data-display/Common';
 import { useCampaign } from '../app/CampaignProvider';
 const width = 248;
@@ -51,6 +52,7 @@ export function AppShell() {
     ['Alertas', selectedId ? base + '/alerts' : '/app/campaigns'],
   ];
   const adminItems = [
+    ['Organizaciones', '/app/admin/organizations'],
     ['Usuarios', '/app/admin/users'],
     ['Roles', '/app/admin/roles'],
     ['Asignaciones', '/app/admin/assignments'],
@@ -75,6 +77,13 @@ export function AppShell() {
       </Toolbar>
       <Divider />
       <List>
+        <ListItemButton
+          component={NavLink}
+          to="/app/organization"
+          onClick={() => setMobileOpen(false)}
+        >
+          <ListItemText primary="Mi organización" />
+        </ListItemButton>
         {items.map(([label, to]) => (
           <ListItemButton
             key={label}
@@ -163,7 +172,7 @@ export function AppShell() {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
-        <Toolbar sx={{ gap: 2 }}>
+        <Toolbar sx={{ gap: { xs: 0.5, sm: 2 }, px: { xs: 0.5, sm: 3 } }}>
           <IconButton
             color="inherit"
             aria-label="Abrir menú"
@@ -172,7 +181,16 @@ export function AppShell() {
           >
             <MenuIcon />
           </IconButton>
-          <Box sx={{ flexGrow: 1 }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              gap: { xs: 0.5, sm: 1.5 },
+              alignItems: 'center',
+              minWidth: 0,
+            }}
+          >
+            <OrganizationSelector />
             <CampaignSelector />
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, alignItems: 'center' }}>

@@ -21,6 +21,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../api/errors';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
+import { commercialErrorMessages, territoryAiSourceLabels } from '../../lib/labels';
 type Entitlement = {
   status: 'ENABLED' | 'TRIAL' | 'EXPIRED' | 'DISABLED' | 'SCHEDULED';
   expires_at: string | null;
@@ -71,7 +72,10 @@ function errorMessage(error: Error) {
     const body = error.detail as { detail?: { code?: string; message?: string } } | undefined;
     if (body?.detail?.code === 'AI_PROVIDER_UNAVAILABLE')
       return 'Territorio IA no está configurada en este entorno.';
-    return body?.detail?.message ?? error.message;
+    return (
+      commercialErrorMessages[body?.detail?.code ?? ''] ??
+      'No fue posible completar la consulta en Territorio IA.'
+    );
   }
   return 'No fue posible completar la consulta.';
 }
@@ -163,7 +167,7 @@ export default function TerritoryAiPage() {
     return (
       <Stack spacing={2}>
         <Typography variant="h4" fontWeight={800}>
-          TERRITORIO IA
+          Territorio IA
         </Typography>
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Chip label="PRO" color="secondary" />
@@ -171,7 +175,7 @@ export default function TerritoryAiPage() {
             Funcionalidad disponible en el plan Pro.
           </Typography>
           <Typography color="text.secondary">
-            La licencia de esta campaña no permite realizar consultas.
+            Territorio IA no está disponible para esta campaña.
           </Typography>
         </Paper>
       </Stack>
@@ -210,7 +214,7 @@ export default function TerritoryAiPage() {
       <Stack minWidth={0} spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight={800}>
-            TERRITORIO IA
+            Territorio IA
           </Typography>
           <Typography color="text.secondary">
             Consulta los datos de tu campaña y territorio con respuestas respaldadas por fuentes.
@@ -295,7 +299,7 @@ export default function TerritoryAiPage() {
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={keyDown}
             disabled={query.isPending}
-            helperText="Enter para enviar · Shift+Enter para nueva línea"
+            helperText="Presiona Enter para enviar · Mayús+Enter para una nueva línea"
           />
           <Button
             variant="contained"
@@ -318,7 +322,8 @@ export default function TerritoryAiPage() {
             <Typography variant="h5">Fuente</Typography>
             <Divider />
             <Typography>
-              <b>Tipo:</b> {citation.source_type}
+              <b>Tipo:</b>{' '}
+              {territoryAiSourceLabels[citation.source_type] ?? 'Fuente de información'}
             </Typography>
             <Typography>
               <b>Título:</b> {citation.title}
