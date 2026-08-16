@@ -11,7 +11,12 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY . .
 
+RUN addgroup --system app && adduser --system --ingroup app app \
+    && mkdir -p /app/generated-reports \
+    && chown -R app:app /app/generated-reports
+
+USER app
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-

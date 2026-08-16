@@ -11,6 +11,7 @@ describe('errores HTTP', () => {
     [413, 'tama'],
     [415, 'formato'],
     [422, 'campos'],
+    [429, 'intentos'],
     [500, 'inesperado'],
     [503, 'servicio'],
   ] as const)

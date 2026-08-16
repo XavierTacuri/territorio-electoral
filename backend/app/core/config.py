@@ -1,6 +1,6 @@
 from functools import lru_cache
 from urllib.parse import quote_plus
-from pydantic import model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     postgres_password: str = "territorio_password"
     postgres_host: str = "db"
     postgres_port: int = 5432
+    database_url_override: str | None = Field(default=None, validation_alias=AliasChoices("DATABASE_URL", "DATABASE_URL_OVERRIDE"))
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
+    db_pool_timeout_seconds: int = 30
+    db_connect_timeout_seconds: int = 10
     secret_key: str = "replace-with-a-secure-secret-at-least-32-chars"
     access_token_expire_minutes: int = 60
     browser_access_token_minutes: int = 15
@@ -65,6 +70,12 @@ class Settings(BaseSettings):
     public_fetch_allow_private_hosts: bool = False
     territory_ai_provider: str = "unavailable"
     territory_ai_rate_limit_per_minute: int = 20
+    auth_rate_limit_attempts: int = 10
+    auth_rate_limit_window_seconds: int = 300
+    metrics_enabled: bool = False
+    metrics_token: str | None = None
+    app_version: str = "2.9.0"
+    git_sha: str | None = None
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     @model_validator(mode="after")
@@ -96,6 +107,10 @@ class Settings(BaseSettings):
             raise ValueError("SURVEY_MIN_AGGREGATE_RESPONSES debe ser al menos 3")
         if self.territory_ai_rate_limit_per_minute <= 0:
             raise ValueError("TERRITORY_AI_RATE_LIMIT_PER_MINUTE debe ser positivo")
+        if min(self.db_pool_size, self.db_pool_timeout_seconds, self.db_connect_timeout_seconds) <= 0 or self.db_max_overflow < 0:
+            raise ValueError("La configuracion del pool de base de datos es invalida")
+        if self.auth_rate_limit_attempts <= 0 or self.auth_rate_limit_window_seconds <= 0:
+            raise ValueError("La configuracion del limite de autenticacion es invalida")
         self.territory_ai_provider = self.territory_ai_provider.strip().lower()
         if self.territory_ai_provider not in {"unavailable", "fake"}:
             raise ValueError("TERRITORY_AI_PROVIDER debe ser unavailable o fake")
@@ -106,6 +121,31 @@ class Settings(BaseSettings):
         if self.app_env.lower() == "production" and self.secret_key.lower() in {"replace-with-a-secure-secret-at-least-32-chars", "change-me", "secret"}:
             raise ValueError("SECRET_KEY debe configurarse de forma segura en producción")
         if self.app_env.lower() == "production":
+            if self.app_debug:
+                raise ValueError("APP_DEBUG debe estar desactivado en produccion")
+            if self.territory_ai_provider == "fake":
+                raise ValueError("TERRITORY_AI_PROVIDER no puede ser fake en produccion")
+            if len(self.secret_key) < 32 or len(self.browser_refresh_token_hmac_secret) < 32:
+                raise ValueError("Los secretos de produccion deben tener al menos 32 caracteres")
+            unsafe_values = {"", "replace_me", "territorio_password", "changethispassword123", "change-me", "secret"}
+            if self.postgres_password.strip().lower() in unsafe_values:
+                raise ValueError("La credencial de base de datos debe configurarse en produccion")
+            if self.initial_admin_password.strip().lower() in unsafe_values:
+                raise ValueError("La credencial administrativa inicial debe configurarse en produccion")
+            if not self.frontend_origin_list or any(origin == "*" for origin in self.frontend_origin_list):
+                raise ValueError("FRONTEND_ORIGINS debe ser explicito en produccion")
+            if not self.browser_origin_list or any(origin == "*" for origin in self.browser_origin_list):
+                raise ValueError("BROWSER_ALLOWED_ORIGINS debe ser explicito en produccion")
+            if not self.trusted_host_list or any(host == "*" for host in self.trusted_host_list):
+                raise ValueError("TRUSTED_HOSTS debe ser explicito en produccion")
+            if any("localhost" in origin or "127.0.0.1" in origin for origin in self.frontend_origin_list + self.browser_origin_list):
+                raise ValueError("Los origenes locales requieren configuracion no productiva")
+            if self.public_fetch_allow_private_hosts:
+                raise ValueError("PUBLIC_FETCH_ALLOW_PRIVATE_HOSTS debe estar desactivado en produccion")
+            if self.enable_api_docs:
+                raise ValueError("ENABLE_API_DOCS debe estar desactivado en produccion")
+            if self.metrics_enabled and (not self.metrics_token or len(self.metrics_token) < 24):
+                raise ValueError("METRICS_TOKEN debe configurarse de forma segura")
             if self.browser_refresh_token_hmac_secret.lower() in {"replace-with-secure-random-secret", "change-me", "secret", ""}:
                 raise ValueError("BROWSER_REFRESH_TOKEN_HMAC_SECRET debe configurarse de forma segura en producción")
             if not self.browser_cookie_secure:
@@ -126,6 +166,8 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        if self.database_url_override:
+            return self.database_url_override
         user, password = quote_plus(self.postgres_user), quote_plus(self.postgres_password)
         return f"postgresql+psycopg://{user}:{password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 

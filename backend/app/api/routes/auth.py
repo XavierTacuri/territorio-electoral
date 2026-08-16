@@ -11,15 +11,24 @@ from app.schemas.user import UserRead
 from app.services.auth_service import AuthService
 from app.services.browser_auth_service import BrowserAuthService
 from app.services.exceptions import AuthenticationError, InactiveUserError
+from app.services.auth_rate_limit import check_login_rate_limit, clear_login_failures, record_login_failure
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/login", response_model=Token)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
-    try: return AuthService(db).authenticate(form.username, form.password)[1]
+def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
+    ip = request.client.host if request.client else "unknown"
+    if not check_login_rate_limit(ip, form.username):
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Inténtalo nuevamente más tarde.", headers={"Retry-After": str(settings.auth_rate_limit_window_seconds)})
+    try:
+        token = AuthService(db).authenticate(form.username, form.password)[1]
+        clear_login_failures(ip, form.username)
+        return token
     except InactiveUserError: raise HTTPException(status_code=403, detail="Usuario inactivo")
-    except AuthenticationError: raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas", headers={"WWW-Authenticate": "Bearer"})
+    except AuthenticationError:
+        record_login_failure(ip, form.username)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas", headers={"WWW-Authenticate": "Bearer"})
 
 
 @router.get("/me", response_model=UserRead)
@@ -63,10 +72,15 @@ def _validate_csrf(cookie_value: str | None, header_value: str | None) -> str:
 def browser_login(data: BrowserLogin, response: Response, request: Request,
                   db: Session = Depends(get_db)) -> BrowserToken:
     _validate_origin(request)
+    ip = request.client.host if request.client else "unknown"
+    if not check_login_rate_limit(ip, data.identifier):
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Inténtalo nuevamente más tarde.", headers={"Retry-After": str(settings.auth_rate_limit_window_seconds)})
     try:
         token, refresh, csrf = BrowserAuthService(db).login(data.identifier, data.password)
     except AuthenticationError:
+        record_login_failure(ip, data.identifier)
         raise HTTPException(status_code=401, detail="Las credenciales ingresadas no son válidas.")
+    clear_login_failures(ip, data.identifier)
     _set_browser_cookies(response, refresh, csrf)
     return token
 

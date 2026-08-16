@@ -18,6 +18,7 @@ export const statusMessage = (status: number): string =>
     413: 'El archivo supera el tamaño permitido.',
     415: 'El formato del archivo no está permitido.',
     422: 'Revisa los campos indicados.',
+    429: 'Demasiados intentos. Inténtalo nuevamente más tarde.',
     500: 'Ocurrió un error inesperado.',
     503: 'El servicio no está disponible.',
   })[status] ?? 'No se pudo completar la solicitud.';

@@ -9,7 +9,8 @@ class RootResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    status: Literal["ok", "error"]
-    application: str
-    database: Literal["connected", "unavailable"]
+    status: Literal["ok"]
 
+
+class ReadyResponse(BaseModel):
+    status: Literal["READY", "NOT_READY"]
