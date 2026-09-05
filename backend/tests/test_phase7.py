@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas.campaign import CampaignCreate
 from app.schemas.dashboard import DashboardFilters, DashboardPeriod
-from app.schemas.operational import CommitmentCreate, CitizenNeedCreate, ParticipantSummaryUpsert, TerritorialActivityCreate
+from app.schemas.operational import ActivityCloseRequest, CommitmentCreate, CitizenNeedCreate, ParticipantSummaryUpsert, TerritorialActivityCreate
 from app.scripts.seed_gualaceo import seed as seed_gualaceo
 from app.services.campaign_service import CampaignService
 from app.services.dashboard_filter_service import DashboardFilterService
@@ -53,7 +53,8 @@ def test_dashboard_overview_empty_is_controlled(db, admin, dashboard_context):
 
 def test_dashboard_aggregates_operations(db, admin, dashboard_context):
     campaign, parishes = dashboard_context; ops = OperationalService(db, today_provider=lambda: date(2026,8,3))
-    activity = ops.create_activity(campaign.id, TerritorialActivityCreate(activity_type_code="TOUR", title="Recorrido", activity_date=date(2026,8,3), status="COMPLETED", parish_id=parishes[0].id), admin)
+    activity = ops.create_activity(campaign.id, TerritorialActivityCreate(activity_type_code="TOUR", title="Recorrido", activity_date=date(2026,8,3), status="PLANNED", parish_id=parishes[0].id), admin)
+    activity = ops.complete_activity(campaign.id, activity.id, ActivityCloseRequest(summary="Recorrido completado mediante el flujo de dominio."), admin)
     ops.participant(campaign.id, activity.id, admin, ParticipantSummaryUpsert(estimated_attendees=25))
     ops.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="Vialidad", mentions_count=7, priority="HIGH"), admin)
     ops.create_commitment(campaign.id, CommitmentCreate(title="Pendiente", priority="HIGH", due_date=date(2026,8,2), parish_id=parishes[0].id), admin)
@@ -66,7 +67,8 @@ def test_dashboard_aggregates_operations(db, admin, dashboard_context):
 
 def test_dashboard_trends_day_week_month(db, admin, dashboard_context):
     campaign, parishes = dashboard_context; ops=OperationalService(db)
-    ops.create_activity(campaign.id, TerritorialActivityCreate(activity_type_code="TOUR",title="A",activity_date=date(2026,8,3),status="COMPLETED",parish_id=parishes[0].id),admin)
+    activity = ops.create_activity(campaign.id, TerritorialActivityCreate(activity_type_code="TOUR",title="A",activity_date=date(2026,8,3),status="PLANNED",parish_id=parishes[0].id),admin)
+    ops.complete_activity(campaign.id,activity.id,ActivityCloseRequest(summary="Actividad completada mediante el flujo de dominio."),admin)
     service=DashboardService(db,lambda:date(2026,8,3));filters=DashboardFilters(period="LAST_7_DAYS")
     assert service.activity_trends(campaign.id,admin,filters,"DAY",True)["points"][0]["period_start"] == date(2026,7,28)
     assert service.activity_trends(campaign.id,admin,filters,"WEEK")["points"][0]["period_start"] == date(2026,8,3)

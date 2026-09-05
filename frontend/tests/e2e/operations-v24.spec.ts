@@ -37,7 +37,7 @@ test('workflow V2.4 real y RBAC parroquial', async ({ page, request }) => {
   });
   expect(create.status()).toBe(201);
   let activity = await create.json();
-  expect(activity.approval_status).toBe('DRAFT');
+  expect(activity.approval_status).toBe('PENDING_APPROVAL');
   expect(
     (
       await request.post(`/api/v1/campaigns/${campaign.id}/activities`, {
@@ -52,13 +52,6 @@ test('workflow V2.4 real y RBAC parroquial', async ({ page, request }) => {
       })
     ).status(),
   ).toBe(403);
-  activity = await (
-    await request.post(
-      `/api/v1/campaigns/${campaign.id}/activities/${activity.id}/submit-for-approval`,
-      { headers: { Authorization: `Bearer ${delegateToken}` } },
-    )
-  ).json();
-  expect(activity.approval_status).toBe('PENDING_APPROVAL');
   expect(
     (
       await request.post(`/api/v1/campaigns/${campaign.id}/activities/${activity.id}/approve`, {
@@ -149,8 +142,12 @@ test('workflow V2.4 real y RBAC parroquial', async ({ page, request }) => {
   await expect(
     page.getByRole('heading', { name: 'Actividades pendientes de aprobación' }),
   ).toBeVisible();
+  // Seguimientos/Commitments es dominio legacy retirado de la experiencia
+  // productiva: el endpoint POST /commitments sigue funcionando por
+  // compatibilidad (arriba), pero el detalle de necesidad ya no lo muestra,
+  // ni siquiera en modo solo lectura.
   await page.goto(`/app/campaigns/${campaign.id}/needs/${need.id}`);
-  await expect(page.getByText(`Compromiso flujo V2.4 ${suffix}`)).toBeVisible();
+  await expect(page.getByText(`Compromiso flujo V2.4 ${suffix}`)).toHaveCount(0);
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 1024, height: 768 },

@@ -5,6 +5,7 @@ export type Page<T> = {
   total: number;
   total_pages: number;
 };
+export type ActivityActor = { id: string; display_name: string; username: string; role_codes: string[] };
 export type Activity = {
   id: string;
   campaign_id: string;
@@ -17,10 +18,14 @@ export type Activity = {
   start_time?: string | null;
   end_time?: string | null;
   rejection_reason?: string | null;
+  rejected_at?: string | null;
+  rejected_by_user_id?: string | null;
+  rejected_by?: ActivityActor | null;
   submitted_for_approval_at?: string | null;
   submitted_by_user_id?: string | null;
   created_by_user_id: string;
   parish_id: number;
+  parish_name?: string | null;
   community_id?: string | null;
   sector_id?: string | null;
   location_name?: string | null;
@@ -28,6 +33,20 @@ export type Activity = {
   longitude?: number | null;
   responsible_user_id?: string | null;
   is_active: boolean;
+  completion_summary?: string | null;
+  outcome_notes?: string | null;
+  completed_at?: string | null;
+  completed_by_user_id?: string | null;
+  completed_by?: ActivityActor | null;
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by_user_id?: string | null;
+  suspension_reason?: string | null;
+  suspended_at?: string | null;
+  suspended_by_user_id?: string | null;
+  suspended_by?: ActivityActor | null;
+  approved_by?: ActivityActor | null;
+  resumed_by?: ActivityActor | null;
 };
 export type Need = {
   id: string;
@@ -44,6 +63,7 @@ export type Need = {
   assigned_to_user_id?: string | null;
   scope: string;
   validation_notes?: string | null;
+  evidence_notes?: string | null;
   validated_by_user_id?: string | null;
   validated_at?: string | null;
   status: string;
@@ -64,10 +84,16 @@ export type Commitment = {
   due_date?: string | null;
   completed_date?: string | null;
   responsible_user_id?: string | null;
+  responsible_name?: string | null;
   parish_id: number;
   community_id?: string | null;
   sector_id?: string | null;
   is_active: boolean;
 };
 export type Catalog = { id: number; code: string; name: string };
-export type Parish = { id: number; name: string };
+export type Parish = {
+  id: number;
+  name: string;
+  dpa_code?: string;
+  parish_type?: 'URBAN' | 'RURAL';
+};

@@ -1,9 +1,9 @@
-﻿from datetime import date
+﻿from datetime import date,datetime
 from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 from pydantic import AnyHttpUrl,BaseModel,ConfigDict,Field,field_validator,model_validator
-class DatasetType(StrEnum):CNE_ELECTORAL_RESULTS='CNE_ELECTORAL_RESULTS';CNE_CANDIDATES='CNE_CANDIDATES';CNE_POLITICAL_ORGANIZATIONS='CNE_POLITICAL_ORGANIZATIONS';CNE_TURNOUT='CNE_TURNOUT';CNE_ELECTORAL_ROLL_SNAPSHOT='CNE_ELECTORAL_ROLL_SNAPSHOT';INEC_DEMOGRAPHIC_INDICATORS='INEC_DEMOGRAPHIC_INDICATORS';INEC_POPULATION_PROJECTIONS='INEC_POPULATION_PROJECTIONS';INEC_GEOGRAPHIC_CLASSIFIER='INEC_GEOGRAPHIC_CLASSIFIER';OTHER_AGGREGATED_OFFICIAL='OTHER_AGGREGATED_OFFICIAL'
+class DatasetType(StrEnum):CNE_ELECTORAL_RESULTS='CNE_ELECTORAL_RESULTS';CNE_CANDIDATES='CNE_CANDIDATES';CNE_POLITICAL_ORGANIZATIONS='CNE_POLITICAL_ORGANIZATIONS';CNE_TURNOUT='CNE_TURNOUT';CNE_ELECTORAL_ROLL_SNAPSHOT='CNE_ELECTORAL_ROLL_SNAPSHOT';INEC_DEMOGRAPHIC_INDICATORS='INEC_DEMOGRAPHIC_INDICATORS';INEC_POPULATION_PROJECTIONS='INEC_POPULATION_PROJECTIONS';INEC_GEOGRAPHIC_CLASSIFIER='INEC_GEOGRAPHIC_CLASSIFIER';OTHER_AGGREGATED_OFFICIAL='OTHER_AGGREGATED_OFFICIAL';CNE_POLLING_PLACES='CNE_POLLING_PLACES';CNE_ELECTORAL_BOARDS='CNE_ELECTORAL_BOARDS'
 def clean(v:str):
  v=' '.join(v.split())
  if not v:raise ValueError('Valor vacío')
@@ -49,3 +49,20 @@ class ElectoralRollSnapshotEntryRead(BaseModel):id:UUID;snapshot_id:UUID;geograp
 class ParticipationProjectionResultRead(BaseModel):id:UUID;run_id:UUID;parish_id:int;registered_voters:int;turnout_rate_low:Decimal;turnout_rate_central:Decimal;turnout_rate_high:Decimal;expected_voters_low:int;expected_voters_central:int;expected_voters_high:int;data_quality_status:str;explanation:str;model_config=ConfigDict(from_attributes=True)
 class ParticipationProjectionRunRead(BaseModel):id:UUID;campaign_id:UUID|None;electoral_process_id:UUID;snapshot_id:UUID;model_code:str;model_version:str;historical_process_ids:list;parameters:dict;run_date:date;created_by_user_id:UUID;model_config=ConfigDict(from_attributes=True)
 class HistoricalElectoralContextRead(BaseModel):campaign_id:UUID;canton:dict;office_type:str;processes:list[dict];turnout_comparison:list[dict];parish_comparison:list[dict];candidate_results:list[dict];data_quality:dict
+class DatasetVersionRead(BaseModel):id:UUID;data_source_id:UUID;dataset_type:str;reference_date:date|None;version_label:str;checksum:str;import_job_id:UUID;status:str;activated_at:datetime|None=None;activated_by_user_id:UUID|None=None;superseded_by_id:UUID|None=None;model_config=ConfigDict(from_attributes=True)
+class DataHubCatalogEntry(BaseModel):dataset_type:str;dataset_label:str;version_kind:str;version_kind_label:str;sources:list[DataSourceRead];active_version:DatasetVersionRead|None;last_job:DataImportJobRead|None;versions_count:int
+class DataHubSummary(BaseModel):active_sources:int;datasets:int;recent_imports:int;imports_with_errors:int;datasets_without_active_version:int
+class DataHubCatalogResponse(BaseModel):summary:DataHubSummary;entries:list[DataHubCatalogEntry]
+class DatasetDetailResponse(BaseModel):dataset_type:str;dataset_label:str;version_kind:str;version_kind_label:str;sources:list[DataSourceRead];active_version:DatasetVersionRead|None;versions:list[DatasetVersionRead];jobs:list[DataImportJobRead]
+class DatasetVersionDiffItem(BaseModel):parish_id:int;previous:int;new:int;delta:int
+class DatasetVersionDiff(BaseModel):version_id:UUID;compared_to_id:UUID|None;comparable:bool;metric:str|None=None;previous_value:int|None=None;new_value:int|None=None;delta:int|None=None;items:list[DatasetVersionDiffItem]=[];warnings:list[dict|str]=[]
+class ElectoralMilestoneCreate(BaseModel):
+ electoral_process_id:UUID;title:str;description:str|None=None;milestone_type:str;starts_at:datetime;ends_at:datetime|None=None;source_id:UUID;source_url:AnyHttpUrl|None=None;model_config=ConfigDict(extra='forbid');_title=field_validator('title')(clean)
+ @model_validator(mode='after')
+ def range_ok(self):
+  if self.ends_at and self.ends_at<self.starts_at:raise ValueError('La fecha de fin debe ser posterior a la fecha de inicio')
+  return self
+class ElectoralMilestoneUpdate(BaseModel):title:str|None=None;description:str|None=None;starts_at:datetime|None=None;ends_at:datetime|None=None;source_url:AnyHttpUrl|None=None;status:str|None=None;model_config=ConfigDict(extra='forbid')
+class ElectoralMilestoneRead(BaseModel):id:UUID;electoral_process_id:UUID;title:str;description:str|None;milestone_type:str;starts_at:datetime;ends_at:datetime|None;source_id:UUID;source_url:str|None;import_job_id:UUID|None;dataset_version_id:UUID|None;is_official:bool;status:str;model_config=ConfigDict(from_attributes=True)
+class CalendarEvent(BaseModel):id:str;event_type:str;title:str;description:str|None=None;starts_at:datetime;ends_at:datetime|None=None;start_time:str|None=None;parish_id:int|None=None;parish_name:str|None=None;is_official:bool=False;status:str|None=None;source_name:str|None=None;source_url:str|None=None;deep_link:str|None=None
+class CalendarResponse(BaseModel):events:list[CalendarEvent]

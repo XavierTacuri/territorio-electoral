@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
@@ -19,6 +19,15 @@ def seed(db:Session)->tuple[Province,Canton,list[Parish]]:
         if not parish:parish=Parish(canton_id=canton.id,code=dpa[-2:],dpa_code=dpa,name=name,parish_type=kind);db.add(parish)
         else:parish.canton_id=canton.id;parish.code=dpa[-2:];parish.name=name;parish.parish_type=kind;parish.is_active=True
         records.append(parish)
+    # The E2E fixture needs deterministic, non-authoritative geometries so
+    # territorial map flows can render from a clean database. They are only
+    # synthetic polygons; electoral values remain separate from geometry.
+    if db.bind is not None and db.bind.dialect.name == "postgresql":
+        for index, parish in enumerate(records):
+            x = index % 3
+            y = index // 3
+            polygon = f"MULTIPOLYGON((({x} {y},{x + 0.8} {y},{x + 0.8} {y + 0.8},{x} {y + 0.8},{x} {y})))"
+            db.execute(update(Parish).where(Parish.id == parish.id).values(geometry=func.ST_GeomFromText(polygon, 4326)))
     db.flush();return province,canton,records
 
 def seed_gualaceo()->None:

@@ -1,6 +1,7 @@
 from datetime import date
 from uuid import UUID
-from fastapi import APIRouter,Depends,HTTPException,Query,Response
+from fastapi import APIRouter,Depends,File,Form,HTTPException,Query,Response,UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -9,7 +10,8 @@ from app.db.session import get_db
 from app.models.operational import ActivityType,NeedCategory,CitizenNeed,Commitment,ActivityEvidence
 from app.models.user import User
 from app.schemas.operational import *
-from app.services.exceptions import ConflictError,NotFoundError
+from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundError
+from app.services.calendar_service import CalendarService
 from app.services.operational_service import OperationalService
 router=APIRouter(tags=["operations"])
 def fail(e):
@@ -69,6 +71,22 @@ def activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Sess
 @router.patch("/campaigns/{cid}/activities/{id}",response_model=TerritorialActivityRead)
 def update_activity(cid:UUID,id:UUID,data:TerritorialActivityUpdate,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).update_activity(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/complete",response_model=TerritorialActivityRead)
+def complete_activity(cid:UUID,id:UUID,data:ActivityCloseRequest,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).complete_activity(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/cancel",response_model=TerritorialActivityRead)
+def cancel_activity(cid:UUID,id:UUID,data:ActivityCancelRequest,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).cancel_activity(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/suspend",response_model=TerritorialActivityRead)
+def suspend_activity(cid:UUID,id:UUID,data:ActivitySuspendRequest,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).suspend_activity(cid,id,data,user)
+    except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{id}/resume",response_model=TerritorialActivityRead)
+def resume_activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return OperationalService(db).resume_activity(cid,id,user)
     except Exception as e:raise fail(e)
 @router.post("/campaigns/{cid}/activities/{id}/submit-for-approval",response_model=TerritorialActivityRead)
 def submit_activity(cid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
@@ -179,6 +197,18 @@ def delete_evidence(cid:UUID,aid:UUID,id:UUID,user:User=Depends(get_current_acti
         if not svc.access.admin(user) and "CAMPAIGN_MANAGER" not in {r.code for r in user.roles}:raise PermissionError("Sin permisos")
         o.is_active=False;db.commit();return Response(status_code=204)
     except Exception as e:raise fail(e)
+@router.post("/campaigns/{cid}/activities/{aid}/evidence/upload",response_model=ActivityEvidenceRead,status_code=201)
+async def upload_evidence(cid:UUID,aid:UUID,file:UploadFile=File(),evidence_type:EvidenceType=Form(),title:str=Form(),description:str|None=Form(None),evidence_date:date|None=Form(None),client_generated_id:UUID|None=Form(None),user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:
+        content=await file.read()
+        return OperationalService(db).upload_evidence(cid,aid,user,file_bytes=content,original_filename=file.filename,evidence_type=evidence_type.value,title=title,description=description,evidence_date=evidence_date,client_generated_id=client_generated_id)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/activities/{aid}/evidence/{id}/download")
+def download_evidence(cid:UUID,aid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:
+        path,obj=OperationalService(db).evidence_file(cid,aid,id,user)
+        return FileResponse(path,media_type=obj.mime_type or "application/octet-stream",filename=obj.original_filename or "evidencia",headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"})
+    except Exception as e:raise fail(e)
 @router.get("/campaigns/{cid}/operational-summary",response_model=OperationalSummaryRead)
 def summary(cid:UUID,date_from:date|None=None,date_to:date|None=None,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     if date_from and date_to and date_from>date_to:raise HTTPException(400,"Rango inválido")
@@ -195,4 +225,9 @@ def operations_summary(cid:UUID,user:User=Depends(get_current_active_user),db:Se
 @router.get("/campaigns/{cid}/operations/agenda")
 def operations_agenda(cid:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:return OperationalService(db).agenda(cid,user)
+    except Exception as e:raise fail(e)
+@router.get("/campaigns/{cid}/calendar")
+def calendar(cid:UUID,date_from:date,date_to:date,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    if date_to<date_from:raise HTTPException(400,"date_to debe ser posterior a date_from")
+    try:return {"events":CalendarService(db).events(cid,user,date_from,date_to)}
     except Exception as e:raise fail(e)

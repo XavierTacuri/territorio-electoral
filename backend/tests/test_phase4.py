@@ -13,7 +13,7 @@ from app.services.role_service import RoleService
 from app.services.territorial_assignment_service import TerritorialAssignmentService
 from app.schemas.campaign import CampaignCreate
 from app.schemas.operational import (
-    ActivityEvidenceCreate, CommitmentCreate, CommitmentUpdate, CitizenNeedCreate,
+    ActivityCloseRequest, ActivityEvidenceCreate, CommitmentCreate, CommitmentUpdate, CitizenNeedCreate,
     ParticipantSummaryUpsert, TerritorialActivityCreate,
 )
 from app.scripts.seed_gualaceo import seed as seed_gualaceo
@@ -39,9 +39,19 @@ def operational_context(db: Session, admin):
 
 def completed_payload(parish_id: int, **changes):
     data = dict(activity_type_code="COMMUNITY_MEETING", title="ReuniÃƒÂ³n comunitaria",
-                activity_date=date(2026, 8, 3), status="COMPLETED", parish_id=parish_id)
+                activity_date=date(2026, 8, 3), status="PLANNED", parish_id=parish_id)
     data.update(changes)
     return TerritorialActivityCreate(**data)
+
+
+def create_completed(service, campaign_id, payload, actor):
+    activity = service.create_activity(campaign_id, payload, actor)
+    return service.complete_activity(
+        campaign_id,
+        activity.id,
+        ActivityCloseRequest(summary="Actividad completada mediante el flujo de dominio del test."),
+        actor,
+    )
 
 
 def test_operational_catalog_seed_is_idempotent(db: Session):
@@ -63,7 +73,7 @@ def test_activity_dates_validation_and_inactive_catalog(db, admin, operational_c
 
 def test_activity_lifecycle_and_participant_upsert(db, admin, operational_context):
     campaign, parishes = operational_context; service = OperationalService(db)
-    activity = service.create_activity(campaign.id, completed_payload(parishes[0].id), admin)
+    activity = create_completed(service, campaign.id, completed_payload(parishes[0].id), admin)
     assert activity.activity_date == date(2026, 8, 3)
     first = service.participant(campaign.id, activity.id, admin, ParticipantSummaryUpsert(estimated_attendees=45, organizations_count=3))
     second = service.participant(campaign.id, activity.id, admin, ParticipantSummaryUpsert(estimated_attendees=50))
@@ -76,7 +86,7 @@ def test_activity_lifecycle_and_participant_upsert(db, admin, operational_contex
 
 def test_territorial_intelligence_aggregates_each_parish_without_n_plus_one(db, admin, operational_context):
     campaign, parishes = operational_context; service = OperationalService(db)
-    activity = service.create_activity(campaign.id, completed_payload(parishes[0].id), admin)
+    activity = create_completed(service, campaign.id, completed_payload(parishes[0].id), admin)
     service.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="Necesidad sintética", mentions_count=2, priority="MEDIUM"), admin)
     service.create_commitment(campaign.id, CommitmentCreate(title="Compromiso sintético", priority="MEDIUM", status="PENDING", parish_id=parishes[0].id), admin)
     payload = service.territory_summaries(campaign.id, admin)
@@ -88,7 +98,7 @@ def test_territorial_intelligence_aggregates_each_parish_without_n_plus_one(db, 
 
 def test_need_derives_territory_and_prevents_duplicates(db, admin, operational_context):
     campaign, parishes = operational_context; service = OperationalService(db)
-    activity = service.create_activity(campaign.id, completed_payload(parishes[1].id), admin)
+    activity = create_completed(service, campaign.id, completed_payload(parishes[1].id), admin)
     payload = CitizenNeedCreate(need_category_code="ROADS", title="  Mejoramiento   vial ", mentions_count=12, priority="HIGH")
     need = service.create_need(campaign.id, activity.id, payload, admin)
     assert need.parish_id == activity.parish_id and need.community_id is None
@@ -110,7 +120,7 @@ def test_commitment_completion_and_overdue(db, admin, operational_context):
 
 def test_evidence_url_validation_and_soft_delete(db, admin, operational_context):
     campaign, parishes = operational_context; service = OperationalService(db)
-    activity = service.create_activity(campaign.id, completed_payload(parishes[0].id), admin)
+    activity = create_completed(service, campaign.id, completed_payload(parishes[0].id), admin)
     with pytest.raises(ValidationError): ActivityEvidenceCreate(evidence_type="PHOTO", title="Archivo", url="ftp://example.com/a.jpg")
     evidence = service.evidence(campaign.id, activity.id, admin, ActivityEvidenceCreate(evidence_type="PHOTO", title="Registro", url="https://example.com/a.jpg", evidence_date=date(2026,8,3)))
     assert evidence.evidence_date == date(2026,8,3) and evidence.url.startswith("https://")
@@ -121,7 +131,7 @@ def test_evidence_url_validation_and_soft_delete(db, admin, operational_context)
 def test_operational_summary_is_deterministic_and_aggregated(db, admin, operational_context):
     campaign, parishes = operational_context; today = date(2026, 8, 3)
     service = OperationalService(db, today_provider=lambda: today)
-    activity = service.create_activity(campaign.id, completed_payload(parishes[0].id), admin)
+    activity = create_completed(service, campaign.id, completed_payload(parishes[0].id), admin)
     service.participant(campaign.id, activity.id, admin, ParticipantSummaryUpsert(estimated_attendees=45))
     service.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="VÃƒÂ­a", mentions_count=12, priority="HIGH"), admin)
     service.create_commitment(campaign.id, CommitmentCreate(title="Pendiente", priority="HIGH", due_date=date(2026,8,2), parish_id=parishes[0].id), admin)
@@ -138,7 +148,7 @@ def test_operational_http_contracts(client, admin_headers, operational_context):
     assert client.get("/api/v1/activity-types").status_code == 401
     assert len(client.get("/api/v1/activity-types", headers=admin_headers).json()) == 11
     url=f"/api/v1/campaigns/{campaign.id}/activities"
-    response=client.post(url,headers=admin_headers,json={"activity_type_code":"TOUR","title":"Recorrido","activity_date":"2026-08-03","status":"COMPLETED","parish_id":parishes[0].id})
+    response=client.post(url,headers=admin_headers,json={"activity_type_code":"TOUR","title":"Recorrido","activity_date":"2026-08-03","status":"PLANNED","parish_id":parishes[0].id})
     assert response.status_code == 201 and response.json()["activity_date"] == "2026-08-03"
     assert "created_at" not in response.text and "updated_at" not in response.text
     assert client.get(url,headers=admin_headers).json()["total"] == 1

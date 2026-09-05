@@ -2,6 +2,7 @@ export const EXECUTION_STATUS_LABELS = {
   PLANNED: 'Planificada',
   IN_PROGRESS: 'En ejecución',
   COMPLETED: 'Completada',
+  SUSPENDED: 'Suspendida',
   CANCELLED: 'Cancelada',
 } as const;
 
@@ -19,5 +20,16 @@ export const OPERATION_STATUS_LABELS: Record<string, string> = {
 };
 
 export function operationStatusLabel(status: string) {
-  return OPERATION_STATUS_LABELS[status] ?? status.replaceAll('_', ' ');
+  return OPERATION_STATUS_LABELS[status] ?? 'No disponible';
+}
+
+export const FOLLOW_UP_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Pendiente',
+  IN_PROGRESS: 'En seguimiento',
+  COMPLETED: 'Realizado',
+  CANCELLED: 'Cancelado',
+};
+
+export function followUpStatusLabel(status: string) {
+  return FOLLOW_UP_STATUS_LABELS[status] ?? 'No disponible';
 }

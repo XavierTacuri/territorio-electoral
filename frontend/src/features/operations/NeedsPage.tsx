@@ -14,23 +14,21 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
 import { useCampaign } from '../../app/CampaignProvider';
-import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
+import { needSourceLabels } from '../../lib/labels';
 import type { Activity, Catalog, Need, Page, Parish } from './types';
+import { parishOptionLabel } from '../../lib/territoryLabels';
 type NeedForm = {
   activity_id: string;
   need_category_code: string;
   title: string;
   description: string;
-  mentions_count: number;
-  priority: string;
-  status: string;
   parish_id: number;
   source_type: string;
   reported_date: string;
@@ -39,6 +37,7 @@ type NeedForm = {
   local_sector_description: string;
   evidence_notes: string;
 };
+export const NEED_TABLE_HEADERS = ['Necesidad', 'Parroquia', 'Origen', 'Acciones'] as const;
 export default function NeedsPage() {
   const { campaignId = '' } = useParams();
   const { active } = useCampaign();
@@ -46,19 +45,15 @@ export default function NeedsPage() {
   const [searchParams] = useSearchParams();
   const [parishFilter, setParishFilter] = useState(searchParams.get('parish_id') ?? '');
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Need | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const params = new URLSearchParams({ page: String(page), page_size: '20' });
-  if (status) params.set('status', status);
-  if (priority) params.set('priority', priority);
   if (search) params.set('search', search);
   if (parishFilter) params.set('parish_id', parishFilter);
   const list = useQuery({
-    queryKey: ['campaign', campaignId, 'needs', page, status, priority, search, parishFilter],
+    queryKey: ['campaign', campaignId, 'needs', page, search, parishFilter],
     queryFn: ({ signal }) =>
       apiRequest<Page<Need>>('/campaigns/' + campaignId + '/needs?' + params, { signal }),
   });
@@ -92,9 +87,6 @@ export default function NeedsPage() {
                 categories.data?.find((x) => x.id === editing.need_category_id)?.code ?? '',
               title: editing.title,
               description: editing.description ?? '',
-              mentions_count: editing.mentions_count,
-              priority: editing.priority,
-              status: editing.status,
               parish_id: editing.parish_id,
               source_type: editing.source_type,
               reported_date: editing.reported_date,
@@ -108,9 +100,6 @@ export default function NeedsPage() {
               need_category_code: categories.data?.[0]?.code ?? '',
               title: '',
               description: '',
-              mentions_count: 1,
-              priority: 'MEDIUM',
-              status: 'REPORTED',
               parish_id: parishes.data?.[0]?.id ?? 0,
               source_type: 'OTHER',
               reported_date: new Date().toISOString().slice(0, 10),
@@ -138,16 +127,11 @@ export default function NeedsPage() {
                   need_category_code: v.need_category_code,
                   title: v.title,
                   description: v.description || null,
-                  mentions_count: Number(v.mentions_count),
-                  priority: v.priority,
                 }
               : {
                   need_category_code: v.need_category_code,
                   title: v.title,
                   description: v.description || null,
-                  mentions_count: Number(v.mentions_count),
-                  priority: v.priority,
-                  status: 'REPORTED',
                   parish_id: Number(v.parish_id),
                   source_type: v.source_type,
                   reported_date: v.reported_date,
@@ -165,18 +149,23 @@ export default function NeedsPage() {
     <>
       <PageHeader
         title="Necesidades"
-        description="Necesidades agregadas; no representan intención de voto."
+        description="Temas registrados por el equipo durante el trabajo territorial de la campaña."
         action={
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            Registrar necesidad
-          </Button>
+          <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+            <Button component={RouterLink} to={`/app/campaigns/${campaignId}/reports?type=THEMATIC_REPORT`}>
+              Generar informe temático
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              Registrar necesidad
+            </Button>
+          </Stack>
         }
       />
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
@@ -190,39 +179,11 @@ export default function NeedsPage() {
           <MenuItem value="">Todas</MenuItem>
           {parishes.data?.map((x) => (
             <MenuItem key={x.id} value={String(x.id)}>
-              {x.name}
+              {parishOptionLabel(x, parishes.data ?? [])}
             </MenuItem>
           ))}
         </TextField>
         <TextField label="Buscar" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <TextField
-          select
-          label="Prioridad"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          <MenuItem value="">Todas</MenuItem>
-          {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
-            <MenuItem key={x} value={x}>
-              {x}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          label="Estado"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          sx={{ minWidth: 190 }}
-        >
-          <MenuItem value="">Todos</MenuItem>
-          {['REPORTED', 'UNDER_REVIEW', 'VALIDATED', 'IN_PLAN', 'CLOSED', 'ARCHIVED'].map((x) => (
-            <MenuItem key={x} value={x}>
-              {x}
-            </MenuItem>
-          ))}
-        </TextField>
       </Stack>
       {list.isError ? (
         <ErrorState retry={() => list.refetch()} />
@@ -233,13 +194,16 @@ export default function NeedsPage() {
           rows={list.data?.items ?? []}
           columns={[
             { key: 'title', label: 'Necesidad', render: (x) => x.title },
-            { key: 'mentions', label: 'Menciones', render: (x) => x.mentions_count },
             {
-              key: 'priority',
-              label: 'Prioridad',
-              render: (x) => <StatusBadge value={x.priority} />,
+              key: 'parish',
+              label: 'Parroquia',
+              render: (x) => parishes.data?.find((p) => p.id === x.parish_id)?.name ?? 'No disponible',
             },
-            { key: 'status', label: 'Estado', render: (x) => <StatusBadge value={x.status} /> },
+            {
+              key: 'source',
+              label: 'Origen',
+              render: (x) => x.activity_id ? 'Actividad relacionada' : (needSourceLabels[x.source_type] ?? 'Registro manual'),
+            },
           ]}
           onView={(x) => navigate(`/app/campaigns/${campaignId}/needs/${x.id}`)}
           onEdit={async (x) => {
@@ -269,7 +233,7 @@ export default function NeedsPage() {
               >
                 {parishes.data?.map((x) => (
                   <MenuItem key={x.id} value={x.id}>
-                    {x.name}
+                    {parishOptionLabel(x, parishes.data ?? [])}
                   </MenuItem>
                 ))}
               </TextField>
@@ -305,18 +269,6 @@ export default function NeedsPage() {
             </TextField>
             <TextField label="Título" {...register('title', { required: true })} />
             <TextField multiline minRows={3} label="Descripción" {...register('description')} />
-            <TextField
-              type="number"
-              label="Conteo de menciones"
-              {...register('mentions_count', { valueAsNumber: true, min: 1 })}
-            />
-            <TextField select label="Prioridad" defaultValue="MEDIUM" {...register('priority')}>
-              {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
-                <MenuItem key={x} value={x}>
-                  {x}
-                </MenuItem>
-              ))}
-            </TextField>
             {!editing && (
               <>
                 <TextField select label="Origen" defaultValue="OTHER" {...register('source_type')}>
@@ -330,7 +282,7 @@ export default function NeedsPage() {
                     'OTHER',
                   ].map((x) => (
                     <MenuItem key={x} value={x}>
-                      {x}
+                    {needSourceLabels[x] ?? 'No disponible'}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -340,13 +292,6 @@ export default function NeedsPage() {
                   InputLabelProps={{ shrink: true }}
                   {...register('reported_date')}
                 />
-                <TextField select label="Urgencia" defaultValue="MEDIUM" {...register('urgency')}>
-                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
-                    <MenuItem key={x} value={x}>
-                      {x}
-                    </MenuItem>
-                  ))}
-                </TextField>
                 <TextField select label="Alcance" defaultValue="PARISH" {...register('scope')}>
                   <MenuItem value="LOCAL">Sector/local</MenuItem>
                   <MenuItem value="PARISH">Parroquial</MenuItem>

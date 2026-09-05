@@ -6,13 +6,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   MenuItem,
   Pagination,
   Stack,
-  Switch,
   TextField,
-  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useForm } from 'react-hook-form';
@@ -25,44 +22,44 @@ import { StatusBadge } from '../../components/data-display/Common';
 import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
-import { formatDateOnly, todayDateOnly } from '../../lib/dates';
-import { operationStatusLabel } from './statusLabels';
+import { todayDateOnly } from '../../lib/dates';
+import { followUpStatusLabel } from './statusLabels';
 import type { Commitment, Page, Parish } from './types';
+import { parishOptionLabel } from '../../lib/territoryLabels';
 type Form = {
   title: string;
   description: string;
-  priority: string;
   status: string;
   due_date: string;
   completed_date: string;
   parish_id: number;
   responsible_user_id: string;
 };
-const overdueDays = (date?: string | null, status?: string) => {
-  if (!date || status === 'COMPLETED' || date >= todayDateOnly()) return 0;
-  const [y, m, d] = date.split('-').map(Number);
-  const [ty, tm, td] = todayDateOnly().split('-').map(Number);
-  return Math.floor((Date.UTC(ty, tm - 1, td) - Date.UTC(y, m - 1, d)) / 86400000);
-};
+export const FOLLOW_UP_TABLE_HEADERS = ['Seguimiento', 'Responsable', 'Origen', 'Estado', 'Acciones'] as const;
+
+export function followUpPayload(v: Form) {
+  return {
+    ...v,
+    due_date: v.due_date || null,
+    completed_date: v.status === 'COMPLETED' ? v.completed_date || todayDateOnly() : null,
+    responsible_user_id: v.responsible_user_id || null,
+  };
+}
 export default function CommitmentsPage() {
   const { campaignId = '' } = useParams();
   const { active } = useCampaign();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
-  const [overdue, setOverdue] = useState(false);
   const [editing, setEditing] = useState<Commitment | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const params = new URLSearchParams({
     page: String(page),
     page_size: '20',
-    overdue: String(overdue),
   });
   if (status) params.set('status', status);
-  if (priority) params.set('priority', priority);
   const list = useQuery({
-    queryKey: ['campaign', campaignId, 'commitments', page, status, priority, overdue],
+    queryKey: ['campaign', campaignId, 'commitments', page, status],
     queryFn: ({ signal }) =>
       apiRequest<Page<Commitment>>('/campaigns/' + campaignId + '/commitments?' + params, {
         signal,
@@ -88,7 +85,6 @@ export default function CommitmentsPage() {
           ? {
               title: editing.title,
               description: editing.description ?? '',
-              priority: editing.priority,
               status: editing.status,
               due_date: editing.due_date ?? '',
               completed_date: editing.completed_date ?? '',
@@ -98,7 +94,6 @@ export default function CommitmentsPage() {
           : {
               title: '',
               description: '',
-              priority: 'MEDIUM',
               status: 'PENDING',
               due_date: '',
               completed_date: '',
@@ -114,12 +109,7 @@ export default function CommitmentsPage() {
         '/campaigns/' + campaignId + '/commitments' + (editing ? '/' + editing.id : ''),
         {
           method: editing ? 'PATCH' : 'POST',
-          body: JSON.stringify({
-            ...v,
-            due_date: v.due_date || null,
-            completed_date: v.status === 'COMPLETED' ? v.completed_date || todayDateOnly() : null,
-            responsible_user_id: v.responsible_user_id || null,
-          }),
+          body: JSON.stringify(followUpPayload(v)),
         },
       ),
     onSuccess: () =>
@@ -128,8 +118,8 @@ export default function CommitmentsPage() {
   return (
     <>
       <PageHeader
-        title="Compromisos"
-        description="Seguimiento de fechas límite, responsables autorizados y cumplimiento."
+        title="Seguimientos de campaña"
+        description="Acciones internas para que el equipo revise y dé continuidad a asuntos del territorio."
         action={
           <Button
             variant="contained"
@@ -139,7 +129,7 @@ export default function CommitmentsPage() {
               setOpen(true);
             }}
           >
-            Crear compromiso
+            Crear seguimiento
           </Button>
         }
       />
@@ -154,61 +144,34 @@ export default function CommitmentsPage() {
           <MenuItem value="">Todos</MenuItem>
           {['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((x) => (
             <MenuItem key={x} value={x}>
-              {operationStatusLabel(x)}
+              {followUpStatusLabel(x)}
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          select
-          label="Prioridad"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          <MenuItem value="">Todas</MenuItem>
-          {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
-            <MenuItem key={x} value={x}>
-              {x}
-            </MenuItem>
-          ))}
-        </TextField>
-        <FormControlLabel
-          control={<Switch checked={overdue} onChange={(e) => setOverdue(e.target.checked)} />}
-          label="Solo vencidos"
-        />
       </Stack>
       {list.isError ? (
         <ErrorState retry={() => list.refetch()} />
       ) : (
         <DataTable
-          label="compromisos"
+          label="seguimientos de campaña"
           loading={list.isLoading}
           rows={list.data?.items ?? []}
           columns={[
-            { key: 'title', label: 'Compromiso', render: (x) => x.title },
+            { key: 'title', label: 'Seguimiento', render: (x) => x.title },
             {
-              key: 'due',
-              label: 'Fecha límite',
-              render: (x) => (
-                <>
-                  {formatDateOnly(x.due_date)}
-                  {overdueDays(x.due_date, x.status) > 0 && (
-                    <Typography color="error" variant="caption" display="block">
-                      {overdueDays(x.due_date, x.status)} días de retraso
-                    </Typography>
-                  )}
-                </>
-              ),
+              key: 'responsible',
+              label: 'Responsable',
+              render: (x) => x.responsible_name ?? (x.responsible_user_id ? 'Responsable asignado' : 'Sin asignar'),
             },
             {
-              key: 'priority',
-              label: 'Prioridad',
-              render: (x) => <StatusBadge value={x.priority} />,
+              key: 'origin',
+              label: 'Origen',
+              render: (x) => x.activity_id ? 'Actividad relacionada' : x.need_id ? 'Necesidad registrada' : 'Registro manual',
             },
             {
               key: 'status',
               label: 'Estado',
-              render: (x) => <StatusBadge value={operationStatusLabel(x.status)} />,
+              render: (x) => <StatusBadge value={followUpStatusLabel(x.status)} />,
             },
           ]}
           onEdit={async (x) => {
@@ -226,36 +189,29 @@ export default function CommitmentsPage() {
         onChange={(_, v) => setPage(v)}
       />
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
-        <DialogTitle>{editing ? 'Editar compromiso' : 'Crear compromiso'}</DialogTitle>
+        <DialogTitle>{editing ? 'Editar seguimiento' : 'Crear seguimiento'}</DialogTitle>
         <DialogContent>
           {error && <Alert severity="error">{error}</Alert>}
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Título" {...register('title', { required: true })} />
             <TextField label="Descripción" multiline minRows={3} {...register('description')} />
-            <TextField select label="Prioridad" defaultValue="MEDIUM" {...register('priority')}>
-              {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((x) => (
-                <MenuItem key={x} value={x}>
-                  {x}
-                </MenuItem>
-              ))}
-            </TextField>
             <TextField select label="Estado" defaultValue="PENDING" {...register('status')}>
               {['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((x) => (
                 <MenuItem key={x} value={x}>
-                  {operationStatusLabel(x)}
+                  {followUpStatusLabel(x)}
                 </MenuItem>
               ))}
             </TextField>
             <TextField
               type="date"
-              label="Fecha límite"
+              label="Fecha de seguimiento (opcional)"
               InputLabelProps={{ shrink: true }}
               {...register('due_date')}
             />
             {formStatus === 'COMPLETED' && (
               <TextField
                 type="date"
-                label="Fecha de cumplimiento"
+                label="Fecha de realización"
                 InputLabelProps={{ shrink: true }}
                 {...register('completed_date')}
               />
@@ -268,7 +224,7 @@ export default function CommitmentsPage() {
             >
               {parishes.data?.map((x) => (
                 <MenuItem key={x.id} value={x.id}>
-                  {x.name}
+                  {parishOptionLabel(x, parishes.data ?? [])}
                 </MenuItem>
               ))}
             </TextField>
@@ -284,7 +240,7 @@ export default function CommitmentsPage() {
                 await save.mutateAsync(v);
                 setOpen(false);
               } catch {
-                setError('No se pudo guardar el compromiso.');
+                setError('No se pudo guardar el seguimiento.');
               }
             })}
           >

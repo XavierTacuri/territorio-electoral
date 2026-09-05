@@ -89,10 +89,6 @@ export default function OperationsPage() {
           ['En revisión', s.needs.under_review],
           ['Necesidades validadas', s.needs.validated],
           ['Críticas sin responsable', s.needs.critical_unassigned],
-          ['Compromisos pendientes', s.commitments.pending],
-          ['En progreso', s.commitments.in_progress],
-          ['Compromisos vencidos', s.commitments.overdue],
-          ['Compromisos completados', s.commitments.completed],
         ].map(([label, value]) => (
           <Grid key={String(label)} size={{ xs: 12, sm: 6, md: 3 }}>
             <Metric label={String(label)} value={value} />
@@ -106,7 +102,6 @@ export default function OperationsPage() {
         {[
           ['Parroquias con actividades', s.coverage.with_activities],
           ['Parroquias con necesidades', s.coverage.with_needs],
-          ['Parroquias con compromisos', s.coverage.with_commitments],
         ].map(([label, value]) => (
           <Grid key={String(label)} size={{ xs: 12, md: 4 }}>
             <Metric label={String(label)} value={`${value} / ${s.coverage.total_parishes}`} />

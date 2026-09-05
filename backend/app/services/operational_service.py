@@ -1,5 +1,7 @@
+import tempfile
 from datetime import date,datetime,timezone,timedelta
 from math import ceil
+from pathlib import Path
 from uuid import UUID
 from hashlib import sha256
 from sqlalchemy import func,or_,select
@@ -11,15 +13,20 @@ from app.models.operational import *
 from app.models.alerts import AlertRule,OperationalAlert
 from app.models.territory import Community,Parish,Sector
 from app.models.user import User
+from app.models.security import SecurityAuditEvent
 from app.schemas.operational import *
 from app.services.campaign_access_service import CampaignAccessService
+from app.services.campaign_permissions import CAMPAIGN_EXECUTIVE_ROLES
 from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundError
 from app.services.security_audit_service import SecurityAuditService
+from app.services.evidence_security_service import EVIDENCE_EXTENSION_BY_MIME,safe_evidence_filename,sniff_evidence_mime
+from app.services.evidence_storage_service import LocalEvidenceStorage
+from app.core.config import settings
 class OperationalService:
-    WRITERS={"CANDIDATE","CAMPAIGN_MANAGER","TERRITORIAL_COORDINATOR"};RESPONSIBLE=WRITERS|{"ANALYST"}
-    def __init__(self,db:Session,today_provider=date.today):self.db=db;self.access=CampaignAccessService(db);self.today=today_provider
+    WRITERS=CAMPAIGN_EXECUTIVE_ROLES|{"TERRITORIAL_COORDINATOR"};RESPONSIBLE=WRITERS|{"ANALYST"}
+    def __init__(self,db:Session,today_provider=date.today,storage=None):self.db=db;self.access=CampaignAccessService(db);self.today=today_provider;self.storage=storage or LocalEvidenceStorage(settings.evidence_output_dir,settings.evidence_max_file_mb)
     def role_codes(self,user):return {r.code for r in user.roles}
-    def can_approve(self,user):return self.access.admin(user) or bool(self.role_codes(user).intersection({"CANDIDATE","CAMPAIGN_MANAGER"}))
+    def can_approve(self,user):return self.access.admin(user) or bool(self.role_codes(user).intersection(CAMPAIGN_EXECUTIVE_ROLES))
     def audit(self,event,obj,user,description,metadata=None):
         SecurityAuditService(self.db).record(event,"SUCCESS",description,user_id=user.id,campaign_id=obj.campaign_id,resource_type=obj.__class__.__name__,resource_id=obj.id,metadata=metadata)
     def workflow_alert(self,code,obj,title,message):
@@ -42,6 +49,30 @@ class OperationalService:
         sec=self.db.get(Sector,sector_id) if sector_id else None
         if sector_id and (not community_id or not sec or sec.community_id!=community_id):raise BusinessRuleError("Sector invÃ¡lido")
         return p,com,sec
+    def _attach_parish_names(self, items):
+        ids={item.parish_id for item in items}
+        names={p.id:p.name for p in self.db.scalars(select(Parish).where(Parish.id.in_(ids)))} if ids else {}
+        for item in items:setattr(item,"parish_name",names.get(item.parish_id))
+        return items
+    @staticmethod
+    def _actor_payload(user):
+        if not user:return None
+        display_name=" ".join(x.strip() for x in (user.first_name,user.last_name) if x and x.strip()) or user.username or "Usuario no disponible"
+        return {"id":user.id,"display_name":display_name,"username":user.username,"role_codes":[role.code for role in user.roles]}
+    def _attach_activity_actors(self,obj):
+        for attribute,user_id in (("approved_by",obj.approved_by_user_id),("rejected_by",obj.rejected_by_user_id),("suspended_by",obj.suspended_by_user_id),("completed_by",obj.completed_by_user_id)):
+            setattr(obj,attribute,self._actor_payload(self.db.get(User,user_id)) if user_id else None)
+        resume_user_id=self.db.scalar(select(SecurityAuditEvent.user_id).where(SecurityAuditEvent.resource_type=="TerritorialActivity",SecurityAuditEvent.resource_id==obj.id,SecurityAuditEvent.event_type=="resume").order_by(SecurityAuditEvent.created_at.desc()).limit(1))
+        setattr(obj,"resumed_by",self._actor_payload(self.db.get(User,resume_user_id)) if resume_user_id else None)
+        return obj
+    def _attach_commitment_responsibles(self,items):
+        ids={item.responsible_user_id for item in items if item.responsible_user_id}
+        users={user.id:user for user in self.db.scalars(select(User).where(User.id.in_(ids)))} if ids else {}
+        for item in items:
+            user=users.get(item.responsible_user_id)
+            name=" ".join(part.strip() for part in (user.first_name,user.last_name) if user and part and part.strip()) if user else ""
+            setattr(item,"responsible_name",name or (user.username if user else None))
+        return items
     def territorial_access(self,user:User,campaign_id:UUID,parish_id:int,community_id=None,sector_id=None):
         roles={r.code for r in user.roles}
         if self.access.admin(user) or roles.intersection({"CANDIDATE","CAMPAIGN_MANAGER"}):return True
@@ -60,9 +91,14 @@ class OperationalService:
         self.campaign(campaign_id,user,write);obj=self.db.get(TerritorialActivity,id)
         if not obj or obj.campaign_id!=campaign_id or (active and not obj.is_active):raise NotFoundError("Actividad no encontrada")
         if not self.territorial_access(user,campaign_id,obj.parish_id,obj.community_id,obj.sector_id) and "CANDIDATE" not in {r.code for r in user.roles} and "ANALYST" not in {r.code for r in user.roles}:raise PermissionError("Sin acceso territorial")
-        return obj
+        return self._attach_activity_actors(self._attach_parish_names([obj])[0])
     def create_activity(self,campaign_id,data,user):
-        c=self.campaign(campaign_id,user,True);self.territory(c,data.parish_id,data.community_id,data.sector_id)
+        c=self.campaign(campaign_id,user,True)
+        if data.client_generated_id:
+            existing=self.db.scalar(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign_id,TerritorialActivity.created_by_user_id==user.id,TerritorialActivity.client_generated_id==data.client_generated_id))
+            if existing:return self._attach_activity_actors(self._attach_parish_names([existing])[0])
+        self.territory(c,data.parish_id,data.community_id,data.sector_id)
+        if data.status!="PLANNED":raise BusinessRuleError("Las actividades nuevas deben crearse como planificadas")
         if not self.territorial_access(user,campaign_id,data.parish_id,data.community_id,data.sector_id):raise PermissionError("Sin acceso territorial")
         t=self.db.scalar(select(ActivityType).where(ActivityType.code==data.activity_type_code.upper(),ActivityType.is_active.is_(True)))
         if not t:raise BusinessRuleError("Tipo de actividad inexistente o inactivo")
@@ -70,9 +106,15 @@ class OperationalService:
         self.responsible(campaign_id,data.responsible_user_id);v=data.model_dump();v.pop("activity_type_code");v["activity_type_id"]=t.id;v["campaign_id"]=campaign_id;v["created_by_user_id"]=user.id;v["location"]=f"SRID=4326;POINT({data.longitude} {data.latitude})" if data.latitude is not None else None
         if self.can_approve(user):
             v.update(approval_status="APPROVED",approved_by_user_id=user.id,approved_at=datetime.now(timezone.utc))
+        elif "TERRITORIAL_COORDINATOR" in self.role_codes(user):
+            v.update(approval_status="PENDING_APPROVAL",submitted_by_user_id=user.id,submitted_for_approval_at=datetime.now(timezone.utc))
         else:v["approval_status"]="DRAFT"
         obj=TerritorialActivity(**v);self.db.add(obj);self.db.flush();self.audit("create",obj,user,"Actividad creada")
+        # ACTIVITY_PENDING_APPROVAL is derived by AlertEvaluationService (state-based,
+        # deduped by fingerprint and auto-resolved once approved/rejected) rather than
+        # fired here as a one-off — a per-transition alert can't be deduped or resolved.
         if obj.approval_status=="APPROVED":self.audit("approve",obj,user,"Actividad aprobada al crear por usuario autorizado")
+        elif obj.approval_status=="PENDING_APPROVAL":self.audit("submit_for_approval",obj,user,"Actividad enviada a aprobación al crear")
         self.db.commit();self.db.refresh(obj);return obj
     def list_activities(self,campaign_id,user,page,size,**filters):
         self.campaign(campaign_id,user);conds=[TerritorialActivity.campaign_id==campaign_id]
@@ -86,15 +128,13 @@ class OperationalService:
         if filters.get("activity_type_code"):conds.append(TerritorialActivity.activity_type_id==select(ActivityType.id).where(ActivityType.code==filters["activity_type_code"]).scalar_subquery())
         items=list(self.db.scalars(select(TerritorialActivity).where(*conds).order_by(TerritorialActivity.activity_date.desc(),TerritorialActivity.title)))
         items=[x for x in items if self.territorial_access(user,campaign_id,x.parish_id,x.community_id,x.sector_id) or {"ADMIN","CANDIDATE","CAMPAIGN_MANAGER","ANALYST"}.intersection(r.code for r in user.roles) or user.is_superuser]
-        total=len(items);items=items[(page-1)*size:page*size];return TerritorialActivityListResponse(items=items,page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
+        total=len(items);items=self._attach_parish_names(items[(page-1)*size:page*size]);return TerritorialActivityListResponse(items=items,page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
     def update_activity(self,campaign_id,id,data,user):
         obj=self.activity(campaign_id,id,user,True);v=data.model_dump(exclude_unset=True);code=v.pop("activity_type_code",None);old_status=obj.status
         material=bool(set(v).intersection({"title","description","activity_date","start_time","end_time","parish_id","location_name"}) or code)
         if material and obj.approval_status=="PENDING_APPROVAL" and not self.can_approve(user):raise BusinessRuleError("Una actividad pendiente no admite cambios materiales")
         if "status" in v and v["status"]!=old_status:
-            allowed={"PLANNED":{"IN_PROGRESS","CANCELLED"},"IN_PROGRESS":{"COMPLETED","CANCELLED"},"COMPLETED":set(),"CANCELLED":set()}
-            if v["status"] not in allowed.get(old_status,set()):raise BusinessRuleError("Transición de ejecución inválida")
-            if obj.approval_status!="APPROVED" and v["status"]!="CANCELLED":raise BusinessRuleError("Solo una actividad aprobada puede ejecutarse")
+            raise BusinessRuleError("Use la acción específica para completar, suspender o reanudar la actividad")
         if code:
             t=self.db.scalar(select(ActivityType).where(ActivityType.code==code.upper(),ActivityType.is_active.is_(True)))
             if not t:raise BusinessRuleError("Tipo inactivo");obj.activity_type_id=t.id
@@ -107,12 +147,74 @@ class OperationalService:
             self.audit("resubmit",obj,user,"Actividad modificada después de aprobación. Requiere nueva aprobación.")
         else:self.audit("status_change" if obj.status!=old_status else "update",obj,user,"Estado de ejecución actualizado" if obj.status!=old_status else "Actividad actualizada",{"material":material})
         self.db.commit();self.db.refresh(obj);return obj
+    def complete_activity(self,campaign_id,id,data,user):
+        """Cierra una actividad y persiste sus relaciones en una sola transacción."""
+        try:
+            obj=self.activity(campaign_id,id,user,True)
+            if obj.status not in {"PLANNED","IN_PROGRESS"}:raise BusinessRuleError("Solo se pueden cerrar actividades planificadas o en progreso")
+            if obj.approval_status!="APPROVED":raise BusinessRuleError("Solo se pueden cerrar actividades aprobadas")
+            existing_ids=list(dict.fromkeys(data.existing_need_ids));linked=[]
+            if existing_ids:
+                linked=list(self.db.scalars(select(CitizenNeed).where(CitizenNeed.id.in_(existing_ids),CitizenNeed.campaign_id==campaign_id,CitizenNeed.is_active.is_(True))))
+                if len(linked)!=len(existing_ids):raise NotFoundError("Una necesidad no pertenece a esta campaÃ±a")
+                for need in linked:
+                    if need.parish_id!=obj.parish_id:raise BusinessRuleError("La necesidad debe pertenecer al mismo territorio")
+                    need.mentions_count+=1
+                    self.audit("relate_activity",need,user,"Necesidad detectada nuevamente en una actividad",{"activity_id":str(obj.id),"activity_title":obj.title})
+            created=[]
+            for data_need in data.new_needs:
+                cat=self.db.scalar(select(NeedCategory).where(NeedCategory.code==data_need.need_category_code.upper(),NeedCategory.is_active.is_(True)))
+                if not cat:raise BusinessRuleError("CategorÃ­a de necesidad inexistente")
+                title=" ".join(data_need.title.split())
+                duplicate=self.db.scalar(select(CitizenNeed).where(CitizenNeed.campaign_id==campaign_id,CitizenNeed.parish_id==obj.parish_id,CitizenNeed.need_category_id==cat.id,func.lower(CitizenNeed.title)==title.lower(),CitizenNeed.is_active.is_(True)))
+                if duplicate:raise ConflictError("Ya existe una necesidad compatible; vincÃºlela en lugar de duplicarla")
+                values=data_need.model_dump();values.pop("need_category_code");values.update(campaign_id=campaign_id,activity_id=obj.id,need_category_id=cat.id,title=title,parish_id=obj.parish_id,community_id=obj.community_id,sector_id=obj.sector_id,created_by_user_id=user.id,reported_by_user_id=user.id,reported_date=self.today(),urgency=values.get("urgency") or values["priority"],is_active=True)
+                self.responsible(campaign_id,values.get("assigned_to_user_id"));need=CitizenNeed(**values);self.db.add(need);self.db.flush();created.append(need)
+            valid_need_ids={need.id for need in linked+created}
+            for data_commitment in data.commitments:
+                if data_commitment.need_id and data_commitment.need_id not in valid_need_ids:
+                    related=self.db.get(CitizenNeed,data_commitment.need_id)
+                    if not related or related.campaign_id!=campaign_id or not related.is_active:raise NotFoundError("La necesidad del compromiso no pertenece a esta campaÃ±a")
+                    if related.parish_id!=obj.parish_id:raise BusinessRuleError("El compromiso debe pertenecer al mismo territorio")
+                    valid_need_ids.add(related.id)
+                values=data_commitment.model_dump();values.update(campaign_id=campaign_id,activity_id=obj.id,parish_id=obj.parish_id,community_id=obj.community_id,sector_id=obj.sector_id,created_by_user_id=user.id,is_active=True)
+                self.responsible(campaign_id,values.get("responsible_user_id"));self.db.add(Commitment(**values))
+            obj.status="COMPLETED";obj.completion_summary=data.summary;obj.outcome_notes=data.outcome_notes;obj.completed_at=datetime.now(timezone.utc);obj.completed_by_user_id=user.id
+            self.audit("complete",obj,user,"Actividad cerrada con resumen estructurado",{"needs":len(linked)+len(created),"commitments":len(data.commitments)})
+            self.db.commit();self.db.refresh(obj);return obj
+        except Exception:
+            self.db.rollback();raise
+    def cancel_activity(self,campaign_id,id,data,user):
+        try:
+            obj=self.activity(campaign_id,id,user,True)
+            if obj.status not in {"PLANNED","IN_PROGRESS"}:raise BusinessRuleError("La actividad no puede cancelarse desde su estado actual")
+            obj.status="CANCELLED";obj.cancellation_reason=data.reason;obj.cancelled_at=datetime.now(timezone.utc);obj.cancelled_by_user_id=user.id
+            self.audit("cancel",obj,user,"Actividad cancelada",{"reason":data.reason});self.db.commit();self.db.refresh(obj);return obj
+        except Exception:
+            self.db.rollback();raise
+    def suspend_activity(self,campaign_id,id,data,user):
+        try:
+            obj=self.activity(campaign_id,id,user,True)
+            if obj.status!="PLANNED":raise BusinessRuleError("Solo se pueden suspender actividades planificadas")
+            if obj.approval_status!="APPROVED":raise BusinessRuleError("Solo se pueden suspender actividades aprobadas")
+            obj.status="SUSPENDED";obj.suspension_reason=data.reason;obj.suspended_at=datetime.now(timezone.utc);obj.suspended_by_user_id=user.id
+            self.audit("suspend",obj,user,"Actividad suspendida",{"reason":data.reason});self.db.commit();self.db.refresh(obj);return obj
+        except Exception:
+            self.db.rollback();raise
+    def resume_activity(self,campaign_id,id,user):
+        try:
+            obj=self.activity(campaign_id,id,user,True)
+            if obj.status!="SUSPENDED":raise BusinessRuleError("Solo se pueden reanudar actividades suspendidas")
+            obj.status="PLANNED"
+            self.audit("resume",obj,user,"Actividad reanudada",{"suspension_reason":obj.suspension_reason});self.db.commit();self.db.refresh(obj);return obj
+        except Exception:
+            self.db.rollback();raise
     def submit_activity(self,campaign_id,id,user):
         obj=self.activity(campaign_id,id,user,True)
         if obj.approval_status not in {"DRAFT","REJECTED"}:raise BusinessRuleError("La actividad no puede enviarse a aprobación desde su estado actual")
         event="resubmit" if obj.approval_status=="REJECTED" else "submit_for_approval"
         obj.approval_status="PENDING_APPROVAL";obj.submitted_by_user_id=user.id;obj.submitted_for_approval_at=datetime.now(timezone.utc)
-        self.audit(event,obj,user,"Actividad enviada a aprobación");self.workflow_alert("ACTIVITY_PENDING_APPROVAL",obj,"Actividad pendiente de aprobación",obj.title);self.db.commit();self.db.refresh(obj);return obj
+        self.audit(event,obj,user,"Actividad enviada a aprobación");self.db.commit();self.db.refresh(obj);return obj
     def approve_activity(self,campaign_id,id,user):
         obj=self.activity(campaign_id,id,user,True)
         if not self.can_approve(user):raise PermissionError("Sin permiso para aprobar actividades")
@@ -131,19 +233,25 @@ class OperationalService:
         self.audit("reject",obj,user,"Actividad rechazada",{"reason":reason});self.workflow_alert("ACTIVITY_REJECTED",obj,"Actividad rechazada",f"{obj.title}: {reason}");self.db.commit();self.db.refresh(obj);return obj
     def deactivate_activity(self,campaign_id,id,user):
         obj=self.activity(campaign_id,id,user,True)
-        if not self.access.admin(user) and "CAMPAIGN_MANAGER" not in {r.code for r in user.roles}:raise PermissionError("Sin permisos")
+        if not self.access.admin(user) and not self.role_codes(user).intersection(CAMPAIGN_EXECUTIVE_ROLES):raise PermissionError("Sin permisos")
         obj.is_active=False;self.db.commit()
     def participant(self,campaign_id,activity_id,user,data=None):
         act=self.activity(campaign_id,activity_id,user,data is not None);obj=self.db.scalar(select(ActivityParticipantSummary).where(ActivityParticipantSummary.activity_id==activity_id))
         if data is None:
             if not obj:raise NotFoundError("Resumen no encontrado")
             return obj
+        if act.approval_status!="APPROVED":raise BusinessRuleError("La actividad debe estar aprobada para registrar resultados")
         if not obj:obj=ActivityParticipantSummary(activity_id=activity_id,created_by_user_id=user.id);self.db.add(obj)
         for k,v in data.model_dump().items():setattr(obj,k,v)
         self.db.commit();self.db.refresh(obj);return obj
     def create_need(self,campaign_id,activity_id,data,user):
+        self.campaign(campaign_id,user,True)
+        if data.client_generated_id:
+            existing=self.db.scalar(select(CitizenNeed).where(CitizenNeed.campaign_id==campaign_id,CitizenNeed.created_by_user_id==user.id,CitizenNeed.client_generated_id==data.client_generated_id))
+            if existing:return existing
         act=self.activity(campaign_id,activity_id,user,True) if activity_id else None
         if act and act.status=="CANCELLED":raise BusinessRuleError("Actividad cancelada")
+        if act and act.approval_status!="APPROVED":raise BusinessRuleError("La actividad debe estar aprobada para registrar necesidades detectadas")
         campaign=self.campaign(campaign_id,user,True);parish_id=act.parish_id if act else data.parish_id
         if not parish_id:raise BusinessRuleError("La parroquia es obligatoria")
         self.territory(campaign,parish_id)
@@ -154,7 +262,7 @@ class OperationalService:
         if activity_id and self.db.scalar(select(CitizenNeed.id).where(CitizenNeed.activity_id==activity_id,CitizenNeed.need_category_id==cat.id,func.lower(CitizenNeed.title)==title.lower(),CitizenNeed.is_active.is_(True))):raise ConflictError("Necesidad duplicada")
         v=data.model_dump();v.pop("need_category_code");v.pop("parish_id",None);v["title"]=title;v["urgency"]=v.pop("urgency") or v["priority"]
         obj=CitizenNeed(**v,campaign_id=campaign_id,activity_id=activity_id,need_category_id=cat.id,parish_id=parish_id,community_id=act.community_id if act else None,sector_id=act.sector_id if act else None,created_by_user_id=user.id,reported_by_user_id=user.id)
-        self.responsible(campaign_id,obj.assigned_to_user_id);self.db.add(obj);self.db.flush();self.audit("create",obj,user,"Necesidad reportada");self.db.commit();self.db.refresh(obj);return obj
+        self.responsible(campaign_id,obj.assigned_to_user_id);self.db.add(obj);self.db.flush();self.audit("create",obj,user,"Necesidad registrada");self.db.commit();self.db.refresh(obj);return obj
     def needs(self,campaign_id,user,page=1,size=20,activity_id=None,**filters):
         self.campaign(campaign_id,user);conds=[CitizenNeed.campaign_id==campaign_id,CitizenNeed.is_active.is_(True)]
         if activity_id:conds.append(CitizenNeed.activity_id==activity_id)
@@ -164,7 +272,8 @@ class OperationalService:
         if filters.get("search"):conds.append(or_(func.lower(CitizenNeed.title).like(f"%{filters['search'].lower()}%"),func.lower(CitizenNeed.description).like(f"%{filters['search'].lower()}%")))
         if filters.get("date_from"):conds.append(CitizenNeed.activity_id.in_(select(TerritorialActivity.id).where(TerritorialActivity.activity_date>=filters["date_from"])))
         if filters.get("date_to"):conds.append(CitizenNeed.activity_id.in_(select(TerritorialActivity.id).where(TerritorialActivity.activity_date<=filters["date_to"])))
-        items=list(self.db.scalars(select(CitizenNeed).where(*conds).order_by(CitizenNeed.mentions_count.desc(),CitizenNeed.title)))
+        # Repeated detections remain contextual data, never a territorial ranking.
+        items=list(self.db.scalars(select(CitizenNeed).where(*conds).order_by(CitizenNeed.reported_date.desc(),CitizenNeed.title)))
         roles={r.code for r in user.roles}
         if not (self.access.admin(user) or roles.intersection({"CANDIDATE","CAMPAIGN_MANAGER","ANALYST"})):
             items=[x for x in items if self.territorial_access(user,campaign_id,x.parish_id,x.community_id,x.sector_id)]
@@ -199,17 +308,17 @@ class OperationalService:
         c=self.campaign(campaign_id,user,True);v=data.model_dump()
         if data.need_id:
             need=self.need(campaign_id,data.need_id,user,True)
-            if need.status!="VALIDATED":raise BusinessRuleError("Solo una necesidad validada puede generar compromiso")
             if (data.parish_id,data.community_id,data.sector_id)!=(need.parish_id,need.community_id,need.sector_id):raise BusinessRuleError("Territorio distinto a la necesidad")
         if data.activity_id:
             act=self.activity(campaign_id,data.activity_id,user,True)
+            if act.approval_status!="APPROVED":raise BusinessRuleError("La actividad debe estar aprobada para registrar seguimientos")
             if (data.parish_id,data.community_id,data.sector_id)!=(act.parish_id,act.community_id,act.sector_id):raise BusinessRuleError("Territorio distinto a la actividad")
         else:self.territory(c,data.parish_id,data.community_id,data.sector_id)
         if not self.territorial_access(user,campaign_id,data.parish_id,data.community_id,data.sector_id):raise PermissionError("Sin acceso territorial")
         self.responsible(campaign_id,data.responsible_user_id)
         if data.status==CommitmentStatus.COMPLETED and not data.completed_date:v["completed_date"]=self.today()
-        obj=Commitment(**v,campaign_id=campaign_id,created_by_user_id=user.id);self.db.add(obj);self.db.flush();self.audit("create_commitment",obj,user,"Compromiso creado",{"need_id":str(data.need_id) if data.need_id else None})
-        if data.need_id:need.status="IN_PLAN"
+        obj=Commitment(**v,campaign_id=campaign_id,created_by_user_id=user.id);self.db.add(obj);self.db.flush();self.audit("create_commitment",obj,user,"Seguimiento de campaña creado",{"need_id":str(data.need_id) if data.need_id else None})
+        # Un seguimiento es una acciÃ³n interna; no convierte la necesidad en promesa o plan.
         self.db.commit();self.db.refresh(obj);return obj
     def history(self,campaign_id,resource_type,resource_id,user):
         if resource_type=="TerritorialActivity":self.activity(campaign_id,resource_id,user)
@@ -225,7 +334,7 @@ class OperationalService:
         commitments=[x for x in self.db.scalars(select(Commitment).where(Commitment.campaign_id==campaign_id,Commitment.is_active.is_(True))) if allowed(x)]
         total=self.db.scalar(select(func.count()).select_from(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True))) or 0
         open_states={"REPORTED","IDENTIFIED","UNDER_REVIEW","VALIDATED","IN_PLAN","INCLUDED_IN_PLAN"}
-        return {"activities":{"upcoming":sum(x.approval_status=="APPROVED" and x.status=="PLANNED" and x.activity_date>=today for x in activities),"pending_approval":sum(x.approval_status=="PENDING_APPROVAL" for x in activities),"completed":sum(x.status=="COMPLETED" for x in activities)},"needs":{"open":sum(x.status in open_states for x in needs),"under_review":sum(x.status=="UNDER_REVIEW" for x in needs),"validated":sum(x.status=="VALIDATED" for x in needs),"critical_unassigned":sum(x.urgency=="CRITICAL" and x.assigned_to_user_id is None and x.status in open_states for x in needs)},"commitments":{"pending":sum(x.status=="PENDING" for x in commitments),"in_progress":sum(x.status=="IN_PROGRESS" for x in commitments),"overdue":sum(bool(x.due_date and x.due_date<today and x.status in {"PENDING","IN_PROGRESS"}) for x in commitments),"completed":sum(x.status=="COMPLETED" for x in commitments)},"coverage":{"total_parishes":total,"with_activities":len({x.parish_id for x in activities}),"with_needs":len({x.parish_id for x in needs}),"with_commitments":len({x.parish_id for x in commitments})},"can_approve":self.can_approve(user)}
+        return {"activities":{"total":len(activities),"demo":sum(x.title.startswith("[DEMO]") for x in activities),"upcoming":sum(x.approval_status=="APPROVED" and x.status=="PLANNED" and x.activity_date>=today for x in activities),"pending_approval":sum(x.approval_status=="PENDING_APPROVAL" for x in activities),"completed":sum(x.status=="COMPLETED" for x in activities)},"needs":{"total":len(needs),"demo":sum(x.title.startswith("[DEMO]") for x in needs),"open":sum(x.status in open_states for x in needs),"under_review":sum(x.status=="UNDER_REVIEW" for x in needs),"validated":sum(x.status=="VALIDATED" for x in needs),"critical_unassigned":sum(x.urgency=="CRITICAL" and x.assigned_to_user_id is None and x.status in open_states for x in needs)},"commitments":{"pending":sum(x.status=="PENDING" for x in commitments),"in_progress":sum(x.status=="IN_PROGRESS" for x in commitments),"overdue":sum(bool(x.due_date and x.due_date<today and x.status in {"PENDING","IN_PROGRESS"}) for x in commitments),"completed":sum(x.status=="COMPLETED" for x in commitments)},"coverage":{"total_parishes":total,"with_activities":len({x.parish_id for x in activities}),"with_needs":len({x.parish_id for x in needs}),"with_commitments":len({x.parish_id for x in commitments})},"can_approve":self.can_approve(user)}
     def agenda(self,campaign_id,user):
         self.campaign(campaign_id,user);today=self.today()
         activities=self.list_activities(campaign_id,user,1,100,include_inactive=False).items
@@ -243,12 +352,12 @@ class OperationalService:
         roles={r.code for r in user.roles}
         if not (self.access.admin(user) or roles.intersection({"CANDIDATE","CAMPAIGN_MANAGER","ANALYST"})):
             items=[x for x in items if self.territorial_access(user,campaign_id,x.parish_id,x.community_id,x.sector_id)]
-        total=len(items);return CommitmentListResponse(items=items[(page-1)*size:page*size],page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
+        total=len(items);page_items=items[(page-1)*size:page*size];self._attach_commitment_responsibles(page_items);return CommitmentListResponse(items=page_items,page=page,page_size=size,total=total,total_pages=ceil(total/size) if total else 0)
     def commitment(self,campaign_id,id,user,write=False):
         self.campaign(campaign_id,user,write);obj=self.db.get(Commitment,id)
-        if not obj or obj.campaign_id!=campaign_id or not obj.is_active:raise NotFoundError("Compromiso no encontrado")
+        if not obj or obj.campaign_id!=campaign_id or not obj.is_active:raise NotFoundError("Seguimiento no encontrado")
         if not self.territorial_access(user,campaign_id,obj.parish_id,obj.community_id,obj.sector_id) and not {"CANDIDATE","ANALYST"}.intersection(r.code for r in user.roles):raise PermissionError("Sin acceso")
-        return obj
+        self._attach_commitment_responsibles([obj]);return obj
     def update_commitment(self,campaign_id,id,data,user):
         obj=self.commitment(campaign_id,id,user,True);v=data.model_dump(exclude_unset=True)
         for k,val in v.items():setattr(obj,k,val)
@@ -257,7 +366,8 @@ class OperationalService:
         if obj.completed_date and obj.completed_date>self.today():raise BusinessRuleError("Fecha futura")
         self.db.commit();self.db.refresh(obj);return obj
     def evidence(self,campaign_id,activity_id,user,data=None,id=None):
-        self.activity(campaign_id,activity_id,user,data is not None)
+        act=self.activity(campaign_id,activity_id,user,data is not None)
+        if data is not None and act.approval_status!="APPROVED":raise BusinessRuleError("La actividad debe estar aprobada para registrar evidencias")
         if id:
             obj=self.db.get(ActivityEvidence,id)
             if not obj or obj.activity_id!=activity_id or not obj.is_active:raise NotFoundError("Evidencia no encontrada")
@@ -267,6 +377,37 @@ class OperationalService:
         if data and id:
             for k,v in data.model_dump(exclude_unset=True).items():setattr(obj,k,str(v) if k=="url" else v)
         self.db.commit();self.db.refresh(obj);return obj
+    def upload_evidence(self,campaign_id,activity_id,user,*,file_bytes,original_filename,evidence_type,title,description,evidence_date,client_generated_id):
+        act=self.activity(campaign_id,activity_id,user,True)
+        if client_generated_id:
+            existing=self.db.scalar(select(ActivityEvidence).where(ActivityEvidence.activity_id==activity_id,ActivityEvidence.uploaded_by_user_id==user.id,ActivityEvidence.client_generated_id==client_generated_id))
+            if existing:return existing
+        if act.approval_status!="APPROVED":raise BusinessRuleError("La actividad debe estar aprobada para adjuntar evidencia")
+        mime=sniff_evidence_mime(file_bytes[:16])
+        if not mime:raise BusinessRuleError("Formato de archivo no permitido")
+        extension=EVIDENCE_EXTENSION_BY_MIME[mime]
+        handle,tmp_name=tempfile.mkstemp(suffix=f".{extension}");tmp=Path(tmp_name)
+        try:
+            with open(handle,"wb") as fh:fh.write(file_bytes)
+            try:key,size,digest=self.storage.store(tmp,extension)
+            except ValueError as e:raise BusinessRuleError(str(e)) from e
+            # A storage/OS failure (disk permissions, no space, ...) is an
+            # infrastructure problem, not an authorization decision — letting
+            # it propagate as a bare PermissionError would get relabeled 403
+            # by the router's generic exception mapping and read as an RBAC
+            # denial, which is actively misleading to whoever is debugging it.
+            except OSError as e:raise BusinessRuleError("No fue posible guardar el archivo. Intenta nuevamente.") from e
+        finally:
+            tmp.unlink(missing_ok=True)
+        obj=ActivityEvidence(activity_id=activity_id,evidence_type=evidence_type,title=title,description=description,evidence_date=evidence_date,uploaded_by_user_id=user.id,storage_key=key,mime_type=mime,size_bytes=size,sha256=digest,original_filename=safe_evidence_filename(original_filename or title,extension),client_generated_id=client_generated_id,is_active=True)
+        self.db.add(obj);self.db.flush()
+        SecurityAuditService(self.db).record("evidence_upload","SUCCESS","Evidencia cargada",user_id=user.id,campaign_id=campaign_id,resource_type="ActivityEvidence",resource_id=obj.id,metadata={"activity_id":str(activity_id),"client_generated_id":str(client_generated_id) if client_generated_id else None,"mime_type":mime,"size_bytes":size})
+        self.db.commit();self.db.refresh(obj);return obj
+    def evidence_file(self,campaign_id,activity_id,evidence_id,user):
+        self.activity(campaign_id,activity_id,user,False)
+        obj=self.db.get(ActivityEvidence,evidence_id)
+        if not obj or obj.activity_id!=activity_id or not obj.is_active or not obj.storage_key:raise NotFoundError("Evidencia no encontrada")
+        return self.storage.resolve(obj.storage_key),obj
     def summary(self,campaign_id,user,date_from=None,date_to=None):
         c=self.campaign(campaign_id,user);today=self.today();date_to=date_to or today;date_from=date_from or today-timedelta(days=today.weekday())
         acts=list(self.db.scalars(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign_id,TerritorialActivity.is_active.is_(True),TerritorialActivity.activity_date.between(date_from,date_to))))
@@ -280,11 +421,12 @@ class OperationalService:
         types={x.id:x for x in self.db.scalars(select(ActivityType))};parishes={x.id:x for x in self.db.scalars(select(Parish).where(Parish.canton_id==c.canton_id,Parish.is_active.is_(True)))};cats={x.id:x for x in self.db.scalars(select(NeedCategory))}
         bytype=[]
         for tid in {a.activity_type_id for a in acts}:bytype.append(ActivityCountByType(code=types[tid].code,name=types[tid].name,count=sum(a.activity_type_id==tid for a in acts)))
-        priority_rank={"LOW":0,"MEDIUM":1,"HIGH":2,"CRITICAL":3};top=[]
+        top=[]
         for cid in {n.need_category_id for n in needs}:
             grouped=[n for n in needs if n.need_category_id==cid]
-            top.append(NeedCountByCategory(code=cats[cid].code,name=cats[cid].name,mentions=sum(n.mentions_count for n in grouped),activities=len({n.activity_id for n in grouped}),max_priority=max((n.priority for n in grouped),key=lambda value:priority_rank[value],default="LOW")))
-        top.sort(key=lambda x:(-x.mentions,-x.activities));done={a.parish_id for a in acts if a.status=="COMPLETED"};uncovered=[UncoveredParishRead(id=p.id,name=p.name) for p in parishes.values() if p.id not in done and (self.access.admin(user) or self.territorial_access(user,campaign_id,p.id))]
+            # max_priority stays only to preserve the existing response contract.
+            top.append(NeedCountByCategory(code=cats[cid].code,name=cats[cid].name,mentions=sum(n.mentions_count for n in grouped),activities=len({n.activity_id for n in grouped}),max_priority="MEDIUM"))
+        top.sort(key=lambda x:(-x.activities,x.name));done={a.parish_id for a in acts if a.status=="COMPLETED"};uncovered=[UncoveredParishRead(id=p.id,name=p.name) for p in parishes.values() if p.id not in done and (self.access.admin(user) or self.territorial_access(user,campaign_id,p.id))]
         attendees_by_activity={x.activity_id:x.estimated_attendees for x in summaries};byparish=[]
         for pid in {a.parish_id for a in acts}:
             grouped=[a for a in acts if a.parish_id==pid]

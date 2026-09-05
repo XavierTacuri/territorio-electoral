@@ -17,16 +17,25 @@ import { ApiError } from '../../api/errors';
 import { todayDateOnly } from '../../lib/dates';
 import { EXECUTION_STATUS_LABELS } from './statusLabels';
 import type { Activity, Catalog, Parish } from './types';
+import { parishOptionLabel } from '../../lib/territoryLabels';
 const schema = z.object({
   activity_type_code: z.string().min(1),
   title: z.string().trim().min(3).max(220),
   description: z.string().optional(),
   activity_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  status: z.enum(['PLANNED', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'SUSPENDED', 'CANCELLED']),
   parish_id: z.coerce.number().int().positive(),
   location_name: z.string().optional(),
 });
 export type ActivityFormValue = z.infer<typeof schema>;
+export function activityStatusOptions(activity?: Activity | null) {
+  if (!activity) return ['PLANNED'] as const;
+  if (activity.status === 'PLANNED' && activity.approval_status === 'APPROVED')
+    return ['PLANNED', 'COMPLETED', 'SUSPENDED'] as const;
+  if (activity.status === 'SUSPENDED' && activity.approval_status === 'APPROVED')
+    return ['SUSPENDED', 'PLANNED'] as const;
+  return [activity.status];
+}
 export function ActivityForm({
   open,
   activity,
@@ -34,6 +43,7 @@ export function ActivityForm({
   parishes,
   onClose,
   onSubmit,
+  submitLabel = 'Guardar',
 }: {
   open: boolean;
   activity?: Activity | null;
@@ -41,7 +51,9 @@ export function ActivityForm({
   parishes: Parish[];
   onClose: () => void;
   onSubmit: (value: ActivityFormValue) => Promise<void>;
+  submitLabel?: string;
 }) {
+  const statusOptions = activityStatusOptions(activity);
   const [serverError, setServerError] = useState('');
   const {
     control,
@@ -110,7 +122,7 @@ export function ActivityForm({
                 >
                   {types.map((x) => (
                     <MenuItem key={x.id} value={x.code}>
-                      {x.name}
+                      {parishOptionLabel(x, parishes)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -123,9 +135,9 @@ export function ActivityForm({
               control={control}
               render={({ field }) => (
                 <TextField {...field} select fullWidth label="Estado">
-                  {Object.entries(EXECUTION_STATUS_LABELS).map(([value, label]) => (
+                  {statusOptions.map((value) => (
                     <MenuItem key={value} value={value}>
-                      {label}
+                      {EXECUTION_STATUS_LABELS[value as keyof typeof EXECUTION_STATUS_LABELS]}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -200,7 +212,7 @@ export function ActivityForm({
             }
           })}
         >
-          {isSubmitting ? 'Guardando…' : 'Guardar'}
+          {isSubmitting ? 'Guardando…' : submitLabel}
         </Button>
       </DialogActions>
     </Dialog>
