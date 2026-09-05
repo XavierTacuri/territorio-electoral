@@ -99,6 +99,7 @@ class AlertListResponse(BaseModel):
     page: int
     page_size: int
     total: int
+    total: int
 
 
 class AlertSummaryRead(BaseModel):

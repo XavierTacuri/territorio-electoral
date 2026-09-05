@@ -17,7 +17,7 @@ async function fixtureCampaign(request: APIRequestContext) {
   throw new Error('El seed E2E requiere análisis territorial sintético');
 }
 
-test('dashboard abre ficha territorial, mapa, INEC, comparador y PDF portables', async ({
+test('dashboard abre comparador, expediente territorial, mapa, INEC y PDF portables', async ({
   page,
   request,
 }) => {
@@ -28,20 +28,6 @@ test('dashboard abre ficha territorial, mapa, INEC, comparador y PDF portables',
   await page.getByRole('option', { name: campaign.name }).click();
   await page.getByRole('link', { name: 'Inteligencia territorial', exact: true }).click();
   await expect(page).toHaveURL(`/app/campaigns/${campaign.id}/territories`);
-  const selector = page.getByLabel('Seleccionar parroquia');
-  await selector.click();
-  await page.getByRole('option', { name: new RegExp(analysis.parishes[0].name) }).click();
-  await expect(page).toHaveURL(new RegExp(`/territories/${analysis.parishes[0].parish_id}$`));
-  await expect(
-    page.getByRole('heading', {
-      level: 2,
-      name: new RegExp(`${analysis.parishes[0].name}.*DPA`, 'i'),
-    }),
-  ).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PARTICIPACIÓN HISTÓRICA' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PROYECCIÓN DE PARTICIPACIÓN' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Mapa de elección actual' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'CONTEXTO TERRITORIAL' })).toBeVisible();
   const compare = page.getByLabel('Seleccione entre 2 y 3 parroquias');
   for (const parish of analysis.parishes.slice(0, 3)) {
     await compare.click();
@@ -49,11 +35,27 @@ test('dashboard abre ficha territorial, mapa, INEC, comparador y PDF portables',
   }
   for (const parish of analysis.parishes.slice(0, 3))
     await expect(page.getByRole('columnheader', { name: parish.name })).toBeVisible();
+
+  const selector = page.getByLabel('Seleccionar parroquia');
+  await selector.click();
+  await page.getByRole('option', { name: new RegExp(analysis.parishes[0].name) }).click();
+  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
+  await expect(page).toHaveURL(new RegExp(`/territories/${analysis.parishes[0].parish_id}$`));
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 3, name: analysis.parishes[0].name }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'ANTECEDENTES ELECTORALES' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'PARTICIPACIÓN ELECTORAL' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Mapa de elección actual' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'DEMOGRAFÍA' })).toBeVisible();
   const report = page.waitForResponse(
     (response) =>
       response.url().includes('/reports/generate') && response.request().method() === 'POST',
   );
-  await page.getByRole('button', { name: 'GENERAR FICHA PDF' }).click();
+  await page.getByRole('button', { name: 'GENERAR PDF' }).click();
   expect((await report).status()).toBeLessThan(400);
   await expect(page.getByText('Ficha generada')).toBeVisible();
   for (const viewport of [

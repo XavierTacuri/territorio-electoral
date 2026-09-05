@@ -5,9 +5,10 @@ from app.services.public_fetch_security import validate_public_url
 from app.services.public_source_adapters import JsonApiAdapter,RSSAdapter,plain
 from datetime import date,datetime,timedelta,timezone
 import httpx
-from app.models.public_intelligence import PublicSource,PublicTopic,PublicItemRevision
+from app.models.public_intelligence import PublicSource,PublicSourceFetchRun,PublicTopic,PublicItemRevision
 from app.models.alerts import OperationalAlert
 from app.schemas.campaign import CampaignCreate
+from app.schemas.public_intelligence import PublicSourceCreate
 from app.scripts.seed_gualaceo import seed as seed_territory
 from app.services.campaign_service import CampaignService
 from app.services.public_intelligence_service import PublicIntelligenceService
@@ -48,6 +49,44 @@ def test_fetch_dedup_revision_search_and_summary(db,admin):
     item=service.items(campaign.id,admin,1,20,search="vial").items[0];assert item.source_name==source.name;assert len(item.revisions)==2;assert service.summary(campaign.id,admin).official_sources==1
     assert service.items(campaign.id,admin,1,20,search="vialidad").items[0].id==item.id
     assert db.query(PublicItemRevision).count()==2
+
+def test_manual_official_website_refresh_is_rejected_without_run_or_ssrf_lookup(db,admin):
+    _,canton,_=seed_territory(db);campaign=CampaignService(db).create(CampaignCreate(name="Manual",slug="manual-publica",canton_id=canton.id,office_type="MAYOR",election_name="Sintética",election_date=date(2027,2,14),status="ACTIVE"),admin)
+    source=PublicSource(campaign_id=campaign.id,code="CNE_ECUADOR",name="Consejo Nacional Electoral del Ecuador",publisher="CNE",source_type="OFFICIAL_WEBSITE",base_url="https://www.cne.gob.ec",official=True,retrieval_method="MANUAL");db.add(source);db.commit()
+    with patch("app.services.public_intelligence_service.validate_public_url") as validate:
+        with pytest.raises(BusinessRuleError,match="SOURCE_REFRESH_NOT_SUPPORTED"):
+            PublicIntelligenceService(db).fetch(source.id,admin)
+    validate.assert_not_called();assert db.query(PublicSourceFetchRun).filter_by(source_id=source.id).count()==0
+    assert PublicIntelligenceService(db).freshness(source)[0]=="MANUAL"
+
+def test_manual_refresh_endpoint_returns_domain_error_without_history(db,admin,client,admin_headers):
+    _,canton,_=seed_territory(db);campaign=CampaignService(db).create(CampaignCreate(name="Manual API",slug="manual-api",canton_id=canton.id,office_type="MAYOR",election_name="Sintética",election_date=date(2027,2,14),status="ACTIVE"),admin)
+    source=PublicSource(campaign_id=campaign.id,code="MANUAL_API",name="Fuente manual",publisher="Entidad",source_type="OFFICIAL_WEBSITE",base_url="https://public.example",retrieval_method="MANUAL");db.add(source);db.commit()
+    response=client.post(f"/api/v1/public-sources/{source.id}/fetch",headers=admin_headers)
+    assert response.status_code==400 and "SOURCE_REFRESH_NOT_SUPPORTED" in response.json()["detail"]
+    assert db.query(PublicSourceFetchRun).filter_by(source_id=source.id).count()==0
+
+@pytest.mark.parametrize("method", ["WEB_PAGE", "FILE_DOWNLOAD"])
+def test_legacy_scraping_methods_are_rejected_for_new_sources(db,admin,method):
+    _,canton,_=seed_territory(db);campaign=CampaignService(db).create(CampaignCreate(name="Bloqueo scraping",slug=f"bloqueo-{method.lower()}",canton_id=canton.id,office_type="MAYOR",election_name="Sintética",election_date=date(2027,2,14),status="ACTIVE"),admin)
+    data=PublicSourceCreate(code=f"LEGACY_{method}",name="Fuente legacy",publisher="Entidad",source_type="OFFICIAL_WEBSITE",base_url="https://public.example",retrieval_method=method)
+    with pytest.raises(BusinessRuleError,match="disponible"):
+        PublicIntelligenceService(db).create_source(campaign.id,admin,data)
+
+@pytest.mark.parametrize(
+    "method,url_field,payload",
+    [
+        ("RSS","feed_url",b'<rss><channel><item><guid>rss</guid><title>RSS</title><link>https://public.example/rss</link></item></channel></rss>'),
+        ("API","api_url",b'[{"id":"api","title":"API","url":"https://public.example/api"}]'),
+    ],
+)
+def test_refresh_selects_only_configured_rss_or_api_adapter(db,admin,method,url_field,payload):
+    _,canton,_=seed_territory(db);campaign=CampaignService(db).create(CampaignCreate(name=f"Adapter {method}",slug=f"adapter-{method.lower()}",canton_id=canton.id,office_type="MAYOR",election_name="Sintética",election_date=date(2027,2,14),status="ACTIVE"),admin)
+    values={url_field:f"https://public.example/{method.lower()}"};source=PublicSource(campaign_id=campaign.id,code=f"{method}_ADAPTER",name=f"Fuente {method}",publisher="Entidad",source_type=method,base_url="https://public.example",retrieval_method=method,**values);db.add(source);db.commit()
+    def handler(request):return httpx.Response(200,content=payload,request=request)
+    service=PublicIntelligenceService(db,httpx.Client(transport=httpx.MockTransport(handler)))
+    with patch("socket.getaddrinfo",return_value=[(2,1,6,"",("8.8.8.8",443))]):run=service.fetch(source.id,admin)
+    assert run.status=="SUCCESS" and run.items_created==1
 
 @pytest.mark.parametrize("report_format,magic",[("PDF",b"%PDF"),("XLSX",b"PK")])
 def test_public_intelligence_report_is_generated(db,admin,tmp_path,report_format,magic):

@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { apiToken, browserLogin } from './support/auth';
+import { e2eRunId, uniqueE2eValue } from './support/run-data';
 async function campaign(page: Page) {
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
@@ -8,87 +10,50 @@ async function campaign(page: Page) {
 }
 test('encuesta anónima real, importaciones, descargas y alertas', async ({ page, request }) => {
   test.setTimeout(240000);
-  const suffix = Date.now().toString();
+  const suffix = e2eRunId;
   await browserLogin(page);
   const campaignId = await campaign(page);
-  await test.step('encuesta completa y supresión', async () => {
-    await page.getByRole('link', { name: 'Encuestas', exact: true }).click();
-    await page.getByRole('button', { name: 'Gestionar cuestionarios' }).click();
-    await page.getByRole('button', { name: 'Crear cuestionario' }).click();
-    let dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Título').fill('Encuesta profunda ' + suffix);
-    await dialog.getByLabel('Slug').fill('encuesta-profunda-' + suffix);
-    await dialog.getByRole('button', { name: 'Crear y diseñar' }).click();
-    await expect(page.getByRole('heading', { name: /Constructor/ })).toBeVisible();
-    const surveyId = page.url().match(/surveys\/([^/]+)/)![1];
-    await page.getByRole('button', { name: 'Crear sección' }).click();
-    await page.getByLabel('Título').fill('Sección inicial');
-    await page.getByRole('button', { name: 'Crear' }).click();
-    page.once('dialog', (d) => d.accept('Sección editada'));
-    await page.getByRole('button', { name: 'Editar sección', exact: true }).click();
-    await expect(page.getByText('Sección editada')).toBeVisible();
-    await page.getByRole('button', { name: 'Crear pregunta' }).click();
-    dialog = page.getByRole('dialog');
-    await dialog.getByRole('combobox', { name: 'Sección' }).click();
-    await page.getByRole('option').first().click();
-    await dialog.getByLabel('Código').fill('OPCION_UNICA');
-    await dialog.getByLabel('Pregunta').fill('Pregunta inicial');
-    await dialog.getByLabel('Obligatoria').check();
-    await dialog.getByRole('button', { name: 'Crear' }).click();
-    page.once('dialog', (d) => d.accept('Pregunta editada'));
-    await page.getByRole('button', { name: 'Editar pregunta', exact: true }).click();
-    await expect(page.getByText(/Pregunta editada/)).toBeVisible();
-    for (const [code, label] of [
-      ['A', 'Alternativa A'],
-      ['B', 'Alternativa B'],
-    ]) {
-      await page.getByRole('button', { name: 'Crear opción' }).click();
-      dialog = page.getByRole('dialog');
-      await dialog.getByRole('combobox', { name: 'Pregunta' }).click();
-      await page.getByRole('option').first().click();
-      await dialog.getByLabel('Código').fill(code);
-      await dialog.getByLabel('Etiqueta').fill(label);
-      await dialog.getByRole('button', { name: 'Crear' }).click();
-    }
-    page.once('dialog', (d) => d.accept('Alternativa editada'));
-    await page.getByRole('button', { name: 'Editar opción', exact: true }).first().click();
-    await page
-      .getByLabel(/Bajar opción/)
-      .first()
-      .click();
-    await page.getByRole('button', { name: 'Publicar' }).click();
-    await expect(page.getByText('PUBLISHED')).toBeVisible();
-    await page.getByRole('button', { name: 'Vista previa' }).click();
-    await page.getByLabel('Parroquia').click();
-    await page.getByRole('option').first().click();
-    await page.getByLabel('Alternativa editada').check();
-    const responsePromise = page.waitForResponse(
-      (r) => r.url().includes('/responses') && r.request().method() === 'POST',
+  await test.step('encuesta general agregada y publicación', async () => {
+    await page.getByRole('link', { name: 'Encuestas y estudios', exact: true }).click();
+    await page.getByRole('button', { name: 'NUEVA ENCUESTA' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nueva encuesta general' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel('Campaña')).toHaveValue('Gualaceo E2E 2027');
+    await expect(dialog.getByLabel('Provincia')).not.toHaveValue('');
+    await expect(dialog.getByLabel('Cantón')).not.toHaveValue('');
+    const surveyName = 'Encuesta profunda ' + suffix;
+    await dialog.getByLabel('Nombre').fill(surveyName);
+    await dialog.getByLabel('Fecha inicio trabajo de campo').fill('2026-08-01');
+    await dialog.getByLabel('Fecha fin trabajo de campo').fill('2026-08-15');
+    await dialog.getByLabel('Tamaño de muestra').fill('100');
+    await dialog.getByLabel('Metodología').fill('Muestra sintética agregada E2E');
+    await dialog.getByLabel('Texto de la pregunta').fill('Preferencia agregada');
+    await dialog.getByRole('textbox', { name: 'Opción', exact: true }).nth(0).fill('Alternativa A');
+    await dialog.getByLabel('Porcentaje').nth(0).fill('60');
+    await dialog.getByLabel('Base N').nth(0).fill('60');
+    await dialog.getByRole('textbox', { name: 'Opción', exact: true }).nth(1).fill('Alternativa B');
+    await dialog.getByLabel('Porcentaje').nth(1).fill('40');
+    await dialog.getByLabel('Base N').nth(1).fill('40');
+    await dialog.getByRole('button', { name: 'Crear encuesta' }).click();
+    await expect(page.getByRole('heading', { name: surveyName })).toBeVisible();
+    await expect(page.getByText('Cobertura cantonal')).toBeVisible();
+    await expect(page.getByText('Alternativa A')).toBeVisible();
+    await expect(page.getByText('60,00 %')).toBeVisible();
+    const publishResponse = page.waitForResponse(
+      (r) => r.url().endsWith('/publish') && r.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: /Enviar respuesta/ }).click();
-    expect((await responsePromise).status()).toBe(201);
-    await expect(page.getByText(/registrada correctamente/)).toBeVisible();
-    for (const personal of ['Nombre', 'Cédula', 'Teléfono', 'Correo'])
-      await expect(page.getByRole('textbox', { name: personal, exact: true })).toHaveCount(0);
-    await page.goto(`/app/campaigns/${campaignId}/surveys/${surveyId}/results`);
-    await expect(page.getByText('1').first()).toBeVisible();
-    await expect(page.getByText(/Alternativa editada: 1/)).toBeVisible();
-    await expect(page.getByText(/privacidad|suprimid/i)).toBeVisible();
-    await page.getByRole('link', { name: 'Volver al constructor' }).click();
-    let transitionResponse = page.waitForResponse(
-      (r) => r.url().endsWith('/close') && r.request().method() === 'POST',
-    );
-    await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
-    expect((await transitionResponse).status()).toBe(200);
-    await expect(page.getByText('CLOSED')).toBeVisible();
-    transitionResponse = page.waitForResponse(
-      (r) => r.url().endsWith('/archive') && r.request().method() === 'POST',
-    );
-    await page.getByRole('button', { name: 'Archivar', exact: true }).click();
-    expect((await transitionResponse).status()).toBe(200);
-    await expect(page.getByText('ARCHIVED')).toBeVisible();
+    await page.getByRole('button', { name: 'PUBLICAR' }).click();
+    expect((await publishResponse).status()).toBe(200);
+    await expect(page.getByRole('button', { name: 'ARCHIVAR' })).toBeVisible();
   });
   await test.step('CSV validado, importado y conflicto', async () => {
+    const processCode = uniqueE2eValue('E2E_IMPORTED_2024').toUpperCase();
+    const processName = uniqueE2eValue('Proceso sintético importado 2024');
+    const csv = (
+      await readFile(path.join(import.meta.dirname, 'fixtures', 'electoral-process.csv'), 'utf8')
+    )
+      .replace('E2E_IMPORTED_2024', processCode)
+      .replace('Proceso sintético importado 2024', processName);
     await page.goto('/app/admin/data-imports');
     await page.getByLabel('Fuente oficial').click();
     await page.getByRole('option').first().click();
@@ -99,7 +64,11 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
       .fill('CANONICAL_ELECTORAL_PROCESS');
     await page
       .locator('input[type=file]')
-      .setInputFiles(path.join(import.meta.dirname, 'fixtures', 'electoral-process.csv'));
+      .setInputFiles({
+        name: 'electoral-process.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from(csv),
+      });
     let response = page.waitForResponse((r) => r.url().endsWith('/data-imports/validate'));
     await page.getByRole('button', { name: '1. Validar' }).click();
     expect((await response).status()).toBe(200);
@@ -118,12 +87,14 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page.goto(`/app/campaigns/${campaignId}/dashboard`);
     await page.getByRole('link', { name: 'Datos electorales', exact: true }).click();
     await page.getByLabel('Proceso').click();
-    await expect(
-      page.getByRole('option', { name: /Proceso sintético importado 2024/ }),
-    ).toBeVisible();
+    await expect(page.getByRole('option', { name: processName })).toBeVisible();
     await page.keyboard.press('Escape');
   });
   await test.step('GeoJSON real conserva el territorio y publica su feature', async () => {
+    const geojson = JSON.parse(
+      await readFile(path.join(import.meta.dirname, 'fixtures', 'parish.geojson'), 'utf8'),
+    );
+    geojson.e2e_run_id = e2eRunId;
     const token = await apiToken(request);
     const headers = { Authorization: 'Bearer ' + token };
     const parishesBefore = await (await request.get('/api/v1/parishes', { headers })).json();
@@ -143,9 +114,11 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page.getByRole('option').nth(1).click();
     await expect(page.getByText(/Nivel territorial:/)).toContainText('PARISH');
     await expect(page.getByText(/Propiedad de unión:/)).toContainText('dpa_code');
-    await page
-      .locator('input[type=file]')
-      .setInputFiles(path.join(import.meta.dirname, 'fixtures', 'parish.geojson'));
+    await page.locator('input[type=file]').setInputFiles({
+      name: 'parish.geojson',
+      mimeType: 'application/geo+json',
+      buffer: Buffer.from(JSON.stringify(geojson)),
+    });
     let response = page.waitForResponse((item) =>
       item.url().endsWith('/geometry-imports/validate'),
     );
@@ -208,19 +181,19 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
   });
   await test.step('PDF y XLSX descargables y protegidos', async () => {
     await page.goto(`/app/campaigns/${campaignId}/dashboard`);
-    await page.getByRole('link', { name: 'Informes', exact: true }).click();
+    await page.getByRole('link', { name: 'Centro de Informes', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Centro de Informes' })).toBeVisible();
     for (const format of ['PDF', 'XLSX']) {
-      await page.getByRole('button', { name: 'Generar informe' }).click();
-      const dialog = page.getByRole('dialog');
-      await dialog.getByLabel('Plantilla').click();
+      await page.getByLabel('Título del informe').fill('Descarga ' + format + ' ' + suffix);
+      await page.getByLabel('Formato de exportación').click();
       await page
-        .getByRole('option', { name: /Resumen ejecutivo/ })
-        .first()
+        .getByRole('option', { name: format === 'PDF' ? 'PDF' : 'Excel (XLSX)' })
         .click();
-      await dialog.getByLabel('Formato').click();
-      await page.getByRole('option', { name: format }).click();
-      await dialog.getByLabel('Título').fill('Descarga ' + format + ' ' + suffix);
-      await dialog.getByRole('button', { name: 'Generar' }).click();
+      const generateResponse = page.waitForResponse(
+        (r) => r.url().endsWith('/reports/generate') && r.request().method() === 'POST',
+      );
+      await page.getByRole('button', { name: `Exportar ${format}` }).click();
+      expect((await generateResponse).status()).toBe(201);
       await expect(page.getByText('Descarga ' + format + ' ' + suffix)).toBeVisible();
       const row = page.getByRole('row').filter({ hasText: 'Descarga ' + format + ' ' + suffix });
       const responsePromise = page.waitForResponse((r) => r.url().includes('/download'));
@@ -245,7 +218,7 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     }
   });
   await test.step('alerta reconocida, resuelta y deduplicada', async () => {
-    await page.getByRole('link', { name: 'Alertas', exact: true }).click();
+    await page.getByRole('link', { name: 'Centro de alertas', exact: true }).click();
     let response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
     const refreshedAlerts = page.waitForResponse(
       (r) => r.url().includes('/alerts?page=') && r.request().method() === 'GET',
@@ -255,12 +228,12 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     expect((await refreshedAlerts).status()).toBe(200);
     const openAlerts = page.waitForResponse((r) => r.url().includes('status=OPEN'));
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'OPEN' }).click();
+    await page.getByRole('option', { name: 'Pendiente' }).click();
     expect((await openAlerts).status()).toBe(200);
     const count = await page.getByRole('row').count();
     const openRow = page
       .getByRole('row')
-      .filter({ has: page.getByRole('cell', { name: 'OPEN', exact: true }) })
+      .filter({ has: page.getByRole('cell', { name: 'Pendiente', exact: true }) })
       .first();
     const alertTitle = (await openRow.getByRole('cell').first().textContent())!;
     await openRow.getByRole('button', { name: 'Gestionar' }).click();
@@ -272,12 +245,13 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await dialog.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'ACKNOWLEDGED' }).click();
-    await expect(page.getByText('ACKNOWLEDGED').first()).toBeVisible();
+    await page.getByRole('option', { name: 'Revisada' }).click();
+    await expect(page.getByText('Revisada').first()).toBeVisible();
     await page
       .getByRole('row')
       .filter({ hasText: alertTitle })
       .getByRole('button', { name: 'Gestionar' })
+      .first()
       .click();
     dialog = page.getByRole('dialog');
     await dialog.getByLabel('Acción').click();
@@ -286,10 +260,10 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await dialog.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'RESOLVED' }).click();
-    await expect(page.getByText('RESOLVED').first()).toBeVisible();
+    await page.getByRole('option', { name: 'Resuelta' }).click();
+    await expect(page.getByText('Resuelta').first()).toBeVisible();
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'OPEN' }).click();
+    await page.getByRole('option', { name: 'Pendiente' }).click();
     const reevaluation = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
     const deduplicatedList = page.waitForResponse(
       (r) => r.url().includes('status=OPEN') && r.request().method() === 'GET',

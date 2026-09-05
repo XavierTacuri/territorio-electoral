@@ -1,4 +1,4 @@
-export type StudyType = 'POLL' | 'TRACKING_POLL' | 'EXIT_POLL' | 'OTHER';
+export type StudyType = 'GENERAL_SURVEY' | 'CNE_EXIT_POLL' | 'POLL' | 'TRACKING_POLL' | 'EXIT_POLL' | 'OTHER';
 export type StudyStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
 export type Study = {
   id: string;
@@ -22,6 +22,8 @@ export type Study = {
   sponsor_name?: string;
   source_type: string;
   source_url?: string;
+  source_name?: string;
+  source_document?: string;
   notes?: string;
   is_official: boolean;
   study_series_code?: string;
@@ -46,6 +48,9 @@ export type Territory = {
 export type Option = {
   id: string;
   study_id: string;
+  question_code: string;
+  question_text: string;
+  question_type: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'SCALE' | 'RATING' | 'VOTE_INTENTION';
   code: string;
   label: string;
   option_type: string;

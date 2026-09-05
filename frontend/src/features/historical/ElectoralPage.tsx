@@ -441,6 +441,8 @@ export default function ElectoralPage() {
 
   if (processes.isLoading) return <LoadingSkeleton />;
   if (processes.isError) return <ErrorState retry={() => processes.refetch()} />;
+  if (processes.data?.length === 0)
+    return <EmptyState detail="Datos electorales aún no cargados." />;
   return (
     <>
       <PageHeader

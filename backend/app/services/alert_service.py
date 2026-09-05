@@ -33,16 +33,27 @@ class AlertService:
         for alert in current:
             if (alert.alert_rule_id,alert.fingerprint) not in seen:alert.status="RESOLVED";alert.resolved_date=request.as_of_date;resolved+=1
         self.db.commit();return {"evaluated_rules":len(rules),"created":created,"updated":updated,"resolved":resolved,"unchanged":unchanged}
+    def _hide_unresolvable_approvals(self,items,user):
+        # A coordinator can never approve an activity, so an approval-pending
+        # alert is not actionable for them — showing it would just be noise
+        # they cannot resolve (§19).
+        if not items or "TERRITORIAL_COORDINATOR" not in {r.code for r in user.roles} or self.access.can_approve_activities(user):return items
+        rule_ids={item.alert_rule_id for item in items}
+        blocked={r.id for r in self.db.scalars(select(AlertRule).where(AlertRule.id.in_(rule_ids),AlertRule.condition_type=="ACTIVITY_PENDING_APPROVAL"))}
+        return [item for item in items if item.alert_rule_id not in blocked]
     def list(self,campaign_id,user,page=1,page_size=20,**filters):
         self.access.require_read(campaign_id,user);items,total=self.alerts.list(campaign_id,page,page_size,**filters);assignments=self.access.access.territorial_ids(campaign_id,user)
         if assignments is not None:
             allowed={a.parish_id for a in assignments if a.parish_id is not None};items=[item for item in items if item.parish_id in allowed];total=len(items)
-        return items,total
+        filtered=self._hide_unresolvable_approvals(items,user)
+        if len(filtered)!=len(items):total=len(filtered)
+        return filtered,total
     def get(self,campaign_id,alert_id,user):
         self.access.require_read(campaign_id,user);alert=self.alerts.by_id(alert_id)
         if not alert or alert.campaign_id!=campaign_id:raise NotFoundError("Alerta no encontrada")
         assignments=self.access.access.territorial_ids(campaign_id,user)
         if assignments is not None and alert.parish_id not in {a.parish_id for a in assignments if a.parish_id is not None}:raise PermissionError("Alerta fuera del alcance territorial")
+        if not self._hide_unresolvable_approvals([alert],user):raise PermissionError("Alerta fuera del alcance territorial")
         return alert
     def action(self,campaign_id,alert_id,action,request,user):
         alert=self.get(campaign_id,alert_id,user)

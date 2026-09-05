@@ -5,15 +5,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TerritorialIntelligencePage from './TerritorialIntelligencePage';
 
-vi.mock('../historical/CurrentElectionMap', () => ({
-  CurrentElectionMap: () => (
-    <div role="region" aria-label="Mapa de elección actual">
-      Mapa resaltado
-    </div>
-  ),
-}));
-vi.mock('../../api/downloads', () => ({ downloadReport: vi.fn().mockResolvedValue(undefined) }));
-
 beforeEach(() => {
   vi.stubGlobal(
     'ResizeObserver',
@@ -96,7 +87,7 @@ const operation = {
   })),
 };
 
-function renderPage(path = '/app/campaigns/campaign-1/territories/1') {
+function renderPage() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
   });
@@ -104,16 +95,13 @@ function renderPage(path = '/app/campaigns/campaign-1/territories/1') {
   client.setQueryData(['territory-operation-summary', 'campaign-1'], operation);
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter initialEntries={['/app/campaigns/campaign-1/territories']}>
         <Routes>
           <Route
             path="/app/campaigns/:campaignId/territories"
             element={<TerritorialIntelligencePage />}
           />
-          <Route
-            path="/app/campaigns/:campaignId/territories/:parishId"
-            element={<TerritorialIntelligencePage />}
-          />
+          <Route path="/app/campaigns/:campaignId/territories/:parishId" element={<div>Expediente</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -122,23 +110,21 @@ function renderPage(path = '/app/campaigns/campaign-1/territories/1') {
 afterEach(() => vi.restoreAllMocks());
 
 describe('inteligencia territorial', () => {
-  it('abre deep link y muestra ficha, histórico, proyección, INEC, mapa, calidad y operación', async () => {
+  it('muestra el panorama comparado y permite elegir una parroquia', async () => {
     renderPage();
     expect(
       await screen.findByRole('heading', { level: 1, name: 'INTELIGENCIA TERRITORIAL' }),
     ).toBeVisible();
-    expect(screen.getByRole('heading', { name: /JADÁN.*DPA 010351/ })).toBeVisible();
-    for (const title of [
-      'REGISTRO ELECTORAL',
-      'PARTICIPACIÓN HISTÓRICA',
-      'PROYECCIÓN DE PARTICIPACIÓN',
-      'CONTEXTO TERRITORIAL',
-      'CALIDAD DEL ANÁLISIS',
-      'OPERACIÓN TERRITORIAL',
-    ])
-      expect(screen.getByRole('heading', { name: title })).toBeVisible();
-    expect(screen.getByText('¿CÓMO SE CALCULÓ?')).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Mapa de elección actual' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'COMPARAR TERRITORIOS' })).toBeVisible();
+  });
+  it('navega al expediente al elegir una parroquia', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const input = screen.getByLabelText('Seleccionar parroquia');
+    await user.click(input);
+    await user.click(screen.getByRole('option', { name: /Jadán/ }));
+    await user.click(screen.getByRole('button', { name: 'VER EXPEDIENTE' }));
+    expect(await screen.findByText('Expediente')).toBeVisible();
   });
   it('compara tres parroquias y bloquea una cuarta', async () => {
     renderPage();
@@ -158,9 +144,10 @@ describe('inteligencia territorial', () => {
       'true',
     );
   });
-  it('ofrece PDF y XLSX territorial', async () => {
+  it('no presenta la comparación como un ranking', async () => {
     renderPage();
-    expect(screen.getByRole('button', { name: 'GENERAR FICHA PDF' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'GENERAR FICHA XLSX' })).toBeVisible();
+    expect(
+      screen.getByText(/no constituye un ranking ni una recomendación de prioridad electoral/i),
+    ).toBeVisible();
   });
 });

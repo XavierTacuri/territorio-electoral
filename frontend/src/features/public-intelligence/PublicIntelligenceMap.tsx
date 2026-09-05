@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Button, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '../../api/client';
+import { publicTopicLabel } from './labels';
 
 type Metric = { parish_id: number; dpa_code: string; name: string; value: number };
 type Topic = { code: string; name: string };
@@ -227,7 +228,7 @@ export function PublicIntelligenceMap({
           <MenuItem value="">Todos</MenuItem>
           {topics.data?.map((t) => (
             <MenuItem key={t.code} value={t.code}>
-              {t.name}
+              {publicTopicLabel(t.code, t.name)}
             </MenuItem>
           ))}
         </TextField>

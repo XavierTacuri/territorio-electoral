@@ -5,7 +5,7 @@ import { apiRequest } from '../../api/client';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
-import { ITEM_TYPE_LABELS } from './labels';
+import { ITEM_TYPE_LABELS, publicTopicLabel } from './labels';
 import type { PublicItem } from './types';
 export default function PublicItemDetailPage() {
   const { campaignId = '', itemId = '' } = useParams();
@@ -48,7 +48,7 @@ export default function PublicItemDetailPage() {
             )}
             <Typography variant="h2">Citación</Typography>
             <Typography>Fuente: {x.source_name}</Typography>
-            <Typography>Publisher: {x.publisher}</Typography>
+            <Typography>Publicador: {x.publisher}</Typography>
             <Typography>
               Publicado:{' '}
               {x.published_at
@@ -67,7 +67,7 @@ export default function PublicItemDetailPage() {
             <Typography variant="h2">Temas</Typography>
             <Stack direction="row" spacing={1}>
               {x.topics.map((t) => (
-                <Chip key={t.code} label={t.name} />
+                <Chip key={t.code} label={publicTopicLabel(t.code, t.name)} />
               ))}
             </Stack>
             <Typography variant="h2">Territorios asociados</Typography>

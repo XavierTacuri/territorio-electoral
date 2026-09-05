@@ -24,7 +24,11 @@ def template_read(x):return {"id":x.id,"code":x.code,"name":x.name,"description"
 def run_read(service,run,user):
     template=service.templates.by_id(run.report_template_id);artifact=service.artifact(run);show_hash=service.admin(user) or "ANALYST" in {r.code for r in user.roles}
     a=None if not artifact else {"id":artifact.id,"format":artifact.format,"original_download_name":artifact.original_download_name,"mime_type":artifact.mime_type,"size_bytes":artifact.size_bytes,"expires_on":artifact.expires_on,"is_available":artifact.is_available,"sha256":artifact.sha256 if show_hash else None}
-    return {"id":run.id,"campaign_id":run.campaign_id,"template_code":template.code,"requested_format":run.requested_format,"status":run.status,"report_date":run.report_date,"date_from":run.date_from,"date_to":run.date_to,"title":run.title,"error_code":run.error_code,"error_message":run.error_message,"artifact":a}
+    return {"id":run.id,"campaign_id":run.campaign_id,"template_code":template.code,"requested_format":run.requested_format,"status":run.status,"report_date":run.report_date,"date_from":run.date_from,"date_to":run.date_to,"title":run.title,"error_code":run.error_code,"error_message":run.error_message,"artifact":a,"filters":run.filters}
+@router.get("/report-types",response_model=list[ReportTypeRead])
+def report_types(user:User=Depends(get_current_active_user)):return ReportService.list_types()
+@router.post("/campaigns/{campaign_id}/reports/preview",response_model=ReportPreviewResponse)
+def preview_report(campaign_id:UUID,data:ReportGenerationRequest,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):return invoke(ReportService(db).preview,campaign_id,data,user)
 @router.get("/report-templates",response_model=list[ReportTemplateRead])
 def templates(include_inactive:bool=False,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):return [template_read(x) for x in ReportService(db).list_templates(user,include_inactive)]
 @router.get("/report-templates/{template_id}",response_model=ReportTemplateRead)
@@ -39,6 +43,8 @@ def generate(campaign_id:UUID,data:ReportGenerationRequest,db:Session=Depends(ge
 @router.get("/campaigns/{campaign_id}/reports",response_model=ReportListResponse)
 def reports(campaign_id:UUID,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
     service=ReportService(db);items,total=invoke(service.list_runs,campaign_id,user,page,page_size);return {"items":[run_read(service,x,user) for x in items],"page":page,"page_size":page_size,"total":total}
+@router.get("/campaigns/{campaign_id}/reports/{run_id}/preview",response_model=ReportPreviewResponse)
+def report_run_preview(campaign_id:UUID,run_id:UUID,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):return invoke(ReportService(db).preview_run,campaign_id,run_id,user)
 @router.get("/campaigns/{campaign_id}/reports/{run_id}",response_model=ReportRunRead)
 def report(campaign_id:UUID,run_id:UUID,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
     service=ReportService(db);return run_read(service,invoke(service.get_run,campaign_id,run_id,user),user)

@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import {
   AppBar,
+  Badge,
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Drawer,
   IconButton,
   List,
   ListItemButton,
   ListItemText,
+  Menu,
+  MenuItem,
   Toolbar,
   Typography,
   useMediaQuery,
@@ -16,60 +24,48 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { useCampaign } from '../app/CampaignProvider';
+import { useActiveOrganization } from '../app/OrganizationProvider';
 import { useAuth } from '../auth/AuthProvider';
-import { canManageUsers } from '../auth/permissions';
 import { CampaignSelector } from '../components/navigation/CampaignSelector';
 import { OrganizationSelector } from '../components/navigation/OrganizationSelector';
 import { RoleBadge } from '../components/data-display/Common';
-import { useCampaign } from '../app/CampaignProvider';
+import { useAlertBadgeCount } from '../features/alerts/useAlertBadgeCount';
+import { usePendingSyncCount } from '../offline/usePendingSyncCount';
+import { useResolvedOrganizationId } from '../offline/useResolvedOrganizationId';
+import { buildNavigation } from './navigation';
+import { GlobalFooter } from './GlobalFooter';
+
 const width = 248;
+
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const navigate = useNavigate();
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const { user, logout } = useAuth();
   const { active } = useCampaign();
+  const { activeOrganization } = useActiveOrganization();
   const { campaignId } = useParams();
   const selectedId = campaignId ?? active?.id;
-  const base = selectedId ? '/app/campaigns/' + selectedId : '/app/campaigns';
-  const items = [
-    ['Dashboard', selectedId ? base + '/dashboard' : '/app/campaigns'],
-    ['Elección actual', selectedId ? base + '/current-election' : '/app/campaigns'],
-    ['Campañas', '/app/campaigns'],
-    ['Inteligencia territorial', selectedId ? base + '/territories' : '/app/campaigns'],
-    ['Inteligencia pública', selectedId ? base + '/public-intelligence' : '/app/campaigns'],
-    ['Territorio IA · PRO', selectedId ? base + '/territory-ai' : '/app/campaigns'],
-    ['Operación territorial', selectedId ? base + '/operations' : '/app/campaigns'],
-    ['Actividades', selectedId ? base + '/activities' : '/app/campaigns'],
-    ['Necesidades', selectedId ? base + '/needs' : '/app/campaigns'],
-    ['Compromisos', selectedId ? base + '/commitments' : '/app/campaigns'],
-    ['Encuestas', selectedId ? base + '/surveys' : '/app/campaigns'],
-    ['Datos electorales', selectedId ? base + '/electoral' : '/app/campaigns'],
-    ['Demografía', selectedId ? base + '/demographics' : '/app/campaigns'],
-    ['Mapas', selectedId ? base + '/maps' : '/app/campaigns'],
-    ['Informes', selectedId ? base + '/reports' : '/app/campaigns'],
-    ['Alertas', selectedId ? base + '/alerts' : '/app/campaigns'],
-  ];
-  const adminItems = [
-    ['Organizaciones', '/app/admin/organizations'],
-    ['Usuarios', '/app/admin/users'],
-    ['Roles', '/app/admin/roles'],
-    ['Asignaciones', '/app/admin/assignments'],
-    ['Fuentes de datos', '/app/admin/data-sources'],
-    ['Licencia y funcionalidades', '/app/admin/feature-entitlements'],
-  ];
-  const officialDataItems = [
-    ['Importar CNE', '/app/admin/official-data/cne'],
-    ['Registro electoral', '/app/admin/official-data/cne/roll'],
-    ['Importar INEC', '/app/admin/official-data/inec'],
-    ['Límites territoriales', '/app/admin/official-data/geography'],
-  ];
-  const importItems = [
-    ['Importaciones', '/app/admin/data-imports'],
-    ['Plantillas de informes', '/app/admin/report-templates'],
-    ['Auditoría', '/app/admin/security-audit'],
-  ];
+  const groups = buildNavigation(user, activeOrganization?.current_role ?? null, selectedId);
+  const organizationId = useResolvedOrganizationId(selectedId, active?.organization_id);
+  const pendingSyncCount = usePendingSyncCount(
+    user && selectedId && organizationId
+      ? { user_id: user.id, organization_id: organizationId, campaign_id: selectedId }
+      : null,
+  );
+  const alertBadgeCount = useAlertBadgeCount(selectedId);
+  const requestLogout = () => {
+    if (pendingSyncCount > 0) setConfirmLogout(true);
+    else void logout();
+  };
+
   const navigation = (
     <Box component="nav" aria-label="Navegación principal">
       <Toolbar>
@@ -77,98 +73,36 @@ export function AppShell() {
       </Toolbar>
       <Divider />
       <List>
-        <ListItemButton
-          component={NavLink}
-          to="/app/organization"
-          onClick={() => setMobileOpen(false)}
-        >
-          <ListItemText primary="Mi organización" />
-        </ListItemButton>
-        {items.map(([label, to]) => (
-          <ListItemButton
-            key={label}
-            component={NavLink}
-            to={to}
-            onClick={() => setMobileOpen(false)}
-            sx={{
-              '&.active': {
-                bgcolor: 'action.selected',
-                borderRight: 3,
-                borderColor: 'primary.main',
-              },
-            }}
-          >
-            <ListItemText primary={label} />
-          </ListItemButton>
+        {groups.map((group, index) => (
+          <Box component="li" key={group.label} sx={{ listStyle: 'none' }}>
+            {index > 0 && <Divider sx={{ my: 1 }} />}
+            <Typography component="div" variant="overline" sx={{ px: 2, py: 1, display: 'block' }}>
+              {group.label}
+            </Typography>
+            {group.items.map(({ label, to }) => (
+              <ListItemButton
+                key={label}
+                component={NavLink}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  pl: 3,
+                  '&.active': {
+                    bgcolor: 'action.selected',
+                    borderRight: 3,
+                    borderColor: 'primary.main',
+                  },
+                }}
+              >
+                <ListItemText primary={label} />
+              </ListItemButton>
+            ))}
+          </Box>
         ))}
-        {canManageUsers(user) && (
-          <>
-            <Divider sx={{ my: 1 }} />
-            <Typography component="li" variant="overline" sx={{ px: 2, py: 1, display: 'block' }}>
-              Administración
-            </Typography>
-            {adminItems.map(([label, to]) => (
-              <ListItemButton
-                key={label}
-                component={NavLink}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  pl: 3,
-                  '&.active': {
-                    bgcolor: 'action.selected',
-                    borderRight: 3,
-                    borderColor: 'primary.main',
-                  },
-                }}
-              >
-                <ListItemText primary={label} />
-              </ListItemButton>
-            ))}
-            <Typography component="li" variant="caption" sx={{ px: 3, pt: 1.5, display: 'block' }}>
-              Datos oficiales
-            </Typography>
-            {officialDataItems.map(([label, to]) => (
-              <ListItemButton
-                key={label}
-                component={NavLink}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  pl: 4,
-                  '&.active': {
-                    bgcolor: 'action.selected',
-                    borderRight: 3,
-                    borderColor: 'primary.main',
-                  },
-                }}
-              >
-                <ListItemText primary={label} />
-              </ListItemButton>
-            ))}
-            {importItems.map(([label, to]) => (
-              <ListItemButton
-                key={label}
-                component={NavLink}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  pl: 3,
-                  '&.active': {
-                    bgcolor: 'action.selected',
-                    borderRight: 3,
-                    borderColor: 'primary.main',
-                  },
-                }}
-              >
-                <ListItemText primary={label} />
-              </ListItemButton>
-            ))}
-          </>
-        )}
       </List>
     </Box>
   );
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
@@ -197,22 +131,57 @@ export function AppShell() {
             <Typography>
               {user?.first_name} {user?.last_name}
             </Typography>
-            {user?.roles.slice(0, 1).map((r) => (
-              <RoleBadge key={r.code} value={r.code} />
+            {user?.roles.slice(0, 1).map((role) => (
+              <RoleBadge key={role.code} value={role.code} />
             ))}
           </Box>
-          <Button
-            color="inherit"
-            startIcon={<LogoutIcon />}
-            onClick={logout}
-            aria-label="Cerrar sesión"
-          >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              Cerrar sesión
-            </Box>
+          {selectedId && (
+            <IconButton
+              color="inherit"
+              aria-label="Centro de alertas"
+              onClick={() => navigate(`/app/campaigns/${selectedId}/alerts`)}
+            >
+              <Badge badgeContent={alertBadgeCount} color="error" max={99}>
+                <NotificationsOutlinedIcon />
+              </Badge>
+            </IconButton>
+          )}
+          <IconButton color="inherit" aria-label="Abrir menú de usuario" onClick={(event) => setAccountAnchor(event.currentTarget)}>
+            <AccountCircleIcon />
+          </IconButton>
+          <Menu anchorEl={accountAnchor} open={Boolean(accountAnchor)} onClose={() => setAccountAnchor(null)}>
+            <MenuItem onClick={() => { setAccountAnchor(null); navigate('/app/account'); }}>Mi cuenta</MenuItem>
+            <MenuItem onClick={() => { setAccountAnchor(null); requestLogout(); }}>
+              <LogoutIcon fontSize="small" sx={{ mr: 1 }} />Cerrar sesión
+            </MenuItem>
+          </Menu>
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={requestLogout} aria-label="Cerrar sesión">
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Cerrar sesión</Box>
           </Button>
         </Toolbar>
       </AppBar>
+      <Dialog open={confirmLogout} onClose={() => setConfirmLogout(false)}>
+        <DialogTitle>Registros pendientes de sincronizar</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tienes {pendingSyncCount} registro{pendingSyncCount === 1 ? '' : 's'} pendiente
+            {pendingSyncCount === 1 ? '' : 's'} de sincronizar. Se mantienen guardados en este dispositivo y
+            volverán a estar disponibles la próxima vez que inicies sesión con la misma cuenta.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmLogout(false)}>Cancelar</Button>
+          <Button
+            color="warning"
+            onClick={() => {
+              setConfirmLogout(false);
+              void logout();
+            }}
+          >
+            Cerrar sesión de todas formas
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Drawer
         variant={desktop ? 'permanent' : 'temporary'}
         open={desktop || mobileOpen}
@@ -226,9 +195,19 @@ export function AppShell() {
         component="main"
         id="contenido"
         tabIndex={-1}
-        sx={{ flexGrow: 1, minWidth: 0, p: { xs: 2, sm: 3 }, mt: 8, ml: { md: 0 } }}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flexGrow: 1,
+          minWidth: 0,
+          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+          p: { xs: 2, sm: 3 },
+          mt: { xs: 7, sm: 8 },
+          ml: { md: 0 },
+        }}
       >
         <Outlet />
+        <GlobalFooter />
       </Box>
     </Box>
   );

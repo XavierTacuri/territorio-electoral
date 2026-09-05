@@ -74,7 +74,11 @@ export type CneDataset =
   | 'CNE_TURNOUT'
   | 'CNE_CANDIDATES'
   | 'CNE_ELECTORAL_RESULTS';
-export type OfficialDataset = CneDataset | 'CNE_ELECTORAL_ROLL_SNAPSHOT';
+export type OfficialDataset =
+  | CneDataset
+  | 'CNE_ELECTORAL_ROLL_SNAPSHOT'
+  | 'CNE_POLLING_PLACES'
+  | 'CNE_ELECTORAL_BOARDS';
 
 export type CsvInspection = {
   headers: string[];

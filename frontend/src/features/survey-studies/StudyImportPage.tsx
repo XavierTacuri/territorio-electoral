@@ -11,6 +11,8 @@ type Summary = {
   studies: string[];
   territories: number;
   options: number;
+  questions: number;
+  parishes: string[];
   errors: { row_number?: number; code: string; message: string }[];
 };
 export default function StudyImportPage() {
@@ -58,9 +60,9 @@ export default function StudyImportPage() {
       />
       <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Alert severity="info" sx={{ mb: 2 }}>
-          Headers: study_code, territory_level, parish_dpa, option_code, option_label, option_type,
-          response_count, percentage
+          Plantilla nacional: preguntas y resultados agregados. parish_dpa vacío representa cobertura cantonal.
         </Alert>
+        <Button href={`${BASE_URL}/campaigns/${campaignId}/survey-imports/template`} sx={{ mb: 2 }}>DESCARGAR PLANTILLA</Button>
         <Button component="label" variant="outlined">
           Seleccionar CSV
           <input
@@ -105,6 +107,7 @@ export default function StudyImportPage() {
               ['Válidas', result.rows_valid],
               ['Rechazadas', result.rows_rejected],
               ['Territorios', result.territories],
+              ['Preguntas', result.questions],
               ['Opciones', result.options],
             ].map(([label, value]) => (
               <Grid key={label} size={{ xs: 6, md: 2 }}>
@@ -116,6 +119,7 @@ export default function StudyImportPage() {
           <Typography sx={{ mt: 2 }}>
             <b>Estudio detectado:</b> {result.studies.join(', ') || 'Ninguno'}
           </Typography>
+          <Typography><b>Parroquias detectadas:</b> {result.parishes?.join(', ') || 'Resultado cantonal'}</Typography>
           {result.errors.map((item, index) => (
             <Alert severity="warning" key={index}>
               {item.row_number ? `Fila ${item.row_number}: ` : ''}

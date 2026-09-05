@@ -26,8 +26,8 @@ export default function StudyComparePage() {
         title="COMPARADOR DE ESTUDIOS"
         description="Comparación descriptiva de hasta tres estudios."
       />
-      {q.data && !q.data.comparable && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+      {q.data?.message && (
+        <Alert severity={q.data.comparable ? 'info' : 'warning'} sx={{ mb: 2 }}>
           {q.data.message}
         </Alert>
       )}
@@ -37,7 +37,7 @@ export default function StudyComparePage() {
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="h2">{s.name}</Typography>
               <Typography>Fecha: {formatDateEsEc(s.fieldwork_end_date)}</Typography>
-              <Typography>Tipo: {s.study_type}</Typography>
+              <Typography>Tipo: {s.study_type === 'CNE_EXIT_POLL' ? 'Exit poll / Boca de urna' : 'Encuesta general'}</Typography>
               <Typography>Muestra: {formatIntegerEsEc(s.sample_size_total)}</Typography>
               <Typography>Método: {s.sampling_method}</Typography>
               <Typography>
@@ -46,7 +46,7 @@ export default function StudyComparePage() {
                   ? '±' + formatPercentEsEc(s.margin_of_error)
                   : 'No declarado'}
               </Typography>
-              <Typography>Cobertura: {s.geography_level}</Typography>
+              <Typography>Cobertura: {s.geography_level === 'PARISH' ? 'Parroquial' : 'Cantonal'}</Typography>
             </Paper>
           </Grid>
         ))}

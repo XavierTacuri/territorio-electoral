@@ -6,9 +6,11 @@ from app.api.dependencies import get_current_active_user,require_admin
 from app.db.session import get_db
 from app.models.campaign import Campaign
 from app.models.user import User
+from app.schemas.debate import ClaimCheckRequest,ClaimCheckResponse
 from app.schemas.entitlement import CampaignLicenseRead,EntitlementRead,EntitlementUpsert,FeatureCode
 from app.schemas.territory_ai import TerritoryAIConversationRead,TerritoryAIQueryRequest,TerritoryAIResponse
 from app.services.campaign_access_service import CampaignAccessService
+from app.services.claim_verification_service import ClaimVerificationService
 from app.services.feature_entitlement_service import FeatureEntitlementService
 from app.services.territory_ai_service import TerritoryAiError,TerritoryAiService,get_ai_provider
 from app.services.organization_service import OrganizationError
@@ -47,5 +49,10 @@ def conversations(campaign_id:UUID,actor:User=Depends(get_current_active_user),d
 def conversation(campaign_id:UUID,conversation_id:UUID,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db),provider=Depends(get_ai_provider)):
     try:return TerritoryAiService(db,provider).conversation(campaign_id,conversation_id,actor)
     except TerritoryAiError as e:raise HTTPException(e.status_code,detail={"code":e.code,"message":e.message})
+    except OrganizationError as e:raise HTTPException(e.status_code,detail={"code":e.code,"message":e.message})
+    except PermissionError as e:raise HTTPException(403,detail={"code":"CAMPAIGN_ACCESS_DENIED","message":str(e)})
+@router.post("/campaigns/{campaign_id}/debate/claim-check",response_model=ClaimCheckResponse)
+def claim_check(campaign_id:UUID,data:ClaimCheckRequest,actor:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    try:return ClaimVerificationService(db).check(campaign_id,data,actor)
     except OrganizationError as e:raise HTTPException(e.status_code,detail={"code":e.code,"message":e.message})
     except PermissionError as e:raise HTTPException(403,detail={"code":"CAMPAIGN_ACCESS_DENIED","message":str(e)})

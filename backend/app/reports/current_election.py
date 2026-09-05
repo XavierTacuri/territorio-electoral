@@ -14,7 +14,7 @@ def build_current_election_sections(data):
     current, history, projection, parishes = data["snapshot"], data["historical"], data["projection"], data["parishes"]
     context, total = data.get("report_context", {}), current["registered_voters"]
     h19, h23 = history.get("2019", {}), history.get("2023", {})
-    def change(a, b): return b - a, (b - a) / a if a else None
+    def change(a, b): return (None, None) if a is None or b is None else (b - a, (b - a) / a if a else None)
     r19, r23 = h19.get("registered_voters"), h23.get("registered_voters")
     cover = {**context, "snapshot_date": current["snapshot_date"], "model_code": projection["model_code"], "model_version": projection["model_version"]}
     summary = {"title": "Resumen", "context": cover, "subtitle": "REGISTRO ELECTORAL ACTUAL · OBSERVADO · CNE",

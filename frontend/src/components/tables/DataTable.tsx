@@ -21,6 +21,7 @@ export function DataTable<T extends { id: string }>({
   loading,
   onView,
   onEdit,
+  actions,
   label,
   emptyTitle,
 }: {
@@ -29,6 +30,7 @@ export function DataTable<T extends { id: string }>({
   loading?: boolean;
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
+  actions?: (row: T) => React.ReactNode;
   label: string;
   emptyTitle?: string;
 }) {
@@ -48,7 +50,7 @@ export function DataTable<T extends { id: string }>({
                 <Typography fontWeight={700}>{column.label}</Typography>
               </TableCell>
             ))}
-            {(onView || onEdit) && <TableCell align="right">Acciones</TableCell>}
+            {(onView || onEdit || actions) && <TableCell align="right">Acciones</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -57,7 +59,7 @@ export function DataTable<T extends { id: string }>({
               {columns.map((column) => (
                 <TableCell key={column.key}>{column.render(row)}</TableCell>
               ))}
-              {(onView || onEdit) && (
+              {(onView || onEdit || actions) && (
                 <TableCell align="right">
                   <Box sx={{ whiteSpace: 'nowrap' }}>
                     {onView && (
@@ -74,6 +76,7 @@ export function DataTable<T extends { id: string }>({
                         </IconButton>
                       </Tooltip>
                     )}
+                    {actions?.(row)}
                   </Box>
                 </TableCell>
               )}

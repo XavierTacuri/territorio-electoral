@@ -14,7 +14,7 @@ JSON_VALUE = JSON().with_variant(JSONB, "postgresql")
 class ReportTemplate(Base):
     __tablename__ = "report_templates"
     __table_args__ = (
-        CheckConstraint("report_type IN ('CAMPAIGN_EXECUTIVE_SUMMARY','OPERATIONAL_ACTIVITY','TERRITORIAL_COVERAGE','NEEDS','COMMITMENTS','SURVEY_RESULTS','SURVEY_STUDY','ELECTORAL_HISTORY','DEMOGRAPHIC_PROFILE','DATA_QUALITY','GEOGRAPHIC_AVAILABILITY','PUBLIC_INTELLIGENCE')", name="report_type"),
+        CheckConstraint("report_type IN ('CAMPAIGN_EXECUTIVE_SUMMARY','OPERATIONAL_ACTIVITY','TERRITORIAL_COVERAGE','NEEDS','COMMITMENTS','SURVEY_RESULTS','SURVEY_STUDY','ELECTORAL_HISTORY','DEMOGRAPHIC_PROFILE','DATA_QUALITY','GEOGRAPHIC_AVAILABILITY','PUBLIC_INTELLIGENCE','THEMATIC','DEBATE_BRIEF','ELECTION_DAY')", name="report_type"),
         Index("ix_report_templates_code", "code", unique=True),
         Index("ix_report_templates_report_type", "report_type"),
         Index("ix_report_templates_is_active", "is_active"),

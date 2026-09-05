@@ -38,6 +38,8 @@ def put_results(study_id:UUID,data:list[ResultInput],user:User=Depends(get_curre
 def validate(study_id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):return run(lambda:SurveyStudyService(db).validate(study_id,user))
 @router.post("/survey-studies/{study_id}/publish",response_model=StudyDetail)
 def publish(study_id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):return run(lambda:SurveyStudyService(db).publish(study_id,user))
+@router.post("/survey-studies/{study_id}/archive",response_model=StudyDetail)
+def archive(study_id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):return run(lambda:SurveyStudyService(db).archive(study_id,user))
 @router.get("/campaigns/{campaign_id}/survey-analysis",response_model=ComparisonResponse)
 def analysis(campaign_id:UUID,study_ids:list[UUID]=Query(),user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     service=SurveyStudyService(db);service.campaign(campaign_id,user)
@@ -50,3 +52,9 @@ async def validate_import(campaign_id:UUID,file:UploadFile=File(),user:User=Depe
 async def execute_import(campaign_id:UUID,file:UploadFile=File(),user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     if not (file.filename or "").lower().endswith(".csv"):raise HTTPException(415,"Solo se permiten archivos CSV")
     content=await file.read();return run(lambda:SurveyStudyService(db).execute_import(campaign_id,content,user))
+@router.get("/campaigns/{campaign_id}/survey-imports/template")
+def import_template(campaign_id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+    service=SurveyStudyService(db);service.campaign(campaign_id,user,True)
+    csv=("study_code,question_code,question_text,question_type,option_code,option_label,percentage,base_n,parish_dpa\n"
+         "DEMO_ESTUDIO,Q1,Principal problema del cantón,SINGLE_CHOICE,OPCION_A,Opción sintética A,42.5,800,\n")
+    return Response(content=csv,media_type="text/csv; charset=utf-8",headers={"Content-Disposition":"attachment; filename=plantilla_encuesta_general.csv"})

@@ -12,6 +12,9 @@ class OperationalAlertRepository:
         if severity:q=q.where(OperationalAlert.severity==severity)
         if module:q=q.where(AlertRule.module==module)
         severity_order=case((OperationalAlert.severity=="CRITICAL",1),(OperationalAlert.severity=="WARNING",2),else_=3)
-        q=q.order_by(severity_order,OperationalAlert.detected_date.desc())
+        # Un tercer criterio determinista evita que dos alertas con la misma
+        # severidad y fecha detectada (frecuente: varias condiciones evaluadas
+        # el mismo día) queden en un orden indefinido entre sí.
+        q=q.order_by(severity_order,OperationalAlert.detected_date.desc(),OperationalAlert.created_at.desc())
         total=self.db.scalar(select(func.count()).select_from(q.subquery())) or 0
         return list(self.db.scalars(q.offset((page-1)*page_size).limit(page_size))),total

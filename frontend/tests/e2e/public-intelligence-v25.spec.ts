@@ -6,7 +6,7 @@ test('inteligencia pública trazable sin Internet', async ({ page }) => {
   await browserLogin(page);
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
-  await page.getByRole('link', { name: 'Inteligencia pública', exact: true }).click();
+  await page.getByRole('link', { name: 'Fuentes públicas', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'INTELIGENCIA PÚBLICA' })).toBeVisible();
   await page.screenshot({
     path: '../quality-artifacts/public-intelligence-dashboard.png',
@@ -16,9 +16,11 @@ test('inteligencia pública trazable sin Internet', async ({ page }) => {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Código').fill(`RSS_SYNTH_${Date.now()}`);
   await dialog.getByLabel('Nombre').fill('Fuente Oficial Sintética');
-  await dialog.getByLabel('Publisher').fill('Municipio Sintético');
+  await dialog.getByLabel('Publicador').fill('Municipio Sintético');
   await dialog.getByLabel('URL base').fill('http://public-fixture:8080');
-  await dialog.getByLabel('RSS URL (opcional)').fill('http://public-fixture:8080/feed.xml');
+  await dialog.getByLabel('Método de recuperación').click();
+  await page.getByRole('option', { name: 'RSS' }).click();
+  await dialog.getByLabel('RSS URL').fill('http://public-fixture:8080/feed.xml');
   await dialog.getByRole('button', { name: 'Guardar' }).click();
   await page.getByRole('tab', { name: 'Fuentes públicas' }).click();
   await expect(page.getByText('Fuente Oficial Sintética').last()).toBeVisible();
@@ -38,7 +40,7 @@ test('inteligencia pública trazable sin Internet', async ({ page }) => {
   await page.getByRole('link', { name: 'Ver detalle' }).first().click();
   await expect(page.getByRole('heading', { name: 'INTELIGENCIA PÚBLICA — DETALLE' })).toBeVisible();
   await expect(page.getByText(/^Fuente:/)).toBeVisible();
-  await expect(page.getByText(/^Publisher:/)).toBeVisible();
+  await expect(page.getByText(/^Publicador:/)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Abrir fuente' })).toHaveAttribute(
     'rel',
     'noopener noreferrer',
@@ -47,10 +49,10 @@ test('inteligencia pública trazable sin Internet', async ({ page }) => {
     path: '../quality-artifacts/public-intelligence-detail.png',
     fullPage: true,
   });
-  await page.getByRole('link', { name: 'Inteligencia pública', exact: true }).click();
+  await page.getByRole('link', { name: 'Fuentes públicas', exact: true }).click();
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Territorio Sintético E2E' }).click();
-  await page.getByRole('link', { name: 'Inteligencia pública', exact: true }).click();
+  await page.getByRole('link', { name: 'Fuentes públicas', exact: true }).click();
   await page.getByRole('tab', { name: 'Mapa' }).click();
   const map = page.getByRole('region', { name: 'Mapa de información pública' });
   await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();

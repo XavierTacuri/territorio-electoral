@@ -4,476 +4,18 @@
  */
 
 export interface paths {
-    "/api/v1/health": {
+    "/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Health Check */
-        get: operations["health_check_api_v1_health_get"];
+        /** Root */
+        get: operations["root__get"];
         put?: never;
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Login */
-        post: operations["login_api_v1_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Me */
-        get: operations["me_api_v1_auth_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/browser/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Browser Login */
-        post: operations["browser_login_api_v1_auth_browser_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/browser/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Browser Refresh */
-        post: operations["browser_refresh_api_v1_auth_browser_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/browser/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Browser Logout */
-        post: operations["browser_logout_api_v1_auth_browser_logout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/browser/session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Browser Session */
-        get: operations["browser_session_api_v1_auth_browser_session_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Roles */
-        get: operations["list_roles_api_v1_roles_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Users */
-        get: operations["list_users_api_v1_users_get"];
-        put?: never;
-        /** Create User */
-        post: operations["create_user_api_v1_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get User */
-        get: operations["get_user_api_v1_users__user_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update User */
-        patch: operations["update_user_api_v1_users__user_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/users/{user_id}/change-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Change Password */
-        post: operations["change_password_api_v1_users__user_id__change_password_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/provinces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Provinces */
-        get: operations["provinces_api_v1_provinces_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/cantons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Cantons */
-        get: operations["cantons_api_v1_cantons_get"];
-        put?: never;
-        /** Create Canton */
-        post: operations["create_canton_api_v1_cantons_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/cantons/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Canton */
-        get: operations["canton_api_v1_cantons__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Canton */
-        patch: operations["update_canton_api_v1_cantons__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/parishes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Parishes */
-        get: operations["parishes_api_v1_parishes_get"];
-        put?: never;
-        /** Create Parish */
-        post: operations["create_parish_api_v1_parishes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/parishes/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Parish */
-        get: operations["parish_api_v1_parishes__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Parish */
-        patch: operations["update_parish_api_v1_parishes__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/communities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Communities */
-        get: operations["communities_api_v1_communities_get"];
-        put?: never;
-        /** Create Community */
-        post: operations["create_community_api_v1_communities_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/communities/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Community */
-        get: operations["community_api_v1_communities__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Community */
-        patch: operations["update_community_api_v1_communities__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/sectors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sectors */
-        get: operations["sectors_api_v1_sectors_get"];
-        put?: never;
-        /** Create Sector */
-        post: operations["create_sector_api_v1_sectors_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sectors/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sector */
-        get: operations["sector_api_v1_sectors__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Sector */
-        patch: operations["update_sector_api_v1_sectors__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listing */
-        get: operations["listing_api_v1_campaigns_get"];
-        put?: never;
-        /** Create */
-        post: operations["create_api_v1_campaigns_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get */
-        get: operations["get_api_v1_campaigns__campaign_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update */
-        patch: operations["update_api_v1_campaigns__campaign_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/candidate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Candidate */
-        get: operations["get_candidate_api_v1_campaigns__campaign_id__candidate_get"];
-        put?: never;
-        /** Create Candidate */
-        post: operations["create_candidate_api_v1_campaigns__campaign_id__candidate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Candidate */
-        patch: operations["update_candidate_api_v1_campaigns__campaign_id__candidate_patch"];
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Campaign Users */
-        get: operations["campaign_users_api_v1_campaigns__campaign_id__users_get"];
-        put?: never;
-        /** Assign User */
-        post: operations["assign_user_api_v1_campaigns__campaign_id__users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove User */
-        delete: operations["remove_user_api_v1_campaigns__campaign_id__users__user_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/territorial-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Assignments */
-        get: operations["assignments_api_v1_campaigns__campaign_id__territorial_assignments_get"];
-        put?: never;
-        /** Create Assignment */
-        post: operations["create_assignment_api_v1_campaigns__campaign_id__territorial_assignments_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/territorial-assignments/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove Assignment */
-        delete: operations["remove_assignment_api_v1_campaigns__campaign_id__territorial_assignments__id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -514,25 +56,709 @@ export interface paths {
         patch: operations["update_type_api_v1_activity_types__id__patch"];
         trace?: never;
     };
-    "/api/v1/need-categories": {
+    "/api/v1/admin/ai-provider": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Categories */
-        get: operations["categories_api_v1_need_categories_get"];
+        /** Configuration */
+        get: operations["configuration_api_v1_admin_ai_provider_get"];
         put?: never;
-        /** Create Category */
-        post: operations["create_category_api_v1_need_categories_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/need-categories/{id}": {
+    "/api/v1/admin/ai-provider/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test Connection */
+        post: operations["test_connection_api_v1_admin_ai_provider_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campaigns/{campaign_id}/feature-entitlements/{feature_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert */
+        put: operations["upsert_api_v1_admin_campaigns__campaign_id__feature_entitlements__feature_code__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/feature-entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Licenses */
+        get: operations["licenses_api_v1_admin_feature_entitlements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/browser/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Browser Login */
+        post: operations["browser_login_api_v1_auth_browser_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/browser/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Browser Logout */
+        post: operations["browser_logout_api_v1_auth_browser_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/browser/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Browser Refresh */
+        post: operations["browser_refresh_api_v1_auth_browser_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/browser/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Browser Session */
+        get: operations["browser_session_api_v1_auth_browser_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change Own Password */
+        post: operations["change_own_password_api_v1_auth_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_api_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_campaigns_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_campaigns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get */
+        get: operations["get_api_v1_campaigns__campaign_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_campaigns__campaign_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Alerts */
+        get: operations["alerts_api_v1_campaigns__campaign_id__alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate */
+        post: operations["evaluate_api_v1_campaigns__campaign_id__alerts_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Summary */
+        get: operations["summary_api_v1_campaigns__campaign_id__alerts_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_campaigns__campaign_id__alerts__alert_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge */
+        post: operations["acknowledge_api_v1_campaigns__campaign_id__alerts__alert_id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss */
+        post: operations["dismiss_api_v1_campaigns__campaign_id__alerts__alert_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve */
+        post: operations["resolve_api_v1_campaigns__campaign_id__alerts__alert_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/candidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Candidate */
+        get: operations["get_candidate_api_v1_campaigns__campaign_id__candidate_get"];
+        put?: never;
+        /** Create Candidate */
+        post: operations["create_candidate_api_v1_campaigns__campaign_id__candidate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Candidate */
+        patch: operations["update_candidate_api_v1_campaigns__campaign_id__candidate_patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/current-election/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current Election Analysis */
+        get: operations["current_election_analysis_api_v1_campaigns__campaign_id__current_election_analysis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consolidated */
+        get: operations["consolidated_api_v1_campaigns__campaign_id__dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/activity-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity Trends */
+        get: operations["activity_trends_api_v1_campaigns__campaign_id__dashboard_activity_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/commitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Commitments */
+        get: operations["commitments_api_v1_campaigns__campaign_id__dashboard_commitments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/data-quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data Quality */
+        get: operations["data_quality_api_v1_campaigns__campaign_id__dashboard_data_quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/demographics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Demographics */
+        get: operations["demographics_api_v1_campaigns__campaign_id__dashboard_demographics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/electoral-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Electoral History */
+        get: operations["electoral_history_api_v1_campaigns__campaign_id__dashboard_electoral_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/filter-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filter Options */
+        get: operations["filter_options_api_v1_campaigns__campaign_id__dashboard_filter_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/needs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Needs */
+        get: operations["needs_api_v1_campaigns__campaign_id__dashboard_needs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_campaigns__campaign_id__dashboard_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/surveys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Surveys */
+        get: operations["surveys_api_v1_campaigns__campaign_id__dashboard_surveys_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/dashboard/territories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Territories */
+        get: operations["territories_api_v1_campaigns__campaign_id__dashboard_territories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/debate/claim-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim Check */
+        post: operations["claim_check_api_v1_campaigns__campaign_id__debate_claim_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assignments */
+        get: operations["list_assignments_api_v1_campaigns__campaign_id__election_day_assignments_get"];
+        put?: never;
+        /** Create Assignment */
+        post: operations["create_assignment_api_v1_campaigns__campaign_id__election_day_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/assignments/{assignment_id}/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check In */
+        post: operations["check_in_api_v1_campaigns__campaign_id__election_day_assignments__assignment_id__check_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/assignments/{assignment_id}/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace Assignment */
+        post: operations["replace_assignment_api_v1_campaigns__campaign_id__election_day_assignments__assignment_id__replace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coverage */
+        get: operations["coverage_api_v1_campaigns__campaign_id__election_day_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Documents */
+        get: operations["list_documents_api_v1_campaigns__campaign_id__election_day_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/documents/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Document */
+        post: operations["upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/documents/{document_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Document */
+        get: operations["download_document_api_v1_campaigns__campaign_id__election_day_documents__document_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/documents/{document_id}/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -545,8 +771,815 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Category */
-        patch: operations["update_category_api_v1_need_categories__id__patch"];
+        /** Update Document Status */
+        patch: operations["update_document_status_api_v1_campaigns__campaign_id__election_day_documents__document_id__status_patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/eligible-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Eligible Users */
+        get: operations["eligible_users_api_v1_campaigns__campaign_id__election_day_eligible_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Incidents */
+        get: operations["list_incidents_api_v1_campaigns__campaign_id__election_day_incidents_get"];
+        put?: never;
+        /** Create Incident */
+        post: operations["create_incident_api_v1_campaigns__campaign_id__election_day_incidents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/incidents/{incident_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Incident */
+        post: operations["resolve_incident_api_v1_campaigns__campaign_id__election_day_incidents__incident_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/my-assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Assignment */
+        get: operations["my_assignment_api_v1_campaigns__campaign_id__election_day_my_assignment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Operation */
+        get: operations["get_operation_api_v1_campaigns__campaign_id__election_day_operation_get"];
+        put?: never;
+        /** Create Operation */
+        post: operations["create_operation_api_v1_campaigns__campaign_id__election_day_operation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Operation */
+        post: operations["close_operation_api_v1_campaigns__campaign_id__election_day_operation_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/closure-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Closure Preview */
+        get: operations["closure_preview_api_v1_campaigns__campaign_id__election_day_operation_closure_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Operation */
+        post: operations["open_operation_api_v1_campaigns__campaign_id__election_day_operation_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/polling-places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Polling Places */
+        get: operations["list_polling_places_api_v1_campaigns__campaign_id__election_day_polling_places_get"];
+        put?: never;
+        /** Create Polling Place */
+        post: operations["create_polling_place_api_v1_campaigns__campaign_id__election_day_polling_places_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/polling-places/{polling_place_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Polling Place Detail */
+        get: operations["polling_place_detail_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/polling-places/{polling_place_id}/boards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Boards */
+        get: operations["list_boards_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_get"];
+        put?: never;
+        /** Create Board */
+        post: operations["create_board_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/feature-entitlements/{feature_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Campaign Feature */
+        get: operations["campaign_feature_api_v1_campaigns__campaign_id__feature_entitlements__feature_code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/historical-electoral-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Context */
+        get: operations["context_api_v1_campaigns__campaign_id__historical_electoral_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activities */
+        get: operations["activities_api_v1_campaigns__campaign_id__map_activities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/boundaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Boundaries */
+        get: operations["boundaries_api_v1_campaigns__campaign_id__map_boundaries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/bounds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bounds */
+        get: operations["bounds_api_v1_campaigns__campaign_id__map_bounds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/commitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Commitments */
+        get: operations["commitments_api_v1_campaigns__campaign_id__map_commitments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Communities */
+        get: operations["communities_api_v1_campaigns__campaign_id__map_communities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/data-quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quality */
+        get: operations["quality_api_v1_campaigns__campaign_id__map_data_quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/demographics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Demographics */
+        get: operations["demographics_api_v1_campaigns__campaign_id__map_demographics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/electoral-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Electoral */
+        get: operations["electoral_api_v1_campaigns__campaign_id__map_electoral_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/features/{resource_type}/{resource_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feature */
+        get: operations["feature_api_v1_campaigns__campaign_id__map_features__resource_type___resource_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/layers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Layers */
+        get: operations["layers_api_v1_campaigns__campaign_id__map_layers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/needs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Needs */
+        get: operations["needs_api_v1_campaigns__campaign_id__map_needs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/operational-coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coverage */
+        get: operations["coverage_api_v1_campaigns__campaign_id__map_operational_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/participation-projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Participation Projection */
+        get: operations["participation_projection_api_v1_campaigns__campaign_id__map_participation_projection_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/sectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sectors */
+        get: operations["sectors_api_v1_campaigns__campaign_id__map_sectors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/map/surveys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Surveys */
+        get: operations["surveys_api_v1_campaigns__campaign_id__map_surveys_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/participation-projections/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest Projection */
+        get: operations["latest_projection_api_v1_campaigns__campaign_id__participation_projections_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reports */
+        get: operations["reports_api_v1_campaigns__campaign_id__reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate */
+        post: operations["generate_api_v1_campaigns__campaign_id__reports_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Report */
+        post: operations["preview_report_api_v1_campaigns__campaign_id__reports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_api_v1_campaigns__campaign_id__reports__run_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_campaigns__campaign_id__reports__run_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports/{run_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_v1_campaigns__campaign_id__reports__run_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/reports/{run_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report Run Preview */
+        get: operations["report_run_preview_api_v1_campaigns__campaign_id__reports__run_id__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/survey-analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis */
+        get: operations["analysis_api_v1_campaigns__campaign_id__survey_analysis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/survey-imports/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Execute Import */
+        post: operations["execute_import_api_v1_campaigns__campaign_id__survey_imports_execute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/survey-imports/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Import Template */
+        get: operations["import_template_api_v1_campaigns__campaign_id__survey_imports_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/survey-imports/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate Import */
+        post: operations["validate_import_api_v1_campaigns__campaign_id__survey_imports_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/survey-studies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Studies */
+        get: operations["list_studies_api_v1_campaigns__campaign_id__survey_studies_get"];
+        put?: never;
+        /** Create Study */
+        post: operations["create_study_api_v1_campaigns__campaign_id__survey_studies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/territorial-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assignments */
+        get: operations["assignments_api_v1_campaigns__campaign_id__territorial_assignments_get"];
+        put?: never;
+        /** Create Assignment */
+        post: operations["create_assignment_api_v1_campaigns__campaign_id__territorial_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/territorial-assignments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Assignment */
+        delete: operations["remove_assignment_api_v1_campaigns__campaign_id__territorial_assignments__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/territory-ai/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversations */
+        get: operations["conversations_api_v1_campaigns__campaign_id__territory_ai_conversations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/territory-ai/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversation */
+        get: operations["conversation_api_v1_campaigns__campaign_id__territory_ai_conversations__conversation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/territory-ai/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Query */
+        post: operations["query_api_v1_campaigns__campaign_id__territory_ai_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Campaign Users */
+        get: operations["campaign_users_api_v1_campaigns__campaign_id__users_get"];
+        put?: never;
+        /** Assign User */
+        post: operations["assign_user_api_v1_campaigns__campaign_id__users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove User */
+        delete: operations["remove_user_api_v1_campaigns__campaign_id__users__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/campaigns/{cid}/activities": {
@@ -567,36 +1600,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/activities/{id}": {
+    "/api/v1/campaigns/{cid}/activities/{aid}/evidence": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Activity */
-        get: operations["activity_api_v1_campaigns__cid__activities__id__get"];
+        /** Evidence */
+        get: operations["evidence_api_v1_campaigns__cid__activities__aid__evidence_get"];
         put?: never;
-        post?: never;
-        /** Deactivate Activity */
-        delete: operations["deactivate_activity_api_v1_campaigns__cid__activities__id__delete"];
+        /** Create Evidence */
+        post: operations["create_evidence_api_v1_campaigns__cid__activities__aid__evidence_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Update Activity */
-        patch: operations["update_activity_api_v1_campaigns__cid__activities__id__patch"];
+        patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/activities/{aid}/participant-summary": {
+    "/api/v1/campaigns/{cid}/activities/{aid}/evidence/upload": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Participants */
-        get: operations["get_participants_api_v1_campaigns__cid__activities__aid__participant_summary_get"];
-        /** Put Participants */
-        put: operations["put_participants_api_v1_campaigns__cid__activities__aid__participant_summary_put"];
+        get?: never;
+        put?: never;
+        /** Upload Evidence */
+        post: operations["upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{aid}/evidence/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Evidence */
+        delete: operations["delete_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Evidence */
+        patch: operations["update_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{aid}/evidence/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Evidence */
+        get: operations["download_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__download_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -622,15 +1688,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/needs": {
+    "/api/v1/campaigns/{cid}/activities/{aid}/participant-summary": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Needs */
-        get: operations["needs_api_v1_campaigns__cid__needs_get"];
+        /** Get Participants */
+        get: operations["get_participants_api_v1_campaigns__cid__activities__aid__participant_summary_get"];
+        /** Put Participants */
+        put: operations["put_participants_api_v1_campaigns__cid__activities__aid__participant_summary_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity */
+        get: operations["activity_api_v1_campaigns__cid__activities__id__get"];
+        put?: never;
+        post?: never;
+        /** Deactivate Activity */
+        delete: operations["deactivate_activity_api_v1_campaigns__cid__activities__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Activity */
+        patch: operations["update_activity_api_v1_campaigns__cid__activities__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Activity */
+        post: operations["approve_activity_api_v1_campaigns__cid__activities__id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Activity */
+        post: operations["cancel_activity_api_v1_campaigns__cid__activities__id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Activity */
+        post: operations["complete_activity_api_v1_campaigns__cid__activities__id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity History */
+        get: operations["activity_history_api_v1_campaigns__cid__activities__id__history_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -639,23 +1793,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/needs/{id}": {
+    "/api/v1/campaigns/{cid}/activities/{id}/reject": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Need */
-        get: operations["need_api_v1_campaigns__cid__needs__id__get"];
+        get?: never;
         put?: never;
-        post?: never;
-        /** Delete Need */
-        delete: operations["delete_need_api_v1_campaigns__cid__needs__id__delete"];
+        /** Reject Activity */
+        post: operations["reject_activity_api_v1_campaigns__cid__activities__id__reject_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Update Need */
-        patch: operations["update_need_api_v1_campaigns__cid__needs__id__patch"];
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Activity */
+        post: operations["resume_activity_api_v1_campaigns__cid__activities__id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/submit-for-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Activity */
+        post: operations["submit_activity_api_v1_campaigns__cid__activities__id__submit_for_approval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/activities/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend Activity */
+        post: operations["suspend_activity_api_v1_campaigns__cid__activities__id__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendar */
+        get: operations["calendar_api_v1_campaigns__cid__calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/campaigns/{cid}/commitments": {
@@ -695,25 +1915,61 @@ export interface paths {
         patch: operations["update_commitment_api_v1_campaigns__cid__commitments__id__patch"];
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/activities/{aid}/evidence": {
+    "/api/v1/campaigns/{cid}/needs": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Evidence */
-        get: operations["evidence_api_v1_campaigns__cid__activities__aid__evidence_get"];
+        /** Needs */
+        get: operations["needs_api_v1_campaigns__cid__needs_get"];
         put?: never;
-        /** Create Evidence */
-        post: operations["create_evidence_api_v1_campaigns__cid__activities__aid__evidence_post"];
+        /** Create Direct Need */
+        post: operations["create_direct_need_api_v1_campaigns__cid__needs_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/activities/{aid}/evidence/{id}": {
+    "/api/v1/campaigns/{cid}/needs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Need */
+        get: operations["need_api_v1_campaigns__cid__needs__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Need */
+        delete: operations["delete_need_api_v1_campaigns__cid__needs__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Need */
+        patch: operations["update_need_api_v1_campaigns__cid__needs__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/needs/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Need History */
+        get: operations["need_history_api_v1_campaigns__cid__needs__id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/needs/{id}/start-review": {
         parameters: {
             query?: never;
             header?: never;
@@ -722,13 +1978,46 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** Delete Evidence */
-        delete: operations["delete_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__delete"];
+        /** Review Need */
+        post: operations["review_need_api_v1_campaigns__cid__needs__id__start_review_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Update Evidence */
-        patch: operations["update_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__patch"];
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/needs/{id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate Need */
+        post: operations["validate_need_api_v1_campaigns__cid__needs__id__validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/needs/{need_id}/public-intelligence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Need Items */
+        get: operations["need_items_api_v1_campaigns__cid__needs__need_id__public_intelligence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/campaigns/{cid}/operational-summary": {
@@ -742,6 +2031,160 @@ export interface paths {
         get: operations["summary_api_v1_campaigns__cid__operational_summary_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/operations/agenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operations Agenda */
+        get: operations["operations_agenda_api_v1_campaigns__cid__operations_agenda_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/operations/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operations Summary */
+        get: operations["operations_summary_api_v1_campaigns__cid__operations_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/evaluate-stale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate Stale */
+        post: operations["evaluate_stale_api_v1_campaigns__cid__public_intelligence_evaluate_stale_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Items */
+        get: operations["items_api_v1_campaigns__cid__public_intelligence_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/items/{iid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_campaigns__cid__public_intelligence_items__iid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/items/{iid}/needs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Need */
+        post: operations["link_need_api_v1_campaigns__cid__public_intelligence_items__iid__needs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Map Metrics */
+        get: operations["map_metrics_api_v1_campaigns__cid__public_intelligence_map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-intelligence/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Summary */
+        get: operations["summary_api_v1_campaigns__cid__public_intelligence_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/public-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sources */
+        get: operations["sources_api_v1_campaigns__cid__public_sources_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_campaigns__cid__public_sources_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -785,7 +2228,7 @@ export interface paths {
         patch: operations["update_api_v1_campaigns__cid__surveys__sid__patch"];
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/sections": {
+    "/api/v1/campaigns/{cid}/surveys/{sid}/archive": {
         parameters: {
             query?: never;
             header?: never;
@@ -794,15 +2237,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Section */
-        post: operations["section_api_v1_campaigns__cid__surveys__sid__sections_post"];
+        /** Archive */
+        post: operations["archive_api_v1_campaigns__cid__surveys__sid__archive_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/sections/{id}": {
+    "/api/v1/campaigns/{cid}/surveys/{sid}/close": {
         parameters: {
             query?: never;
             header?: never;
@@ -811,16 +2254,49 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** Section Delete */
-        delete: operations["section_delete_api_v1_campaigns__cid__surveys__sid__sections__id__delete"];
+        /** Close */
+        post: operations["close_api_v1_campaigns__cid__surveys__sid__close_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Section Update */
-        patch: operations["section_update_api_v1_campaigns__cid__surveys__sid__sections__id__patch"];
+        patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/sections/{section_id}/questions": {
+    "/api/v1/campaigns/{cid}/surveys/{sid}/export-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export */
+        get: operations["export_api_v1_campaigns__cid__surveys__sid__export_data_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/surveys/{sid}/participation-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Participation */
+        get: operations["participation_api_v1_campaigns__cid__surveys__sid__participation_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/surveys/{sid}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -829,8 +2305,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Question */
-        post: operations["question_api_v1_campaigns__cid__surveys__sid__sections__section_id__questions_post"];
+        /** Publish */
+        post: operations["publish_api_v1_campaigns__cid__surveys__sid__publish_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -888,57 +2364,6 @@ export interface paths {
         head?: never;
         /** Option Update */
         patch: operations["option_update_api_v1_campaigns__cid__surveys__sid__questions__qid__options__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publish */
-        post: operations["publish_api_v1_campaigns__cid__surveys__sid__publish_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Close */
-        post: operations["close_api_v1_campaigns__cid__surveys__sid__close_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Archive */
-        post: operations["archive_api_v1_campaigns__cid__surveys__sid__archive_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/campaigns/{cid}/surveys/{sid}/responses": {
@@ -1010,6 +2435,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{cid}/surveys/{sid}/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Section */
+        post: operations["section_api_v1_campaigns__cid__surveys__sid__sections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/surveys/{sid}/sections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Section Delete */
+        delete: operations["section_delete_api_v1_campaigns__cid__surveys__sid__sections__id__delete"];
+        options?: never;
+        head?: never;
+        /** Section Update */
+        patch: operations["section_update_api_v1_campaigns__cid__surveys__sid__sections__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/campaigns/{cid}/surveys/{sid}/sections/{section_id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Question */
+        post: operations["question_api_v1_campaigns__cid__surveys__sid__sections__section_id__questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{cid}/surveys/{sid}/territorial-comparison": {
         parameters: {
             query?: never;
@@ -1027,15 +2504,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/participation-summary": {
+    "/api/v1/campaigns/{cid}/territories/summary": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Participation */
-        get: operations["participation_api_v1_campaigns__cid__surveys__sid__participation_summary_get"];
+        /** Territory Summaries */
+        get: operations["territory_summaries_api_v1_campaigns__cid__territories_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1044,15 +2521,274 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{cid}/surveys/{sid}/export-data": {
+    "/api/v1/cantons": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Export */
-        get: operations["export_api_v1_campaigns__cid__surveys__sid__export_data_get"];
+        /** Cantons */
+        get: operations["cantons_api_v1_cantons_get"];
+        put?: never;
+        /** Create Canton */
+        post: operations["create_canton_api_v1_cantons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cantons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Canton */
+        get: operations["canton_api_v1_cantons__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Canton */
+        patch: operations["update_canton_api_v1_cantons__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Communities */
+        get: operations["communities_api_v1_communities_get"];
+        put?: never;
+        /** Create Community */
+        post: operations["create_community_api_v1_communities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/communities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Community */
+        get: operations["community_api_v1_communities__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Community */
+        patch: operations["update_community_api_v1_communities__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/data-hub/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data Hub Catalog */
+        get: operations["data_hub_catalog_api_v1_data_hub_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-hub/datasets/{dataset_type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data Hub Dataset */
+        get: operations["data_hub_dataset_api_v1_data_hub_datasets__dataset_type__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-hub/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data Hub Versions */
+        get: operations["data_hub_versions_api_v1_data_hub_versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-hub/versions/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate Version */
+        post: operations["activate_version_api_v1_data_hub_versions__id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-hub/versions/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Version */
+        post: operations["archive_version_api_v1_data_hub_versions__id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-hub/versions/{id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Diff Version */
+        get: operations["diff_version_api_v1_data_hub_versions__id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-import-profiles/{dataset_type}/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Import Template */
+        get: operations["import_template_api_v1_data_import_profiles__dataset_type__template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jobs */
+        get: operations["jobs_api_v1_data_imports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-imports/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Execute */
+        post: operations["execute_api_v1_data_imports_execute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-imports/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate */
+        post: operations["validate_api_v1_data_imports_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_api_v1_data_imports__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-imports/{id}/errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Errors */
+        get: operations["errors_api_v1_data_imports__id__errors_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1097,7 +2833,25 @@ export interface paths {
         patch: operations["source_update_api_v1_data_sources__id__patch"];
         trace?: never;
     };
-    "/api/v1/data-imports/validate": {
+    "/api/v1/demographic-indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Indicators */
+        get: operations["indicators_api_v1_demographic_indicators_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_demographic_indicators_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/demographic-indicators/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1106,15 +2860,85 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Validate */
-        post: operations["validate_api_v1_data_imports_validate_post"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_demographic_indicators__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/demographic-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Observations */
+        get: operations["observations_api_v1_demographic_observations_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/data-imports/execute": {
+    "/api/v1/electoral-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comparison */
+        get: operations["comparison_api_v1_electoral_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/electoral-milestones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Milestones */
+        get: operations["milestones_api_v1_electoral_milestones_get"];
+        put?: never;
+        /** Milestone Create */
+        post: operations["milestone_create_api_v1_electoral_milestones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/electoral-milestones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Milestone */
+        get: operations["milestone_api_v1_electoral_milestones__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Milestone Update */
+        patch: operations["milestone_update_api_v1_electoral_milestones__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/electoral-milestones/{id}/activate": {
         parameters: {
             query?: never;
             header?: never;
@@ -1123,59 +2947,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Execute */
-        post: operations["execute_api_v1_data_imports_execute_post"];
+        /** Milestone Activate */
+        post: operations["milestone_activate_api_v1_electoral_milestones__id__activate_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/data-imports": {
+    "/api/v1/electoral-milestones/{id}/archive": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Jobs */
-        get: operations["jobs_api_v1_data_imports_get"];
+        get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/data-imports/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Job */
-        get: operations["job_api_v1_data_imports__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/data-imports/{id}/errors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Errors */
-        get: operations["errors_api_v1_data_imports__id__errors_get"];
-        put?: never;
-        post?: never;
+        /** Milestone Archive */
+        post: operations["milestone_archive_api_v1_electoral_milestones__id__archive_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1253,23 +3043,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/electoral-processes/{pid}/contests/{cid}/turnout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Turnout */
-        get: operations["turnout_api_v1_electoral_processes__pid__contests__cid__turnout_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/electoral-processes/{pid}/contests/{cid}/candidate-results": {
         parameters: {
             query?: never;
@@ -1279,6 +3052,23 @@ export interface paths {
         };
         /** Results */
         get: operations["results_api_v1_electoral_processes__pid__contests__cid__candidate_results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/electoral-processes/{pid}/contests/{cid}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidates */
+        get: operations["candidates_api_v1_electoral_processes__pid__contests__cid__candidates_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1304,15 +3094,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/electoral-comparison": {
+    "/api/v1/electoral-processes/{pid}/contests/{cid}/turnout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Comparison */
-        get: operations["comparison_api_v1_electoral_comparison_get"];
+        /** Turnout */
+        get: operations["turnout_api_v1_electoral_processes__pid__contests__cid__turnout_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1321,15 +3111,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/historical-electoral-context": {
+    "/api/v1/electoral-processes/{pid}/geographies": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Context */
-        get: operations["context_api_v1_campaigns__campaign_id__historical_electoral_context_get"];
+        /** Geographies */
+        get: operations["geographies_api_v1_electoral_processes__pid__geographies_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1338,50 +3128,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/demographic-indicators": {
+    "/api/v1/electoral-roll-snapshots": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Indicators */
-        get: operations["indicators_api_v1_demographic_indicators_get"];
-        put?: never;
-        /** Create */
-        post: operations["create_api_v1_demographic_indicators_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/demographic-indicators/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update */
-        patch: operations["update_api_v1_demographic_indicators__id__patch"];
-        trace?: never;
-    };
-    "/api/v1/demographic-observations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Observations */
-        get: operations["observations_api_v1_demographic_observations_get"];
+        /** Snapshots */
+        get: operations["snapshots_api_v1_electoral_roll_snapshots_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1390,15 +3145,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/territories/demographic-profile": {
+    "/api/v1/electoral-roll-snapshots/latest": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Profile */
-        get: operations["profile_api_v1_territories_demographic_profile_get"];
+        /** Latest Snapshot */
+        get: operations["latest_snapshot_api_v1_electoral_roll_snapshots_latest_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1407,15 +3162,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/dashboard/filter-options": {
+    "/api/v1/electoral-roll-snapshots/{snapshot_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Filter Options */
-        get: operations["filter_options_api_v1_campaigns__campaign_id__dashboard_filter_options_get"];
+        /** Snapshot */
+        get: operations["snapshot_api_v1_electoral_roll_snapshots__snapshot_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1424,15 +3179,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/dashboard/overview": {
+    "/api/v1/electoral-roll-snapshots/{snapshot_id}/entries": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Overview */
-        get: operations["overview_api_v1_campaigns__campaign_id__dashboard_overview_get"];
+        /** Snapshot Entries */
+        get: operations["snapshot_entries_api_v1_electoral_roll_snapshots__snapshot_id__entries_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1441,408 +3196,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/dashboard/territories": {
+    "/api/v1/geometry-imports": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Territories */
-        get: operations["territories_api_v1_campaigns__campaign_id__dashboard_territories_get"];
+        /** Geometry Jobs */
+        get: operations["geometry_jobs_api_v1_geometry_imports_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/activity-trends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Activity Trends */
-        get: operations["activity_trends_api_v1_campaigns__campaign_id__dashboard_activity_trends_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/needs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Needs */
-        get: operations["needs_api_v1_campaigns__campaign_id__dashboard_needs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/commitments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Commitments */
-        get: operations["commitments_api_v1_campaigns__campaign_id__dashboard_commitments_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/surveys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Surveys */
-        get: operations["surveys_api_v1_campaigns__campaign_id__dashboard_surveys_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/electoral-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Electoral History */
-        get: operations["electoral_history_api_v1_campaigns__campaign_id__dashboard_electoral_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/demographics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Demographics */
-        get: operations["demographics_api_v1_campaigns__campaign_id__dashboard_demographics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard/data-quality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Data Quality */
-        get: operations["data_quality_api_v1_campaigns__campaign_id__dashboard_data_quality_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/dashboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Consolidated */
-        get: operations["consolidated_api_v1_campaigns__campaign_id__dashboard_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/layers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Layers */
-        get: operations["layers_api_v1_campaigns__campaign_id__map_layers_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/bounds": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Bounds */
-        get: operations["bounds_api_v1_campaigns__campaign_id__map_bounds_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/boundaries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Boundaries */
-        get: operations["boundaries_api_v1_campaigns__campaign_id__map_boundaries_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/communities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Communities */
-        get: operations["communities_api_v1_campaigns__campaign_id__map_communities_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/sectors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sectors */
-        get: operations["sectors_api_v1_campaigns__campaign_id__map_sectors_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/activities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Activities */
-        get: operations["activities_api_v1_campaigns__campaign_id__map_activities_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/operational-coverage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Coverage */
-        get: operations["coverage_api_v1_campaigns__campaign_id__map_operational_coverage_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/needs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Needs */
-        get: operations["needs_api_v1_campaigns__campaign_id__map_needs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/commitments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Commitments */
-        get: operations["commitments_api_v1_campaigns__campaign_id__map_commitments_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/surveys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Surveys */
-        get: operations["surveys_api_v1_campaigns__campaign_id__map_surveys_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/electoral-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Electoral */
-        get: operations["electoral_api_v1_campaigns__campaign_id__map_electoral_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/demographics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Demographics */
-        get: operations["demographics_api_v1_campaigns__campaign_id__map_demographics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/features/{resource_type}/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Feature */
-        get: operations["feature_api_v1_campaigns__campaign_id__map_features__resource_type___resource_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/map/data-quality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Quality */
-        get: operations["quality_api_v1_campaigns__campaign_id__map_data_quality_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/geometry-imports/validate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Validate Geometry */
-        post: operations["validate_geometry_api_v1_geometry_imports_validate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1866,17 +3230,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/geometry-imports": {
+    "/api/v1/geometry-imports/validate": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Geometry Jobs */
-        get: operations["geometry_jobs_api_v1_geometry_imports_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Validate Geometry */
+        post: operations["validate_geometry_api_v1_geometry_imports_validate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1909,6 +3273,455 @@ export interface paths {
         };
         /** Geometry Errors */
         get: operations["geometry_errors_api_v1_geometry_imports__job_id__errors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health Check */
+        get: operations["health_check_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/need-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Categories */
+        get: operations["categories_api_v1_need_categories_get"];
+        put?: never;
+        /** Create Category */
+        post: operations["create_category_api_v1_need_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/need-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Category */
+        patch: operations["update_category_api_v1_need_categories__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_organizations_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_organizations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Onboarding */
+        post: operations["onboarding_api_v1_organizations_onboarding_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_organizations__organization_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_organizations__organization_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit */
+        get: operations["audit_api_v1_organizations__organization_id__audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/licenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Licenses */
+        get: operations["licenses_api_v1_organizations__organization_id__licenses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Memberships */
+        get: operations["memberships_api_v1_organizations__organization_id__memberships_get"];
+        put?: never;
+        /** Add Membership */
+        post: operations["add_membership_api_v1_organizations__organization_id__memberships_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/memberships/{membership_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Membership */
+        delete: operations["remove_membership_api_v1_organizations__organization_id__memberships__membership_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscription */
+        get: operations["subscription_api_v1_organizations__organization_id__subscription_get"];
+        /** Update Subscription */
+        put: operations["update_subscription_api_v1_organizations__organization_id__subscription_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Usage */
+        get: operations["usage_api_v1_organizations__organization_id__usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search User */
+        get: operations["search_user_api_v1_organizations__organization_id__users_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/parishes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parishes */
+        get: operations["parishes_api_v1_parishes_get"];
+        put?: never;
+        /** Create Parish */
+        post: operations["create_parish_api_v1_parishes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/parishes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parish */
+        get: operations["parish_api_v1_parishes__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Parish */
+        patch: operations["update_parish_api_v1_parishes__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/participation-projections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Projection */
+        post: operations["create_projection_api_v1_participation_projections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/participation-projections/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projection */
+        get: operations["projection_api_v1_participation_projections__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/participation-projections/{run_id}/explanation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projection Explanation */
+        get: operations["projection_explanation_api_v1_participation_projections__run_id__explanation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/participation-projections/{run_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projection Results */
+        get: operations["projection_results_api_v1_participation_projections__run_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/political-organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Organizations */
+        get: operations["organizations_api_v1_political_organizations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/provinces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provinces */
+        get: operations["provinces_api_v1_provinces_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public-sources/{sid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_public_sources__sid__patch"];
+        trace?: never;
+    };
+    "/api/v1/public-sources/{sid}/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch */
+        post: operations["fetch_api_v1_public_sources__sid__fetch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public-sources/{sid}/fetch-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Runs */
+        get: operations["runs_api_v1_public_sources__sid__fetch_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public-topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Topics */
+        get: operations["topics_api_v1_public_topics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness Check */
+        get: operations["readiness_check_api_v1_ready_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1953,32 +3766,15 @@ export interface paths {
         patch: operations["update_template_api_v1_report_templates__template_id__patch"];
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/reports/generate": {
+    "/api/v1/report-types": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Generate */
-        post: operations["generate_api_v1_campaigns__campaign_id__reports_generate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Reports */
-        get: operations["reports_api_v1_campaigns__campaign_id__reports_get"];
+        /** Report Types */
+        get: operations["report_types_api_v1_report_types_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1987,33 +3783,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/reports/{run_id}": {
+    "/api/v1/roles": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Report */
-        get: operations["report_api_v1_campaigns__campaign_id__reports__run_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete */
-        delete: operations["delete_api_v1_campaigns__campaign_id__reports__run_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/reports/{run_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Download */
-        get: operations["download_api_v1_campaigns__campaign_id__reports__run_id__download_get"];
+        /** List Roles */
+        get: operations["list_roles_api_v1_roles_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2022,123 +3800,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/alerts/evaluate": {
+    "/api/v1/sectors": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Sectors */
+        get: operations["sectors_api_v1_sectors_get"];
         put?: never;
-        /** Evaluate */
-        post: operations["evaluate_api_v1_campaigns__campaign_id__alerts_evaluate_post"];
+        /** Create Sector */
+        post: operations["create_sector_api_v1_sectors_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaign_id}/alerts/summary": {
+    "/api/v1/sectors/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Summary */
-        get: operations["summary_api_v1_campaigns__campaign_id__alerts_summary_get"];
+        /** Sector */
+        get: operations["sector_api_v1_sectors__id__get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Alerts */
-        get: operations["alerts_api_v1_campaigns__campaign_id__alerts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Detail */
-        get: operations["detail_api_v1_campaigns__campaign_id__alerts__alert_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/acknowledge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Acknowledge */
-        post: operations["acknowledge_api_v1_campaigns__campaign_id__alerts__alert_id__acknowledge_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve */
-        post: operations["resolve_api_v1_campaigns__campaign_id__alerts__alert_id__resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign_id}/alerts/{alert_id}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Dismiss */
-        post: operations["dismiss_api_v1_campaigns__campaign_id__alerts__alert_id__dismiss_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        /** Update Sector */
+        patch: operations["update_sector_api_v1_sectors__id__patch"];
         trace?: never;
     };
     "/api/v1/security/audit-events": {
@@ -2158,17 +3853,192 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/": {
+    "/api/v1/survey-studies/{study_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Root */
-        get: operations["root__get"];
+        /** Detail */
+        get: operations["detail_api_v1_survey_studies__study_id__get"];
         put?: never;
         post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_survey_studies__study_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_survey_studies__study_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive */
+        post: operations["archive_api_v1_survey_studies__study_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Option */
+        post: operations["option_api_v1_survey_studies__study_id__options_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish */
+        post: operations["publish_api_v1_survey_studies__study_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Results */
+        get: operations["results_api_v1_survey_studies__study_id__results_get"];
+        /** Put Results */
+        put: operations["put_results_api_v1_survey_studies__study_id__results_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/territories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Territory */
+        post: operations["territory_api_v1_survey_studies__study_id__territories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-studies/{study_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate */
+        post: operations["validate_api_v1_survey_studies__study_id__validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/territories/demographic-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profile */
+        get: operations["profile_api_v1_territories_demographic_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_v1_users_get"];
+        put?: never;
+        /** Create User */
+        post: operations["create_user_api_v1_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User */
+        get: operations["get_user_api_v1_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update User */
+        patch: operations["update_user_api_v1_users__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change Password */
+        post: operations["change_password_api_v1_users__user_id__change_password_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2179,107 +4049,207 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** ActivityCountByParish */
-        ActivityCountByParish: {
-            /** Parish Id */
-            parish_id: number;
-            /** Name */
-            name: string;
-            /** Completed */
-            completed: number;
-            /** Planned */
-            planned: number;
-            /** Estimated Attendees */
-            estimated_attendees: number;
-        };
-        /** ActivityCountByType */
-        ActivityCountByType: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Count */
-            count: number;
-        };
-        /** ActivityEvidenceCreate */
-        ActivityEvidenceCreate: {
-            evidence_type: components["schemas"]["EvidenceType"];
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /**
-             * Url
-             * Format: uri
-             */
-            url: string;
-            /** Evidence Date */
-            evidence_date?: string | null;
-        };
-        /** ActivityEvidenceRead */
-        ActivityEvidenceRead: {
+        /** ActivityActorRead */
+        ActivityActorRead: {
+            /** Display Name */
+            display_name: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Role Codes */
+            role_codes: string[];
+            /** Username */
+            username: string;
+        };
+        /** ActivityCancelRequest */
+        ActivityCancelRequest: {
+            /** Reason */
+            reason: string;
+        };
+        /** ActivityCloseCommitmentCreate */
+        ActivityCloseCommitmentCreate: {
+            /** Completed Date */
+            completed_date?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Need Id */
+            need_id?: string | null;
+            /** @default MEDIUM */
+            priority: components["schemas"]["Priority"];
+            /** Responsible User Id */
+            responsible_user_id?: string | null;
+            /** @default PENDING */
+            status: components["schemas"]["CommitmentStatus"];
+            /** Title */
+            title: string;
+        };
+        /** ActivityCloseNeedCreate */
+        ActivityCloseNeedCreate: {
+            /** Assigned To User Id */
+            assigned_to_user_id?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Evidence Notes */
+            evidence_notes?: string | null;
+            /** Local Sector Description */
+            local_sector_description?: string | null;
+            /**
+             * Mentions Count
+             * @default 1
+             */
+            mentions_count: number;
+            /** Need Category Code */
+            need_category_code: string;
+            /** @default MEDIUM */
+            priority: components["schemas"]["Priority"];
+            /** @default PARISH */
+            scope: components["schemas"]["NeedScope"];
+            /** Source Reference */
+            source_reference?: string | null;
+            /** @default CAMPAIGN_ACTIVITY */
+            source_type: components["schemas"]["NeedSourceType"];
+            /** @default REPORTED */
+            status: components["schemas"]["NeedStatus"];
+            /** Title */
+            title: string;
+            urgency?: components["schemas"]["Priority"] | null;
+        };
+        /** ActivityCloseRequest */
+        ActivityCloseRequest: {
+            /** Commitments */
+            commitments?: components["schemas"]["ActivityCloseCommitmentCreate"][];
+            /** Existing Need Ids */
+            existing_need_ids?: string[];
+            /** New Needs */
+            new_needs?: components["schemas"]["ActivityCloseNeedCreate"][];
+            /** Outcome Notes */
+            outcome_notes?: string | null;
+            /** Summary */
+            summary: string;
+        };
+        /** ActivityCountByParish */
+        ActivityCountByParish: {
+            /** Completed */
+            completed: number;
+            /** Estimated Attendees */
+            estimated_attendees: number;
+            /** Name */
+            name: string;
+            /** Parish Id */
+            parish_id: number;
+            /** Planned */
+            planned: number;
+        };
+        /** ActivityCountByType */
+        ActivityCountByType: {
+            /** Code */
+            code: string;
+            /** Count */
+            count: number;
+            /** Name */
+            name: string;
+        };
+        /** ActivityEvidenceCreate */
+        ActivityEvidenceCreate: {
+            /** Description */
+            description?: string | null;
+            /** Evidence Date */
+            evidence_date?: string | null;
+            evidence_type: components["schemas"]["EvidenceType"];
+            /** Title */
+            title: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+        };
+        /** ActivityEvidenceRead */
+        ActivityEvidenceRead: {
             /**
              * Activity Id
              * Format: uuid
              */
             activity_id: string;
-            evidence_type: components["schemas"]["EvidenceType"];
-            /** Title */
-            title: string;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
             /** Description */
             description: string | null;
-            /** Url */
-            url: string;
             /** Evidence Date */
             evidence_date: string | null;
+            evidence_type: components["schemas"]["EvidenceType"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Original Filename */
+            original_filename?: string | null;
+            /** Size Bytes */
+            size_bytes?: number | null;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
         };
         /** ActivityEvidenceUpdate */
         ActivityEvidenceUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Evidence Date */
+            evidence_date?: string | null;
             evidence_type?: components["schemas"]["EvidenceType"] | null;
             /** Title */
             title?: string | null;
-            /** Description */
-            description?: string | null;
             /** Url */
             url?: string | null;
-            /** Evidence Date */
-            evidence_date?: string | null;
+        };
+        /** ActivityRejectRequest */
+        ActivityRejectRequest: {
+            /** Rejection Reason */
+            rejection_reason: string;
         };
         /**
          * ActivityStatus
          * @enum {string}
          */
-        ActivityStatus: "PLANNED" | "COMPLETED" | "CANCELLED";
+        ActivityStatus: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SUSPENDED" | "CANCELLED";
+        /** ActivitySuspendRequest */
+        ActivitySuspendRequest: {
+            /** Reason */
+            reason: string;
+        };
         /** ActivityTrendPoint */
         ActivityTrendPoint: {
+            /** Cancelled */
+            cancelled: number;
+            /** Completed */
+            completed: number;
+            /** Distinct Activity Types */
+            distinct_activity_types: number;
+            /** Estimated Attendees */
+            estimated_attendees: number;
             /**
              * Period Start
              * Format: date
              */
             period_start: string;
-            /** Completed */
-            completed: number;
             /** Planned */
             planned: number;
-            /** Cancelled */
-            cancelled: number;
-            /** Estimated Attendees */
-            estimated_attendees: number;
-            /** Distinct Activity Types */
-            distinct_activity_types: number;
         };
         /** ActivityTrendRead */
         ActivityTrendRead: {
-            period: components["schemas"]["DashboardPeriodRead"];
             /** Group By */
             group_by: string;
+            period: components["schemas"]["DashboardPeriodRead"];
             /** Points */
             points: components["schemas"]["ActivityTrendPoint"][];
         };
@@ -2287,34 +4257,27 @@ export interface components {
         ActivityTypeCreate: {
             /** Code */
             code: string;
-            /** Name */
-            name: string;
             /** Description */
             description?: string | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Display Order
              * @default 0
              */
             display_order: number;
-        };
-        /** ActivityTypeRead */
-        ActivityTypeRead: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Name */
+            name: string;
+        };
+        /** ActivityTypeRead */
+        ActivityTypeRead: {
+            /** Code */
+            code: string;
+            /** Description */
+            description?: string | null;
             /**
              * Display Order
              * @default 0
@@ -2322,30 +4285,65 @@ export interface components {
             display_order: number;
             /** Id */
             id: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Name */
+            name: string;
         };
         /** ActivityTypeUpdate */
         ActivityTypeUpdate: {
-            /** Name */
-            name?: string | null;
             /** Description */
             description?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
             /** Display Order */
             display_order?: number | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
         /**
          * AgeRange
          * @enum {string}
          */
         AgeRange: "UNDER_18" | "AGE_18_24" | "AGE_25_34" | "AGE_35_44" | "AGE_45_54" | "AGE_55_64" | "AGE_65_PLUS" | "NOT_PROVIDED";
+        /** AiProviderConfiguration */
+        AiProviderConfiguration: {
+            /** Api Key Configured */
+            api_key_configured: boolean;
+            /** Model */
+            model: string | null;
+            /** Provider */
+            provider: string;
+            /** Provider Label */
+            provider_label: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "CONNECTED" | "NOT_CONFIGURED" | "ERROR";
+        };
+        /** AiProviderConnectionResult */
+        AiProviderConnectionResult: {
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Model */
+            model: string;
+            /** Provider */
+            provider: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "CONNECTED";
+        };
         /** AlertAcknowledgementRead */
         AlertAcknowledgementRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
             /** Action */
             action: string;
             /**
@@ -2353,6 +4351,11 @@ export interface components {
              * Format: date
              */
             action_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Note */
             note: string | null;
             /**
@@ -2373,32 +4376,32 @@ export interface components {
         };
         /** AlertEvaluationRequest */
         AlertEvaluationRequest: {
-            /** Rule Codes */
-            rule_codes?: string[];
             /**
              * As Of Date
              * Format: date
              */
             as_of_date: string;
-            /** Parish Id */
-            parish_id?: number | null;
             /** Community Id */
             community_id?: string | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Rule Codes */
+            rule_codes?: string[];
             /** Sector Id */
             sector_id?: string | null;
         };
         /** AlertEvaluationResponse */
         AlertEvaluationResponse: {
-            /** Evaluated Rules */
-            evaluated_rules: number;
             /** Created */
             created: number;
-            /** Updated */
-            updated: number;
+            /** Evaluated Rules */
+            evaluated_rules: number;
             /** Resolved */
             resolved: number;
             /** Unchanged */
             unchanged: number;
+            /** Updated */
+            updated: number;
         };
         /** AlertListResponse */
         AlertListResponse: {
@@ -2413,16 +4416,12 @@ export interface components {
         };
         /** AlertSummaryRead */
         AlertSummaryRead: {
-            /** Statuses */
-            statuses: {
-                [key: string]: number;
-            };
-            /** By Severity */
-            by_severity: {
-                [key: string]: unknown;
-            }[];
             /** By Module */
             by_module: {
+                [key: string]: unknown;
+            }[];
+            /** By Severity */
+            by_severity: {
                 [key: string]: unknown;
             }[];
             /** By Territory */
@@ -2433,72 +4432,91 @@ export interface components {
             new_in_period: number;
             /** Overdue */
             overdue: number;
+            /** Statuses */
+            statuses: {
+                [key: string]: number;
+            };
             /** Top Alerts */
             top_alerts: components["schemas"]["OperationalAlertRead"][];
         };
+        /**
+         * ApprovalStatus
+         * @enum {string}
+         */
+        ApprovalStatus: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
         /** Body_execute_api_v1_data_imports_execute_post */
         Body_execute_api_v1_data_imports_execute_post: {
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
-            /** Dataset Type */
-            dataset_type: string;
-            /** File */
-            file: string;
-            /** Mapping Profile */
-            mapping_profile?: string | null;
             /** Column Mapping Json */
             column_mapping_json?: string | null;
-            /** Encoding */
-            encoding?: string | null;
+            /** Dataset Type */
+            dataset_type: string;
             /** Delimiter */
             delimiter?: string | null;
+            /** Encoding */
+            encoding?: string | null;
+            /** File */
+            file: string;
             /**
              * Force
              * @default false
              */
             force: boolean;
-        };
-        /** Body_execute_geometry_api_v1_geometry_imports_execute_post */
-        Body_execute_geometry_api_v1_geometry_imports_execute_post: {
+            /** Mapping Profile */
+            mapping_profile?: string | null;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** File */
-            file: string;
-            /** Territory Level */
-            territory_level: string;
+        };
+        /** Body_execute_geometry_api_v1_geometry_imports_execute_post */
+        Body_execute_geometry_api_v1_geometry_imports_execute_post: {
+            /**
+             * Allow Make Valid
+             * @default false
+             */
+            allow_make_valid: boolean;
             /**
              * Dpa Code Property
              * @default dpa_code
              */
             dpa_code_property: string;
+            /** File */
+            file: string;
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
             /**
              * Name Property
              * @default name
              */
             name_property: string;
             /**
-             * Force
-             * @default false
+             * Source Id
+             * Format: uuid
              */
-            force: boolean;
-            /**
-             * Allow Make Valid
-             * @default false
-             */
-            allow_make_valid: boolean;
+            source_id: string;
+            /** Territory Level */
+            territory_level: string;
+        };
+        /** Body_execute_import_api_v1_campaigns__campaign_id__survey_imports_execute_post */
+        Body_execute_import_api_v1_campaigns__campaign_id__survey_imports_execute_post: {
+            /** File */
+            file: string;
         };
         /** Body_login_api_v1_auth_login_post */
         Body_login_api_v1_auth_login_post: {
+            /** Client Id */
+            client_id?: string | null;
+            /**
+             * Client Secret
+             * Format: password
+             */
+            client_secret?: string | null;
             /** Grant Type */
             grant_type?: string | null;
-            /** Username */
-            username: string;
             /**
              * Password
              * Format: password
@@ -2509,60 +4527,90 @@ export interface components {
              * @default
              */
             scope: string;
-            /** Client Id */
-            client_id?: string | null;
+            /** Username */
+            username: string;
+        };
+        /** Body_upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post */
+        Body_upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post: {
+            /** Board Id */
+            board_id?: string | null;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Document Type */
+            document_type: string;
+            /** File */
+            file: string;
             /**
-             * Client Secret
-             * Format: password
+             * Polling Place Id
+             * Format: uuid
              */
-            client_secret?: string | null;
+            polling_place_id: string;
+        };
+        /** Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post */
+        Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post: {
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Evidence Date */
+            evidence_date?: string | null;
+            evidence_type: components["schemas"]["EvidenceType"];
+            /** File */
+            file: string;
+            /** Title */
+            title: string;
         };
         /** Body_validate_api_v1_data_imports_validate_post */
         Body_validate_api_v1_data_imports_validate_post: {
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
+            /** Column Mapping Json */
+            column_mapping_json?: string | null;
             /** Dataset Type */
             dataset_type: string;
+            /** Delimiter */
+            delimiter?: string | null;
+            /** Encoding */
+            encoding?: string | null;
             /** File */
             file: string;
             /** Mapping Profile */
             mapping_profile?: string | null;
-            /** Column Mapping Json */
-            column_mapping_json?: string | null;
-            /** Encoding */
-            encoding?: string | null;
-            /** Delimiter */
-            delimiter?: string | null;
-        };
-        /** Body_validate_geometry_api_v1_geometry_imports_validate_post */
-        Body_validate_geometry_api_v1_geometry_imports_validate_post: {
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** File */
-            file: string;
-            /** Territory Level */
-            territory_level: string;
+        };
+        /** Body_validate_geometry_api_v1_geometry_imports_validate_post */
+        Body_validate_geometry_api_v1_geometry_imports_validate_post: {
+            /**
+             * Allow Make Valid
+             * @default false
+             */
+            allow_make_valid: boolean;
             /**
              * Dpa Code Property
              * @default dpa_code
              */
             dpa_code_property: string;
+            /** File */
+            file: string;
             /**
              * Name Property
              * @default name
              */
             name_property: string;
             /**
-             * Allow Make Valid
-             * @default false
+             * Source Id
+             * Format: uuid
              */
-            allow_make_valid: boolean;
+            source_id: string;
+            /** Territory Level */
+            territory_level: string;
+        };
+        /** Body_validate_import_api_v1_campaigns__campaign_id__survey_imports_validate_post */
+        Body_validate_import_api_v1_campaigns__campaign_id__survey_imports_validate_post: {
+            /** File */
+            file: string;
         };
         /** BrowserLogin */
         BrowserLogin: {
@@ -2581,61 +4629,79 @@ export interface components {
         BrowserToken: {
             /** Access Token */
             access_token: string;
+            /** Expires In */
+            expires_in: number;
             /**
              * Token Type
              * @default bearer
              * @constant
              */
             token_type: "bearer";
-            /** Expires In */
-            expires_in: number;
             user: components["schemas"]["UserRead"];
         };
         /** CampaignCreate */
         CampaignCreate: {
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
             /** Canton Id */
             canton_id: number;
-            office_type: components["schemas"]["OfficeType"];
-            /** Election Name */
-            election_name: string;
+            /** Description */
+            description?: string | null;
             /**
              * Election Date
              * Format: date
              */
             election_date: string;
-            /** Start Date */
-            start_date?: string | null;
+            /** Election Name */
+            election_name: string;
             /** End Date */
             end_date?: string | null;
-            /** @default DRAFT */
-            status: components["schemas"]["CampaignStatus"];
-            /** Description */
-            description?: string | null;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Name */
+            name: string;
+            office_type: components["schemas"]["OfficeType"];
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Province Id */
+            province_id?: number | null;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date?: string | null;
+            /** @default DRAFT */
+            status: components["schemas"]["CampaignStatus"];
         };
         /** CampaignDashboardOverviewRead */
         CampaignDashboardOverviewRead: {
-            /** Campaign */
-            campaign: {
-                [key: string]: unknown;
-            };
-            scope: components["schemas"]["DashboardScopeRead"];
-            period: components["schemas"]["DashboardPeriodRead"];
             /**
              * As Of Date
              * Format: date
              */
             as_of_date: string;
+            /** Campaign */
+            campaign: {
+                [key: string]: unknown;
+            };
+            /** Commitment Summary */
+            commitment_summary: {
+                [key: string]: unknown;
+            };
+            /** Data Quality */
+            data_quality: {
+                [key: string]: unknown;
+            };
             /** Metrics */
             metrics: components["schemas"]["DashboardMetricRead"][];
+            period: components["schemas"]["DashboardPeriodRead"];
+            scope: components["schemas"]["DashboardScopeRead"];
+            /** Summary Text */
+            summary_text: string;
+            /** Survey Summary */
+            survey_summary: {
+                [key: string]: unknown;
+            };
             /** Territorial Coverage */
             territorial_coverage: {
                 [key: string]: unknown;
@@ -2644,44 +4710,44 @@ export interface components {
             top_needs: {
                 [key: string]: unknown;
             }[];
-            /** Commitment Summary */
-            commitment_summary: {
-                [key: string]: unknown;
-            };
-            /** Survey Summary */
-            survey_summary: {
-                [key: string]: unknown;
-            };
-            /** Data Quality */
-            data_quality: {
-                [key: string]: unknown;
-            };
-            /** Summary Text */
-            summary_text: string;
         };
         /** CampaignDashboardRead */
         CampaignDashboardRead: {
-            overview: components["schemas"]["CampaignDashboardOverviewRead"];
-            /** Top Needs */
-            top_needs: {
-                [key: string]: unknown;
-            }[];
             /** Commitments */
             commitments: {
-                [key: string]: unknown;
-            };
-            /** Surveys */
-            surveys: {
                 [key: string]: unknown;
             };
             /** Coverage */
             coverage: {
                 [key: string]: unknown;
             };
+            overview: components["schemas"]["CampaignDashboardOverviewRead"];
             /** Quality */
             quality: {
                 [key: string]: unknown;
             };
+            /** Surveys */
+            surveys: {
+                [key: string]: unknown;
+            };
+            /** Top Needs */
+            top_needs: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** CampaignLicenseRead */
+        CampaignLicenseRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Campaign Name */
+            campaign_name: string;
+            /** Commercial Plan */
+            commercial_plan: string;
+            /** Features */
+            features: components["schemas"]["EntitlementRead"][];
         };
         /** CampaignListResponse */
         CampaignListResponse: {
@@ -2698,35 +4764,46 @@ export interface components {
         };
         /** CampaignRead */
         CampaignRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
+            candidate?: components["schemas"]["CandidateRead"] | null;
             /** Canton Id */
             canton_id: number;
-            office_type: components["schemas"]["OfficeType"];
-            /** Election Name */
-            election_name: string;
+            /** Canton Name */
+            canton_name?: string | null;
+            /** Description */
+            description: string | null;
             /**
              * Election Date
              * Format: date
              */
             election_date: string;
-            status: components["schemas"]["CampaignStatus"];
-            /** Is Active */
-            is_active: boolean;
-            /** Start Date */
-            start_date: string | null;
+            /** Election Name */
+            election_name: string;
             /** End Date */
             end_date: string | null;
-            /** Description */
-            description: string | null;
-            candidate?: components["schemas"]["CandidateRead"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Name */
+            name: string;
+            office_type: components["schemas"]["OfficeType"];
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Province Id */
+            province_id?: number | null;
+            /** Province Name */
+            province_name?: string | null;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date: string | null;
+            status: components["schemas"]["CampaignStatus"];
         };
         /**
          * CampaignStatus
@@ -2735,49 +4812,60 @@ export interface components {
         CampaignStatus: "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
         /** CampaignSummary */
         CampaignSummary: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
             /** Canton Id */
             canton_id: number;
-            office_type: components["schemas"]["OfficeType"];
-            /** Election Name */
-            election_name: string;
+            /** Canton Name */
+            canton_name?: string | null;
             /**
              * Election Date
              * Format: date
              */
             election_date: string;
-            status: components["schemas"]["CampaignStatus"];
+            /** Election Name */
+            election_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Name */
+            name: string;
+            office_type: components["schemas"]["OfficeType"];
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Province Id */
+            province_id?: number | null;
+            /** Province Name */
+            province_name?: string | null;
+            /** Slug */
+            slug: string;
+            status: components["schemas"]["CampaignStatus"];
         };
         /** CampaignUpdate */
         CampaignUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Slug */
-            slug?: string | null;
-            office_type?: components["schemas"]["OfficeType"] | null;
-            /** Election Name */
-            election_name?: string | null;
-            /** Election Date */
-            election_date?: string | null;
-            /** Start Date */
-            start_date?: string | null;
-            /** End Date */
-            end_date?: string | null;
-            status?: components["schemas"]["CampaignStatus"] | null;
             /** Description */
             description?: string | null;
+            /** Election Date */
+            election_date?: string | null;
+            /** Election Name */
+            election_name?: string | null;
+            /** End Date */
+            end_date?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
+            office_type?: components["schemas"]["OfficeType"] | null;
+            /** Slug */
+            slug?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            status?: components["schemas"]["CampaignStatus"] | null;
         };
         /** CampaignUserAssign */
         CampaignUserAssign: {
@@ -2790,156 +4878,164 @@ export interface components {
         /** CampaignUserRead */
         CampaignUserRead: {
             /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
             /**
              * User Id
              * Format: uuid
              */
             user_id: string;
-            /** Is Active */
-            is_active: boolean;
         };
         /** CandidateCreate */
         CandidateCreate: {
-            /** User Id */
-            user_id?: string | null;
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
-            /** Display Name */
-            display_name: string;
-            /** Birth Date */
-            birth_date?: string | null;
-            /** Political Organization */
-            political_organization?: string | null;
-            /** List Number */
-            list_number?: number | null;
             /** Biography */
             biography?: string | null;
-            /** Photo Url */
-            photo_url?: string | null;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Display Name */
+            display_name: string;
+            /** First Name */
+            first_name: string;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Last Name */
+            last_name: string;
+            /** List Number */
+            list_number?: number | null;
+            /** Photo Url */
+            photo_url?: string | null;
+            /** Political Organization */
+            political_organization?: string | null;
+            /** User Id */
+            user_id?: string | null;
         };
         /** CandidateRead */
         CandidateRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Biography */
+            biography: string | null;
+            /** Birth Date */
+            birth_date: string | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** User Id */
-            user_id: string | null;
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
             /** Display Name */
             display_name: string;
-            /** Birth Date */
-            birth_date: string | null;
-            /** Political Organization */
-            political_organization: string | null;
-            /** List Number */
-            list_number: number | null;
-            /** Biography */
-            biography: string | null;
-            /** Photo Url */
-            photo_url: string | null;
+            /** First Name */
+            first_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Last Name */
+            last_name: string;
+            /** List Number */
+            list_number: number | null;
+            /** Photo Url */
+            photo_url: string | null;
+            /** Political Organization */
+            political_organization: string | null;
+            /** User Id */
+            user_id: string | null;
         };
         /** CandidateResultRead */
         CandidateResultRead: {
             candidate: components["schemas"]["ElectoralCandidateRead"];
-            organization: components["schemas"]["PoliticalOrganizationRead"] | null;
-            /** Votes */
-            votes: number;
-            /** Vote Share */
-            vote_share: string | null;
-            /** Position */
-            position: number;
+            /** Geography Code */
+            geography_code?: string | null;
+            /** Geography Id */
+            geography_id?: string | null;
+            /** Geography Level */
+            geography_level?: string | null;
+            /** Geography Name */
+            geography_name?: string | null;
             /** Is Winner */
             is_winner: boolean;
+            organization: components["schemas"]["PoliticalOrganizationRead"] | null;
+            /** Position */
+            position: number;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
+            /** Vote Share */
+            vote_share: string | null;
+            /** Votes */
+            votes: number;
         };
         /** CandidateUpdate */
         CandidateUpdate: {
-            /** User Id */
-            user_id?: string | null;
-            /** First Name */
-            first_name?: string | null;
-            /** Last Name */
-            last_name?: string | null;
-            /** Display Name */
-            display_name?: string | null;
-            /** Birth Date */
-            birth_date?: string | null;
-            /** Political Organization */
-            political_organization?: string | null;
-            /** List Number */
-            list_number?: number | null;
             /** Biography */
             biography?: string | null;
-            /** Photo Url */
-            photo_url?: string | null;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** First Name */
+            first_name?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** List Number */
+            list_number?: number | null;
+            /** Photo Url */
+            photo_url?: string | null;
+            /** Political Organization */
+            political_organization?: string | null;
+            /** User Id */
+            user_id?: string | null;
         };
         /** CantonCreate */
         CantonCreate: {
-            /** Province Id */
-            province_id: number;
             /** Code */
             code: string;
             /** Dpa Code */
             dpa_code: string;
-            /** Name */
-            name: string;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Name */
+            name: string;
+            /** Province Id */
+            province_id: number;
         };
         /** CantonRead */
         CantonRead: {
-            /** Province Id */
-            province_id: number;
             /** Code */
             code: string;
             /** Dpa Code */
             dpa_code: string;
-            /** Name */
-            name: string;
+            /** Id */
+            id: number;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
-            /** Id */
-            id: number;
+            /** Name */
+            name: string;
+            /** Province Id */
+            province_id: number;
         };
         /** CantonUpdate */
         CantonUpdate: {
@@ -2947,27 +5043,61 @@ export interface components {
             code?: string | null;
             /** Dpa Code */
             dpa_code?: string | null;
-            /** Name */
-            name?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** CheckInRequest */
+        CheckInRequest: {
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Offline Created At */
+            offline_created_at?: string | null;
         };
         /** CitizenNeedCreate */
         CitizenNeedCreate: {
-            /** Need Category Code */
-            need_category_code: string;
-            /** Title */
-            title: string;
+            /** Assigned To User Id */
+            assigned_to_user_id?: string | null;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
             /** Description */
             description?: string | null;
+            /** Evidence Notes */
+            evidence_notes?: string | null;
+            /** Local Sector Description */
+            local_sector_description?: string | null;
             /**
              * Mentions Count
              * @default 1
              */
             mentions_count: number;
+            /** Need Category Code */
+            need_category_code: string;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** @default MEDIUM */
             priority: components["schemas"]["Priority"];
-            /** @default IDENTIFIED */
+            /**
+             * Reported Date
+             * Format: date
+             */
+            reported_date?: string;
+            /** @default PARISH */
+            scope: components["schemas"]["NeedScope"];
+            /** Source Reference */
+            source_reference?: string | null;
+            /** @default OTHER */
+            source_type: components["schemas"]["NeedSourceType"];
+            /** @default REPORTED */
             status: components["schemas"]["NeedStatus"];
+            /** Title */
+            title: string;
+            urgency?: components["schemas"]["Priority"] | null;
         };
         /** CitizenNeedListResponse */
         CitizenNeedListResponse: {
@@ -2984,108 +5114,189 @@ export interface components {
         };
         /** CitizenNeedRead */
         CitizenNeedRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Activity Id
-             * Format: uuid
-             */
-            activity_id: string;
-            /** Need Category Id */
-            need_category_id: number;
-            /** Title */
-            title: string;
-            /** Mentions Count */
-            mentions_count: number;
-            priority: components["schemas"]["Priority"];
-            status: components["schemas"]["NeedStatus"];
-            /** Parish Id */
-            parish_id: number;
-            /** Is Active */
-            is_active: boolean;
+            /** Activity Id */
+            activity_id: string | null;
+            /** Assigned To User Id */
+            assigned_to_user_id: string | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Description */
-            description: string | null;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
             /** Community Id */
             community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
-        };
-        /** CitizenNeedSummary */
-        CitizenNeedSummary: {
+            /** Description */
+            description: string | null;
+            /** Evidence Notes */
+            evidence_notes: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /**
-             * Activity Id
-             * Format: uuid
-             */
-            activity_id: string;
-            /** Need Category Id */
-            need_category_id: number;
-            /** Title */
-            title: string;
-            /** Mentions Count */
-            mentions_count: number;
-            priority: components["schemas"]["Priority"];
-            status: components["schemas"]["NeedStatus"];
-            /** Parish Id */
-            parish_id: number;
             /** Is Active */
             is_active: boolean;
+            /** Local Sector Description */
+            local_sector_description: string | null;
+            /** Mentions Count */
+            mentions_count: number;
+            /** Need Category Id */
+            need_category_id: number;
+            /** Parish Id */
+            parish_id: number;
+            priority: components["schemas"]["Priority"];
+            /** Reported By User Id */
+            reported_by_user_id: string | null;
+            /**
+             * Reported Date
+             * Format: date
+             */
+            reported_date: string;
+            /** Resolution Notes */
+            resolution_notes: string | null;
+            scope: components["schemas"]["NeedScope"];
+            /** Sector Id */
+            sector_id: string | null;
+            /** Source Reference */
+            source_reference: string | null;
+            source_type: components["schemas"]["NeedSourceType"];
+            status: components["schemas"]["NeedStatus"];
+            /** Title */
+            title: string;
+            urgency: components["schemas"]["Priority"];
+            /** Validated At */
+            validated_at: string | null;
+            /** Validated By User Id */
+            validated_by_user_id: string | null;
+            /** Validation Notes */
+            validation_notes: string | null;
+        };
+        /** CitizenNeedSummary */
+        CitizenNeedSummary: {
+            /** Activity Id */
+            activity_id: string | null;
+            /** Assigned To User Id */
+            assigned_to_user_id: string | null;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Mentions Count */
+            mentions_count: number;
+            /** Need Category Id */
+            need_category_id: number;
+            /** Parish Id */
+            parish_id: number;
+            priority: components["schemas"]["Priority"];
+            /**
+             * Reported Date
+             * Format: date
+             */
+            reported_date: string;
+            source_type: components["schemas"]["NeedSourceType"];
+            status: components["schemas"]["NeedStatus"];
+            /** Title */
+            title: string;
+            urgency: components["schemas"]["Priority"];
         };
         /** CitizenNeedUpdate */
         CitizenNeedUpdate: {
-            /** Title */
-            title?: string | null;
+            /** Assigned To User Id */
+            assigned_to_user_id?: string | null;
             /** Description */
             description?: string | null;
+            /** Evidence Notes */
+            evidence_notes?: string | null;
             /** Mentions Count */
             mentions_count?: number | null;
-            priority?: components["schemas"]["Priority"] | null;
-            status?: components["schemas"]["NeedStatus"] | null;
             /** Need Category Code */
             need_category_code?: string | null;
+            priority?: components["schemas"]["Priority"] | null;
+            /** Resolution Notes */
+            resolution_notes?: string | null;
+            /** Source Reference */
+            source_reference?: string | null;
+            /** Title */
+            title?: string | null;
+            urgency?: components["schemas"]["Priority"] | null;
+        };
+        /** ClaimCheckRequest */
+        ClaimCheckRequest: {
+            /** Claim Text */
+            claim_text: string;
+            /** Parish Id */
+            parish_id?: number | null;
+        };
+        /** ClaimCheckResponse */
+        ClaimCheckResponse: {
+            /** Claim Text */
+            claim_text: string;
+            /** Evidence */
+            evidence?: components["schemas"]["ClaimEvidenceItem"][];
+            /** Verdict */
+            verdict: string;
+            /** Verdict Label */
+            verdict_label: string;
+            /** Warnings */
+            warnings?: string[];
+        };
+        /** ClaimEvidenceItem */
+        ClaimEvidenceItem: {
+            /** Evidence Class */
+            evidence_class: string;
+            /** External Url */
+            external_url?: string | null;
+            /** Id */
+            id: string;
+            /** Record Date */
+            record_date?: string | null;
+            /** Source Label */
+            source_label: string;
+            /** Source Name */
+            source_name: string;
+            /** Title */
+            title: string;
         };
         /** CommitmentCreate */
         CommitmentCreate: {
             /** Activity Id */
             activity_id?: string | null;
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            priority: components["schemas"]["Priority"];
-            /** @default PENDING */
-            status: components["schemas"]["CommitmentStatus"];
-            /** Due Date */
-            due_date?: string | null;
-            /** Completed Date */
-            completed_date?: string | null;
-            /** Responsible User Id */
-            responsible_user_id?: string | null;
-            /** Parish Id */
-            parish_id: number;
             /** Community Id */
             community_id?: string | null;
+            /** Completed Date */
+            completed_date?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Need Id */
+            need_id?: string | null;
+            /** Parish Id */
+            parish_id: number;
+            /** @default MEDIUM */
+            priority: components["schemas"]["Priority"];
+            /** Responsible User Id */
+            responsible_user_id?: string | null;
             /** Sector Id */
             sector_id?: string | null;
+            /** @default PENDING */
+            status: components["schemas"]["CommitmentStatus"];
+            /** Title */
+            title: string;
         };
         /** CommitmentDashboardRead */
         CommitmentDashboardRead: {
-            /** Total */
-            total: number;
             /** Completion Rate */
             completion_rate: string | null;
+            /** Total */
+            total: number;
         } & {
             [key: string]: unknown;
         };
@@ -3104,38 +5315,42 @@ export interface components {
         };
         /** CommitmentRead */
         CommitmentRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Activity Id */
+            activity_id: string | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Activity Id */
-            activity_id: string | null;
-            /** Title */
-            title: string;
-            priority: components["schemas"]["Priority"];
-            status: components["schemas"]["CommitmentStatus"];
-            /** Due Date */
-            due_date: string | null;
-            /** Completed Date */
-            completed_date: string | null;
-            /** Parish Id */
-            parish_id: number;
-            /** Is Active */
-            is_active: boolean;
-            /** Description */
-            description: string | null;
-            /** Responsible User Id */
-            responsible_user_id: string | null;
             /** Community Id */
             community_id: string | null;
+            /** Completed Date */
+            completed_date: string | null;
+            /** Description */
+            description: string | null;
+            /** Due Date */
+            due_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Need Id */
+            need_id: string | null;
+            /** Parish Id */
+            parish_id: number;
+            priority: components["schemas"]["Priority"];
+            /** Responsible Name */
+            responsible_name?: string | null;
+            /** Responsible User Id */
+            responsible_user_id: string | null;
             /** Sector Id */
             sector_id: string | null;
+            status: components["schemas"]["CommitmentStatus"];
+            /** Title */
+            title: string;
         };
         /**
          * CommitmentStatus
@@ -3145,103 +5360,109 @@ export interface components {
         /** CommitmentStatusSummary */
         CommitmentStatusSummary: {
             /**
-             * Pending
+             * Cancelled
              * @default 0
              */
-            pending: number;
-            /**
-             * In Progress
-             * @default 0
-             */
-            in_progress: number;
+            cancelled: number;
             /**
              * Completed
              * @default 0
              */
             completed: number;
             /**
-             * Cancelled
+             * In Progress
              * @default 0
              */
-            cancelled: number;
+            in_progress: number;
             /**
              * Overdue
              * @default 0
              */
             overdue: number;
+            /**
+             * Pending
+             * @default 0
+             */
+            pending: number;
         };
         /** CommitmentSummary */
         CommitmentSummary: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Activity Id */
+            activity_id: string | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Activity Id */
-            activity_id: string | null;
-            /** Title */
-            title: string;
-            priority: components["schemas"]["Priority"];
-            status: components["schemas"]["CommitmentStatus"];
-            /** Due Date */
-            due_date: string | null;
             /** Completed Date */
             completed_date: string | null;
-            /** Parish Id */
-            parish_id: number;
+            /** Due Date */
+            due_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Need Id */
+            need_id: string | null;
+            /** Parish Id */
+            parish_id: number;
+            priority: components["schemas"]["Priority"];
+            /** Responsible Name */
+            responsible_name?: string | null;
+            /** Responsible User Id */
+            responsible_user_id: string | null;
+            status: components["schemas"]["CommitmentStatus"];
+            /** Title */
+            title: string;
         };
         /** CommitmentUpdate */
         CommitmentUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Description */
-            description?: string | null;
-            priority?: components["schemas"]["Priority"] | null;
-            status?: components["schemas"]["CommitmentStatus"] | null;
-            /** Due Date */
-            due_date?: string | null;
-            /** Completed Date */
-            completed_date?: string | null;
-            /** Responsible User Id */
-            responsible_user_id?: string | null;
-            /** Parish Id */
-            parish_id?: number | null;
             /** Community Id */
             community_id?: string | null;
+            /** Completed Date */
+            completed_date?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            priority?: components["schemas"]["Priority"] | null;
+            /** Responsible User Id */
+            responsible_user_id?: string | null;
             /** Sector Id */
             sector_id?: string | null;
+            status?: components["schemas"]["CommitmentStatus"] | null;
+            /** Title */
+            title?: string | null;
         };
         /** CommunityCreate */
         CommunityCreate: {
-            /** Name */
-            name: string;
             /** Code */
             code?: string | null;
             /** Description */
             description?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
-            /** Parish Id */
-            parish_id: number;
             /**
              * Is Official
              * @default false
              */
             is_official: boolean;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name: string;
+            /** Parish Id */
+            parish_id: number;
         };
         /** CommunityListResponse */
         CommunityListResponse: {
@@ -3258,43 +5479,37 @@ export interface components {
         };
         /** CommunityRead */
         CommunityRead: {
-            /** Name */
-            name: string;
             /** Code */
             code?: string | null;
             /** Description */
             description?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Parish Id */
-            parish_id: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
             /** Is Official */
             is_official: boolean;
-        };
-        /** CommunityUpdate */
-        CommunityUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Code */
-            code?: string | null;
-            /** Description */
-            description?: string | null;
             /** Latitude */
             latitude?: number | null;
             /** Longitude */
             longitude?: number | null;
+            /** Name */
+            name: string;
+            /** Parish Id */
+            parish_id: number;
+        };
+        /** CommunityUpdate */
+        CommunityUpdate: {
+            /** Code */
+            code?: string | null;
+            /** Description */
+            description?: string | null;
             /**
              * Is Active
              * @default true
@@ -3302,6 +5517,42 @@ export interface components {
             is_active: boolean;
             /** Is Official */
             is_official?: boolean | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** ComparisonResponse */
+        ComparisonResponse: {
+            /** Comparable */
+            comparable: boolean;
+            /** Message */
+            message?: string | null;
+            /** Studies */
+            studies: components["schemas"]["StudyDetail"][];
+        };
+        /** CoverageSummary */
+        CoverageSummary: {
+            /** Covered Boards */
+            covered_boards: number;
+            /** Covered Polling Places */
+            covered_polling_places: number;
+            /** Documents Received */
+            documents_received: number;
+            /** Expected Documents */
+            expected_documents: number;
+            /** Open Incidents */
+            open_incidents: number;
+            /** Personnel Checked In */
+            personnel_checked_in: number;
+            /** Personnel Confirmed */
+            personnel_confirmed: number;
+            /** Total Boards */
+            total_boards: number;
+            /** Total Polling Places */
+            total_polling_places: number;
         };
         /**
          * DashboardDataStatus
@@ -3310,16 +5561,29 @@ export interface components {
         DashboardDataStatus: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE" | "SUPPRESSED" | "NOT_APPLICABLE";
         /** DashboardFilterOptionsRead */
         DashboardFilterOptionsRead: {
-            /** Periods */
-            periods: string[];
-            /** Parishes */
-            parishes: {
-                [key: string]: unknown;
-            }[];
             /** Communities */
             communities: {
                 [key: string]: unknown;
             }[];
+            /** Demographic Indicators */
+            demographic_indicators: {
+                [key: string]: unknown;
+            }[];
+            /** Electoral Processes */
+            electoral_processes: {
+                [key: string]: unknown;
+            }[];
+            /** Max Date */
+            max_date: string | null;
+            /** Min Date */
+            min_date: string | null;
+            /** Parishes */
+            parishes: {
+                [key: string]: unknown;
+            }[];
+            /** Periods */
+            periods: string[];
+            scope: components["schemas"]["DashboardScopeRead"];
             /** Sectors */
             sectors: {
                 [key: string]: unknown;
@@ -3328,47 +5592,34 @@ export interface components {
             surveys: {
                 [key: string]: unknown;
             }[];
-            /** Electoral Processes */
-            electoral_processes: {
-                [key: string]: unknown;
-            }[];
-            /** Demographic Indicators */
-            demographic_indicators: {
-                [key: string]: unknown;
-            }[];
-            /** Min Date */
-            min_date: string | null;
-            /** Max Date */
-            max_date: string | null;
-            scope: components["schemas"]["DashboardScopeRead"];
         };
         /** DashboardMetricRead */
         DashboardMetricRead: {
-            /** Code */
-            code: string;
-            /** Label */
-            label: string;
-            /** Value */
-            value: string | number | null;
-            /** Unit */
-            unit: string;
-            /** Denominator */
-            denominator?: string | number | null;
-            /** Previous Value */
-            previous_value?: string | number | null;
             /** Absolute Change */
             absolute_change?: string | number | null;
-            /** Percentage Change */
-            percentage_change?: string | null;
+            /** Code */
+            code: string;
+            /** @default AVAILABLE */
+            data_status: components["schemas"]["DashboardDataStatus"];
+            /** Denominator */
+            denominator?: string | number | null;
             /**
              * Is Comparable
              * @default false
              */
             is_comparable: boolean;
-            /** @default AVAILABLE */
-            data_status: components["schemas"]["DashboardDataStatus"];
+            /** Label */
+            label: string;
             /** Note */
             note?: string | null;
+            /** Percentage Change */
+            percentage_change?: string | null;
+            /** Previous Value */
+            previous_value?: string | number | null;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: string | number | null;
         };
         /**
          * DashboardPeriod
@@ -3394,84 +5645,86 @@ export interface components {
         };
         /** DashboardScopeRead */
         DashboardScopeRead: {
-            /** Type */
-            type: string;
-            /**
-             * Parish Ids
-             * @default []
-             */
-            parish_ids: number[];
             /**
              * Community Ids
              * @default []
              */
             community_ids: string[];
             /**
+             * Parish Ids
+             * @default []
+             */
+            parish_ids: number[];
+            /**
              * Sector Ids
              * @default []
              */
             sector_ids: string[];
+            /** Type */
+            type: string;
+        };
+        /** DataHubCatalogEntry */
+        DataHubCatalogEntry: {
+            active_version: components["schemas"]["DatasetVersionRead"] | null;
+            /** Dataset Label */
+            dataset_label: string;
+            /** Dataset Type */
+            dataset_type: string;
+            last_job: components["schemas"]["DataImportJobRead"] | null;
+            /** Sources */
+            sources: components["schemas"]["DataSourceRead"][];
+            /** Version Kind */
+            version_kind: string;
+            /** Version Kind Label */
+            version_kind_label: string;
+            /** Versions Count */
+            versions_count: number;
+        };
+        /** DataHubCatalogResponse */
+        DataHubCatalogResponse: {
+            /** Entries */
+            entries: components["schemas"]["DataHubCatalogEntry"][];
+            summary: components["schemas"]["DataHubSummary"];
+        };
+        /** DataHubSummary */
+        DataHubSummary: {
+            /** Active Sources */
+            active_sources: number;
+            /** Datasets */
+            datasets: number;
+            /** Datasets Without Active Version */
+            datasets_without_active_version: number;
+            /** Imports With Errors */
+            imports_with_errors: number;
+            /** Recent Imports */
+            recent_imports: number;
         };
         /** DataImportErrorRead */
         DataImportErrorRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Row Number */
-            row_number: number | null;
             /** Column Name */
             column_name: string | null;
             /** Error Code */
             error_code: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Message */
             message: string;
             /** Rejected Value Preview */
             rejected_value_preview: string | null;
+            /** Row Number */
+            row_number: number | null;
         };
         /** DataImportExecutionResponse */
         DataImportExecutionResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
             /** Dataset Type */
             dataset_type: string;
-            /** Original Filename */
-            original_filename: string;
-            /** File Sha256 */
-            file_sha256: string;
-            /** File Size Bytes */
-            file_size_bytes: number;
-            /** Status */
-            status: string;
-            /** Validation Only */
-            validation_only: boolean;
-            /** Rows Read */
-            rows_read: number;
-            /** Rows Valid */
-            rows_valid: number;
-            /** Rows Inserted */
-            rows_inserted: number;
-            /** Rows Updated */
-            rows_updated: number;
-            /** Rows Skipped */
-            rows_skipped: number;
-            /** Rows Failed */
-            rows_failed: number;
-            /** Encoding Used */
-            encoding_used: string | null;
             /** Delimiter Used */
             delimiter_used: string | null;
-            /** Mapping Profile */
-            mapping_profile: string | null;
+            /** Encoding Used */
+            encoding_used: string | null;
             /** Error Summary */
             error_summary: string | null;
             /**
@@ -3479,94 +5732,94 @@ export interface components {
              * @default []
              */
             errors: components["schemas"]["DataImportErrorRead"][];
+            /** File Sha256 */
+            file_sha256: string;
+            /** File Size Bytes */
+            file_size_bytes: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mapping Profile */
+            mapping_profile: string | null;
+            /** Original Filename */
+            original_filename: string;
+            /** Rows Failed */
+            rows_failed: number;
+            /** Rows Inserted */
+            rows_inserted: number;
+            /** Rows Read */
+            rows_read: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Updated */
+            rows_updated: number;
+            /** Rows Valid */
+            rows_valid: number;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Status */
+            status: string;
+            /** Validation Only */
+            validation_only: boolean;
         };
         /** DataImportJobRead */
         DataImportJobRead: {
+            /** Dataset Type */
+            dataset_type: string;
+            /** Delimiter Used */
+            delimiter_used: string | null;
+            /** Encoding Used */
+            encoding_used: string | null;
+            /** Error Summary */
+            error_summary: string | null;
+            /** File Sha256 */
+            file_sha256: string;
+            /** File Size Bytes */
+            file_size_bytes: number;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Mapping Profile */
+            mapping_profile: string | null;
+            /** Original Filename */
+            original_filename: string;
+            /** Rows Failed */
+            rows_failed: number;
+            /** Rows Inserted */
+            rows_inserted: number;
+            /** Rows Read */
+            rows_read: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Updated */
+            rows_updated: number;
+            /** Rows Valid */
+            rows_valid: number;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** Dataset Type */
-            dataset_type: string;
-            /** Original Filename */
-            original_filename: string;
-            /** File Sha256 */
-            file_sha256: string;
-            /** File Size Bytes */
-            file_size_bytes: number;
             /** Status */
             status: string;
             /** Validation Only */
             validation_only: boolean;
-            /** Rows Read */
-            rows_read: number;
-            /** Rows Valid */
-            rows_valid: number;
-            /** Rows Inserted */
-            rows_inserted: number;
-            /** Rows Updated */
-            rows_updated: number;
-            /** Rows Skipped */
-            rows_skipped: number;
-            /** Rows Failed */
-            rows_failed: number;
-            /** Encoding Used */
-            encoding_used: string | null;
-            /** Delimiter Used */
-            delimiter_used: string | null;
-            /** Mapping Profile */
-            mapping_profile: string | null;
-            /** Error Summary */
-            error_summary: string | null;
         };
         /** DataImportValidationResponse */
         DataImportValidationResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
             /** Dataset Type */
             dataset_type: string;
-            /** Original Filename */
-            original_filename: string;
-            /** File Sha256 */
-            file_sha256: string;
-            /** File Size Bytes */
-            file_size_bytes: number;
-            /** Status */
-            status: string;
-            /** Validation Only */
-            validation_only: boolean;
-            /** Rows Read */
-            rows_read: number;
-            /** Rows Valid */
-            rows_valid: number;
-            /** Rows Inserted */
-            rows_inserted: number;
-            /** Rows Updated */
-            rows_updated: number;
-            /** Rows Skipped */
-            rows_skipped: number;
-            /** Rows Failed */
-            rows_failed: number;
-            /** Encoding Used */
-            encoding_used: string | null;
             /** Delimiter Used */
             delimiter_used: string | null;
-            /** Mapping Profile */
-            mapping_profile: string | null;
+            /** Encoding Used */
+            encoding_used: string | null;
             /** Error Summary */
             error_summary: string | null;
             /**
@@ -3574,22 +5827,56 @@ export interface components {
              * @default []
              */
             errors: components["schemas"]["DataImportErrorRead"][];
+            /** File Sha256 */
+            file_sha256: string;
+            /** File Size Bytes */
+            file_size_bytes: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mapping Profile */
+            mapping_profile: string | null;
+            /** Original Filename */
+            original_filename: string;
+            /** Rows Failed */
+            rows_failed: number;
+            /** Rows Inserted */
+            rows_inserted: number;
+            /** Rows Read */
+            rows_read: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Updated */
+            rows_updated: number;
+            /** Rows Valid */
+            rows_valid: number;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Status */
+            status: string;
+            /** Validation Only */
+            validation_only: boolean;
         };
         /** DataQualityDashboardRead */
         DataQualityDashboardRead: {
-            /** Status */
-            status: string;
             /** Issues */
             issues: components["schemas"]["DataQualityIssueRead"][];
+            /** Status */
+            status: string;
         };
         /** DataQualityIssueRead */
         DataQualityIssueRead: {
             /** Code */
             code: string;
-            /** Description */
-            description: string;
             /** Count */
             count: number;
+            /** Description */
+            description: string;
             /** Scope */
             scope: string;
             /** Source */
@@ -3603,11 +5890,20 @@ export interface components {
         DataSourceCreate: {
             /** Code */
             code: string;
-            /** Institution */
-            institution: string;
             /** Dataset Name */
             dataset_name: string;
             dataset_type: components["schemas"]["DatasetType"];
+            /** Description */
+            description?: string | null;
+            /** Institution */
+            institution: string;
+            /**
+             * Is Official
+             * @default true
+             */
+            is_official: boolean;
+            /** License Or Terms */
+            license_or_terms?: string | null;
             /** Official Url */
             official_url?: string | null;
             /** Publication Date */
@@ -3616,30 +5912,29 @@ export interface components {
             reference_date?: string | null;
             /** Reference Year */
             reference_year?: number | null;
-            /** License Or Terms */
-            license_or_terms?: string | null;
-            /** Description */
-            description?: string | null;
-            /**
-             * Is Official
-             * @default true
-             */
-            is_official: boolean;
         };
         /** DataSourceRead */
         DataSourceRead: {
+            /** Code */
+            code: string;
+            /** Dataset Name */
+            dataset_name: string;
+            dataset_type: components["schemas"]["DatasetType"];
+            /** Description */
+            description: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Code */
-            code: string;
             /** Institution */
             institution: string;
-            /** Dataset Name */
-            dataset_name: string;
-            dataset_type: components["schemas"]["DatasetType"];
+            /** Is Active */
+            is_active: boolean;
+            /** Is Official */
+            is_official: boolean;
+            /** License Or Terms */
+            license_or_terms: string | null;
             /** Official Url */
             official_url: string | null;
             /** Publication Date */
@@ -3648,21 +5943,21 @@ export interface components {
             reference_date: string | null;
             /** Reference Year */
             reference_year: number | null;
-            /** License Or Terms */
-            license_or_terms: string | null;
-            /** Description */
-            description: string | null;
-            /** Is Official */
-            is_official: boolean;
-            /** Is Active */
-            is_active: boolean;
         };
         /** DataSourceUpdate */
         DataSourceUpdate: {
-            /** Institution */
-            institution?: string | null;
             /** Dataset Name */
             dataset_name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Institution */
+            institution?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Is Official */
+            is_official?: boolean | null;
+            /** License Or Terms */
+            license_or_terms?: string | null;
             /** Official Url */
             official_url?: string | null;
             /** Publication Date */
@@ -3671,20 +5966,107 @@ export interface components {
             reference_date?: string | null;
             /** Reference Year */
             reference_year?: number | null;
-            /** License Or Terms */
-            license_or_terms?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Is Official */
-            is_official?: boolean | null;
-            /** Is Active */
-            is_active?: boolean | null;
+        };
+        /** DatasetDetailResponse */
+        DatasetDetailResponse: {
+            active_version: components["schemas"]["DatasetVersionRead"] | null;
+            /** Dataset Label */
+            dataset_label: string;
+            /** Dataset Type */
+            dataset_type: string;
+            /** Jobs */
+            jobs: components["schemas"]["DataImportJobRead"][];
+            /** Sources */
+            sources: components["schemas"]["DataSourceRead"][];
+            /** Version Kind */
+            version_kind: string;
+            /** Version Kind Label */
+            version_kind_label: string;
+            /** Versions */
+            versions: components["schemas"]["DatasetVersionRead"][];
         };
         /**
          * DatasetType
          * @enum {string}
          */
-        DatasetType: "CNE_ELECTORAL_RESULTS" | "CNE_CANDIDATES" | "CNE_POLITICAL_ORGANIZATIONS" | "CNE_TURNOUT" | "INEC_DEMOGRAPHIC_INDICATORS" | "INEC_POPULATION_PROJECTIONS" | "INEC_GEOGRAPHIC_CLASSIFIER" | "OTHER_AGGREGATED_OFFICIAL";
+        DatasetType: "CNE_ELECTORAL_RESULTS" | "CNE_CANDIDATES" | "CNE_POLITICAL_ORGANIZATIONS" | "CNE_TURNOUT" | "CNE_ELECTORAL_ROLL_SNAPSHOT" | "INEC_DEMOGRAPHIC_INDICATORS" | "INEC_POPULATION_PROJECTIONS" | "INEC_GEOGRAPHIC_CLASSIFIER" | "OTHER_AGGREGATED_OFFICIAL" | "CNE_POLLING_PLACES" | "CNE_ELECTORAL_BOARDS";
+        /** DatasetVersionDiff */
+        DatasetVersionDiff: {
+            /** Comparable */
+            comparable: boolean;
+            /** Compared To Id */
+            compared_to_id: string | null;
+            /** Delta */
+            delta?: number | null;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["DatasetVersionDiffItem"][];
+            /** Metric */
+            metric?: string | null;
+            /** New Value */
+            new_value?: number | null;
+            /** Previous Value */
+            previous_value?: number | null;
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: ({
+                [key: string]: unknown;
+            } | string)[];
+        };
+        /** DatasetVersionDiffItem */
+        DatasetVersionDiffItem: {
+            /** Delta */
+            delta: number;
+            /** New */
+            new: number;
+            /** Parish Id */
+            parish_id: number;
+            /** Previous */
+            previous: number;
+        };
+        /** DatasetVersionRead */
+        DatasetVersionRead: {
+            /** Activated At */
+            activated_at?: string | null;
+            /** Activated By User Id */
+            activated_by_user_id?: string | null;
+            /** Checksum */
+            checksum: string;
+            /**
+             * Data Source Id
+             * Format: uuid
+             */
+            data_source_id: string;
+            /** Dataset Type */
+            dataset_type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Import Job Id
+             * Format: uuid
+             */
+            import_job_id: string;
+            /** Reference Date */
+            reference_date: string | null;
+            /** Status */
+            status: string;
+            /** Superseded By Id */
+            superseded_by_id?: string | null;
+            /** Version Label */
+            version_label: string;
+        };
         /** DemographicDashboardItem */
         DemographicDashboardItem: {
             /** Indicator Code */
@@ -3703,43 +6085,32 @@ export interface components {
         };
         /** DemographicIndicatorCreate */
         DemographicIndicatorCreate: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
             /** Category */
             category: string;
-            /** Unit */
-            unit: string;
-            /** Value Type */
-            value_type: string;
+            /** Code */
+            code: string;
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name: string;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
+            /** Unit */
+            unit: string;
+            /** Value Type */
+            value_type: string;
         };
         /** DemographicIndicatorRead */
         DemographicIndicatorRead: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
             /** Category */
             category: string;
-            /** Unit */
-            unit: string;
-            /** Value Type */
-            value_type: string;
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
+            /** Code */
+            code: string;
+            /** Description */
+            description?: string | null;
             /**
              * Id
              * Format: uuid
@@ -3747,102 +6118,407 @@ export interface components {
             id: string;
             /** Is Active */
             is_active: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Unit */
+            unit: string;
+            /** Value Type */
+            value_type: string;
         };
         /** DemographicObservationRead */
         DemographicObservationRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Canton Id */
+            canton_id: number | null;
             /**
              * Demographic Indicator Id
              * Format: uuid
              */
             demographic_indicator_id: string;
-            /** Geography Level */
-            geography_level: string;
-            /** Province Id */
-            province_id: number | null;
-            /** Canton Id */
-            canton_id: number | null;
-            /** Parish Id */
-            parish_id: number | null;
-            /** Reference Year */
-            reference_year: number;
-            /** Value */
-            value: string;
-            /** Numerator */
-            numerator: string | null;
             /** Denominator */
             denominator: string | null;
+            /** Geography Level */
+            geography_level: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Official */
+            is_official: boolean;
+            /** Numerator */
+            numerator: string | null;
+            /** Parish Id */
+            parish_id: number | null;
+            /** Province Id */
+            province_id: number | null;
+            /** Reference Year */
+            reference_year: number;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** Is Official */
-            is_official: boolean;
-            /** Is Active */
-            is_active: boolean;
+            /** Value */
+            value: string;
         };
         /** DemographicProfileRead */
         DemographicProfileRead: {
             /** Canton Id */
             canton_id: number;
-            /** Parish Id */
-            parish_id: number | null;
-            /** Reference Year */
-            reference_year: number | null;
             /** Observations */
             observations: {
                 [key: string]: unknown;
             }[];
+            /** Parish Id */
+            parish_id: number | null;
+            /** Reference Year */
+            reference_year: number | null;
         };
-        /** ElectoralCandidateRead */
-        ElectoralCandidateRead: {
+        /** ElectionDayAssignmentCreate */
+        ElectionDayAssignmentCreate: {
+            /** Assignment Role */
+            assignment_role: string;
+            /** Board Id */
+            board_id?: string | null;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** ElectionDayAssignmentListResponse */
+        ElectionDayAssignmentListResponse: {
+            /** Items */
+            items: components["schemas"]["ElectionDayAssignmentRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ElectionDayAssignmentRead */
+        ElectionDayAssignmentRead: {
+            /** Assignment Role */
+            assignment_role: string;
+            /** Board Id */
+            board_id: string | null;
+            /** Checked In At */
+            checked_in_at: string | null;
+            /** Checkin Latitude */
+            checkin_latitude: number | null;
+            /** Checkin Longitude */
+            checkin_longitude: number | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Replaced By Assignment Id */
+            replaced_by_assignment_id: string | null;
+            /** Status */
+            status: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** ElectionDayAssignmentReplace */
+        ElectionDayAssignmentReplace: {
+            /** Reason */
+            reason?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** ElectionDayCloseRequest */
+        ElectionDayCloseRequest: {
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ElectionDayDocumentListResponse */
+        ElectionDayDocumentListResponse: {
+            /** Items */
+            items: components["schemas"]["ElectionDayDocumentRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ElectionDayDocumentRead */
+        ElectionDayDocumentRead: {
+            /** Board Id */
+            board_id: string | null;
+            /** Document Type */
+            document_type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime Type */
+            mime_type: string | null;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Original Filename */
+            original_filename: string | null;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Size Bytes */
+            size_bytes: number | null;
+            /** Status */
+            status: string;
+            /**
+             * Uploaded By User Id
+             * Format: uuid
+             */
+            uploaded_by_user_id: string;
+        };
+        /** ElectionDayDocumentStatusUpdate */
+        ElectionDayDocumentStatusUpdate: {
+            /** Status */
+            status: string;
+        };
+        /** ElectionDayEligibleUser */
+        ElectionDayEligibleUser: {
+            /** First Name */
+            first_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Last Name */
+            last_name: string;
+            /** Username */
+            username: string;
+        };
+        /** ElectionDayIncidentCreate */
+        ElectionDayIncidentCreate: {
+            /** Board Id */
+            board_id?: string | null;
+            /** Category */
+            category: string;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Description */
+            description: string;
+            /** Offline Created At */
+            offline_created_at?: string | null;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+        };
+        /** ElectionDayIncidentListResponse */
+        ElectionDayIncidentListResponse: {
+            /** Items */
+            items: components["schemas"]["ElectionDayIncidentRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ElectionDayIncidentRead */
+        ElectionDayIncidentRead: {
+            /** Board Id */
+            board_id: string | null;
+            /** Category */
+            category: string;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+            /**
+             * Reported By User Id
+             * Format: uuid
+             */
+            reported_by_user_id: string;
+            /** Resolution Notes */
+            resolution_notes: string | null;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Status */
+            status: string;
+        };
+        /** ElectionDayIncidentResolve */
+        ElectionDayIncidentResolve: {
+            /** Resolution Notes */
+            resolution_notes?: string | null;
+            /** Status */
+            status: string;
+        };
+        /** ElectionDayOperationCreate */
+        ElectionDayOperationCreate: {
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ElectionDayOperationRead */
+        ElectionDayOperationRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Closed By User Id */
+            closed_by_user_id: string | null;
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes: string | null;
+            /** Opened At */
+            opened_at: string | null;
+            /** Opened By User Id */
+            opened_by_user_id: string | null;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Status */
+            status: string;
+        };
+        /** ElectoralBoardCreate */
+        ElectoralBoardCreate: {
+            /** Board Number */
+            board_number: number;
+            /** Official Code */
+            official_code: string;
+            /** Registered Voters */
+            registered_voters?: number | null;
+            /** Sex Category */
+            sex_category?: string | null;
+        };
+        /** ElectoralBoardRead */
+        ElectoralBoardRead: {
+            /** Board Number */
+            board_number: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Official Code */
+            official_code: string;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Registered Voters */
+            registered_voters: number | null;
+            /** Sex Category */
+            sex_category: string | null;
+        };
+        /** ElectoralCandidateRead */
+        ElectoralCandidateRead: {
+            /** Ballot Order */
+            ballot_order: number | null;
+            /** Display Name */
+            display_name: string | null;
+            /**
              * Electoral Contest Id
              * Format: uuid
              */
             electoral_contest_id: string;
-            /** Political Organization Id */
-            political_organization_id: string | null;
             /** External Code */
             external_code: string;
             /** Full Name */
             full_name: string;
-            /** Display Name */
-            display_name: string | null;
-            /** List Number */
-            list_number: string | null;
-            /** Ballot Order */
-            ballot_order: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
             /** Is Winner */
             is_winner: boolean;
+            /** List Number */
+            list_number: string | null;
+            /** Political Organization Id */
+            political_organization_id: string | null;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** Is Active */
-            is_active: boolean;
         };
         /** ElectoralComparisonRead */
         ElectoralComparisonRead: {
-            /** Process Ids */
-            process_ids: string[];
-            /** Office Type */
-            office_type: string;
-            /** Canton Id */
-            canton_id: number;
             /** Aggregation Level */
             aggregation_level: string;
+            /** Canton Id */
+            canton_id: number;
             /** Items */
             items: {
                 [key: string]: unknown;
@@ -3852,6 +6528,10 @@ export interface components {
              * @default false
              */
             not_comparable: boolean;
+            /** Office Type */
+            office_type: string;
+            /** Process Ids */
+            process_ids: string[];
             /**
              * Warnings
              * @default []
@@ -3860,55 +6540,92 @@ export interface components {
         };
         /** ElectoralContestCreate */
         ElectoralContestCreate: {
-            /** Office Type */
-            office_type: string;
-            /** Name */
-            name: string;
-            /** Vote Method */
-            vote_method: string;
-            /** Province Id */
-            province_id?: number | null;
             /** Canton Id */
             canton_id?: number | null;
+            /** Name */
+            name: string;
+            /** Office Type */
+            office_type: string;
             /** Parish Id */
             parish_id?: number | null;
+            /** Province Id */
+            province_id?: number | null;
             /**
              * Seats
              * @default 1
              */
             seats: number;
+            /** Vote Method */
+            vote_method: string;
         };
         /** ElectoralContestRead */
         ElectoralContestRead: {
-            /** Office Type */
-            office_type: string;
-            /** Name */
-            name: string;
-            /** Vote Method */
-            vote_method: string;
-            /** Province Id */
-            province_id?: number | null;
             /** Canton Id */
             canton_id?: number | null;
-            /** Parish Id */
-            parish_id?: number | null;
-            /**
-             * Seats
-             * @default 1
-             */
-            seats: number;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
             /**
              * Electoral Process Id
              * Format: uuid
              */
             electoral_process_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Name */
+            name: string;
+            /** Office Type */
+            office_type: string;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Province Id */
+            province_id?: number | null;
+            /**
+             * Seats
+             * @default 1
+             */
+            seats: number;
+            /** Vote Method */
+            vote_method: string;
+        };
+        /** ElectoralGeographyRead */
+        ElectoralGeographyRead: {
+            /** Canton Id */
+            canton_id: number | null;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /** External Code */
+            external_code: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Mapped */
+            is_mapped: boolean;
+            /** Jrv Code */
+            jrv_code: string | null;
+            /** Level */
+            level: string;
+            /** Name */
+            name: string;
+            /** Parent Id */
+            parent_id: string | null;
+            /** Parish Id */
+            parish_id: number | null;
+            /** Precinct Code */
+            precinct_code: string | null;
+            /** Province Id */
+            province_id: number | null;
+            /** Zone Code */
+            zone_code: string | null;
         };
         /** ElectoralHistoryDashboardRead */
         ElectoralHistoryDashboardRead: {
@@ -3921,93 +6638,254 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** ElectoralMilestoneCreate */
+        ElectoralMilestoneCreate: {
+            /** Description */
+            description?: string | null;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /** Ends At */
+            ends_at?: string | null;
+            /** Milestone Type */
+            milestone_type: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Source Url */
+            source_url?: string | null;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Title */
+            title: string;
+        };
+        /** ElectoralMilestoneRead */
+        ElectoralMilestoneRead: {
+            /** Dataset Version Id */
+            dataset_version_id: string | null;
+            /** Description */
+            description: string | null;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /** Ends At */
+            ends_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Import Job Id */
+            import_job_id: string | null;
+            /** Is Official */
+            is_official: boolean;
+            /** Milestone Type */
+            milestone_type: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Source Url */
+            source_url: string | null;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /** ElectoralMilestoneUpdate */
+        ElectoralMilestoneUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+            /** Source Url */
+            source_url?: string | null;
+            /** Starts At */
+            starts_at?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Title */
+            title?: string | null;
+        };
         /** ElectoralProcessCreate */
         ElectoralProcessCreate: {
             /** Code */
             code: string;
-            /** Name */
-            name: string;
-            /** Process Type */
-            process_type: string;
+            /** Description */
+            description?: string | null;
             /**
              * Election Date
              * Format: date
              */
             election_date: string;
-            /** Year */
-            year: number;
-            /**
-             * Status
-             * @default DRAFT
-             */
-            status: string;
             /**
              * Is Final
              * @default true
              */
             is_final: boolean;
-            /**
-             * Source Id
-             * Format: uuid
-             */
-            source_id: string;
-            /** Description */
-            description?: string | null;
-        };
-        /** ElectoralProcessRead */
-        ElectoralProcessRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Code */
-            code: string;
             /** Name */
             name: string;
             /** Process Type */
             process_type: string;
             /**
-             * Election Date
-             * Format: date
-             */
-            election_date: string;
-            /** Year */
-            year: number;
-            /** Status */
-            status: string;
-            /** Is Final */
-            is_final: boolean;
-            /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
+            /**
+             * Status
+             * @default DRAFT
+             */
+            status: string;
+            /** Year */
+            year: number;
+        };
+        /** ElectoralProcessRead */
+        ElectoralProcessRead: {
+            /** Code */
+            code: string;
             /** Description */
             description: string | null;
-            /** Is Active */
-            is_active: boolean;
-        };
-        /** ElectoralProcessUpdate */
-        ElectoralProcessUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Status */
-            status?: string | null;
-            /** Is Final */
-            is_final?: boolean | null;
-            /** Description */
-            description?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
-        };
-        /** ElectoralTurnoutRead */
-        ElectoralTurnoutRead: {
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Final */
+            is_final: boolean;
+            /** Name */
+            name: string;
+            /** Process Type */
+            process_type: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Status */
+            status: string;
+            /** Year */
+            year: number;
+        };
+        /** ElectoralProcessUpdate */
+        ElectoralProcessUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Is Final */
+            is_final?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Status */
+            status?: string | null;
+        };
+        /** ElectoralRollSnapshotEntryRead */
+        ElectoralRollSnapshotEntryRead: {
+            /** Canton Dpa */
+            canton_dpa: string | null;
+            /** Canton Id */
+            canton_id: number | null;
+            /** Electoral Zones */
+            electoral_zones: number | null;
+            /** Female Voters */
+            female_voters: number | null;
+            /** Geography Level */
+            geography_level: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Juntas */
+            juntas: number | null;
+            /** Male Voters */
+            male_voters: number | null;
+            /** Parish Dpa */
+            parish_dpa: string | null;
+            /** Parish Id */
+            parish_id: number | null;
+            /** Province Dpa */
+            province_dpa: string | null;
+            /** Province Id */
+            province_id: number | null;
+            /** Registered Voters */
+            registered_voters: number;
+            /**
+             * Snapshot Id
+             * Format: uuid
+             */
+            snapshot_id: string;
+        };
+        /** ElectoralRollSnapshotRead */
+        ElectoralRollSnapshotRead: {
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
+            /** Electoral Process Id */
+            electoral_process_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Final */
+            is_final: boolean;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Snapshot Date
+             * Format: date
+             */
+            snapshot_date: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Status */
+            status: string;
+        };
+        /** ElectoralTurnoutRead */
+        ElectoralTurnoutRead: {
+            /** Absentee Count */
+            absentee_count: number;
+            /** Absentee Rate */
+            absentee_rate: string | null;
+            /** Aggregation Level */
+            aggregation_level: string;
+            /** Ballots Cast */
+            ballots_cast: number;
+            /** Blank Vote Rate */
+            blank_vote_rate: string | null;
+            /** Blank Votes */
+            blank_votes: number;
             /**
              * Electoral Contest Id
              * Format: uuid
@@ -4018,79 +6896,180 @@ export interface components {
              * Format: uuid
              */
             electoral_geography_id: string;
-            /** Aggregation Level */
-            aggregation_level: string;
-            /** Registered Voters */
-            registered_voters: number;
-            /** Ballots Cast */
-            ballots_cast: number;
-            /** Absentee Count */
-            absentee_count: number;
-            /** Valid Votes */
-            valid_votes: number;
-            /** Blank Votes */
-            blank_votes: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Final */
+            is_final: boolean;
+            /** Null Vote Rate */
+            null_vote_rate: string | null;
             /** Null Votes */
             null_votes: number;
             /** Participation Rate */
             participation_rate: string | null;
-            /** Absentee Rate */
-            absentee_rate: string | null;
-            /** Valid Vote Rate */
-            valid_vote_rate: string | null;
-            /** Blank Vote Rate */
-            blank_vote_rate: string | null;
-            /** Null Vote Rate */
-            null_vote_rate: string | null;
+            /** Registered Voters */
+            registered_voters: number;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
-            /** Is Final */
-            is_final: boolean;
+            /** Valid Vote Rate */
+            valid_vote_rate: string | null;
+            /** Valid Votes */
+            valid_votes: number;
+        };
+        /** EntitlementRead */
+        EntitlementRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Enabled */
+            enabled: boolean;
+            entitlement_type: components["schemas"]["EntitlementType"];
+            /** Expires At */
+            expires_at: string | null;
+            feature_code: components["schemas"]["FeatureCode"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Monthly Request Limit */
+            monthly_request_limit: number | null;
+            /** Monthly Token Limit */
+            monthly_token_limit: number | null;
+            /** Starts At */
+            starts_at: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * EntitlementType
+         * @enum {string}
+         */
+        EntitlementType: "LICENSE" | "TRIAL" | "ADMIN_OVERRIDE";
+        /** EntitlementUpsert */
+        EntitlementUpsert: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            entitlement_type: components["schemas"]["EntitlementType"];
+            /** Expires At */
+            expires_at?: string | null;
+            feature_code: components["schemas"]["FeatureCode"];
+            /** Monthly Request Limit */
+            monthly_request_limit?: number | null;
+            /** Monthly Token Limit */
+            monthly_token_limit?: number | null;
+            /** Starts At */
+            starts_at?: string | null;
         };
         /**
          * EvidenceType
          * @enum {string}
          */
         EvidenceType: "PHOTO" | "VIDEO" | "DOCUMENT" | "NEWS_LINK" | "SOCIAL_LINK" | "OTHER";
+        /**
+         * FeatureCode
+         * @enum {string}
+         */
+        FeatureCode: "TERRITORY_AI";
+        /** FetchRunRead */
+        FetchRunRead: {
+            /** Error Summary */
+            error_summary: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Items Created */
+            items_created: number;
+            /** Items Discovered */
+            items_discovered: number;
+            /** Items Failed */
+            items_failed: number;
+            /** Items Unchanged */
+            items_unchanged: number;
+            /** Items Updated */
+            items_updated: number;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+            /** Trigger Type */
+            trigger_type: string;
+        };
         /** GeoJSONFeature */
         GeoJSONFeature: {
+            geometry: components["schemas"]["GeoJSONGeometry"] | null;
+            /** Id */
+            id: string | number;
+            /** Properties */
+            properties: {
+                [key: string]: unknown;
+            };
             /**
              * Type
              * @default Feature
              * @constant
              */
             type: "Feature";
-            /** Id */
-            id: string | number;
-            geometry: components["schemas"]["GeoJSONGeometry"] | null;
-            /** Properties */
-            properties: {
-                [key: string]: unknown;
-            };
         };
         /** GeoJSONFeatureCollectionRead */
         GeoJSONFeatureCollectionRead: {
-            /**
-             * Type
-             * @default FeatureCollection
-             * @constant
-             */
-            type: "FeatureCollection";
             /** Bbox */
             bbox?: number[] | null;
+            /**
+             * Data Status
+             * @default AVAILABLE
+             */
+            data_status: string;
             /**
              * Features
              * @default []
              */
             features: components["schemas"]["GeoJSONFeature"][];
             /**
-             * Data Status
-             * @default AVAILABLE
+             * Metadata
+             * @default {}
              */
-            data_status: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            /**
+             * Type
+             * @default FeatureCollection
+             * @constant
+             */
+            type: "FeatureCollection";
             /**
              * Unmapped Count
              * @default 0
@@ -4101,40 +7080,21 @@ export interface components {
              * @default []
              */
             warnings: string[];
-            /**
-             * Metadata
-             * @default {}
-             */
-            metadata: {
-                [key: string]: unknown;
-            };
         };
         /** GeoJSONGeometry */
         GeoJSONGeometry: {
-            /** Type */
-            type: string;
             /** Coordinates */
             coordinates: unknown;
+            /** Type */
+            type: string;
         };
+        /**
+         * GeographyLevel
+         * @enum {string}
+         */
+        GeographyLevel: "CANTON" | "PARISH";
         /** GeometryImportExecutionRead */
         GeometryImportExecutionRead: {
-            /**
-             * Job Id
-             * Format: uuid
-             */
-            job_id: string;
-            /** Status */
-            status: string;
-            /** Features Read */
-            features_read: number;
-            /** Features Valid */
-            features_valid: number;
-            /** Features Updated */
-            features_updated: number;
-            /** Features Rejected */
-            features_rejected: number;
-            /** File Sha256 */
-            file_sha256: string;
             /**
              * Errors
              * @default []
@@ -4142,33 +7102,50 @@ export interface components {
             errors: {
                 [key: string]: unknown;
             }[];
+            /** Features Read */
+            features_read: number;
+            /** Features Rejected */
+            features_rejected: number;
+            /** Features Updated */
+            features_updated: number;
+            /** Features Valid */
+            features_valid: number;
+            /** File Sha256 */
+            file_sha256: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /** Status */
+            status: string;
         };
         /** GeometryImportValidationRead */
         GeometryImportValidationRead: {
             /**
-             * Job Id
-             * Format: uuid
-             */
-            job_id: string;
-            /** Status */
-            status: string;
-            /** Features Read */
-            features_read: number;
-            /** Features Valid */
-            features_valid: number;
-            /** Features Updated */
-            features_updated: number;
-            /** Features Rejected */
-            features_rejected: number;
-            /** File Sha256 */
-            file_sha256: string;
-            /**
              * Errors
              * @default []
              */
             errors: {
                 [key: string]: unknown;
             }[];
+            /** Features Read */
+            features_read: number;
+            /** Features Rejected */
+            features_rejected: number;
+            /** Features Updated */
+            features_updated: number;
+            /** Features Valid */
+            features_valid: number;
+            /** File Sha256 */
+            file_sha256: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /** Status */
+            status: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4179,16 +7156,9 @@ export interface components {
         HealthResponse: {
             /**
              * Status
-             * @enum {string}
+             * @constant
              */
-            status: "ok" | "error";
-            /** Application */
-            application: string;
-            /**
-             * Database
-             * @enum {string}
-             */
-            database: "connected" | "unavailable";
+            status: "ok";
         };
         /** HistoricalElectoralContextRead */
         HistoricalElectoralContextRead: {
@@ -4197,12 +7167,24 @@ export interface components {
              * Format: uuid
              */
             campaign_id: string;
+            /** Candidate Results */
+            candidate_results: {
+                [key: string]: unknown;
+            }[];
             /** Canton */
             canton: {
                 [key: string]: unknown;
             };
+            /** Data Quality */
+            data_quality: {
+                [key: string]: unknown;
+            };
             /** Office Type */
             office_type: string;
+            /** Parish Comparison */
+            parish_comparison: {
+                [key: string]: unknown;
+            }[];
             /** Processes */
             processes: {
                 [key: string]: unknown;
@@ -4211,31 +7193,101 @@ export interface components {
             turnout_comparison: {
                 [key: string]: unknown;
             }[];
-            /** Parish Comparison */
-            parish_comparison: {
+        };
+        /** ItemPage */
+        ItemPage: {
+            /** Items */
+            items: components["schemas"]["ItemRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** ItemRead */
+        ItemRead: {
+            /** Author */
+            author: string | null;
+            /** Canonical Url */
+            canonical_url: string;
+            /** Content Excerpt */
+            content_excerpt: string | null;
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Type */
+            item_type: string;
+            /** Language */
+            language: string;
+            /** Official */
+            official: boolean;
+            /** Published At */
+            published_at: string | null;
+            /** Publisher */
+            publisher: string;
+            /**
+             * Revisions
+             * @default []
+             */
+            revisions: {
                 [key: string]: unknown;
             }[];
-            /** Candidate Results */
-            candidate_results: {
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Source Name */
+            source_name: string;
+            /** Source Url */
+            source_url: string;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string | null;
+            /**
+             * Territories
+             * @default []
+             */
+            territories: {
                 [key: string]: unknown;
             }[];
-            /** Data Quality */
-            data_quality: {
+            /** Title */
+            title: string;
+            /**
+             * Topics
+             * @default []
+             */
+            topics: {
                 [key: string]: unknown;
-            };
+            }[];
+            /** Url */
+            url: string;
         };
         /** MapBoundsRead */
         MapBoundsRead: {
-            /** Canton Bbox */
-            canton_bbox: number[] | null;
             /** Accessible Bbox */
             accessible_bbox: number[] | null;
+            /** Canton Bbox */
+            canton_bbox: number[] | null;
             /** Center */
             center: number[] | null;
-            /** Recommended Zoom */
-            recommended_zoom: number;
             /** Geometry Available */
             geometry_available: boolean;
+            /** Recommended Zoom */
+            recommended_zoom: number;
             /** Territories Without Geometry */
             territories_without_geometry: number;
         };
@@ -4243,10 +7295,10 @@ export interface components {
         MapDataQualityIssue: {
             /** Code */
             code: string;
-            /** Description */
-            description: string;
             /** Count */
             count: number;
+            /** Description */
+            description: string;
             /** Resource Type */
             resource_type: string;
             /** Status */
@@ -4256,22 +7308,22 @@ export interface components {
         };
         /** MapDataQualityRead */
         MapDataQualityRead: {
-            /** Status */
-            status: string;
             /** Issues */
             issues: components["schemas"]["MapDataQualityIssue"][];
+            /** Status */
+            status: string;
         };
         /** MapFeatureDetailRead */
         MapFeatureDetailRead: {
-            /** Resource Type */
-            resource_type: string;
-            /** Resource Id */
-            resource_id: string;
             geometry: components["schemas"]["GeoJSONGeometry"] | null;
             /** Properties */
             properties: {
                 [key: string]: unknown;
             };
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Type */
+            resource_type: string;
             /** Summary */
             summary: {
                 [key: string]: unknown;
@@ -4284,30 +7336,89 @@ export interface components {
         };
         /** MapLayerRead */
         MapLayerRead: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description: string;
-            /** Geometry Type */
-            geometry_type: string;
-            /** Territory Levels */
-            territory_levels: string[];
-            /** Metrics */
-            metrics: string[];
-            /** Filters */
-            filters: string[];
-            /** Min Zoom */
-            min_zoom: number;
-            /** Max Zoom */
-            max_zoom: number;
             /** Available */
             available: boolean;
+            /** Code */
+            code: string;
             /** Data Status */
             data_status: string;
+            /** Description */
+            description: string;
+            /** Filters */
+            filters: string[];
+            /** Geometry Type */
+            geometry_type: string;
+            /** Max Zoom */
+            max_zoom: number;
+            /** Metrics */
+            metrics: string[];
+            /** Min Zoom */
+            min_zoom: number;
+            /** Name */
+            name: string;
+            /** Territory Levels */
+            territory_levels: string[];
             /** Unavailable Reason */
             unavailable_reason?: string | null;
+        };
+        /** MapMetricRead */
+        MapMetricRead: {
+            /** Dpa Code */
+            dpa_code: string;
+            /** Name */
+            name: string;
+            /** Parish Id */
+            parish_id: number;
+            /** Value */
+            value: number;
+        };
+        /** MembershipRead */
+        MembershipRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Email */
+            email?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            organization_role: components["schemas"]["OrganizationRole"];
+            status: components["schemas"]["MembershipStatus"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Username */
+            username?: string | null;
+        };
+        /**
+         * MembershipStatus
+         * @enum {string}
+         */
+        MembershipStatus: "ACTIVE" | "INACTIVE" | "INVITED";
+        /** MembershipUpsert */
+        MembershipUpsert: {
+            /** @default MEMBER */
+            organization_role: components["schemas"]["OrganizationRole"];
+            /** @default ACTIVE */
+            status: components["schemas"]["MembershipStatus"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** MessageResponse */
         MessageResponse: {
@@ -4318,33 +7429,33 @@ export interface components {
         NeedCategoryCreate: {
             /** Code */
             code: string;
-            /** Name */
-            name: string;
             /** Description */
             description?: string | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Display Order
              * @default 0
              */
             display_order: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Name */
+            name: string;
         };
         /** NeedCategoryDashboardItem */
         NeedCategoryDashboardItem: {
+            /** Activities */
+            activities: number;
             /** Code */
             code: string;
+            /** Mentions */
+            mentions: number;
             /** Name */
             name: string;
             /** Needs */
             needs: number;
-            /** Mentions */
-            mentions: number;
-            /** Activities */
-            activities: number;
             /** Territories */
             territories: number;
         };
@@ -4352,15 +7463,8 @@ export interface components {
         NeedCategoryRead: {
             /** Code */
             code: string;
-            /** Name */
-            name: string;
             /** Description */
             description?: string | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Display Order
              * @default 0
@@ -4368,56 +7472,86 @@ export interface components {
             display_order: number;
             /** Id */
             id: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Name */
+            name: string;
         };
         /** NeedCategoryUpdate */
         NeedCategoryUpdate: {
-            /** Name */
-            name?: string | null;
             /** Description */
             description?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
             /** Display Order */
             display_order?: number | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
         /** NeedCountByCategory */
         NeedCountByCategory: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Mentions */
-            mentions: number;
             /** Activities */
             activities: number;
+            /** Code */
+            code: string;
             /** Max Priority */
             max_priority: string;
+            /** Mentions */
+            mentions: number;
+            /** Name */
+            name: string;
         };
         /** NeedCountByParish */
         NeedCountByParish: {
-            /** Parish Id */
-            parish_id: number;
-            /** Name */
-            name: string;
             /** Mentions */
             mentions: number;
+            /** Name */
+            name: string;
+            /** Parish Id */
+            parish_id: number;
         };
         /** NeedDashboardRead */
         NeedDashboardRead: {
-            /** Total Needs */
-            total_needs: number;
-            /** Total Mentions */
-            total_mentions: number;
             /** Categories */
             categories: components["schemas"]["NeedCategoryDashboardItem"][];
+            /** Total Mentions */
+            total_mentions: number;
+            /** Total Needs */
+            total_needs: number;
         } & {
             [key: string]: unknown;
         };
+        /** NeedLinkCreate */
+        NeedLinkCreate: {
+            /**
+             * Need Id
+             * Format: uuid
+             */
+            need_id: string;
+        };
+        /**
+         * NeedScope
+         * @enum {string}
+         */
+        NeedScope: "LOCAL" | "PARISH" | "CANTON";
+        /**
+         * NeedSourceType
+         * @enum {string}
+         */
+        NeedSourceType: "ASSEMBLY" | "COMMUNITY_MEETING" | "FIELD_VISIT" | "CAMPAIGN_ACTIVITY" | "CITIZEN_REPORT" | "TEAM_REPORT" | "OTHER";
         /**
          * NeedStatus
          * @enum {string}
          */
-        NeedStatus: "IDENTIFIED" | "UNDER_REVIEW" | "INCLUDED_IN_PLAN" | "DISCARDED";
+        NeedStatus: "REPORTED" | "UNDER_REVIEW" | "VALIDATED" | "IN_PLAN" | "CLOSED" | "ARCHIVED" | "IDENTIFIED" | "INCLUDED_IN_PLAN" | "DISCARDED";
+        /** NeedValidationRequest */
+        NeedValidationRequest: {
+            /** Validation Notes */
+            validation_notes?: string | null;
+        };
         /**
          * OfficeType
          * @enum {string}
@@ -4426,56 +7560,65 @@ export interface components {
         /** OperationalAlertRead */
         OperationalAlertRead: {
             /**
+             * Acknowledgements
+             * @default []
+             */
+            acknowledgements: components["schemas"]["AlertAcknowledgementRead"][];
+            /** Community Id */
+            community_id: string | null;
+            /**
+             * Detected Date
+             * Format: date
+             */
+            detected_date: string;
+            /** Evidence */
+            evidence: {
+                [key: string]: unknown;
+            };
+            /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Rule Code */
-            rule_code: string;
+            /**
+             * Last Seen Date
+             * Format: date
+             */
+            last_seen_date: string;
+            /** Message */
+            message: string;
             /** Module */
             module: string;
+            /** Parish Id */
+            parish_id: number | null;
+            /** Resolved Date */
+            resolved_date: string | null;
+            /** Resource Id */
+            resource_id: string | null;
+            /** Resource Type */
+            resource_type: string | null;
+            /** Rule Code */
+            rule_code: string;
+            /** Sector Id */
+            sector_id: string | null;
             /** Severity */
             severity: string;
             /** Status */
             status: string;
             /** Title */
             title: string;
-            /** Message */
-            message: string;
-            /**
-             * Detected Date
-             * Format: date
-             */
-            detected_date: string;
-            /**
-             * Last Seen Date
-             * Format: date
-             */
-            last_seen_date: string;
-            /** Resolved Date */
-            resolved_date: string | null;
-            /** Parish Id */
-            parish_id: number | null;
-            /** Community Id */
-            community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
-            /** Resource Type */
-            resource_type: string | null;
-            /** Resource Id */
-            resource_id: string | null;
-            /** Evidence */
-            evidence: {
-                [key: string]: unknown;
-            };
-            /**
-             * Acknowledgements
-             * @default []
-             */
-            acknowledgements: components["schemas"]["AlertAcknowledgementRead"][];
         };
         /** OperationalSummaryRead */
         OperationalSummaryRead: {
+            /** Activities By Parish */
+            activities_by_parish: components["schemas"]["ActivityCountByParish"][];
+            /** Activities By Type */
+            activities_by_type: components["schemas"]["ActivityCountByType"][];
+            /** Cancelled Activities */
+            cancelled_activities: number;
+            commitments: components["schemas"]["CommitmentStatusSummary"];
+            /** Completed Activities */
+            completed_activities: number;
             /**
              * Date From
              * Format: date
@@ -4486,27 +7629,257 @@ export interface components {
              * Format: date
              */
             date_to: string;
-            /** Completed Activities */
-            completed_activities: number;
-            /** Planned Activities */
-            planned_activities: number;
-            /** Cancelled Activities */
-            cancelled_activities: number;
             /** Estimated Attendees */
             estimated_attendees: number;
-            /** Activities By Type */
-            activities_by_type: components["schemas"]["ActivityCountByType"][];
-            /** Activities By Parish */
-            activities_by_parish: components["schemas"]["ActivityCountByParish"][];
-            /** Top Needs */
-            top_needs: components["schemas"]["NeedCountByCategory"][];
             /** Needs By Parish */
             needs_by_parish: components["schemas"]["NeedCountByParish"][];
-            commitments: components["schemas"]["CommitmentStatusSummary"];
-            /** Uncovered Parishes */
-            uncovered_parishes: components["schemas"]["UncoveredParishRead"][];
+            /** Open Needs */
+            open_needs: number;
+            /** Parishes With Commitments */
+            parishes_with_commitments: number;
+            /** Planned Activities */
+            planned_activities: number;
             /** Summary Text */
             summary_text: string;
+            /** Top Needs */
+            top_needs: components["schemas"]["NeedCountByCategory"][];
+            /** Total Activities */
+            total_activities: number;
+            /** Uncovered Parishes */
+            uncovered_parishes: components["schemas"]["UncoveredParishRead"][];
+        };
+        /** OptionInput */
+        OptionInput: {
+            /** Code */
+            code: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Label */
+            label: string;
+            /** @default OTHER */
+            option_type: components["schemas"]["OptionType"];
+            /**
+             * Question Code
+             * @default Q1
+             */
+            question_code: string;
+            /**
+             * Question Text
+             * @default Pregunta agregada
+             */
+            question_text: string;
+            /** @default SINGLE_CHOICE */
+            question_type: components["schemas"]["app__schemas__survey_study__QuestionType"];
+        };
+        /** OptionRead */
+        OptionRead: {
+            /** Code */
+            code: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** @default OTHER */
+            option_type: components["schemas"]["OptionType"];
+            /**
+             * Question Code
+             * @default Q1
+             */
+            question_code: string;
+            /**
+             * Question Text
+             * @default Pregunta agregada
+             */
+            question_text: string;
+            /** @default SINGLE_CHOICE */
+            question_type: components["schemas"]["app__schemas__survey_study__QuestionType"];
+            /**
+             * Study Id
+             * Format: uuid
+             */
+            study_id: string;
+        };
+        /**
+         * OptionType
+         * @enum {string}
+         */
+        OptionType: "CANDIDATE" | "UNDECIDED" | "BLANK" | "NULL_VOTE" | "OTHER" | "NO_RESPONSE";
+        /** OrganizationAuditRead */
+        OrganizationAuditRead: {
+            /** Actor */
+            actor?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string;
+            /** Event Date */
+            event_date?: string | null;
+            /** Event Type */
+            event_type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Outcome */
+            outcome: string;
+        };
+        /** OrganizationCreate */
+        OrganizationCreate: {
+            /** Contact Email */
+            contact_email?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /**
+             * Country
+             * @default EC
+             */
+            country: string;
+            /** Legal Name */
+            legal_name?: string | null;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** @default ACTIVE */
+            status: components["schemas"]["OrganizationStatus"];
+            /**
+             * Timezone
+             * @default America/Guayaquil
+             */
+            timezone: string;
+        };
+        /** OrganizationOnboarding */
+        OrganizationOnboarding: {
+            campaign: components["schemas"]["CampaignCreate"];
+            organization: components["schemas"]["OrganizationCreate"];
+            /**
+             * Owner User Id
+             * Format: uuid
+             */
+            owner_user_id: string;
+            subscription: components["schemas"]["SubscriptionUpsert"];
+        };
+        /** OrganizationOnboardingRead */
+        OrganizationOnboardingRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            membership: components["schemas"]["MembershipRead"];
+            organization: components["schemas"]["OrganizationRead"];
+            subscription: components["schemas"]["SubscriptionRead"];
+        };
+        /** OrganizationRead */
+        OrganizationRead: {
+            /**
+             * Campaign Count
+             * @default 0
+             */
+            campaign_count: number;
+            /** Contact Email */
+            contact_email: string | null;
+            /** Contact Phone */
+            contact_phone: string | null;
+            /** Country */
+            country: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            current_role?: components["schemas"]["OrganizationRole"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Legal Name */
+            legal_name: string | null;
+            /** Name */
+            name: string;
+            plan_code?: components["schemas"]["PlanCode"] | null;
+            /** Slug */
+            slug: string;
+            status: components["schemas"]["OrganizationStatus"];
+            subscription_status?: components["schemas"]["SubscriptionStatus"] | null;
+            /** Timezone */
+            timezone: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * User Count
+             * @default 0
+             */
+            user_count: number;
+        };
+        /**
+         * OrganizationRole
+         * @enum {string}
+         */
+        OrganizationRole: "OWNER" | "ADMIN" | "MEMBER";
+        /**
+         * OrganizationStatus
+         * @enum {string}
+         */
+        OrganizationStatus: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+        /** OrganizationUpdate */
+        OrganizationUpdate: {
+            /** Contact Email */
+            contact_email?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /** Country */
+            country?: string | null;
+            /** Legal Name */
+            legal_name?: string | null;
+            /** Name */
+            name?: string | null;
+            status?: components["schemas"]["OrganizationStatus"] | null;
+            /** Timezone */
+            timezone?: string | null;
+        };
+        /** OrganizationUsageRead */
+        OrganizationUsageRead: {
+            /** Ai Requests Limit */
+            ai_requests_limit?: number | null;
+            /** Ai Requests Used */
+            ai_requests_used: number;
+            /** Campaigns Limit */
+            campaigns_limit: number | null;
+            /** Campaigns Used */
+            campaigns_used: number;
+            /** Users Limit */
+            users_limit: number | null;
+            /** Users Used */
+            users_used: number;
+        };
+        /** OwnPasswordChange */
+        OwnPasswordChange: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
+            /** New Password Confirmation */
+            new_password_confirmation: string;
         };
         /** ParishCreate */
         ParishCreate: {
@@ -4516,14 +7889,14 @@ export interface components {
             code: string;
             /** Dpa Code */
             dpa_code: string;
-            /** Name */
-            name: string;
-            parish_type: components["schemas"]["ParishType"];
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Name */
+            name: string;
+            parish_type: components["schemas"]["ParishType"];
         };
         /** ParishRead */
         ParishRead: {
@@ -4533,16 +7906,16 @@ export interface components {
             code: string;
             /** Dpa Code */
             dpa_code: string;
-            /** Name */
-            name: string;
-            parish_type: components["schemas"]["ParishType"];
+            /** Id */
+            id: number;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
-            /** Id */
-            id: number;
+            /** Name */
+            name: string;
+            parish_type: components["schemas"]["ParishType"];
         };
         /**
          * ParishType
@@ -4555,103 +7928,234 @@ export interface components {
             code?: string | null;
             /** Dpa Code */
             dpa_code?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
             /** Name */
             name?: string | null;
             parish_type?: components["schemas"]["ParishType"] | null;
-            /** Is Active */
-            is_active?: boolean | null;
         };
         /** ParticipantSummaryRead */
         ParticipantSummaryRead: {
-            /**
-             * Estimated Attendees
-             * @default 0
-             */
-            estimated_attendees: number;
-            /**
-             * Organizations Count
-             * @default 0
-             */
-            organizations_count: number;
-            /**
-             * Community Leaders Count
-             * @default 0
-             */
-            community_leaders_count: number;
-            /**
-             * Campaign Team Count
-             * @default 0
-             */
-            campaign_team_count: number;
-            /** Notes */
-            notes?: string | null;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
             /**
              * Activity Id
              * Format: uuid
              */
             activity_id: string;
-        };
-        /** ParticipantSummaryUpsert */
-        ParticipantSummaryUpsert: {
             /**
-             * Estimated Attendees
+             * Campaign Team Count
              * @default 0
              */
-            estimated_attendees: number;
-            /**
-             * Organizations Count
-             * @default 0
-             */
-            organizations_count: number;
+            campaign_team_count: number;
             /**
              * Community Leaders Count
              * @default 0
              */
             community_leaders_count: number;
             /**
+             * Estimated Attendees
+             * @default 0
+             */
+            estimated_attendees: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Organizations Count
+             * @default 0
+             */
+            organizations_count: number;
+        };
+        /** ParticipantSummaryUpsert */
+        ParticipantSummaryUpsert: {
+            /**
              * Campaign Team Count
              * @default 0
              */
             campaign_team_count: number;
+            /**
+             * Community Leaders Count
+             * @default 0
+             */
+            community_leaders_count: number;
+            /**
+             * Estimated Attendees
+             * @default 0
+             */
+            estimated_attendees: number;
             /** Notes */
             notes?: string | null;
+            /**
+             * Organizations Count
+             * @default 0
+             */
+            organizations_count: number;
+        };
+        /** ParticipationProjectionResultRead */
+        ParticipationProjectionResultRead: {
+            /** Data Quality Status */
+            data_quality_status: string;
+            /** Expected Voters Central */
+            expected_voters_central: number;
+            /** Expected Voters High */
+            expected_voters_high: number;
+            /** Expected Voters Low */
+            expected_voters_low: number;
+            /** Explanation */
+            explanation: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Parish Id */
+            parish_id: number;
+            /** Registered Voters */
+            registered_voters: number;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Turnout Rate Central */
+            turnout_rate_central: string;
+            /** Turnout Rate High */
+            turnout_rate_high: string;
+            /** Turnout Rate Low */
+            turnout_rate_low: string;
+        };
+        /** ParticipationProjectionRunRead */
+        ParticipationProjectionRunRead: {
+            /** Campaign Id */
+            campaign_id: string | null;
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /** Historical Process Ids */
+            historical_process_ids: unknown[];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Model Code */
+            model_code: string;
+            /** Model Version */
+            model_version: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /**
+             * Run Date
+             * Format: date
+             */
+            run_date: string;
+            /**
+             * Snapshot Id
+             * Format: uuid
+             */
+            snapshot_id: string;
         };
         /** PasswordChange */
         PasswordChange: {
             /** New Password */
             new_password: string;
         };
+        /**
+         * PlanCode
+         * @enum {string}
+         */
+        PlanCode: "STANDARD" | "PRO";
         /** PoliticalOrganizationRead */
         PoliticalOrganizationRead: {
+            /** External Code */
+            external_code: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** External Code */
-            external_code: string | null;
-            /** Name */
-            name: string;
-            /** Short Name */
-            short_name: string | null;
-            /** Organization Type */
-            organization_type: string | null;
+            /** Is Active */
+            is_active: boolean;
             /** List Number */
             list_number: string | null;
+            /** Name */
+            name: string;
+            /** Organization Type */
+            organization_type: string | null;
             /** Scope */
             scope: string | null;
+            /** Short Name */
+            short_name: string | null;
             /**
              * Source Id
              * Format: uuid
              */
             source_id: string;
+        };
+        /** PollingPlaceCreate */
+        PollingPlaceCreate: {
+            /** Address */
+            address?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name: string;
+            /** Official Code */
+            official_code: string;
+            /** Parish Id */
+            parish_id: number;
+        };
+        /** PollingPlaceListResponse */
+        PollingPlaceListResponse: {
+            /** Items */
+            items: components["schemas"]["PollingPlaceRead"][];
+            /** Total */
+            total: number;
+        };
+        /** PollingPlaceRead */
+        PollingPlaceRead: {
+            /** Address */
+            address: string | null;
+            /** Canton Id */
+            canton_id: number;
+            /**
+             * Electoral Process Id
+             * Format: uuid
+             */
+            electoral_process_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Latitude */
+            latitude: number | null;
+            /** Longitude */
+            longitude: number | null;
+            /** Name */
+            name: string;
+            /** Official Code */
+            official_code: string;
+            /** Parish Id */
+            parish_id: number;
+            /** Province Id */
+            province_id: number;
         };
         /**
          * Priority
@@ -4660,49 +8164,226 @@ export interface components {
         Priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
         /** ProvinceRead */
         ProvinceRead: {
-            /** Id */
-            id: number;
             /** Code */
             code: string;
-            /** Name */
-            name: string;
+            /** Dpa Code */
+            dpa_code: string;
+            /** Id */
+            id: number;
             /** Is Active */
             is_active: boolean;
+            /** Name */
+            name: string;
         };
-        /**
-         * QuestionType
-         * @enum {string}
-         */
-        QuestionType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "YES_NO" | "SHORT_TEXT" | "LONG_TEXT" | "INTEGER" | "DECIMAL" | "RATING";
-        /** ReportArtifactRead */
-        ReportArtifactRead: {
+        /** PublicSourceCreate */
+        PublicSourceCreate: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Adapter Config */
+            adapter_config?: {
+                [key: string]: unknown;
+            };
+            /** Api Url */
+            api_url?: string | null;
+            /** Base Url */
+            base_url: string;
+            /** Canton */
+            canton?: string | null;
+            /** Code */
+            code: string;
+            /**
+             * Country
+             * @default EC
+             */
+            country: string;
+            /** Credential Reference */
+            credential_reference?: string | null;
+            /** Feed Url */
+            feed_url?: string | null;
+            /** Jurisdiction */
+            jurisdiction?: string | null;
+            /** License Notes */
+            license_notes?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Official
+             * @default false
+             */
+            official: boolean;
+            /** Province */
+            province?: string | null;
+            /** Publisher */
+            publisher: string;
+            /** Refresh Interval Minutes */
+            refresh_interval_minutes?: number | null;
+            retrieval_method: components["schemas"]["RetrievalMethod"];
+            source_type: components["schemas"]["SourceType"];
+            /** Terms Notes */
+            terms_notes?: string | null;
+        };
+        /** PublicSourceRead */
+        PublicSourceRead: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Adapter Config */
+            adapter_config?: {
+                [key: string]: unknown;
+            };
+            /** Api Url */
+            api_url?: string | null;
+            /** Base Url */
+            base_url: string;
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Canton */
+            canton?: string | null;
+            /** Code */
+            code: string;
+            /** Consecutive Failures */
+            consecutive_failures: number;
+            /**
+             * Country
+             * @default EC
+             */
+            country: string;
+            /** Credential Reference */
+            credential_reference?: string | null;
+            /** Feed Url */
+            feed_url?: string | null;
+            /** Freshness Status */
+            freshness_status?: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Format */
-            format: string;
-            /** Original Download Name */
-            original_download_name: string;
-            /** Mime Type */
-            mime_type: string;
-            /** Size Bytes */
-            size_bytes: number;
+            /** Items Last Fetch */
+            items_last_fetch: number;
+            /** Jurisdiction */
+            jurisdiction?: string | null;
+            /** Last Fetch At */
+            last_fetch_at: string | null;
+            /** Last Success At */
+            last_success_at: string | null;
+            /** License Notes */
+            license_notes?: string | null;
+            /** Name */
+            name: string;
+            /** Next Refresh At */
+            next_refresh_at?: string | null;
+            /**
+             * Official
+             * @default false
+             */
+            official: boolean;
+            /** Province */
+            province?: string | null;
+            /** Publisher */
+            publisher: string;
+            /** Refresh Interval Minutes */
+            refresh_interval_minutes?: number | null;
+            retrieval_method: components["schemas"]["RetrievalMethod"];
+            source_type: components["schemas"]["SourceType"];
+            /** Stale After At */
+            stale_after_at?: string | null;
+            /** Terms Notes */
+            terms_notes?: string | null;
+        };
+        /** PublicSourceUpdate */
+        PublicSourceUpdate: {
+            /** Active */
+            active?: boolean | null;
+            /** Adapter Config */
+            adapter_config?: {
+                [key: string]: unknown;
+            } | null;
+            /** Api Url */
+            api_url?: string | null;
+            /** Base Url */
+            base_url?: string | null;
+            /** Feed Url */
+            feed_url?: string | null;
+            /** Jurisdiction */
+            jurisdiction?: string | null;
+            /** License Notes */
+            license_notes?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Official */
+            official?: boolean | null;
+            /** Publisher */
+            publisher?: string | null;
+            /** Refresh Interval Minutes */
+            refresh_interval_minutes?: number | null;
+            retrieval_method?: components["schemas"]["RetrievalMethod"] | null;
+            source_type?: components["schemas"]["SourceType"] | null;
+            /** Terms Notes */
+            terms_notes?: string | null;
+        };
+        /** ReadyResponse */
+        ReadyResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "READY" | "NOT_READY";
+        };
+        /** ReportArtifactRead */
+        ReportArtifactRead: {
             /**
              * Expires On
              * Format: date
              */
             expires_on: string;
+            /** Format */
+            format: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Available */
             is_available: boolean;
+            /** Mime Type */
+            mime_type: string;
+            /** Original Download Name */
+            original_download_name: string;
             /** Sha256 */
             sha256?: string | null;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /** ReportCitationRead */
+        ReportCitationRead: {
+            /** Deep Link */
+            deep_link?: string | null;
+            /** Evidence Class */
+            evidence_class: string;
+            /** Id */
+            id: string;
+            /** Record Date */
+            record_date?: string | null;
+            /** Source Name */
+            source_name: string;
+            /** Source Type */
+            source_type: string;
+            /** Source Url */
+            source_url?: string | null;
+            /** Title */
+            title: string;
         };
         /** ReportDefinition */
         ReportDefinition: {
-            /** Sections */
-            sections: string[];
             /**
              * Include Comparisons
              * @default true
@@ -4723,6 +8404,8 @@ export interface components {
              * @default 50
              */
             max_items_per_section: number;
+            /** Sections */
+            sections: string[];
         };
         /**
          * ReportFormat
@@ -4731,74 +8414,105 @@ export interface components {
         ReportFormat: "PDF" | "XLSX";
         /** ReportGenerationRequest */
         ReportGenerationRequest: {
-            /** Template Code */
-            template_code: string;
-            format: components["schemas"]["ReportFormat"];
-            /** Title */
-            title: string;
-            /**
-             * Report Date
-             * Format: date
-             */
-            report_date: string;
+            /** Community Id */
+            community_id?: string | null;
             /** Date From */
             date_from?: string | null;
             /** Date To */
             date_to?: string | null;
-            /** Period */
-            period?: string | null;
-            /** Parish Id */
-            parish_id?: number | null;
-            /** Community Id */
-            community_id?: string | null;
-            /** Sector Id */
-            sector_id?: string | null;
-            /** Survey Ids */
-            survey_ids?: string[];
-            /** Electoral Process Ids */
-            electoral_process_ids?: string[];
             /** Demographic Indicator Codes */
             demographic_indicator_codes?: string[];
+            /** Electoral Process Ids */
+            electoral_process_ids?: string[];
+            format: components["schemas"]["ReportFormat"];
+            /**
+             * Include Citations
+             * @default true
+             */
+            include_citations: boolean;
             /**
              * Include Comparisons
              * @default true
              */
             include_comparisons: boolean;
+            /**
+             * Include Demo
+             * @default true
+             */
+            include_demo: boolean;
+            /**
+             * Include Evidence
+             * @default true
+             */
+            include_evidence: boolean;
+            /**
+             * Include Public Intelligence
+             * @default true
+             */
+            include_public_intelligence: boolean;
+            /**
+             * Include Surveys
+             * @default true
+             */
+            include_surveys: boolean;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Period */
+            period?: string | null;
+            /**
+             * Report Date
+             * Format: date
+             */
+            report_date: string;
+            /** Sector Id */
+            sector_id?: string | null;
+            /** Survey Ids */
+            survey_ids?: string[];
+            /** Template Code */
+            template_code: string;
+            /** Theme */
+            theme?: string | null;
+            /** Title */
+            title: string;
         };
         /** ReportGenerationResponse */
         ReportGenerationResponse: {
+            artifact?: components["schemas"]["ReportArtifactRead"] | null;
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Date From */
+            date_from: string | null;
+            /** Date To */
+            date_to: string | null;
+            /** Error Code */
+            error_code?: string | null;
+            /** Error Message */
+            error_message?: string | null;
+            /** Filters */
+            filters?: {
+                [key: string]: unknown;
+            };
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /**
-             * Campaign Id
-             * Format: uuid
-             */
-            campaign_id: string;
-            /** Template Code */
-            template_code: string;
-            /** Requested Format */
-            requested_format: string;
-            /** Status */
-            status: string;
-            /**
              * Report Date
              * Format: date
              */
             report_date: string;
-            /** Date From */
-            date_from: string | null;
-            /** Date To */
-            date_to: string | null;
+            /** Requested Format */
+            requested_format: string;
+            /** Status */
+            status: string;
+            /** Template Code */
+            template_code: string;
             /** Title */
             title: string;
-            /** Error Code */
-            error_code?: string | null;
-            /** Error Message */
-            error_message?: string | null;
-            artifact?: components["schemas"]["ReportArtifactRead"] | null;
         };
         /** ReportListResponse */
         ReportListResponse: {
@@ -4811,105 +8525,240 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ReportNarrativeRead */
+        ReportNarrativeRead: {
+            /** Hallazgos Principales */
+            hallazgos_principales: string[];
+            /** Limitations */
+            limitations?: string[];
+            /** Provider */
+            provider: string;
+            /** Resumen Ejecutivo */
+            resumen_ejecutivo: string;
+            /** Titulo Sugerido */
+            titulo_sugerido: string;
+        };
+        /** ReportPreviewResponse */
+        ReportPreviewResponse: {
+            /** Citations */
+            citations: components["schemas"]["ReportCitationRead"][];
+            /**
+             * Generated At
+             * Format: date
+             */
+            generated_at: string;
+            /** Generated By */
+            generated_by: string;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Limitations */
+            limitations?: string[];
+            narrative: components["schemas"]["ReportNarrativeRead"];
+            /** Report Kind */
+            report_kind: string;
+            /** Sections */
+            sections: components["schemas"]["ReportSectionPreview"][];
+            /** Subtitle */
+            subtitle?: string | null;
+            /** Title */
+            title: string;
+        };
         /** ReportRunRead */
         ReportRunRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            artifact?: components["schemas"]["ReportArtifactRead"] | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Template Code */
-            template_code: string;
-            /** Requested Format */
-            requested_format: string;
-            /** Status */
-            status: string;
-            /**
-             * Report Date
-             * Format: date
-             */
-            report_date: string;
             /** Date From */
             date_from: string | null;
             /** Date To */
             date_to: string | null;
-            /** Title */
-            title: string;
             /** Error Code */
             error_code?: string | null;
             /** Error Message */
             error_message?: string | null;
-            artifact?: components["schemas"]["ReportArtifactRead"] | null;
-        };
-        /** ReportTemplateCreate */
-        ReportTemplateCreate: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
-            /** Report Type */
-            report_type: string;
-            /** Allowed Formats */
-            allowed_formats: components["schemas"]["ReportFormat"][];
-            definition: components["schemas"]["ReportDefinition"];
-        };
-        /** ReportTemplateRead */
-        ReportTemplateRead: {
+            /** Filters */
+            filters?: {
+                [key: string]: unknown;
+            };
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /**
+             * Report Date
+             * Format: date
+             */
+            report_date: string;
+            /** Requested Format */
+            requested_format: string;
+            /** Status */
+            status: string;
+            /** Template Code */
+            template_code: string;
+            /** Title */
+            title: string;
+        };
+        /** ReportSectionPreview */
+        ReportSectionPreview: {
+            /** Headers */
+            headers?: string[];
+            /** Rows */
+            rows?: unknown[][];
+            /** Subtitle */
+            subtitle?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** ReportTemplateCreate */
+        ReportTemplateCreate: {
+            /** Allowed Formats */
+            allowed_formats: components["schemas"]["ReportFormat"][];
             /** Code */
             code: string;
+            definition: components["schemas"]["ReportDefinition"];
+            /** Description */
+            description?: string | null;
             /** Name */
             name: string;
-            /** Description */
-            description: string | null;
             /** Report Type */
             report_type: string;
+        };
+        /** ReportTemplateRead */
+        ReportTemplateRead: {
             /** Allowed Formats */
             allowed_formats: string[];
+            /** Code */
+            code: string;
             /** Definition */
             definition: {
                 [key: string]: unknown;
             };
-            /** Is System */
-            is_system: boolean;
+            /** Description */
+            description: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Is System */
+            is_system: boolean;
+            /** Name */
+            name: string;
+            /** Report Type */
+            report_type: string;
         };
         /** ReportTemplateUpdate */
         ReportTemplateUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
             /** Allowed Formats */
             allowed_formats?: components["schemas"]["ReportFormat"][] | null;
             definition?: components["schemas"]["ReportDefinition"] | null;
+            /** Description */
+            description?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
+        /** ReportTypeRead */
+        ReportTypeRead: {
+            /** Allowed Formats */
+            allowed_formats: string[];
+            /** Code */
+            code: string;
+            /** Description */
+            description: string;
+            /** Name */
+            name: string;
+            /**
+             * Requires Parish
+             * @default false
+             */
+            requires_parish: boolean;
+            /**
+             * Requires Theme
+             * @default false
+             */
+            requires_theme: boolean;
+        };
+        /** ResultInput */
+        ResultInput: {
+            /**
+             * Option Id
+             * Format: uuid
+             */
+            option_id: string;
+            /** Percentage */
+            percentage: number | string;
+            /** Response Count */
+            response_count?: number | null;
+            /**
+             * Study Territory Id
+             * Format: uuid
+             */
+            study_territory_id: string;
+        };
+        /** ResultRead */
+        ResultRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Option Code */
+            option_code: string;
+            /**
+             * Option Id
+             * Format: uuid
+             */
+            option_id: string;
+            /** Option Label */
+            option_label: string;
+            option_type: components["schemas"]["OptionType"];
+            /** Percentage */
+            percentage: string;
+            /** Response Count */
+            response_count?: number | null;
+            /**
+             * Study Id
+             * Format: uuid
+             */
+            study_id: string;
+            /**
+             * Study Territory Id
+             * Format: uuid
+             */
+            study_territory_id: string;
+        };
+        /**
+         * RetrievalMethod
+         * @enum {string}
+         */
+        RetrievalMethod: "MANUAL" | "RSS" | "API" | "WEB_PAGE" | "FILE_DOWNLOAD";
         /** RoleRead */
         RoleRead: {
             /** Code */
             code: string;
-            /** Name */
-            name: string;
-            /** Id */
-            id: number;
             /** Description */
             description: string | null;
+            /** Id */
+            id: number;
             /** Is Active */
             is_active: boolean;
+            /** Name */
+            name: string;
         };
         /** RoleSummary */
         RoleSummary: {
@@ -4930,26 +8779,26 @@ export interface components {
         };
         /** SectorCreate */
         SectorCreate: {
-            /** Name */
-            name: string;
             /** Code */
             code?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Community Id
              * Format: uuid
              */
             community_id: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name: string;
         };
         /** SectorListResponse */
         SectorListResponse: {
@@ -4966,49 +8815,49 @@ export interface components {
         };
         /** SectorRead */
         SectorRead: {
-            /** Name */
-            name: string;
             /** Code */
             code?: string | null;
+            /**
+             * Community Id
+             * Format: uuid
+             */
+            community_id: string;
             /** Description */
             description?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /**
-             * Community Id
-             * Format: uuid
+             * Is Active
+             * @default true
              */
-            community_id: string;
-        };
-        /** SectorUpdate */
-        SectorUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Code */
-            code?: string | null;
-            /** Description */
-            description?: string | null;
+            is_active: boolean;
             /** Latitude */
             latitude?: number | null;
             /** Longitude */
             longitude?: number | null;
+            /** Name */
+            name: string;
+        };
+        /** SectorUpdate */
+        SectorUpdate: {
+            /** Code */
+            code?: string | null;
+            /** Description */
+            description?: string | null;
             /**
              * Is Active
              * @default true
              */
             is_active: boolean;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name?: string | null;
         };
         /** SecurityAuditEventList */
         SecurityAuditEventList: {
@@ -5025,52 +8874,496 @@ export interface components {
         };
         /** SecurityAuditEventRead */
         SecurityAuditEventRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Event Type */
-            event_type: string;
-            /** Outcome */
-            outcome: string;
+            /** Campaign Id */
+            campaign_id: string | null;
+            /** Description */
+            description: string;
             /**
              * Event Date
              * Format: date
              */
             event_date: string;
-            /** User Id */
-            user_id: string | null;
-            /** Campaign Id */
-            campaign_id: string | null;
-            /** Resource Type */
-            resource_type: string | null;
-            /** Resource Id */
-            resource_id: string | null;
-            /** Description */
-            description: string;
+            /** Event Type */
+            event_type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Metadata */
             metadata: {
                 [key: string]: unknown;
             };
+            /** Outcome */
+            outcome: string;
+            /** Resource Id */
+            resource_id: string | null;
+            /** Resource Type */
+            resource_type: string | null;
+            /** User Id */
+            user_id: string | null;
         };
         /**
          * SourceChannel
          * @enum {string}
          */
         SourceChannel: "FIELD" | "WEB" | "QR" | "ACTIVITY" | "MANUAL_IMPORT" | "OTHER";
+        /**
+         * SourceType
+         * @enum {string}
+         */
+        SourceType: "OFFICIAL_WEBSITE" | "OFFICIAL_API" | "OPEN_DATA" | "RSS" | "NEWS" | "PUBLIC_DOCUMENT_REPOSITORY" | "OTHER";
+        /** StudyCreate */
+        StudyCreate: {
+            /** Code */
+            code: string;
+            /** Collection Method */
+            collection_method: string;
+            /** Confidence Level */
+            confidence_level?: number | string | null;
+            /** Description */
+            description?: string | null;
+            /** Election Process Id */
+            election_process_id?: string | null;
+            /**
+             * Fieldwork End Date
+             * Format: date
+             */
+            fieldwork_end_date: string;
+            /**
+             * Fieldwork Start Date
+             * Format: date
+             */
+            fieldwork_start_date: string;
+            geography_level: components["schemas"]["GeographyLevel"];
+            /**
+             * Is Official
+             * @default false
+             */
+            is_official: boolean;
+            /** Margin Of Error */
+            margin_of_error?: number | string | null;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /** Pollster Name */
+            pollster_name?: string | null;
+            /** Publication Date */
+            publication_date?: string | null;
+            /**
+             * Question Code
+             * @default VOTE_INTENTION
+             */
+            question_code: string;
+            /** Result Count Notes */
+            result_count_notes?: string | null;
+            /** Sample Size Total */
+            sample_size_total: number;
+            /** Sampling Method */
+            sampling_method: string;
+            /** Source Document */
+            source_document?: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /**
+             * Source Type
+             * @default ESTUDIO
+             */
+            source_type: string;
+            /** Source Url */
+            source_url?: string | null;
+            /** Sponsor Name */
+            sponsor_name?: string | null;
+            /** Study Series Code */
+            study_series_code?: string | null;
+            study_type: components["schemas"]["StudyType"];
+            /** Universe Description */
+            universe_description: string;
+        };
+        /** StudyDetail */
+        StudyDetail: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Code */
+            code: string;
+            /** Collection Method */
+            collection_method: string;
+            /** Confidence Level */
+            confidence_level?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
+            /** Description */
+            description?: string | null;
+            /** Election Process Id */
+            election_process_id?: string | null;
+            /** Exit Poll Warning */
+            exit_poll_warning?: string | null;
+            /**
+             * Fieldwork End Date
+             * Format: date
+             */
+            fieldwork_end_date: string;
+            /**
+             * Fieldwork Start Date
+             * Format: date
+             */
+            fieldwork_start_date: string;
+            geography_level: components["schemas"]["GeographyLevel"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Imported By User Id */
+            imported_by_user_id?: string | null;
+            /**
+             * Is Official
+             * @default false
+             */
+            is_official: boolean;
+            /** Margin Of Error */
+            margin_of_error?: string | null;
+            /** Methodology Completeness */
+            methodology_completeness: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Options
+             * @default []
+             */
+            options: components["schemas"]["OptionRead"][];
+            /** Pollster Name */
+            pollster_name?: string | null;
+            /** Publication Date */
+            publication_date?: string | null;
+            /**
+             * Question Code
+             * @default VOTE_INTENTION
+             */
+            question_code: string;
+            /** Result Count Notes */
+            result_count_notes?: string | null;
+            /**
+             * Results
+             * @default []
+             */
+            results: components["schemas"]["ResultRead"][];
+            /** Sample Size Total */
+            sample_size_total: number;
+            /** Sampling Method */
+            sampling_method: string;
+            /** Source Document */
+            source_document?: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /**
+             * Source Type
+             * @default ESTUDIO
+             */
+            source_type: string;
+            /** Source Url */
+            source_url?: string | null;
+            /** Sponsor Name */
+            sponsor_name?: string | null;
+            status: components["schemas"]["StudyStatus"];
+            /** Study Series Code */
+            study_series_code?: string | null;
+            study_type: components["schemas"]["StudyType"];
+            /**
+             * Territories
+             * @default []
+             */
+            territories: components["schemas"]["TerritoryRead"][];
+            /** Universe Description */
+            universe_description: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** StudyList */
+        StudyList: {
+            /** Items */
+            items: components["schemas"]["StudyRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            total_pages: number;
+        };
+        /** StudyRead */
+        StudyRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Code */
+            code: string;
+            /** Collection Method */
+            collection_method: string;
+            /** Confidence Level */
+            confidence_level?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
+            /** Description */
+            description?: string | null;
+            /** Election Process Id */
+            election_process_id?: string | null;
+            /**
+             * Fieldwork End Date
+             * Format: date
+             */
+            fieldwork_end_date: string;
+            /**
+             * Fieldwork Start Date
+             * Format: date
+             */
+            fieldwork_start_date: string;
+            geography_level: components["schemas"]["GeographyLevel"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Imported By User Id */
+            imported_by_user_id?: string | null;
+            /**
+             * Is Official
+             * @default false
+             */
+            is_official: boolean;
+            /** Margin Of Error */
+            margin_of_error?: string | null;
+            /** Methodology Completeness */
+            methodology_completeness: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /** Pollster Name */
+            pollster_name?: string | null;
+            /** Publication Date */
+            publication_date?: string | null;
+            /**
+             * Question Code
+             * @default VOTE_INTENTION
+             */
+            question_code: string;
+            /** Result Count Notes */
+            result_count_notes?: string | null;
+            /** Sample Size Total */
+            sample_size_total: number;
+            /** Sampling Method */
+            sampling_method: string;
+            /** Source Document */
+            source_document?: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /**
+             * Source Type
+             * @default ESTUDIO
+             */
+            source_type: string;
+            /** Source Url */
+            source_url?: string | null;
+            /** Sponsor Name */
+            sponsor_name?: string | null;
+            status: components["schemas"]["StudyStatus"];
+            /** Study Series Code */
+            study_series_code?: string | null;
+            study_type: components["schemas"]["StudyType"];
+            /** Universe Description */
+            universe_description: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * StudyStatus
+         * @enum {string}
+         */
+        StudyStatus: "DRAFT" | "VALIDATED" | "PUBLISHED" | "ARCHIVED";
+        /**
+         * StudyType
+         * @enum {string}
+         */
+        StudyType: "GENERAL_SURVEY" | "CNE_EXIT_POLL" | "POLL" | "TRACKING_POLL" | "EXIT_POLL" | "OTHER";
+        /** StudyUpdate */
+        StudyUpdate: {
+            /** Collection Method */
+            collection_method?: string | null;
+            /** Confidence Level */
+            confidence_level?: number | string | null;
+            /** Description */
+            description?: string | null;
+            /** Fieldwork End Date */
+            fieldwork_end_date?: string | null;
+            /** Fieldwork Start Date */
+            fieldwork_start_date?: string | null;
+            /** Is Official */
+            is_official?: boolean | null;
+            /** Margin Of Error */
+            margin_of_error?: number | string | null;
+            /** Name */
+            name?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Pollster Name */
+            pollster_name?: string | null;
+            /** Publication Date */
+            publication_date?: string | null;
+            /** Result Count Notes */
+            result_count_notes?: string | null;
+            /** Sample Size Total */
+            sample_size_total?: number | null;
+            /** Sampling Method */
+            sampling_method?: string | null;
+            /** Source Document */
+            source_document?: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /** Source Type */
+            source_type?: string | null;
+            /** Source Url */
+            source_url?: string | null;
+            /** Sponsor Name */
+            sponsor_name?: string | null;
+            /** Universe Description */
+            universe_description?: string | null;
+        };
+        /** SubscriptionRead */
+        SubscriptionRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Effective */
+            effective: boolean;
+            /** Expires At */
+            expires_at: string | null;
+            /** External Customer Id */
+            external_customer_id: string | null;
+            /** External Subscription Id */
+            external_subscription_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Max Campaigns */
+            max_campaigns: number | null;
+            /** Max Users */
+            max_users: number | null;
+            /** Metadata */
+            metadata: {
+                [key: string]: unknown;
+            };
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            plan_code: components["schemas"]["PlanCode"];
+            /** Starts At */
+            starts_at: string | null;
+            status: components["schemas"]["SubscriptionStatus"];
+            /** Trial Ends At */
+            trial_ends_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * SubscriptionStatus
+         * @enum {string}
+         */
+        SubscriptionStatus: "TRIAL" | "ACTIVE" | "PAST_DUE" | "SUSPENDED" | "EXPIRED" | "CANCELLED";
+        /** SubscriptionUpsert */
+        SubscriptionUpsert: {
+            /** Expires At */
+            expires_at?: string | null;
+            /** External Customer Id */
+            external_customer_id?: string | null;
+            /** External Subscription Id */
+            external_subscription_id?: string | null;
+            /** Max Campaigns */
+            max_campaigns?: number | null;
+            /** Max Users */
+            max_users?: number | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            plan_code: components["schemas"]["PlanCode"];
+            /** Starts At */
+            starts_at?: string | null;
+            status: components["schemas"]["SubscriptionStatus"];
+            /** Trial Ends At */
+            trial_ends_at?: string | null;
+        };
+        /** SummaryRead */
+        SummaryRead: {
+            /** Active Sources */
+            active_sources: number;
+            /** Items Last 24H */
+            items_last_24h: number;
+            /** Items Last 7 Days */
+            items_last_7_days: number;
+            /** Last Update */
+            last_update: string | null;
+            /** Latest Items */
+            latest_items: components["schemas"]["ItemRead"][];
+            /** New Documents */
+            new_documents: number;
+            /** Official Sources */
+            official_sources: number;
+            /** Sources With Error */
+            sources_with_error: number;
+        };
         /** SurveyAnswerInput */
         SurveyAnswerInput: {
-            /** Question Code */
-            question_code: string;
-            /** Text Value */
-            text_value?: string | null;
-            /** Integer Value */
-            integer_value?: number | null;
-            /** Decimal Value */
-            decimal_value?: number | string | null;
             /** Boolean Value */
             boolean_value?: boolean | null;
+            /** Decimal Value */
+            decimal_value?: number | string | null;
+            /** Integer Value */
+            integer_value?: number | null;
+            /** Other Text */
+            other_text?: string | null;
+            /** Question Code */
+            question_code: string;
             /** Rating Value */
             rating_value?: number | null;
             /**
@@ -5078,21 +9371,21 @@ export interface components {
              * @default []
              */
             selected_option_codes: string[];
-            /** Other Text */
-            other_text?: string | null;
+            /** Text Value */
+            text_value?: string | null;
         };
         /** SurveyAnswerRead */
         SurveyAnswerRead: {
-            /** Question Code */
-            question_code: string;
-            /** Text Value */
-            text_value?: string | null;
-            /** Integer Value */
-            integer_value?: number | null;
-            /** Decimal Value */
-            decimal_value?: string | null;
             /** Boolean Value */
             boolean_value?: boolean | null;
+            /** Decimal Value */
+            decimal_value?: string | null;
+            /** Integer Value */
+            integer_value?: number | null;
+            /** Other Text */
+            other_text?: string | null;
+            /** Question Code */
+            question_code: string;
             /** Rating Value */
             rating_value?: number | null;
             /**
@@ -5100,44 +9393,31 @@ export interface components {
              * @default []
              */
             selected_option_codes: string[];
-            /** Other Text */
-            other_text?: string | null;
+            /** Text Value */
+            text_value?: string | null;
         };
         /** SurveyCloseResponse */
         SurveyCloseResponse: {
+            /** Closed Date */
+            closed_date: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             status: components["schemas"]["SurveyStatus"];
-            /** Closed Date */
-            closed_date: string | null;
         };
         /** SurveyComparisonRead */
         SurveyComparisonRead: {
+            /** Items */
+            items: components["schemas"]["SurveyTerritorialResult"][];
             /** Level */
             level: string;
             /** Question Code */
             question_code: string;
-            /** Items */
-            items: components["schemas"]["SurveyTerritorialResult"][];
         };
         /** SurveyCreate */
         SurveyCreate: {
-            /** Title */
-            title: string;
-            /** Slug */
-            slug: string;
-            /** Description */
-            description?: string | null;
-            /** Instructions */
-            instructions?: string | null;
-            /** Start Date */
-            start_date?: string | null;
-            /** End Date */
-            end_date?: string | null;
-            target_scope: components["schemas"]["TargetScope"];
             /**
              * Allow Multiple Submissions
              * @default true
@@ -5148,13 +9428,26 @@ export interface components {
              * @default true
              */
             anonymous_only: boolean;
+            /** Description */
+            description?: string | null;
+            /** End Date */
+            end_date?: string | null;
+            /** Instructions */
+            instructions?: string | null;
             /**
              * Show Progress
              * @default true
              */
             show_progress: boolean;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date?: string | null;
+            target_scope: components["schemas"]["TargetScope"];
             /** Thank You Message */
             thank_you_message?: string | null;
+            /** Title */
+            title: string;
         };
         /** SurveyDashboardItem */
         SurveyDashboardItem: {
@@ -5177,44 +9470,32 @@ export interface components {
         };
         /** SurveyDetail */
         SurveyDetail: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Allow Multiple Submissions */
+            allow_multiple_submissions: boolean;
+            /** Anonymous Only */
+            anonymous_only: boolean;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Title */
-            title: string;
-            /** Slug */
-            slug: string;
-            status: components["schemas"]["SurveyStatus"];
-            /** Start Date */
-            start_date: string | null;
-            /** End Date */
-            end_date: string | null;
-            target_scope: components["schemas"]["TargetScope"];
-            /** Is Active */
-            is_active: boolean;
-            /** Description */
-            description: string | null;
-            /** Instructions */
-            instructions: string | null;
-            /** Published Date */
-            published_date: string | null;
             /** Closed Date */
             closed_date: string | null;
-            /** Allow Multiple Submissions */
-            allow_multiple_submissions: boolean;
-            /** Anonymous Only */
-            anonymous_only: boolean;
-            /** Show Progress */
-            show_progress: boolean;
-            /** Thank You Message */
-            thank_you_message: string | null;
+            /** Description */
+            description: string | null;
+            /** End Date */
+            end_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructions */
+            instructions: string | null;
+            /** Is Active */
+            is_active: boolean;
+            /** Published Date */
+            published_date: string | null;
             /**
              * Sections
              * @default []
@@ -5222,11 +9503,74 @@ export interface components {
             sections: {
                 [key: string]: unknown;
             }[];
+            /** Show Progress */
+            show_progress: boolean;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date: string | null;
+            status: components["schemas"]["SurveyStatus"];
+            target_scope: components["schemas"]["TargetScope"];
+            /** Thank You Message */
+            thank_you_message: string | null;
+            /** Title */
+            title: string;
             /**
              * Total Valid Responses
              * @default 0
              */
             total_valid_responses: number;
+        };
+        /** SurveyImportIssue */
+        SurveyImportIssue: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Row Number */
+            row_number?: number | null;
+        };
+        /** SurveyImportSummary */
+        SurveyImportSummary: {
+            /**
+             * Dataset Type
+             * @default SURVEY_AGGREGATE_RESULTS
+             */
+            dataset_type: string;
+            /**
+             * Errors
+             * @default []
+             */
+            errors: components["schemas"]["SurveyImportIssue"][];
+            /**
+             * Mapping Profile
+             * @default CANONICAL_SURVEY_AGGREGATE_RESULT
+             */
+            mapping_profile: string;
+            /** Options */
+            options: number;
+            /**
+             * Parishes
+             * @default []
+             */
+            parishes: string[];
+            /**
+             * Questions
+             * @default 0
+             */
+            questions: number;
+            /** Rows Read */
+            rows_read: number;
+            /** Rows Rejected */
+            rows_rejected: number;
+            /** Rows Valid */
+            rows_valid: number;
+            /** Status */
+            status: string;
+            /** Studies */
+            studies: string[];
+            /** Territories */
+            territories: number;
         };
         /** SurveyListResponse */
         SurveyListResponse: {
@@ -5243,27 +9587,25 @@ export interface components {
         };
         /** SurveyNumericSummary */
         SurveyNumericSummary: {
-            /** Count */
-            count: number;
             /** Average */
             average: string | null;
-            /** Minimum */
-            minimum: string | null;
-            /** Maximum */
-            maximum: string | null;
-            /** Median */
-            median: string | null;
+            /** Count */
+            count: number;
             /** Distribution */
             distribution?: {
                 [key: string]: number;
             } | null;
+            /** Maximum */
+            maximum: string | null;
+            /** Median */
+            median: string | null;
+            /** Minimum */
+            minimum: string | null;
         };
         /** SurveyOptionCreate */
         SurveyOptionCreate: {
             /** Code */
             code: string;
-            /** Label */
-            label: string;
             /** Description */
             description?: string | null;
             /**
@@ -5276,13 +9618,13 @@ export interface components {
              * @default false
              */
             is_other: boolean;
+            /** Label */
+            label: string;
         };
         /** SurveyOptionRead */
         SurveyOptionRead: {
             /** Code */
             code: string;
-            /** Label */
-            label: string;
             /** Description */
             description?: string | null;
             /**
@@ -5291,79 +9633,81 @@ export interface components {
              */
             display_order: number;
             /**
-             * Is Other
-             * @default false
-             */
-            is_other: boolean;
-            /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Is Other
+             * @default false
+             */
+            is_other: boolean;
+            /** Label */
+            label: string;
             /**
              * Question Id
              * Format: uuid
              */
             question_id: string;
-            /** Is Active */
-            is_active: boolean;
         };
         /** SurveyOptionResult */
         SurveyOptionResult: {
             /** Code */
             code: string;
-            /** Label */
-            label: string;
             /** Count */
             count: number;
+            /** Label */
+            label: string;
             /** Percentage */
             percentage: number | null;
         };
         /** SurveyOptionUpdate */
         SurveyOptionUpdate: {
-            /** Label */
-            label?: string | null;
             /** Description */
             description?: string | null;
             /** Display Order */
             display_order?: number | null;
             /** Is Other */
             is_other?: boolean | null;
+            /** Label */
+            label?: string | null;
         };
         /** SurveyParticipationSummary */
         SurveyParticipationSummary: {
-            /** Total Responses */
-            total_responses: number;
-            /** Valid Responses */
-            valid_responses: number;
-            /** Invalid Responses */
-            invalid_responses: number;
             /** Complete Responses */
             complete_responses: number;
-            /** Responses By Parish */
-            responses_by_parish: {
+            /** Invalid Responses */
+            invalid_responses: number;
+            /** Responses By Age Range */
+            responses_by_age_range: {
                 [key: string]: unknown;
             }[];
             /** Responses By Channel */
             responses_by_channel: {
                 [key: string]: unknown;
             }[];
-            /** Responses By Age Range */
-            responses_by_age_range: {
-                [key: string]: unknown;
-            }[];
             /** Responses By Date */
             responses_by_date: {
                 [key: string]: unknown;
             }[];
-            /** Territories Without Responses */
-            territories_without_responses: {
+            /** Responses By Parish */
+            responses_by_parish: {
                 [key: string]: unknown;
             }[];
             /** Territories Below Threshold */
             territories_below_threshold: {
                 [key: string]: unknown;
             }[];
+            /** Territories Without Responses */
+            territories_without_responses: {
+                [key: string]: unknown;
+            }[];
+            /** Total Responses */
+            total_responses: number;
+            /** Valid Responses */
+            valid_responses: number;
         };
         /** SurveyPublishResponse */
         SurveyPublishResponse: {
@@ -5372,198 +9716,198 @@ export interface components {
              * Format: uuid
              */
             id: string;
-            status: components["schemas"]["SurveyStatus"];
             /** Published Date */
             published_date: string | null;
+            status: components["schemas"]["SurveyStatus"];
         };
         /** SurveyQuestionCreate */
         SurveyQuestionCreate: {
-            /** Code */
-            code: string;
-            /** Question Text */
-            question_text: string;
-            /** Help Text */
-            help_text?: string | null;
-            question_type: components["schemas"]["QuestionType"];
-            /**
-             * Is Required
-             * @default false
-             */
-            is_required: boolean;
-            /**
-             * Display Order
-             * @default 0
-             */
-            display_order: number;
             /**
              * Allow Other
              * @default false
              */
             allow_other: boolean;
-            /** Min Value */
-            min_value?: number | string | null;
+            /** Code */
+            code: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Help Text */
+            help_text?: string | null;
+            /**
+             * Is Required
+             * @default false
+             */
+            is_required: boolean;
+            /** Max Length */
+            max_length?: number | null;
+            /** Max Selections */
+            max_selections?: number | null;
             /** Max Value */
             max_value?: number | string | null;
             /** Min Length */
             min_length?: number | null;
-            /** Max Length */
-            max_length?: number | null;
             /** Min Selections */
             min_selections?: number | null;
-            /** Max Selections */
-            max_selections?: number | null;
-            /** Rating Min */
-            rating_min?: number | null;
+            /** Min Value */
+            min_value?: number | string | null;
+            /** Question Text */
+            question_text: string;
+            question_type: components["schemas"]["app__schemas__survey__QuestionType"];
             /** Rating Max */
             rating_max?: number | null;
-            /** Rating Min Label */
-            rating_min_label?: string | null;
             /** Rating Max Label */
             rating_max_label?: string | null;
+            /** Rating Min */
+            rating_min?: number | null;
+            /** Rating Min Label */
+            rating_min_label?: string | null;
         };
         /** SurveyQuestionRead */
         SurveyQuestionRead: {
+            /** Allow Other */
+            allow_other: boolean;
+            /** Code */
+            code: string;
+            /** Display Order */
+            display_order: number;
+            /** Help Text */
+            help_text: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /**
-             * Survey Id
-             * Format: uuid
-             */
-            survey_id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Required */
+            is_required: boolean;
+            /** Max Length */
+            max_length: number | null;
+            /** Max Selections */
+            max_selections: number | null;
+            /** Max Value */
+            max_value: string | null;
+            /** Min Length */
+            min_length: number | null;
+            /** Min Selections */
+            min_selections: number | null;
+            /** Min Value */
+            min_value: string | null;
+            /** Question Text */
+            question_text: string;
+            question_type: components["schemas"]["app__schemas__survey__QuestionType"];
+            /** Rating Max */
+            rating_max: number | null;
+            /** Rating Max Label */
+            rating_max_label: string | null;
+            /** Rating Min */
+            rating_min: number | null;
+            /** Rating Min Label */
+            rating_min_label: string | null;
             /**
              * Section Id
              * Format: uuid
              */
             section_id: string;
-            /** Code */
-            code: string;
-            /** Question Text */
-            question_text: string;
-            /** Help Text */
-            help_text: string | null;
-            question_type: components["schemas"]["QuestionType"];
-            /** Is Required */
-            is_required: boolean;
-            /** Display Order */
-            display_order: number;
-            /** Allow Other */
-            allow_other: boolean;
-            /** Min Value */
-            min_value: string | null;
-            /** Max Value */
-            max_value: string | null;
-            /** Min Length */
-            min_length: number | null;
-            /** Max Length */
-            max_length: number | null;
-            /** Min Selections */
-            min_selections: number | null;
-            /** Max Selections */
-            max_selections: number | null;
-            /** Rating Min */
-            rating_min: number | null;
-            /** Rating Max */
-            rating_max: number | null;
-            /** Rating Min Label */
-            rating_min_label: string | null;
-            /** Rating Max Label */
-            rating_max_label: string | null;
-            /** Is Active */
-            is_active: boolean;
+            /**
+             * Survey Id
+             * Format: uuid
+             */
+            survey_id: string;
         };
         /** SurveyQuestionResult */
         SurveyQuestionResult: {
-            /** Code */
-            code: string;
-            /** Question Text */
-            question_text: string;
-            question_type: components["schemas"]["QuestionType"];
             /** Answered Count */
             answered_count: number;
+            /** Code */
+            code: string;
+            numeric?: components["schemas"]["SurveyNumericSummary"] | null;
             /**
              * Options
              * @default []
              */
             options: components["schemas"]["SurveyOptionResult"][];
-            numeric?: components["schemas"]["SurveyNumericSummary"] | null;
+            /** Question Text */
+            question_text: string;
+            question_type: components["schemas"]["app__schemas__survey__QuestionType"];
             text?: components["schemas"]["SurveyTextSummary"] | null;
         };
         /** SurveyQuestionUpdate */
         SurveyQuestionUpdate: {
-            /** Question Text */
-            question_text?: string | null;
+            /** Allow Other */
+            allow_other?: boolean | null;
+            /** Display Order */
+            display_order?: number | null;
             /** Help Text */
             help_text?: string | null;
             /** Is Required */
             is_required?: boolean | null;
-            /** Display Order */
-            display_order?: number | null;
-            /** Allow Other */
-            allow_other?: boolean | null;
-            /** Min Value */
-            min_value?: number | string | null;
+            /** Max Length */
+            max_length?: number | null;
+            /** Max Selections */
+            max_selections?: number | null;
             /** Max Value */
             max_value?: number | string | null;
             /** Min Length */
             min_length?: number | null;
-            /** Max Length */
-            max_length?: number | null;
             /** Min Selections */
             min_selections?: number | null;
-            /** Max Selections */
-            max_selections?: number | null;
-            /** Rating Min */
-            rating_min?: number | null;
+            /** Min Value */
+            min_value?: number | string | null;
+            /** Question Text */
+            question_text?: string | null;
             /** Rating Max */
             rating_max?: number | null;
-            /** Rating Min Label */
-            rating_min_label?: string | null;
             /** Rating Max Label */
             rating_max_label?: string | null;
+            /** Rating Min */
+            rating_min?: number | null;
+            /** Rating Min Label */
+            rating_min_label?: string | null;
         };
         /** SurveyRead */
         SurveyRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Allow Multiple Submissions */
+            allow_multiple_submissions: boolean;
+            /** Anonymous Only */
+            anonymous_only: boolean;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Title */
-            title: string;
-            /** Slug */
-            slug: string;
-            status: components["schemas"]["SurveyStatus"];
-            /** Start Date */
-            start_date: string | null;
-            /** End Date */
-            end_date: string | null;
-            target_scope: components["schemas"]["TargetScope"];
-            /** Is Active */
-            is_active: boolean;
-            /** Description */
-            description: string | null;
-            /** Instructions */
-            instructions: string | null;
-            /** Published Date */
-            published_date: string | null;
             /** Closed Date */
             closed_date: string | null;
-            /** Allow Multiple Submissions */
-            allow_multiple_submissions: boolean;
-            /** Anonymous Only */
-            anonymous_only: boolean;
+            /** Description */
+            description: string | null;
+            /** End Date */
+            end_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructions */
+            instructions: string | null;
+            /** Is Active */
+            is_active: boolean;
+            /** Published Date */
+            published_date: string | null;
             /** Show Progress */
             show_progress: boolean;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date: string | null;
+            status: components["schemas"]["SurveyStatus"];
+            target_scope: components["schemas"]["TargetScope"];
             /** Thank You Message */
             thank_you_message: string | null;
+            /** Title */
+            title: string;
         };
         /** SurveyResponseInvalidation */
         SurveyResponseInvalidation: {
@@ -5585,117 +9929,115 @@ export interface components {
         };
         /** SurveyResponseRead */
         SurveyResponseRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Survey Id
-             * Format: uuid
-             */
-            survey_id: string;
-            /**
-             * Response Date
-             * Format: date
-             */
-            response_date: string;
-            /** Parish Id */
-            parish_id: number;
-            /** Community Id */
-            community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
             /** Activity Id */
             activity_id: string | null;
-            source_channel: components["schemas"]["SourceChannel"];
             age_range: components["schemas"]["AgeRange"] | null;
-            /** Is Complete */
-            is_complete: boolean;
-            /** Is Valid */
-            is_valid: boolean;
-            /** Invalid Reason */
-            invalid_reason: string | null;
             /**
              * Answers
              * @default []
              */
             answers: components["schemas"]["SurveyAnswerRead"][];
-        };
-        /** SurveyResponseSummary */
-        SurveyResponseSummary: {
+            /** Community Id */
+            community_id: string | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /**
-             * Survey Id
-             * Format: uuid
-             */
-            survey_id: string;
+            /** Invalid Reason */
+            invalid_reason: string | null;
+            /** Is Complete */
+            is_complete: boolean;
+            /** Is Valid */
+            is_valid: boolean;
+            /** Parish Id */
+            parish_id: number;
             /**
              * Response Date
              * Format: date
              */
             response_date: string;
-            /** Parish Id */
-            parish_id: number;
-            /** Community Id */
-            community_id: string | null;
             /** Sector Id */
             sector_id: string | null;
-            /** Activity Id */
-            activity_id: string | null;
             source_channel: components["schemas"]["SourceChannel"];
-            age_range: components["schemas"]["AgeRange"] | null;
-            /** Is Complete */
-            is_complete: boolean;
-            /** Is Valid */
-            is_valid: boolean;
-            /** Invalid Reason */
-            invalid_reason: string | null;
-        };
-        /** SurveyResultsRead */
-        SurveyResultsRead: {
             /**
              * Survey Id
              * Format: uuid
              */
             survey_id: string;
-            /** Title */
-            title: string;
+        };
+        /** SurveyResponseSummary */
+        SurveyResponseSummary: {
+            /** Activity Id */
+            activity_id: string | null;
+            age_range: components["schemas"]["AgeRange"] | null;
+            /** Community Id */
+            community_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invalid Reason */
+            invalid_reason: string | null;
+            /** Is Complete */
+            is_complete: boolean;
+            /** Is Valid */
+            is_valid: boolean;
+            /** Parish Id */
+            parish_id: number;
+            /**
+             * Response Date
+             * Format: date
+             */
+            response_date: string;
+            /** Sector Id */
+            sector_id: string | null;
+            source_channel: components["schemas"]["SourceChannel"];
+            /**
+             * Survey Id
+             * Format: uuid
+             */
+            survey_id: string;
+        };
+        /** SurveyResultsRead */
+        SurveyResultsRead: {
+            /** Complete Responses */
+            complete_responses: number;
             /** Date From */
             date_from: string | null;
             /** Date To */
             date_to: string | null;
-            /** Total Responses */
-            total_responses: number;
-            /** Valid Responses */
-            valid_responses: number;
             /** Invalid Responses */
             invalid_responses: number;
-            /** Complete Responses */
-            complete_responses: number;
-            /** Responses By Parish */
-            responses_by_parish: {
+            /** Question Results */
+            question_results: components["schemas"]["SurveyQuestionResult"][];
+            /** Responses By Age Range */
+            responses_by_age_range: {
                 [key: string]: unknown;
             }[];
             /** Responses By Channel */
             responses_by_channel: {
                 [key: string]: unknown;
             }[];
-            /** Responses By Age Range */
-            responses_by_age_range: {
+            /** Responses By Parish */
+            responses_by_parish: {
                 [key: string]: unknown;
             }[];
-            /** Question Results */
-            question_results: components["schemas"]["SurveyQuestionResult"][];
+            /**
+             * Survey Id
+             * Format: uuid
+             */
+            survey_id: string;
+            /** Title */
+            title: string;
+            /** Total Responses */
+            total_responses: number;
+            /** Valid Responses */
+            valid_responses: number;
         };
         /** SurveySectionCreate */
         SurveySectionCreate: {
-            /** Title */
-            title: string;
             /** Description */
             description?: string | null;
             /**
@@ -5703,11 +10045,11 @@ export interface components {
              * @default 0
              */
             display_order: number;
+            /** Title */
+            title: string;
         };
         /** SurveySectionRead */
         SurveySectionRead: {
-            /** Title */
-            title: string;
             /** Description */
             description?: string | null;
             /**
@@ -5720,22 +10062,24 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Is Active */
+            is_active: boolean;
             /**
              * Survey Id
              * Format: uuid
              */
             survey_id: string;
-            /** Is Active */
-            is_active: boolean;
+            /** Title */
+            title: string;
         };
         /** SurveySectionUpdate */
         SurveySectionUpdate: {
-            /** Title */
-            title?: string | null;
             /** Description */
             description?: string | null;
             /** Display Order */
             display_order?: number | null;
+            /** Title */
+            title?: string | null;
         };
         /**
          * SurveyStatus
@@ -5744,65 +10088,65 @@ export interface components {
         SurveyStatus: "DRAFT" | "PUBLISHED" | "CLOSED" | "ARCHIVED";
         /** SurveySubmissionCreate */
         SurveySubmissionCreate: {
+            /** Activity Id */
+            activity_id?: string | null;
+            age_range?: components["schemas"]["AgeRange"] | null;
+            /** Answers */
+            answers: components["schemas"]["SurveyAnswerInput"][];
+            /** Community Id */
+            community_id?: string | null;
+            /** Parish Id */
+            parish_id: number;
             /**
              * Response Date
              * Format: date
              */
             response_date: string;
-            /** Parish Id */
-            parish_id: number;
-            /** Community Id */
-            community_id?: string | null;
             /** Sector Id */
             sector_id?: string | null;
-            /** Activity Id */
-            activity_id?: string | null;
             source_channel: components["schemas"]["SourceChannel"];
-            age_range?: components["schemas"]["AgeRange"] | null;
             /** Submission Key */
             submission_key?: string | null;
-            /** Answers */
-            answers: components["schemas"]["SurveyAnswerInput"][];
         };
         /** SurveySummary */
         SurveySummary: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Title */
-            title: string;
-            /** Slug */
-            slug: string;
-            status: components["schemas"]["SurveyStatus"];
-            /** Start Date */
-            start_date: string | null;
             /** End Date */
             end_date: string | null;
-            target_scope: components["schemas"]["TargetScope"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Slug */
+            slug: string;
+            /** Start Date */
+            start_date: string | null;
+            status: components["schemas"]["SurveyStatus"];
+            target_scope: components["schemas"]["TargetScope"];
+            /** Title */
+            title: string;
         };
         /** SurveyTerritorialResult */
         SurveyTerritorialResult: {
-            /** Territory Id */
-            territory_id: string;
-            /** Territory Name */
-            territory_name: string;
             /** Response Count */
             response_count: number;
-            /** Suppressed */
-            suppressed: boolean;
             /** Result */
             result?: {
                 [key: string]: unknown;
             } | null;
+            /** Suppressed */
+            suppressed: boolean;
+            /** Territory Id */
+            territory_id: string;
+            /** Territory Name */
+            territory_name: string;
         };
         /** SurveyTextSummary */
         SurveyTextSummary: {
@@ -5813,27 +10157,27 @@ export interface components {
         };
         /** SurveyUpdate */
         SurveyUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Slug */
-            slug?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Instructions */
-            instructions?: string | null;
-            /** Start Date */
-            start_date?: string | null;
-            /** End Date */
-            end_date?: string | null;
-            target_scope?: components["schemas"]["TargetScope"] | null;
             /** Allow Multiple Submissions */
             allow_multiple_submissions?: boolean | null;
             /** Anonymous Only */
             anonymous_only?: boolean | null;
+            /** Description */
+            description?: string | null;
+            /** End Date */
+            end_date?: string | null;
+            /** Instructions */
+            instructions?: string | null;
             /** Show Progress */
             show_progress?: boolean | null;
+            /** Slug */
+            slug?: string | null;
+            /** Start Date */
+            start_date?: string | null;
+            target_scope?: components["schemas"]["TargetScope"] | null;
             /** Thank You Message */
             thank_you_message?: string | null;
+            /** Title */
+            title?: string | null;
         };
         /**
          * TargetScope
@@ -5842,32 +10186,39 @@ export interface components {
         TargetScope: "CANTON" | "PARISH" | "COMMUNITY" | "SECTOR" | "ACTIVITY";
         /** TerritorialActivityCreate */
         TerritorialActivityCreate: {
-            /** Activity Type Code */
-            activity_type_code: string;
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
             /**
              * Activity Date
              * Format: date
              */
             activity_date: string;
-            status: components["schemas"]["ActivityStatus"];
-            /** Parish Id */
-            parish_id: number;
+            /** Activity Type Code */
+            activity_type_code: string;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
             /** Community Id */
             community_id?: string | null;
-            /** Sector Id */
-            sector_id?: string | null;
-            /** Location Name */
-            location_name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** End Time */
+            end_time?: string | null;
             /** Latitude */
             latitude?: number | null;
+            /** Location Name */
+            location_name?: string | null;
             /** Longitude */
             longitude?: number | null;
+            /** Parish Id */
+            parish_id: number;
             /** Responsible User Id */
             responsible_user_id?: string | null;
+            /** Sector Id */
+            sector_id?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** @default PLANNED */
+            status: components["schemas"]["ActivityStatus"];
+            /** Title */
+            title: string;
         };
         /** TerritorialActivityListResponse */
         TerritorialActivityListResponse: {
@@ -5885,140 +10236,211 @@ export interface components {
         /** TerritorialActivityRead */
         TerritorialActivityRead: {
             /**
-             * Id
-             * Format: uuid
+             * Activity Date
+             * Format: date
              */
-            id: string;
+            activity_date: string;
+            /** Activity Type Id */
+            activity_type_id: number;
+            approval_status: components["schemas"]["ApprovalStatus"];
+            /** Approved At */
+            approved_at: string | null;
+            approved_by?: components["schemas"]["ActivityActorRead"] | null;
+            /** Approved By User Id */
+            approved_by_user_id: string | null;
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
-            /** Activity Type Id */
-            activity_type_id: number;
-            /** Title */
-            title: string;
-            /**
-             * Activity Date
-             * Format: date
-             */
-            activity_date: string;
-            status: components["schemas"]["ActivityStatus"];
-            /** Parish Id */
-            parish_id: number;
+            /** Cancellation Reason */
+            cancellation_reason: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Cancelled By User Id */
+            cancelled_by_user_id: string | null;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
             /** Community Id */
             community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
-            /** Is Active */
-            is_active: boolean;
+            /** Completed At */
+            completed_at: string | null;
+            completed_by?: components["schemas"]["ActivityActorRead"] | null;
+            /** Completed By User Id */
+            completed_by_user_id: string | null;
+            /** Completion Summary */
+            completion_summary: string | null;
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
             /** Description */
             description: string | null;
-            /** Location Name */
-            location_name: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
             /** Latitude */
             latitude: number | null;
+            /** Location Name */
+            location_name: string | null;
             /** Longitude */
             longitude: number | null;
+            /** Outcome Notes */
+            outcome_notes: string | null;
+            /** Parish Id */
+            parish_id: number;
+            /** Parish Name */
+            parish_name?: string | null;
+            /** Rejected At */
+            rejected_at: string | null;
+            rejected_by?: components["schemas"]["ActivityActorRead"] | null;
+            /** Rejected By User Id */
+            rejected_by_user_id: string | null;
+            /** Rejection Reason */
+            rejection_reason: string | null;
             /** Responsible User Id */
             responsible_user_id: string | null;
+            resumed_by?: components["schemas"]["ActivityActorRead"] | null;
+            /** Sector Id */
+            sector_id: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            status: components["schemas"]["ActivityStatus"];
+            /** Submitted By User Id */
+            submitted_by_user_id: string | null;
+            /** Submitted For Approval At */
+            submitted_for_approval_at: string | null;
+            /** Suspended At */
+            suspended_at: string | null;
+            suspended_by?: components["schemas"]["ActivityActorRead"] | null;
+            /** Suspended By User Id */
+            suspended_by_user_id: string | null;
+            /** Suspension Reason */
+            suspension_reason: string | null;
+            /** Title */
+            title: string;
         };
         /** TerritorialActivitySummary */
         TerritorialActivitySummary: {
             /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Campaign Id
-             * Format: uuid
-             */
-            campaign_id: string;
-            /** Activity Type Id */
-            activity_type_id: number;
-            /** Title */
-            title: string;
-            /**
              * Activity Date
              * Format: date
              */
             activity_date: string;
-            status: components["schemas"]["ActivityStatus"];
-            /** Parish Id */
-            parish_id: number;
-            /** Community Id */
-            community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
-            /** Is Active */
-            is_active: boolean;
-        };
-        /** TerritorialActivityUpdate */
-        TerritorialActivityUpdate: {
-            /** Activity Type Code */
-            activity_type_code?: string | null;
-            /** Title */
-            title?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Activity Date */
-            activity_date?: string | null;
-            status?: components["schemas"]["ActivityStatus"] | null;
-            /** Parish Id */
-            parish_id?: number | null;
-            /** Community Id */
-            community_id?: string | null;
-            /** Sector Id */
-            sector_id?: string | null;
-            /** Location Name */
-            location_name?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /** Responsible User Id */
-            responsible_user_id?: string | null;
-        };
-        /** TerritorialAssignmentCreate */
-        TerritorialAssignmentCreate: {
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Parish Id */
-            parish_id: number;
-            /** Community Id */
-            community_id?: string | null;
-            /** Sector Id */
-            sector_id?: string | null;
-        };
-        /** TerritorialAssignmentRead */
-        TerritorialAssignmentRead: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
+            /** Activity Type Id */
+            activity_type_id: number;
+            approval_status: components["schemas"]["ApprovalStatus"];
             /**
              * Campaign Id
              * Format: uuid
              */
             campaign_id: string;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Community Id */
+            community_id: string | null;
+            /**
+             * Created By User Id
+             * Format: uuid
+             */
+            created_by_user_id: string;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Parish Id */
+            parish_id: number;
+            /** Parish Name */
+            parish_name?: string | null;
+            /** Sector Id */
+            sector_id: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            status: components["schemas"]["ActivityStatus"];
+            /** Title */
+            title: string;
+        };
+        /** TerritorialActivityUpdate */
+        TerritorialActivityUpdate: {
+            /** Activity Date */
+            activity_date?: string | null;
+            /** Activity Type Code */
+            activity_type_code?: string | null;
+            /** Community Id */
+            community_id?: string | null;
+            /** Description */
+            description?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Location Name */
+            location_name?: string | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Responsible User Id */
+            responsible_user_id?: string | null;
+            /** Sector Id */
+            sector_id?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            status?: components["schemas"]["ActivityStatus"] | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** TerritorialAssignmentCreate */
+        TerritorialAssignmentCreate: {
+            /** Community Id */
+            community_id?: string | null;
+            /** Parish Id */
+            parish_id: number;
+            /** Sector Id */
+            sector_id?: string | null;
             /**
              * User Id
              * Format: uuid
              */
             user_id: string;
-            /** Parish Id */
-            parish_id: number;
+        };
+        /** TerritorialAssignmentRead */
+        TerritorialAssignmentRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
             /** Community Id */
             community_id: string | null;
-            /** Sector Id */
-            sector_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Is Active */
             is_active: boolean;
+            /** Parish Id */
+            parish_id: number;
+            /** Sector Id */
+            sector_id: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** TerritorialDashboardItem */
         TerritorialDashboardItem: {
@@ -6056,18 +10478,213 @@ export interface components {
              */
             warnings: string[];
         };
+        /** TerritoryAICitation */
+        TerritoryAICitation: {
+            /** Data Cutoff */
+            data_cutoff?: string | null;
+            /** Dataset Version Label */
+            dataset_version_label?: string | null;
+            /**
+             * Evidence Class
+             * @default CAMPAIGN
+             */
+            evidence_class: string;
+            /** Excerpt */
+            excerpt?: string | null;
+            /** External Url */
+            external_url?: string | null;
+            /** Freshness */
+            freshness: string;
+            /** Id */
+            id: string;
+            /** Internal Path */
+            internal_path?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Reference Date */
+            reference_date?: string | null;
+            /** Source Name */
+            source_name: string;
+            source_type: components["schemas"]["TerritoryAISourceKind"];
+            territory?: components["schemas"]["TerritoryReference"] | null;
+            /** Title */
+            title: string;
+        };
+        /** TerritoryAIConversationRead */
+        TerritoryAIConversationRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Messages */
+            messages?: components["schemas"]["TerritoryAIMessageRead"][];
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * TerritoryAIIntent
+         * @enum {string}
+         */
+        TerritoryAIIntent: "ELECTORAL_PANORAMA" | "DEBATE_BRIEF" | "TERRITORY_SUMMARY" | "ELECTORAL_REGISTER" | "HISTORICAL_TURNOUT" | "TURNOUT_PROJECTION" | "DEMOGRAPHICS" | "SURVEY_STUDIES" | "OPERATIONS" | "NEEDS" | "COMMITMENTS" | "PUBLIC_INTELLIGENCE" | "SOURCE_LOOKUP" | "GENERAL_GROUNDED_SEARCH" | "CAMPAIGN_SCHEDULE" | "OPERATIONAL_ALERTS" | "ELECTION_DAY_OPERATIONS";
+        /** TerritoryAIMessageRead */
+        TerritoryAIMessageRead: {
+            /** Citations */
+            citations: {
+                [key: string]: unknown;
+            }[];
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Role */
+            role: string;
+        };
+        /** TerritoryAIQueryRequest */
+        TerritoryAIQueryRequest: {
+            /** Activity Id */
+            activity_id?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Need Id */
+            need_id?: string | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Public Item Id */
+            public_item_id?: string | null;
+            /** Question */
+            question: string;
+            /** Study Id */
+            study_id?: string | null;
+        };
+        /** TerritoryAIResponse */
+        TerritoryAIResponse: {
+            /** Answer */
+            answer: string;
+            /** Citations */
+            citations: components["schemas"]["TerritoryAICitation"][];
+            /** Conversation Id */
+            conversation_id?: string | null;
+            intent: components["schemas"]["TerritoryAIIntent"];
+            /** Limitations */
+            limitations?: string[];
+            /** Message Id */
+            message_id?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Provider */
+            provider?: string | null;
+            /**
+             * Status
+             * @default ANSWERED
+             */
+            status: string;
+            territory?: components["schemas"]["TerritoryReference"] | null;
+        };
+        /**
+         * TerritoryAISourceKind
+         * @enum {string}
+         */
+        TerritoryAISourceKind: "CNE" | "TURNOUT_MODEL" | "INEC" | "SURVEY_STUDY" | "TERRITORIAL_ACTIVITY" | "CITIZEN_NEED" | "COMMITMENT" | "ACTIVITY_EVIDENCE" | "PUBLIC_INTELLIGENCE" | "SYSTEM_METADATA" | "CAMPAIGN_SCHEDULE" | "OPERATIONAL_ALERT" | "ELECTION_DAY";
+        /** TerritoryInput */
+        TerritoryInput: {
+            /** Coverage Notes */
+            coverage_notes?: string | null;
+            /** Margin Of Error */
+            margin_of_error?: number | string | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Sample Size */
+            sample_size: number;
+        };
+        /** TerritoryRead */
+        TerritoryRead: {
+            /** Coverage Notes */
+            coverage_notes?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Margin Of Error */
+            margin_of_error?: string | null;
+            /** Parish Dpa */
+            parish_dpa?: string | null;
+            /** Parish Id */
+            parish_id?: number | null;
+            /** Parish Name */
+            parish_name?: string | null;
+            /** Sample Size */
+            sample_size: number;
+            /**
+             * Study Id
+             * Format: uuid
+             */
+            study_id: string;
+        };
+        /** TerritoryReference */
+        TerritoryReference: {
+            /** Campaign Id */
+            campaign_id?: string | null;
+            /** Canton Id */
+            canton_id: number;
+            /** Dpa Code */
+            dpa_code: string;
+            /** Id */
+            id: number;
+            /** Level */
+            level: string;
+            /** Name */
+            name: string;
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Province Id */
+            province_id?: number | null;
+            /** Province Name */
+            province_name?: string | null;
+        };
         /** Token */
         Token: {
             /** Access Token */
             access_token: string;
+            /** Expires In */
+            expires_in: number;
             /**
              * Token Type
              * @default bearer
              * @constant
              */
             token_type: "bearer";
-            /** Expires In */
-            expires_in: number;
         };
         /** UncoveredParishRead */
         UncoveredParishRead: {
@@ -6083,8 +10700,6 @@ export interface components {
              * Format: email
              */
             email: string;
-            /** Username */
-            username: string;
             /** First Name */
             first_name: string;
             /** Last Name */
@@ -6093,6 +10708,8 @@ export interface components {
             password: string;
             /** Role Codes */
             role_codes: string[];
+            /** Username */
+            username: string;
         };
         /** UserListResponse */
         UserListResponse: {
@@ -6109,57 +10726,83 @@ export interface components {
         };
         /** UserRead */
         UserRead: {
+            /** Email */
+            email: string;
+            /** First Name */
+            first_name: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Username */
-            username: string;
-            /** First Name */
-            first_name: string;
-            /** Last Name */
-            last_name: string;
             /** Is Active */
             is_active: boolean;
             /** Is Superuser */
             is_superuser: boolean;
+            /** Last Name */
+            last_name: string;
             /** Roles */
             roles: components["schemas"]["RoleSummary"][];
+            /** Username */
+            username: string;
         };
         /** UserUpdate */
         UserUpdate: {
             /** Email */
             email?: string | null;
-            /** Username */
-            username?: string | null;
             /** First Name */
             first_name?: string | null;
-            /** Last Name */
-            last_name?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Last Name */
+            last_name?: string | null;
             /** Role Codes */
             role_codes?: string[] | null;
+            /** Username */
+            username?: string | null;
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
+        /** ValidationIssue */
+        ValidationIssue: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Territory Id */
+            territory_id?: string | null;
+        };
+        /** ValidationResponse */
+        ValidationResponse: {
+            /** Issues */
+            issues: components["schemas"]["ValidationIssue"][];
+            /** Methodology Completeness */
+            methodology_completeness: string;
+            status: components["schemas"]["StudyStatus"];
+            /** Valid */
+            valid: boolean;
+        };
+        /**
+         * QuestionType
+         * @enum {string}
+         */
+        app__schemas__survey__QuestionType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "YES_NO" | "SHORT_TEXT" | "LONG_TEXT" | "INTEGER" | "DECIMAL" | "RATING";
+        /**
+         * QuestionType
+         * @enum {string}
+         */
+        app__schemas__survey_study__QuestionType: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "SCALE" | "RATING" | "VOTE_INTENTION";
     };
     responses: never;
     parameters: never;
@@ -6169,7 +10812,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    health_check_api_v1_health_get: {
+    root__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -6184,16 +10827,365 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthResponse"];
+                    "application/json": components["schemas"]["RootResponse"];
                 };
             };
-            /** @description Service Unavailable */
-            503: {
+        };
+    };
+    activity_types_api_v1_activity_types_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthResponse"];
+                    "application/json": components["schemas"]["ActivityTypeRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_type_api_v1_activity_types_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityTypeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityTypeRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_type_api_v1_activity_types__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityTypeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityTypeRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    configuration_api_v1_admin_ai_provider_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiProviderConfiguration"];
+                };
+            };
+        };
+    };
+    test_connection_api_v1_admin_ai_provider_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiProviderConnectionResult"];
+                };
+            };
+        };
+    };
+    upsert_api_v1_admin_campaigns__campaign_id__feature_entitlements__feature_code__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                feature_code: components["schemas"]["FeatureCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntitlementUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    licenses_api_v1_admin_feature_entitlements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignLicenseRead"][];
+                };
+            };
+        };
+    };
+    browser_login_api_v1_auth_browser_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrowserLogin"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserToken"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    browser_logout_api_v1_auth_browser_logout_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                te_refresh?: string | null;
+                te_csrf?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    browser_refresh_api_v1_auth_browser_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                te_refresh?: string | null;
+                te_csrf?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserToken"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    browser_session_api_v1_auth_browser_session_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                te_refresh?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserSession"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_own_password_api_v1_auth_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnPasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6251,884 +11243,6 @@ export interface operations {
             };
         };
     };
-    browser_login_api_v1_auth_browser_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BrowserLogin"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserToken"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    browser_refresh_api_v1_auth_browser_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-CSRF-Token"?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                te_refresh?: string | null;
-                te_csrf?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserToken"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    browser_logout_api_v1_auth_browser_logout_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-CSRF-Token"?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                te_refresh?: string | null;
-                te_csrf?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    browser_session_api_v1_auth_browser_session_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                te_refresh?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSession"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_roles_api_v1_roles_get: {
-        parameters: {
-            query?: {
-                include_inactive?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_users_api_v1_users_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                search?: string | null;
-                is_active?: boolean | null;
-                role_code?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_user_api_v1_users_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_api_v1_users__user_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_user_api_v1_users__user_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    change_password_api_v1_users__user_id__change_password_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordChange"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    provinces_api_v1_provinces_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProvinceRead"][];
-                };
-            };
-        };
-    };
-    cantons_api_v1_cantons_get: {
-        parameters: {
-            query?: {
-                province_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CantonRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_canton_api_v1_cantons_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CantonCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CantonRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    canton_api_v1_cantons__id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CantonRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_canton_api_v1_cantons__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CantonUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CantonRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    parishes_api_v1_parishes_get: {
-        parameters: {
-            query?: {
-                canton_id?: number | null;
-                parish_type?: components["schemas"]["ParishType"] | null;
-                is_active?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParishRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_parish_api_v1_parishes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParishCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParishRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    parish_api_v1_parishes__id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParishRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_parish_api_v1_parishes__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParishUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParishRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    communities_api_v1_communities_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                parish_id?: number | null;
-                search?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommunityListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_community_api_v1_communities_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CommunityCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommunityRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    community_api_v1_communities__id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommunityRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_community_api_v1_communities__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CommunityUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommunityRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sectors_api_v1_sectors_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                community_id?: string | null;
-                search?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectorListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_sector_api_v1_sectors_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SectorCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectorRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sector_api_v1_sectors__id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectorRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_sector_api_v1_sectors__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SectorUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectorRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     listing_api_v1_campaigns_get: {
         parameters: {
             query?: {
@@ -7138,6 +11252,7 @@ export interface operations {
                 status?: components["schemas"]["CampaignStatus"] | null;
                 office_type?: components["schemas"]["OfficeType"] | null;
                 is_active?: boolean | null;
+                organization_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -7264,6 +11379,252 @@ export interface operations {
             };
         };
     };
+    alerts_api_v1_campaigns__campaign_id__alerts_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                severity?: string | null;
+                module?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluate_api_v1_campaigns__campaign_id__alerts_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertEvaluationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertEvaluationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_v1_campaigns__campaign_id__alerts_summary_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSummaryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_campaigns__campaign_id__alerts__alert_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalAlertRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_api_v1_campaigns__campaign_id__alerts__alert_id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalAlertRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_api_v1_campaigns__campaign_id__alerts__alert_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalAlertRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_api_v1_campaigns__campaign_id__alerts__alert_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalAlertRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_candidate_api_v1_campaigns__campaign_id__candidate_get: {
         parameters: {
             query?: never;
@@ -7365,7 +11726,7 @@ export interface operations {
             };
         };
     };
-    campaign_users_api_v1_campaigns__campaign_id__users_get: {
+    current_election_analysis_api_v1_campaigns__campaign_id__current_election_analysis_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -7382,7 +11743,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignUserRead"][];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -7396,7 +11757,480 @@ export interface operations {
             };
         };
     };
-    assign_user_api_v1_campaigns__campaign_id__users_post: {
+    consolidated_api_v1_campaigns__campaign_id__dashboard_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activity_trends_api_v1_campaigns__campaign_id__dashboard_activity_trends_get: {
+        parameters: {
+            query?: {
+                group_by?: string;
+                fill_missing_periods?: boolean;
+                activity_type_codes?: string[] | null;
+                statuses?: string[] | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityTrendRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commitments_api_v1_campaigns__campaign_id__dashboard_commitments_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitmentDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_quality_api_v1_campaigns__campaign_id__dashboard_data_quality_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataQualityDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    demographics_api_v1_campaigns__campaign_id__dashboard_demographics_get: {
+        parameters: {
+            query?: {
+                reference_year?: number | null;
+                source_id?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemographicDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    electoral_history_api_v1_campaigns__campaign_id__dashboard_electoral_history_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralHistoryDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    filter_options_api_v1_campaigns__campaign_id__dashboard_filter_options_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardFilterOptionsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_api_v1_campaigns__campaign_id__dashboard_needs_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_v1_campaigns__campaign_id__dashboard_overview_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDashboardOverviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    surveys_api_v1_campaigns__campaign_id__dashboard_surveys_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    territories_api_v1_campaigns__campaign_id__dashboard_territories_get: {
+        parameters: {
+            query?: {
+                level?: string;
+                page?: number;
+                page_size?: number;
+                sort_by?: string;
+                sort_order?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                compare_previous_period?: boolean;
+                survey_ids?: string[] | null;
+                electoral_process_ids?: string[] | null;
+                demographic_indicator_codes?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialDashboardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_check_api_v1_campaigns__campaign_id__debate_claim_check_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -7407,17 +12241,17 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CampaignUserAssign"];
+                "application/json": components["schemas"]["ClaimCheckRequest"];
             };
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignUserRead"];
+                    "application/json": components["schemas"]["ClaimCheckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7431,13 +12265,14 @@ export interface operations {
             };
         };
     };
-    remove_user_api_v1_campaigns__campaign_id__users__user_id__delete: {
+    list_assignments_api_v1_campaigns__campaign_id__election_day_assignments_get: {
         parameters: {
-            query?: never;
+            query?: {
+                polling_place_id?: string | null;
+            };
             header?: never;
             path: {
                 campaign_id: string;
-                user_id: string;
             };
             cookie?: never;
         };
@@ -7449,7 +12284,1989 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["ElectionDayAssignmentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_assignment_api_v1_campaigns__campaign_id__election_day_assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayAssignmentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAssignmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_api_v1_campaigns__campaign_id__election_day_assignments__assignment_id__check_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAssignmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_assignment_api_v1_campaigns__campaign_id__election_day_assignments__assignment_id__replace_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayAssignmentReplace"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAssignmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coverage_api_v1_campaigns__campaign_id__election_day_coverage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverageSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_documents_api_v1_campaigns__campaign_id__election_day_documents_get: {
+        parameters: {
+            query?: {
+                polling_place_id?: string | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayDocumentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayDocumentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_document_api_v1_campaigns__campaign_id__election_day_documents__document_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_document_status_api_v1_campaigns__campaign_id__election_day_documents__document_id__status_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayDocumentStatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayDocumentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eligible_users_api_v1_campaigns__campaign_id__election_day_eligible_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayEligibleUser"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_incidents_api_v1_campaigns__campaign_id__election_day_incidents_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayIncidentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_incident_api_v1_campaigns__campaign_id__election_day_incidents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayIncidentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayIncidentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_incident_api_v1_campaigns__campaign_id__election_day_incidents__incident_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayIncidentResolve"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayIncidentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_assignment_api_v1_campaigns__campaign_id__election_day_my_assignment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAssignmentRead"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_operation_api_v1_campaigns__campaign_id__election_day_operation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayOperationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_operation_api_v1_campaigns__campaign_id__election_day_operation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayOperationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayOperationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_operation_api_v1_campaigns__campaign_id__election_day_operation_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayCloseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayOperationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    closure_preview_api_v1_campaigns__campaign_id__election_day_operation_closure_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverageSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_operation_api_v1_campaigns__campaign_id__election_day_operation_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayOperationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_polling_places_api_v1_campaigns__campaign_id__election_day_polling_places_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollingPlaceListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_polling_place_api_v1_campaigns__campaign_id__election_day_polling_places_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollingPlaceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollingPlaceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    polling_place_detail_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                polling_place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollingPlaceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_boards_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                polling_place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralBoardRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_board_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                polling_place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectoralBoardCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralBoardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    campaign_feature_api_v1_campaigns__campaign_id__feature_entitlements__feature_code__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                feature_code: components["schemas"]["FeatureCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementRead"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    context_api_v1_campaigns__campaign_id__historical_electoral_context_get: {
+        parameters: {
+            query?: {
+                process_ids?: string[] | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoricalElectoralContextRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activities_api_v1_campaigns__campaign_id__map_activities_get: {
+        parameters: {
+            query?: {
+                cluster?: boolean;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    boundaries_api_v1_campaigns__campaign_id__map_boundaries_get: {
+        parameters: {
+            query?: {
+                level?: string;
+                include_metrics?: boolean;
+                metric?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bounds_api_v1_campaigns__campaign_id__map_bounds_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapBoundsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commitments_api_v1_campaigns__campaign_id__map_commitments_get: {
+        parameters: {
+            query?: {
+                metric?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    communities_api_v1_campaigns__campaign_id__map_communities_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quality_api_v1_campaigns__campaign_id__map_data_quality_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapDataQualityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    demographics_api_v1_campaigns__campaign_id__map_demographics_get: {
+        parameters: {
+            query: {
+                indicator_code: string;
+                reference_year?: number | null;
+                source_id?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    electoral_api_v1_campaigns__campaign_id__map_electoral_history_get: {
+        parameters: {
+            query: {
+                process_id: string;
+                contest_id: string;
+                metric?: string;
+                is_final?: boolean;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feature_api_v1_campaigns__campaign_id__map_features__resource_type___resource_id__get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+                resource_type: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapFeatureDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    layers_api_v1_campaigns__campaign_id__map_layers_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapLayerCatalogRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_api_v1_campaigns__campaign_id__map_needs_get: {
+        parameters: {
+            query?: {
+                metric?: string;
+                need_category_code?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coverage_api_v1_campaigns__campaign_id__map_operational_coverage_get: {
+        parameters: {
+            query?: {
+                metric?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    participation_projection_api_v1_campaigns__campaign_id__map_participation_projection_get: {
+        parameters: {
+            query?: {
+                metric?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sectors_api_v1_campaigns__campaign_id__map_sectors_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    surveys_api_v1_campaigns__campaign_id__map_surveys_get: {
+        parameters: {
+            query?: {
+                survey_id?: string | null;
+                question_code?: string | null;
+                metric?: string;
+                date_from?: string | null;
+                date_to?: string | null;
+                period?: components["schemas"]["DashboardPeriod"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                bbox?: string | null;
+                zoom?: number;
+                simplify?: boolean;
+                simplify_tolerance?: number | null;
+                include_geometry?: boolean;
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    latest_projection_api_v1_campaigns__campaign_id__participation_projections_latest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reports_api_v1_campaigns__campaign_id__reports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_v1_campaigns__campaign_id__reports_generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportGenerationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_report_api_v1_campaigns__campaign_id__reports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_api_v1_campaigns__campaign_id__reports__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportRunRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_campaigns__campaign_id__reports__run_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_api_v1_campaigns__campaign_id__reports__run_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_run_preview_api_v1_campaigns__campaign_id__reports__run_id__preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analysis_api_v1_campaigns__campaign_id__survey_analysis_get: {
+        parameters: {
+            query: {
+                study_ids: string[];
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    execute_import_api_v1_campaigns__campaign_id__survey_imports_execute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_execute_import_api_v1_campaigns__campaign_id__survey_imports_execute_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyImportSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_template_api_v1_campaigns__campaign_id__survey_imports_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_import_api_v1_campaigns__campaign_id__survey_imports_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_validate_import_api_v1_campaigns__campaign_id__survey_imports_validate_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyImportSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_studies_api_v1_campaigns__campaign_id__survey_studies_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                status?: components["schemas"]["StudyStatus"] | null;
+                study_type?: components["schemas"]["StudyType"] | null;
+                parish_id?: number | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_study_api_v1_campaigns__campaign_id__survey_studies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyRead"];
                 };
             };
             /** @description Validation Error */
@@ -7561,13 +14378,13 @@ export interface operations {
             };
         };
     };
-    activity_types_api_v1_activity_types_get: {
+    conversations_api_v1_campaigns__campaign_id__territory_ai_conversations_get: {
         parameters: {
-            query?: {
-                include_inactive?: boolean;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                campaign_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -7578,7 +14395,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityTypeRead"][];
+                    "application/json": components["schemas"]["TerritoryAIConversationRead"][];
                 };
             };
             /** @description Validation Error */
@@ -7592,81 +14409,14 @@ export interface operations {
             };
         };
     };
-    create_type_api_v1_activity_types_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActivityTypeCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ActivityTypeRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_type_api_v1_activity_types__id__patch: {
+    conversation_api_v1_campaigns__campaign_id__territory_ai_conversations__conversation_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                campaign_id: string;
+                conversation_id: string;
             };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActivityTypeUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ActivityTypeRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    categories_api_v1_need_categories_get: {
-        parameters: {
-            query?: {
-                include_inactive?: boolean;
-            };
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -7677,7 +14427,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NeedCategoryRead"][];
+                    "application/json": components["schemas"]["TerritoryAIConversationRead"];
                 };
             };
             /** @description Validation Error */
@@ -7691,51 +14441,18 @@ export interface operations {
             };
         };
     };
-    create_category_api_v1_need_categories_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NeedCategoryCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NeedCategoryRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_category_api_v1_need_categories__id__patch: {
+    query_api_v1_campaigns__campaign_id__territory_ai_query_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                campaign_id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NeedCategoryUpdate"];
+                "application/json": components["schemas"]["TerritoryAIQueryRequest"];
             };
         };
         responses: {
@@ -7745,7 +14462,105 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NeedCategoryRead"];
+                    "application/json": components["schemas"]["TerritoryAIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    campaign_users_api_v1_campaigns__campaign_id__users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignUserRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_user_api_v1_campaigns__campaign_id__users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignUserAssign"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignUserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_user_api_v1_campaigns__campaign_id__users__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7767,6 +14582,7 @@ export interface operations {
                 search?: string | null;
                 activity_type_code?: string | null;
                 status?: components["schemas"]["ActivityStatus"] | null;
+                approval_status?: components["schemas"]["ApprovalStatus"] | null;
                 parish_id?: number | null;
                 community_id?: string | null;
                 sector_id?: string | null;
@@ -7825,6 +14641,347 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evidence_api_v1_campaigns__cid__activities__aid__evidence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityEvidenceRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_evidence_api_v1_campaigns__cid__activities__aid__evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityEvidenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityEvidenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activity_needs_api_v1_campaigns__cid__activities__aid__needs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitizenNeedListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_need_api_v1_campaigns__cid__activities__aid__needs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CitizenNeedCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitizenNeedRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_participants_api_v1_campaigns__cid__activities__aid__participant_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParticipantSummaryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_participants_api_v1_campaigns__cid__activities__aid__participant_summary_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParticipantSummaryUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParticipantSummaryRead"];
                 };
             };
             /** @description Validation Error */
@@ -7936,187 +15093,7 @@ export interface operations {
             };
         };
     };
-    get_participants_api_v1_campaigns__cid__activities__aid__participant_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                aid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParticipantSummaryRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_participants_api_v1_campaigns__cid__activities__aid__participant_summary_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                aid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParticipantSummaryUpsert"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParticipantSummaryRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    activity_needs_api_v1_campaigns__cid__activities__aid__needs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                aid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CitizenNeedListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_need_api_v1_campaigns__cid__activities__aid__needs_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                aid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CitizenNeedCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CitizenNeedRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    needs_api_v1_campaigns__cid__needs_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                need_category_code?: string | null;
-                priority?: components["schemas"]["Priority"] | null;
-                status?: components["schemas"]["NeedStatus"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                activity_id?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                search?: string | null;
-            };
-            header?: never;
-            path: {
-                cid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CitizenNeedListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    need_api_v1_campaigns__cid__needs__id__get: {
+    approve_activity_api_v1_campaigns__cid__activities__id__approve_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -8134,7 +15111,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CitizenNeedRead"];
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
                 };
             };
             /** @description Validation Error */
@@ -8148,7 +15125,79 @@ export interface operations {
             };
         };
     };
-    delete_need_api_v1_campaigns__cid__needs__id__delete: {
+    cancel_activity_api_v1_campaigns__cid__activities__id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_activity_api_v1_campaigns__cid__activities__id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityCloseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activity_history_api_v1_campaigns__cid__activities__id__history_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -8161,11 +15210,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": unknown;
+                };
             };
             /** @description Validation Error */
             422: {
@@ -8178,7 +15229,7 @@ export interface operations {
             };
         };
     };
-    update_need_api_v1_campaigns__cid__needs__id__patch: {
+    reject_activity_api_v1_campaigns__cid__activities__id__reject_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -8190,7 +15241,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CitizenNeedUpdate"];
+                "application/json": components["schemas"]["ActivityRejectRequest"];
             };
         };
         responses: {
@@ -8200,7 +15251,141 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CitizenNeedRead"];
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_activity_api_v1_campaigns__cid__activities__id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_activity_api_v1_campaigns__cid__activities__id__submit_for_approval_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspend_activity_api_v1_campaigns__cid__activities__id__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivitySuspendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritorialActivityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_api_v1_campaigns__cid__calendar_get: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+            };
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -8392,13 +15577,25 @@ export interface operations {
             };
         };
     };
-    evidence_api_v1_campaigns__cid__activities__aid__evidence_get: {
+    needs_api_v1_campaigns__cid__needs_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+                need_category_code?: string | null;
+                priority?: components["schemas"]["Priority"] | null;
+                status?: components["schemas"]["NeedStatus"] | null;
+                parish_id?: number | null;
+                community_id?: string | null;
+                sector_id?: string | null;
+                activity_id?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                search?: string | null;
+            };
             header?: never;
             path: {
                 cid: string;
-                aid: string;
             };
             cookie?: never;
         };
@@ -8410,7 +15607,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityEvidenceRead"][];
+                    "application/json": components["schemas"]["CitizenNeedListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8424,19 +15621,18 @@ export interface operations {
             };
         };
     };
-    create_evidence_api_v1_campaigns__cid__activities__aid__evidence_post: {
+    create_direct_need_api_v1_campaigns__cid__needs_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 cid: string;
-                aid: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ActivityEvidenceCreate"];
+                "application/json": components["schemas"]["CitizenNeedCreate"];
             };
         };
         responses: {
@@ -8446,7 +15642,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityEvidenceRead"];
+                    "application/json": components["schemas"]["CitizenNeedRead"];
                 };
             };
             /** @description Validation Error */
@@ -8460,13 +15656,44 @@ export interface operations {
             };
         };
     };
-    delete_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__delete: {
+    need_api_v1_campaigns__cid__needs__id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 cid: string;
-                aid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitizenNeedRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_need_api_v1_campaigns__cid__needs__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
                 id: string;
             };
             cookie?: never;
@@ -8491,20 +15718,19 @@ export interface operations {
             };
         };
     };
-    update_evidence_api_v1_campaigns__cid__activities__aid__evidence__id__patch: {
+    update_need_api_v1_campaigns__cid__needs__id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 cid: string;
-                aid: string;
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ActivityEvidenceUpdate"];
+                "application/json": components["schemas"]["CitizenNeedUpdate"];
             };
         };
         responses: {
@@ -8514,7 +15740,139 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityEvidenceRead"];
+                    "application/json": components["schemas"]["CitizenNeedRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    need_history_api_v1_campaigns__cid__needs__id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_need_api_v1_campaigns__cid__needs__id__start_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitizenNeedRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_need_api_v1_campaigns__cid__needs__id__validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NeedValidationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitizenNeedRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    need_items_api_v1_campaigns__cid__needs__need_id__public_intelligence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                need_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"][];
                 };
             };
             /** @description Validation Error */
@@ -8549,6 +15907,341 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperationalSummaryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operations_agenda_api_v1_campaigns__cid__operations_agenda_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operations_summary_api_v1_campaigns__cid__operations_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluate_stale_api_v1_campaigns__cid__public_intelligence_evaluate_stale_post: {
+        parameters: {
+            query?: {
+                at?: string | null;
+            };
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    items_api_v1_campaigns__cid__public_intelligence_items_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                search?: string | null;
+                source_id?: string | null;
+                topic?: string | null;
+                parish_id?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                official?: boolean | null;
+            };
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_campaigns__cid__public_intelligence_items__iid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                iid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_need_api_v1_campaigns__cid__public_intelligence_items__iid__needs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                iid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NeedLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    map_metrics_api_v1_campaigns__cid__public_intelligence_map_get: {
+        parameters: {
+            query?: {
+                period?: string;
+                topic?: string | null;
+            };
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapMetricRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_v1_campaigns__cid__public_intelligence_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sources_api_v1_campaigns__cid__public_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicSourceRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_campaigns__cid__public_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicSourceRead"];
                 };
             };
             /** @description Validation Error */
@@ -8735,89 +16428,17 @@ export interface operations {
             };
         };
     };
-    section_api_v1_campaigns__cid__surveys__sid__sections_post: {
+    archive_api_v1_campaigns__cid__surveys__sid__archive_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 cid: string;
                 sid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SurveySectionCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SurveySectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    section_delete_api_v1_campaigns__cid__surveys__sid__sections__id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                sid: string;
-                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    section_update_api_v1_campaigns__cid__surveys__sid__sections__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                sid: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SurveySectionUpdate"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -8825,7 +16446,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SurveySectionRead"];
+                    "application/json": components["schemas"]["SurveyRead"];
                 };
             };
             /** @description Validation Error */
@@ -8839,30 +16460,127 @@ export interface operations {
             };
         };
     };
-    question_api_v1_campaigns__cid__surveys__sid__sections__section_id__questions_post: {
+    close_api_v1_campaigns__cid__surveys__sid__close_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 cid: string;
                 sid: string;
-                section_id: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SurveyQuestionCreate"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SurveyQuestionRead"];
+                    "application/json": components["schemas"]["SurveyCloseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_v1_campaigns__cid__surveys__sid__export_data_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    participation_api_v1_campaigns__cid__surveys__sid__participation_summary_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyParticipationSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_api_v1_campaigns__cid__surveys__sid__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyPublishResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9038,102 +16756,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyOptionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    publish_api_v1_campaigns__cid__surveys__sid__publish_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                sid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SurveyPublishResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    close_api_v1_campaigns__cid__surveys__sid__close_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                sid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SurveyCloseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    archive_api_v1_campaigns__cid__surveys__sid__archive_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                cid: string;
-                sid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SurveyRead"];
                 };
             };
             /** @description Validation Error */
@@ -9339,6 +16961,147 @@ export interface operations {
             };
         };
     };
+    section_api_v1_campaigns__cid__surveys__sid__sections_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveySectionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveySectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    section_delete_api_v1_campaigns__cid__surveys__sid__sections__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    section_update_api_v1_campaigns__cid__surveys__sid__sections__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveySectionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveySectionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    question_api_v1_campaigns__cid__surveys__sid__sections__section_id__questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+                sid: string;
+                section_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyQuestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyQuestionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     comparison_api_v1_campaigns__cid__surveys__sid__territorial_comparison_get: {
         parameters: {
             query: {
@@ -9376,16 +17139,12 @@ export interface operations {
             };
         };
     };
-    participation_api_v1_campaigns__cid__surveys__sid__participation_summary_get: {
+    territory_summaries_api_v1_campaigns__cid__territories_summary_get: {
         parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-            };
+            query?: never;
             header?: never;
             path: {
                 cid: string;
-                sid: string;
             };
             cookie?: never;
         };
@@ -9397,7 +17156,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SurveyParticipationSummary"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -9411,16 +17170,451 @@ export interface operations {
             };
         };
     };
-    export_api_v1_campaigns__cid__surveys__sid__export_data_get: {
+    cantons_api_v1_cantons_get: {
         parameters: {
             query?: {
-                date_from?: string | null;
-                date_to?: string | null;
+                province_id?: number | null;
             };
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CantonRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_canton_api_v1_cantons_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CantonCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CantonRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    canton_api_v1_cantons__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
             path: {
-                cid: string;
-                sid: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CantonRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_canton_api_v1_cantons__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CantonUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CantonRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    communities_api_v1_communities_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                parish_id?: number | null;
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_community_api_v1_communities_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    community_api_v1_communities__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_community_api_v1_communities__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_hub_catalog_api_v1_data_hub_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataHubCatalogResponse"];
+                };
+            };
+        };
+    };
+    data_hub_dataset_api_v1_data_hub_datasets__dataset_type__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_hub_versions_api_v1_data_hub_versions_get: {
+        parameters: {
+            query?: {
+                dataset_type?: string | null;
+                source_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetVersionRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_version_api_v1_data_hub_versions__id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetVersionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_version_api_v1_data_hub_versions__id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetVersionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    diff_version_api_v1_data_hub_versions__id__diff_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetVersionDiff"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_template_api_v1_data_import_profiles__dataset_type__template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_type: string;
             };
             cookie?: never;
         };
@@ -9433,6 +17627,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    jobs_api_v1_data_imports_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                dataset_type?: string | null;
+                source_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataImportJobRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    execute_api_v1_data_imports_execute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_execute_api_v1_data_imports_execute_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataImportExecutionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_api_v1_data_imports_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_validate_api_v1_data_imports_validate_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataImportValidationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_api_v1_data_imports__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataImportJobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    errors_api_v1_data_imports__id__errors_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataImportErrorRead"][];
                 };
             };
             /** @description Validation Error */
@@ -9565,7 +17923,27 @@ export interface operations {
             };
         };
     };
-    validate_api_v1_data_imports_validate_post: {
+    indicators_api_v1_demographic_indicators_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemographicIndicatorRead"][];
+                };
+            };
+        };
+    };
+    create_api_v1_demographic_indicators_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -9574,17 +17952,17 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_validate_api_v1_data_imports_validate_post"];
+                "application/json": components["schemas"]["DemographicIndicatorCreate"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DataImportValidationResponse"];
+                    "application/json": components["schemas"]["DemographicIndicatorRead"];
                 };
             };
             /** @description Validation Error */
@@ -9598,16 +17976,18 @@ export interface operations {
             };
         };
     };
-    execute_api_v1_data_imports_execute_post: {
+    update_api_v1_demographic_indicators__id__patch: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_execute_api_v1_data_imports_execute_post"];
+                "application/json": components["schemas"]["DemographicIndicatorCreate"];
             };
         };
         responses: {
@@ -9617,7 +17997,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DataImportExecutionResponse"];
+                    "application/json": components["schemas"]["DemographicIndicatorRead"];
                 };
             };
             /** @description Validation Error */
@@ -9631,11 +18011,15 @@ export interface operations {
             };
         };
     };
-    jobs_api_v1_data_imports_get: {
+    observations_api_v1_demographic_observations_get: {
         parameters: {
             query?: {
-                status?: string | null;
-                dataset_type?: string | null;
+                indicator_id?: string | null;
+                reference_year?: number | null;
+                geography_level?: string | null;
+                province_id?: number | null;
+                canton_id?: number | null;
+                parish_id?: number | null;
                 source_id?: string | null;
             };
             header?: never;
@@ -9650,7 +18034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DataImportJobRead"][];
+                    "application/json": components["schemas"]["DemographicObservationRead"][];
                 };
             };
             /** @description Validation Error */
@@ -9664,7 +18048,106 @@ export interface operations {
             };
         };
     };
-    job_api_v1_data_imports__id__get: {
+    comparison_api_v1_electoral_comparison_get: {
+        parameters: {
+            query: {
+                process_ids: string[];
+                office_type?: string;
+                canton_id: number;
+                aggregation_level?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralComparisonRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    milestones_api_v1_electoral_milestones_get: {
+        parameters: {
+            query?: {
+                electoral_process_id?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    milestone_create_api_v1_electoral_milestones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectoralMilestoneCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    milestone_api_v1_electoral_milestones__id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9681,7 +18164,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DataImportJobRead"];
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"];
                 };
             };
             /** @description Validation Error */
@@ -9695,12 +18178,44 @@ export interface operations {
             };
         };
     };
-    errors_api_v1_data_imports__id__errors_get: {
+    milestone_update_api_v1_electoral_milestones__id__patch: {
         parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectoralMilestoneUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    milestone_activate_api_v1_electoral_milestones__id__activate_post: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -9715,7 +18230,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DataImportErrorRead"][];
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    milestone_archive_api_v1_electoral_milestones__id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralMilestoneRead"];
                 };
             };
             /** @description Validation Error */
@@ -9960,45 +18506,6 @@ export interface operations {
             };
         };
     };
-    turnout_api_v1_electoral_processes__pid__contests__cid__turnout_get: {
-        parameters: {
-            query?: {
-                aggregation_level?: string | null;
-                province_id?: number | null;
-                canton_id?: number | null;
-                parish_id?: number | null;
-                geography_id?: string | null;
-                is_final?: boolean | null;
-            };
-            header?: never;
-            path: {
-                pid: string;
-                cid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ElectoralTurnoutRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     results_api_v1_electoral_processes__pid__contests__cid__candidate_results_get: {
         parameters: {
             query?: {
@@ -10020,6 +18527,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CandidateResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    candidates_api_v1_electoral_processes__pid__contests__cid__candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralCandidateRead"][];
                 };
             };
             /** @description Validation Error */
@@ -10065,171 +18604,86 @@ export interface operations {
             };
         };
     };
-    comparison_api_v1_electoral_comparison_get: {
-        parameters: {
-            query: {
-                process_ids: string[];
-                office_type?: string;
-                canton_id: number;
-                aggregation_level?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ElectoralComparisonRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    context_api_v1_campaigns__campaign_id__historical_electoral_context_get: {
+    turnout_api_v1_electoral_processes__pid__contests__cid__turnout_get: {
         parameters: {
             query?: {
-                process_ids?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HistoricalElectoralContextRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    indicators_api_v1_demographic_indicators_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DemographicIndicatorRead"][];
-                };
-            };
-        };
-    };
-    create_api_v1_demographic_indicators_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DemographicIndicatorCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DemographicIndicatorRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_api_v1_demographic_indicators__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DemographicIndicatorCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DemographicIndicatorRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    observations_api_v1_demographic_observations_get: {
-        parameters: {
-            query?: {
-                indicator_id?: string | null;
-                reference_year?: number | null;
-                geography_level?: string | null;
+                aggregation_level?: string | null;
                 province_id?: number | null;
                 canton_id?: number | null;
                 parish_id?: number | null;
+                geography_id?: string | null;
+                is_final?: boolean | null;
+            };
+            header?: never;
+            path: {
+                pid: string;
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralTurnoutRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    geographies_api_v1_electoral_processes__pid__geographies_get: {
+        parameters: {
+            query?: {
+                aggregation_level?: string | null;
+                canton_id?: number | null;
+                is_mapped?: boolean | null;
+            };
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralGeographyRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    snapshots_api_v1_electoral_roll_snapshots_get: {
+        parameters: {
+            query?: {
                 source_id?: string | null;
+                process_id?: string | null;
+                snapshot_date?: string | null;
             };
             header?: never;
             path?: never;
@@ -10243,7 +18697,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DemographicObservationRead"][];
+                    "application/json": components["schemas"]["ElectoralRollSnapshotRead"][];
                 };
             };
             /** @description Validation Error */
@@ -10257,14 +18711,9 @@ export interface operations {
             };
         };
     };
-    profile_api_v1_territories_demographic_profile_get: {
+    latest_snapshot_api_v1_electoral_roll_snapshots_latest_get: {
         parameters: {
-            query: {
-                canton_id: number;
-                parish_id?: number | null;
-                reference_year?: number | null;
-                indicator_codes?: string[] | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -10277,7 +18726,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DemographicProfileRead"];
+                    "application/json": components["schemas"]["ElectoralRollSnapshotRead"];
+                };
+            };
+        };
+    };
+    snapshot_api_v1_electoral_roll_snapshots__snapshot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectoralRollSnapshotRead"];
                 };
             };
             /** @description Validation Error */
@@ -10291,23 +18762,14 @@ export interface operations {
             };
         };
     };
-    filter_options_api_v1_campaigns__campaign_id__dashboard_filter_options_get: {
+    snapshot_entries_api_v1_electoral_roll_snapshots__snapshot_id__entries_get: {
         parameters: {
             query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
+                canton_id?: number | null;
             };
             header?: never;
             path: {
-                campaign_id: string;
+                snapshot_id: string;
             };
             cookie?: never;
         };
@@ -10319,7 +18781,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DashboardFilterOptionsRead"];
+                    "application/json": components["schemas"]["ElectoralRollSnapshotEntryRead"][];
                 };
             };
             /** @description Validation Error */
@@ -10333,24 +18795,11 @@ export interface operations {
             };
         };
     };
-    overview_api_v1_campaigns__campaign_id__dashboard_overview_get: {
+    geometry_jobs_api_v1_geometry_imports_get: {
         parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
+            query?: never;
             header?: never;
-            path: {
-                campaign_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -10361,46 +18810,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignDashboardOverviewRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["DataImportJobRead"][];
                 };
             };
         };
     };
-    territories_api_v1_campaigns__campaign_id__dashboard_territories_get: {
+    execute_geometry_api_v1_geometry_imports_execute_post: {
         parameters: {
-            query?: {
-                level?: string;
-                page?: number;
-                page_size?: number;
-                sort_by?: string;
-                sort_order?: string;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
+            query?: never;
             header?: never;
-            path: {
-                campaign_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_execute_geometry_api_v1_geometry_imports_execute_post"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -10408,984 +18834,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TerritorialDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    activity_trends_api_v1_campaigns__campaign_id__dashboard_activity_trends_get: {
-        parameters: {
-            query?: {
-                group_by?: string;
-                fill_missing_periods?: boolean;
-                activity_type_codes?: string[] | null;
-                statuses?: string[] | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ActivityTrendRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    needs_api_v1_campaigns__campaign_id__dashboard_needs_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NeedDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commitments_api_v1_campaigns__campaign_id__dashboard_commitments_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommitmentDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    surveys_api_v1_campaigns__campaign_id__dashboard_surveys_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SurveyDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    electoral_history_api_v1_campaigns__campaign_id__dashboard_electoral_history_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ElectoralHistoryDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    demographics_api_v1_campaigns__campaign_id__dashboard_demographics_get: {
-        parameters: {
-            query?: {
-                reference_year?: number | null;
-                source_id?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DemographicDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    data_quality_api_v1_campaigns__campaign_id__dashboard_data_quality_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataQualityDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    consolidated_api_v1_campaigns__campaign_id__dashboard_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                compare_previous_period?: boolean;
-                survey_ids?: string[] | null;
-                electoral_process_ids?: string[] | null;
-                demographic_indicator_codes?: string[] | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignDashboardRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    layers_api_v1_campaigns__campaign_id__map_layers_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MapLayerCatalogRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bounds_api_v1_campaigns__campaign_id__map_bounds_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MapBoundsRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    boundaries_api_v1_campaigns__campaign_id__map_boundaries_get: {
-        parameters: {
-            query?: {
-                level?: string;
-                include_metrics?: boolean;
-                metric?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    communities_api_v1_campaigns__campaign_id__map_communities_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sectors_api_v1_campaigns__campaign_id__map_sectors_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    activities_api_v1_campaigns__campaign_id__map_activities_get: {
-        parameters: {
-            query?: {
-                cluster?: boolean;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    coverage_api_v1_campaigns__campaign_id__map_operational_coverage_get: {
-        parameters: {
-            query?: {
-                metric?: string;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    needs_api_v1_campaigns__campaign_id__map_needs_get: {
-        parameters: {
-            query?: {
-                metric?: string;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commitments_api_v1_campaigns__campaign_id__map_commitments_get: {
-        parameters: {
-            query?: {
-                metric?: string;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    surveys_api_v1_campaigns__campaign_id__map_surveys_get: {
-        parameters: {
-            query?: {
-                survey_id?: string | null;
-                question_code?: string | null;
-                metric?: string;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    electoral_api_v1_campaigns__campaign_id__map_electoral_history_get: {
-        parameters: {
-            query: {
-                process_id: string;
-                contest_id: string;
-                metric?: string;
-                is_final?: boolean;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    demographics_api_v1_campaigns__campaign_id__map_demographics_get: {
-        parameters: {
-            query: {
-                indicator_code: string;
-                reference_year?: number | null;
-                source_id?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoJSONFeatureCollectionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    feature_api_v1_campaigns__campaign_id__map_features__resource_type___resource_id__get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-                resource_type: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MapFeatureDetailRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    quality_api_v1_campaigns__campaign_id__map_data_quality_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-                period?: components["schemas"]["DashboardPeriod"] | null;
-                parish_id?: number | null;
-                community_id?: string | null;
-                sector_id?: string | null;
-                bbox?: string | null;
-                zoom?: number;
-                simplify?: boolean;
-                simplify_tolerance?: number | null;
-                include_geometry?: boolean;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MapDataQualityRead"];
+                    "application/json": components["schemas"]["GeometryImportExecutionRead"];
                 };
             };
             /** @description Validation Error */
@@ -11428,59 +18877,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    execute_geometry_api_v1_geometry_imports_execute_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_execute_geometry_api_v1_geometry_imports_execute_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeometryImportExecutionRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    geometry_jobs_api_v1_geometry_imports_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataImportJobRead"][];
                 };
             };
         };
@@ -11546,6 +18942,1022 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_check_api_v1_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    categories_api_v1_need_categories_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedCategoryRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_category_api_v1_need_categories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NeedCategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedCategoryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_category_api_v1_need_categories__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NeedCategoryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedCategoryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_organizations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationRead"][];
+                };
+            };
+        };
+    };
+    create_api_v1_organizations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    onboarding_api_v1_organizations_onboarding_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationOnboarding"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationOnboardingRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_organizations__organization_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_organizations__organization_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_api_v1_organizations__organization_id__audit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationAuditRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    licenses_api_v1_organizations__organization_id__licenses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignLicenseRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    memberships_api_v1_organizations__organization_id__memberships_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_membership_api_v1_organizations__organization_id__memberships_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_membership_api_v1_organizations__organization_id__memberships__membership_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscription_api_v1_organizations__organization_id__subscription_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subscription_api_v1_organizations__organization_id__subscription_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    usage_api_v1_organizations__organization_id__usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationUsageRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_user_api_v1_organizations__organization_id__users_search_get: {
+        parameters: {
+            query: {
+                query: string;
+            };
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    parishes_api_v1_parishes_get: {
+        parameters: {
+            query?: {
+                canton_id?: number | null;
+                parish_type?: components["schemas"]["ParishType"] | null;
+                is_active?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParishRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_parish_api_v1_parishes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParishCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParishRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    parish_api_v1_parishes__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParishRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_parish_api_v1_parishes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParishUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParishRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_projection_api_v1_participation_projections_post: {
+        parameters: {
+            query: {
+                campaign_id: string;
+                snapshot_id: string;
+                process_ids?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_api_v1_participation_projections__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParticipationProjectionRunRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_explanation_api_v1_participation_projections__run_id__explanation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_results_api_v1_participation_projections__run_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParticipationProjectionResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    organizations_api_v1_political_organizations_get: {
+        parameters: {
+            query: {
+                source_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoliticalOrganizationRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provinces_api_v1_provinces_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvinceRead"][];
+                };
+            };
+        };
+    };
+    update_api_v1_public_sources__sid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicSourceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicSourceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fetch_api_v1_public_sources__sid__fetch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FetchRunRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    runs_api_v1_public_sources__sid__fetch_runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FetchRunRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    topics_api_v1_public_topics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    readiness_check_api_v1_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadyResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadyResponse"];
                 };
             };
         };
@@ -11680,18 +20092,101 @@ export interface operations {
             };
         };
     };
-    generate_api_v1_campaigns__campaign_id__reports_generate_post: {
+    report_types_api_v1_report_types_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                campaign_id: string;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTypeRead"][];
+                };
             };
+        };
+    };
+    list_roles_api_v1_roles_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sectors_api_v1_sectors_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                community_id?: string | null;
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectorListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_sector_api_v1_sectors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReportGenerationRequest"];
+                "application/json": components["schemas"]["SectorCreate"];
             };
         };
         responses: {
@@ -11701,7 +20196,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReportGenerationResponse"];
+                    "application/json": components["schemas"]["SectorRead"];
                 };
             };
             /** @description Validation Error */
@@ -11715,15 +20210,12 @@ export interface operations {
             };
         };
     };
-    reports_api_v1_campaigns__campaign_id__reports_get: {
+    sector_api_v1_sectors__id__get: {
         parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
+            query?: never;
             header?: never;
             path: {
-                campaign_id: string;
+                id: string;
             };
             cookie?: never;
         };
@@ -11735,7 +20227,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReportListResponse"];
+                    "application/json": components["schemas"]["SectorRead"];
                 };
             };
             /** @description Validation Error */
@@ -11749,112 +20241,18 @@ export interface operations {
             };
         };
     };
-    report_api_v1_campaigns__campaign_id__reports__run_id__get: {
+    update_sector_api_v1_sectors__id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                campaign_id: string;
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReportRunRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_api_v1_campaigns__campaign_id__reports__run_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_api_v1_campaigns__campaign_id__reports__run_id__download_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    evaluate_api_v1_campaigns__campaign_id__alerts_evaluate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
+                id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AlertEvaluationRequest"];
+                "application/json": components["schemas"]["SectorUpdate"];
             };
         };
         responses: {
@@ -11864,218 +20262,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AlertEvaluationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    summary_api_v1_campaigns__campaign_id__alerts_summary_get: {
-        parameters: {
-            query?: {
-                date_from?: string | null;
-                date_to?: string | null;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertSummaryRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    alerts_api_v1_campaigns__campaign_id__alerts_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-                severity?: string | null;
-                module?: string | null;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    detail_api_v1_campaigns__campaign_id__alerts__alert_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                alert_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationalAlertRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    acknowledge_api_v1_campaigns__campaign_id__alerts__alert_id__acknowledge_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                alert_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AlertActionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationalAlertRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_api_v1_campaigns__campaign_id__alerts__alert_id__resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                alert_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AlertActionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationalAlertRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dismiss_api_v1_campaigns__campaign_id__alerts__alert_id__dismiss_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-                alert_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AlertActionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationalAlertRead"];
+                    "application/json": components["schemas"]["SectorRead"];
                 };
             };
             /** @description Validation Error */
@@ -12127,9 +20314,338 @@ export interface operations {
             };
         };
     };
-    root__get: {
+    detail_api_v1_survey_studies__study_id__get: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_survey_studies__study_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_survey_studies__study_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_api_v1_survey_studies__study_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    option_api_v1_survey_studies__study_id__options_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OptionInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OptionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_api_v1_survey_studies__study_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    results_api_v1_survey_studies__study_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_results_api_v1_survey_studies__study_id__results_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultInput"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    territory_api_v1_survey_studies__study_id__territories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TerritoryInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritoryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_api_v1_survey_studies__study_id__validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_api_v1_territories_demographic_profile_get: {
+        parameters: {
+            query: {
+                canton_id: number;
+                parish_id?: number | null;
+                reference_year?: number | null;
+                indicator_codes?: string[] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -12142,7 +20658,185 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RootResponse"];
+                    "application/json": components["schemas"]["DemographicProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_users_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                search?: string | null;
+                is_active?: boolean | null;
+                role_code?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_user_api_v1_users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_api_v1_users__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user_api_v1_users__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_api_v1_users__user_id__change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

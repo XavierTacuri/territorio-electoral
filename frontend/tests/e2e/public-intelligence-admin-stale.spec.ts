@@ -11,7 +11,8 @@ async function campaign(request: APIRequestContext, token: string) {
 async function openSources(page: Parameters<typeof browserLogin>[0]) {
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
-  await page.getByRole('link', { name: 'Inteligencia pública', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('link', { name: 'Fuentes públicas', exact: true }).click();
   await page.getByRole('tab', { name: 'Fuentes públicas' }).click();
 }
 
@@ -24,9 +25,11 @@ test('administración completa y RBAC de fuentes públicas', async ({ page, requ
   const create = page.getByRole('dialog');
   await create.getByLabel('Código').fill(`RSS_ADMIN_${suffix}`);
   await create.getByLabel('Nombre').fill(name);
-  await create.getByLabel('Publisher').fill('Publisher sintético inicial');
+  await create.getByLabel('Publicador').fill('Entidad sintética inicial');
   await create.getByLabel('URL base').fill('http://public-fixture:8080');
-  await create.getByLabel('RSS URL (opcional)').fill('http://public-fixture:8080/feed.xml');
+  await create.getByLabel('Método de recuperación').click();
+  await page.getByRole('option', { name: 'RSS' }).click();
+  await create.getByLabel('RSS URL').fill('http://public-fixture:8080/feed.xml');
   await create.getByLabel('Intervalo actualización (min)').fill('60');
   await create.getByRole('button', { name: 'Guardar' }).click();
   const card = page.getByText(name, { exact: true }).locator('..').locator('..').locator('..');
@@ -38,7 +41,7 @@ test('administración completa y RBAC de fuentes públicas', async ({ page, requ
   const edit = page.getByRole('dialog');
   const editedName = `${name} Editada`;
   await edit.getByLabel('Nombre').fill(editedName);
-  await edit.getByLabel('Publisher').fill('Publisher sintético editado');
+  await edit.getByLabel('Publicador').fill('Entidad sintética editada');
   await edit.getByLabel('Intervalo actualización (min)').fill('90');
   await edit.getByRole('button', { name: 'Guardar' }).click();
   const editedCard = page
@@ -46,7 +49,7 @@ test('administración completa y RBAC de fuentes públicas', async ({ page, requ
     .locator('..')
     .locator('..')
     .locator('..');
-  await expect(editedCard.getByText('Publisher sintético editado')).toBeVisible();
+  await expect(editedCard.getByText('Entidad sintética editada')).toBeVisible();
 
   await editedCard.getByRole('button', { name: 'Actualizar ahora' }).click();
   await expect(
@@ -58,7 +61,7 @@ test('administración completa y RBAC de fuentes públicas', async ({ page, requ
   await expect(history.getByText(/Inicio:/)).toBeVisible();
   await expect(history.getByText(/Fin:/)).toBeVisible();
   await expect(
-    history.getByText(/Nuevos \d+ · Actualizados \d+ · Sin cambios \d+ · Errores \d+/),
+    history.getByText(/Nuevos \d+ · Actualizados \d+ · Sin cambios \d+ · Items con error \d+/),
   ).toBeVisible();
   await history.getByRole('button', { name: 'Cerrar' }).click();
 
@@ -127,7 +130,7 @@ test('SOURCE_STALE determinístico, deduplicado, recuperable e ignora inactivas/
     data: {
       code: `RSS_STALE_${suffix}`,
       name: `Fuente frescura ${suffix}`,
-      publisher: 'Publisher frescura',
+      publisher: 'Entidad frescura',
       source_type: 'RSS',
       base_url: 'http://public-fixture:8080',
       feed_url: 'http://public-fixture:8080/feed.xml',
@@ -193,7 +196,7 @@ test('SOURCE_STALE determinístico, deduplicado, recuperable e ignora inactivas/
   await page.getByRole('link', { name: 'Alertas' }).click();
   await expect(page.getByText('Fuente pública desactualizada').first()).toBeVisible();
 
-  await page.getByRole('link', { name: 'Inteligencia pública', exact: true }).click();
+  await page.getByRole('link', { name: 'Fuentes públicas', exact: true }).click();
   await page.getByRole('tab', { name: 'Fuentes públicas' }).click();
   await card.getByRole('button', { name: 'Actualizar ahora' }).click();
   await page.clock.setFixedTime(realNow);

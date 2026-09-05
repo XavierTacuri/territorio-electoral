@@ -7,18 +7,19 @@ async function campaigns(request: APIRequestContext) {
     .items as { id: string; name: string; slug: string }[];
   return { headers, items };
 }
-test('STANDARD bloquea UI y API sin provider', async ({ page, request }) => {
+test('Gualaceo habilita panorama IA factual en API y UI', async ({ page, request }) => {
   const { headers, items } = await campaigns(request);
   const standard = items.find((c) => c.slug === 'gualaceo-e2e-2027')!;
   const direct = await request.post(`/api/v1/campaigns/${standard.id}/territory-ai/query`, {
     headers,
-    data: { question: '¿Cuál es la fuente?' },
+    data: { question: '¿Cuál es el panorama electoral de Gualaceo ahora?' },
   });
-  expect(direct.status()).toBe(403);
-  expect((await direct.json()).detail.code).toBe('FEATURE_NOT_ENTITLED');
+  expect(direct.status()).toBe(200);
+  expect((await direct.json()).intent).toBe('ELECTORAL_PANORAMA');
   await browserLogin(page);
   await page.goto(`/app/campaigns/${standard.id}/territory-ai`);
-  await expect(page.getByText('Funcionalidad disponible en el plan Pro.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'TERRITORIO IA' })).toBeVisible();
+  await expect(page.getByText('Funcionalidad disponible en el plan Pro.')).toHaveCount(0);
   await page.screenshot({
     path: '../quality-artifacts/territory-ai-standard-locked.png',
     fullPage: true,
@@ -42,6 +43,8 @@ test('PRO responde multi-source, abre citation y protege safety', async ({ page,
   await page.getByRole('button', { name: 'ENVIAR' }).click();
   const grounded = (await (await queryResponse).json()) as { citations: { source_type: string }[] };
   const sourceTypes = new Set(grounded.citations.map((c) => c.source_type));
+  // Seguimientos/Commitment se retiró como fuente productiva de Territorio IA
+  // (retiro de producto): ya no debe citarse en respuestas nuevas.
   for (const kind of [
     'CNE',
     'TURNOUT_MODEL',
@@ -49,10 +52,10 @@ test('PRO responde multi-source, abre citation y protege safety', async ({ page,
     'SURVEY_STUDY',
     'TERRITORIAL_ACTIVITY',
     'CITIZEN_NEED',
-    'COMMITMENT',
     'PUBLIC_INTELLIGENCE',
   ])
     expect(sourceTypes.has(kind), `Debe citar ${kind}`).toBe(true);
+  expect(sourceTypes.has('COMMITMENT'), 'COMMITMENT ya no debe citarse').toBe(false);
   await expect(page.getByText(/Respuesta grounded sintética.*CNE/)).toBeVisible();
   await page.screenshot({ path: '../quality-artifacts/territory-ai-answer.png', fullPage: true });
   await page.screenshot({
@@ -88,7 +91,8 @@ test('deep link parroquial conserva contexto y responsive no desborda', async ({
   await page.goto(`/app/campaigns/${pro.id}/territories`);
   await page.getByLabel('Seleccionar parroquia').click();
   await page.getByRole('option', { name: /Parroquia Alfa/ }).click();
-  await page.getByRole('link', { name: 'Preguntar sobre esta parroquia' }).click();
+  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
+  await page.getByRole('link', { name: 'PREGUNTAR A TERRITORIO IA' }).first().click();
   await expect(page).toHaveURL(/territory-ai.*parish_id=/);
   for (const viewport of [
     { width: 1440, height: 900 },

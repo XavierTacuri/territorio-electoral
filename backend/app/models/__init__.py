@@ -21,3 +21,4 @@ from app.models.public_intelligence import PublicSource, PublicIntelligenceItem,
 from app.models.entitlement import CampaignFeatureEntitlement, AiUsageEvent
 from app.models.territory_ai import TerritoryAIConversation, TerritoryAIMessage
 from app.models.organization import Organization, OrganizationMembership, OrganizationSubscription  # noqa: F401
+from app.models.election_day import ElectionDayOperation, PollingPlace, ElectoralBoard, ElectionDayAssignment, ElectionDayIncident, ElectionDayDocument  # noqa: F401

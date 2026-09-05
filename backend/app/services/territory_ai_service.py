@@ -1,5 +1,6 @@
-from dataclasses import dataclass,field
+from dataclasses import dataclass
 from datetime import datetime,timedelta,timezone
+import logging
 from time import perf_counter
 from uuid import UUID
 from pydantic import ValidationError
@@ -12,6 +13,7 @@ from app.models.user import User
 from app.schemas.entitlement import FeatureCode
 from app.schemas.territory_ai import ProviderStructuredOutput,TerritoryAICitation,TerritoryAIConversationRead,TerritoryAIIntent,TerritoryAIQueryRequest,TerritoryAIResponse
 from app.services.campaign_access_service import CampaignAccessService
+from app.services.dataset_version_service import DatasetVersionService
 from app.services.feature_entitlement_service import FeatureEntitlementService
 from app.services.security_audit_service import SecurityAuditService
 from app.services.territory_ai_intent import TerritoryAIIntentRouter
@@ -20,16 +22,14 @@ from app.services.territory_ai_policy import TerritoryAIPolicy
 from app.services.territory_ai_prompt import TERRITORY_AI_SYSTEM_PROMPT,TERRITORY_AI_SYSTEM_PROMPT_ID,build_user_prompt,provider_documents
 from app.services.territory_ai_retrieval import TerritoryAIEvidenceRetriever
 from app.services.territory_ai_territory import TerritoryAIResolver,TerritoryAmbiguousError
+from app.services.territory_ai_provider import AiProviderRateLimitError, ProviderResult, UnavailableAiProvider, build_ai_provider
+from app.services.territory_ai_facts import build_panorama_facts, format_integer, format_percent, panorama_citation_ids, render_debate_brief, render_election_day_operations, render_historical_turnout, render_panorama
+
+logger = logging.getLogger("territorio.territory_ai")
 
 class TerritoryAiError(Exception):
     def __init__(self,code,message,status_code=403,extra=None):self.code=code;self.message=message;self.status_code=status_code;self.extra=extra or {};super().__init__(message)
 @dataclass
-class ProviderResult:
-    answer:str;model:str;input_tokens:int|None=None;output_tokens:int|None=None;citation_ids:list[str]=field(default_factory=list);limitations:list[str]=field(default_factory=list)
-class UnavailableAiProvider:
-    name="unavailable";available=False
-    def generate(self,question,context):raise RuntimeError("Proveedor no configurado")
-_provider=UnavailableAiProvider()
 class E2EFakeAiProvider:
     name="fake-e2e";available=True
     def generate(self,question,context):
@@ -39,6 +39,32 @@ class E2EFakeAiProvider:
         citation_ids=[]
         for document in documents:
             if document["source_kind"] not in kinds:kinds.append(document["source_kind"]);citation_ids.append(document["evidence_id"])
+        if "ELECTORAL_PANORAMA" in question:
+            facts=context.get("panorama_facts") or build_panorama_facts(documents)
+            return ProviderResult(render_panorama(facts),"territory-ai-fake-v2",10,12,panorama_citation_ids(facts),[])
+        if "HISTORICAL_TURNOUT" in question:
+            facts=context.get("panorama_facts") or build_panorama_facts(documents)
+            return ProviderResult(render_historical_turnout(facts),"territory-ai-fake-v2",10,12,panorama_citation_ids(facts),[])
+        if "DEBATE_BRIEF" in question:
+            return ProviderResult(render_debate_brief(documents),"territory-ai-fake-v2",10,12,citation_ids,[])
+        if "ELECTION_DAY_OPERATIONS" in question:
+            return ProviderResult(render_election_day_operations(documents),"territory-ai-fake-v2",10,12,citation_ids,[])
+        surveys=[d for d in documents if d["source_kind"]=="SURVEY_STUDY"]
+        # Only survey-focused intents should switch to the survey summary
+        # renderer.  General territorial summaries may include survey evidence
+        # alongside CNE, INEC and operational sources.
+        if surveys and "SURVEY_STUDIES" in question:
+            selected=surveys[:2] if "compara" in question.casefold() else surveys[:1];parts=[]
+            for document in selected:
+                data=document["structured_data"];margin=data.get("margin_of_error");header=f"{data.get('name') or document['title']}: trabajo de campo {data.get('fieldwork_start')} a {data.get('fieldwork_end')}; muestra {format_integer(data.get('sample_size'))}; metodología: {data.get('methodology')}"
+                if margin is not None:header+=f"; margen de error declarado {format_percent(float(margin)*100)}"
+                header+=f"; cobertura {'parroquial' if data.get('coverage')=='PARISH' else 'cantonal'}."
+                results=data.get("results") or [];lines=[]
+                for result in results[:8]:lines.append(f"{result.get('question')}: {result.get('option')} registró {format_percent(float(result.get('observed_percentage',0))*100)} como porcentaje observado en el estudio.")
+                if data.get("demo"):lines.append("Datos simulados para demostración.")
+                parts.append(header+" "+" ".join(lines))
+            if len(selected)>1:parts.append("La comparación es descriptiva: preguntas, cobertura, universo, metodología y periodo deben ser equivalentes; no se deriva una tendencia predictiva.")
+            return ProviderResult("\n\n".join(parts),"territory-ai-fake-v2",10,12,[d["evidence_id"] for d in selected],["No constituye predicción electoral."])
         current=[d for d in documents if d["source_kind"]=="CNE" and d["title"]=="Padrón electoral actual"]
         projections=[d for d in documents if d["source_kind"]=="TURNOUT_MODEL"]
         if current and projections and "TERRITORY_SUMMARY" not in question:
@@ -47,8 +73,8 @@ class E2EFakeAiProvider:
             projection_register=sum(d["structured_data"].get("registered_voters") or 0 for d in projections)
             rate=(expected/projection_register*100) if projection_register else None
             citation_ids=list(dict.fromkeys(d["evidence_id"] for d in current+projections))
-            answer=f"El padrón electoral actual es de {registered:,} electores. La proyección central es de {expected:,} votantes esperados"
-            if rate is not None:answer+=f" ({rate:.2f}% del padrón)"
+            answer=f"El padrón electoral actual es de {format_integer(registered)} electores. La proyección central es de {format_integer(expected)} votantes esperados"
+            if rate is not None:answer+=f" ({format_percent(rate)} del padrón)"
             answer+=". Es una estimación de participación, no de apoyo político."
             return ProviderResult(answer,"territory-ai-fake-v1",10,12,citation_ids,[])
         return ProviderResult("Respuesta grounded sintética. Fuentes disponibles: "+", ".join(kinds)+".","territory-ai-fake-v1",10,12,citation_ids,[])
@@ -58,7 +84,7 @@ def get_ai_provider():
     app_env=settings.app_env.strip().lower()
     if app_env=="e2e":return _e2e_provider
     if app_env in _LOCAL_FAKE_ENVIRONMENTS and settings.territory_ai_provider=="fake":return _e2e_provider
-    return _provider
+    return build_ai_provider()
 
 class TerritoryAiService:
     ALLOWED_ROLES={"ADMIN","CAMPAIGN_MANAGER","TERRITORIAL_COORDINATOR","ANALYST","CANDIDATE"}
@@ -85,9 +111,18 @@ class TerritoryAiService:
     def _save(self,conversation,question,response,intent,territory):
         user_message=TerritoryAIMessage(conversation_id=conversation.id,role="USER",content=question,intent=intent.value,territory_id=territory.id if territory else None)
         self.db.add(user_message);self.db.flush();assistant=TerritoryAIMessage(conversation_id=conversation.id,role="ASSISTANT",content=response.answer,citations=[c.model_dump(mode="json") for c in response.citations],intent=intent.value,territory_id=territory.id if territory else None);self.db.add(assistant);conversation.last_intent=intent.value;self.db.flush();return assistant
-    def _citation(self,e):return TerritoryAICitation(id=e.evidence_id,source_type=e.source_kind,title=e.title,source_name=e.source_name,reference_date=e.record_date,data_cutoff=e.data_cutoff,territory=e.territory,excerpt=e.excerpt,internal_path=e.internal_path,external_url=e.source_url,freshness=e.freshness)
-    def _audit(self,cid,user,intent,territory,evidence,status,started,provider=None,model=None):
-        self.audit.record("TERRITORY_AI_QUERY",status,"Consulta de Territorio IA",user_id=user.id,campaign_id=cid,resource_type="TERRITORY_AI",metadata={"intent":intent.value,"territory":territory.name if territory else None,"evidence_types":sorted({e.source_kind.value for e in evidence}),"provider":provider,"model":model,"latency_ms":round((perf_counter()-started)*1000),"status":status})
+    def _dataset_version_label(self,e):
+        if not e.data_source_id and not e.import_job_id:return None
+        cutoff=e.data_cutoff or e.record_date;reference_date=cutoff.date() if isinstance(cutoff,datetime) else cutoff
+        # Prefer the exact import behind this row (import_job_id) over "whichever
+        # version is ACTIVE for the source": those can differ for upsert-governed
+        # datasets, where the ACTIVE version is only an administrative pointer.
+        version=DatasetVersionService(self.db).resolve_for_evidence(data_source_id=e.data_source_id,import_job_id=e.import_job_id,reference_date=reference_date)
+        return version.version_label if version else None
+    def _citation(self,e):return TerritoryAICitation(id=e.evidence_id,source_type=e.source_kind,evidence_class=e.evidence_class,title=e.title,source_name=e.source_name,reference_date=e.record_date,data_cutoff=e.data_cutoff,territory=e.territory,excerpt=e.excerpt,internal_path=e.internal_path,external_url=e.source_url,freshness=e.freshness,metadata=e.metadata,dataset_version_label=self._dataset_version_label(e))
+    def _audit(self,cid,user,intent,territory,evidence,status,started,provider=None,model=None,usage=None):
+        usage=usage or {}
+        self.audit.record("TERRITORY_AI_QUERY",status,"Consulta de Territorio IA",user_id=user.id,campaign_id=cid,resource_type="TERRITORY_AI",metadata={"intent":intent.value,"territory":territory.name if territory else None,"evidence_types":sorted({e.source_kind.value for e in evidence}),"provider":provider,"model":model,"input_tokens":usage.get("input_tokens"),"output_tokens":usage.get("output_tokens"),"total_tokens":usage.get("total_tokens"),"provider_latency_ms":usage.get("latency_ms"),"latency_ms":round((perf_counter()-started)*1000),"status":status})
     def query(self,campaign_id:UUID,data:TerritoryAIQueryRequest|str,user:User):
         if isinstance(data,str):data=TerritoryAIQueryRequest(question=data)
         started=perf_counter();self.authorize(campaign_id,user);conversation=self._conversation(campaign_id,user,data)
@@ -105,18 +140,28 @@ class TerritoryAiService:
             response=TerritoryAIResponse(answer=self.NO_EVIDENCE,citations=[],limitations=["EVIDENCE_NOT_AVAILABLE"],intent=intent,territory=territory,conversation_id=conversation.id,status="NO_EVIDENCE");message=self._save(conversation,data.question,response,intent,territory);response.message_id=message.id;self._audit(campaign_id,user,intent,territory,[],"NO_EVIDENCE",started);self.db.commit();return response
         if not getattr(self.provider,"available",False):self.db.rollback();raise TerritoryAiError("AI_PROVIDER_UNAVAILABLE","Territorio IA no está configurada en este entorno.",503)
         try:
-            raw=self.provider.generate(build_user_prompt(data.question,plan),{"system_prompt_id":TERRITORY_AI_SYSTEM_PROMPT_ID,"system_prompt":TERRITORY_AI_SYSTEM_PROMPT,"documents":provider_documents(evidence)})
+            documents=provider_documents(evidence)
+            context={"system_prompt_id":TERRITORY_AI_SYSTEM_PROMPT_ID,"system_prompt":TERRITORY_AI_SYSTEM_PROMPT,"documents":documents}
+            if intent in {TerritoryAIIntent.ELECTORAL_PANORAMA,TerritoryAIIntent.HISTORICAL_TURNOUT}:context["panorama_facts"]=build_panorama_facts(documents)
+            raw=self.provider.generate(build_user_prompt(data.question,plan),context)
         except (TimeoutError,):self.db.rollback();raise TerritoryAiError("AI_PROVIDER_TIMEOUT","El proveedor de IA no respondió a tiempo.",504)
-        except Exception:self.db.rollback();raise TerritoryAiError("AI_PROVIDER_ERROR","No fue posible completar la consulta de IA.",502)
+        except AiProviderRateLimitError:self.db.rollback();raise TerritoryAiError("AI_PROVIDER_RATE_LIMITED","El proveedor de IA alcanzó su límite. Intenta nuevamente más tarde.",429)
+        except Exception as exc:
+            self.db.rollback()
+            logger.exception("territory_ai_provider_error",extra={"error_type":type(exc).__name__,"provider":getattr(self.provider,"name","unknown"),"intent":intent.value})
+            raise TerritoryAiError("AI_PROVIDER_ERROR","No fue posible completar la consulta de IA.",502) from exc
         try:
             payload={"answer":raw.answer,"citation_ids":getattr(raw,"citation_ids",[]),"limitations":getattr(raw,"limitations",[])} if hasattr(raw,"answer") else raw
             output=ProviderStructuredOutput.model_validate(payload)
-        except (ValidationError,TypeError,ValueError):self.db.rollback();raise TerritoryAiError("AI_PROVIDER_INVALID_RESPONSE","El proveedor devolvió una respuesta inválida.",502)
+        except (ValidationError,TypeError,ValueError) as exc:
+            self.db.rollback()
+            logger.exception("territory_ai_invalid_provider_response",extra={"error_type":type(exc).__name__,"provider":getattr(self.provider,"name","unknown"),"intent":intent.value})
+            raise TerritoryAiError("AI_PROVIDER_INVALID_RESPONSE","El proveedor devolvió una respuesta inválida.",502) from exc
         if self.policy.SECRET.search(output.answer):self.db.rollback();raise TerritoryAiError("AI_PROVIDER_INVALID_RESPONSE","El proveedor devolvió contenido no permitido.",502)
         available={e.evidence_id:e for e in evidence};valid_ids=list(dict.fromkeys(i for i in output.citation_ids if i in available));citations=[self._citation(available[i]) for i in valid_ids]
         found={e.source_kind for e in evidence};missing=[kind.value for kind in plan.source_kinds if kind not in found];limitations=list(dict.fromkeys(output.limitations+(["Sin evidencia disponible para: "+", ".join(missing)] if missing else [])))
         model=getattr(raw,"model","unknown");response=TerritoryAIResponse(answer=output.answer,citations=citations,limitations=limitations,intent=intent,territory=territory,conversation_id=conversation.id,provider=self.provider.name,model=model)
-        message=self._save(conversation,data.question,response,intent,territory);response.message_id=message.id;usage=AiUsageEvent(campaign_id=campaign_id,user_id=user.id,provider=self.provider.name,model=model,input_tokens=getattr(raw,"input_tokens",None),output_tokens=getattr(raw,"output_tokens",None),request_count=1);self.db.add(usage);self._audit(campaign_id,user,intent,territory,evidence,"SUCCESS",started,self.provider.name,model);self.db.commit();return response
+        message=self._save(conversation,data.question,response,intent,territory);response.message_id=message.id;usage_data={"input_tokens":getattr(raw,"input_tokens",None),"output_tokens":getattr(raw,"output_tokens",None),"total_tokens":getattr(raw,"total_tokens",None),"latency_ms":getattr(raw,"latency_ms",None)};usage=AiUsageEvent(campaign_id=campaign_id,user_id=user.id,provider=self.provider.name,model=model,input_tokens=usage_data["input_tokens"],output_tokens=usage_data["output_tokens"],request_count=1);self.db.add(usage);self._audit(campaign_id,user,intent,territory,evidence,"SUCCESS",started,self.provider.name,model,usage_data);self.db.commit();return response
     def list_conversations(self,campaign_id,user):
         self.access.require_access(campaign_id,user);return list(self.db.scalars(select(TerritoryAIConversation).where(TerritoryAIConversation.campaign_id==campaign_id,TerritoryAIConversation.user_id==user.id).order_by(TerritoryAIConversation.updated_at.desc())))
     def conversation(self,campaign_id,conversation_id,user):

@@ -24,6 +24,7 @@ import { useCampaign } from '../../app/CampaignProvider';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { todayDateOnly } from '../../lib/dates';
+import { parishOptionLabel, type ParishOption } from '../../lib/territoryLabels';
 import type { Question, Survey } from './types';
 type Values = {
   response_date: string;
@@ -59,7 +60,7 @@ export default function SurveyCapturePage() {
   const parishes = useQuery({
     queryKey: ['parishes', active?.canton_id],
     queryFn: () =>
-      apiRequest<{ id: number; name: string }[]>('/parishes?canton_id=' + active!.canton_id),
+      apiRequest<ParishOption[]>('/parishes?canton_id=' + active!.canton_id),
     enabled: Boolean(active?.canton_id),
   });
   const {
@@ -184,7 +185,7 @@ export default function SurveyCapturePage() {
               <TextField {...field} select label="Parroquia" required>
                 {parishes.data?.map((x) => (
                   <MenuItem key={x.id} value={x.id}>
-                    {x.name}
+                    {parishOptionLabel(x, parishes.data ?? [])}
                   </MenuItem>
                 ))}
               </TextField>

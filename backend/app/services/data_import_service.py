@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.importers.csv_utils import parse_csv
 from app.importers.mappings import DATASET_PROFILE
+from app.models.election_day import ElectoralBoard,PollingPlace
 from app.models.historical import *
 from app.models.territory import Province,Canton,Parish
 from app.services.data_source_service import DataSourceService
@@ -21,6 +22,12 @@ def decimal(v,name,optional=False):
  if optional and not v:return None
  try:return Decimal(v)
  except InvalidOperation:raise BusinessRuleError(f'{name}: decimal inválido')
+def coordinate(v,name,lo,hi):
+ if not v:return None
+ try:value=float(v)
+ except ValueError:raise BusinessRuleError(f'{name}: coordenada inválida')
+ if not lo<=value<=hi:raise BusinessRuleError(f'{name}: fuera de rango')
+ return value
 class DataImportService:
  def __init__(self,db:Session):self.db=db
  def run(self,source_id:UUID,dataset_type:str,filename:str,content:bytes,user,validation_only=False,profile=None,encoding=None,delimiter=None,mapping=None,force=False):
@@ -52,7 +59,7 @@ class DataImportService:
    if temp and temp.exists():temp.unlink()
  def validate(self,profile,rows,source=None):
   issues=[]
-  candidate_codes=set();result_keys=set();turnout_keys=set();roll_keys=set()
+  candidate_codes=set();result_keys=set();turnout_keys=set();roll_keys=set();polling_place_keys=set();board_keys=set()
   for n,r in rows:
    try:
     if profile=='CANONICAL_ELECTORAL_PROCESS':
@@ -108,6 +115,8 @@ class DataImportService:
     elif profile=='CANONICAL_DEMOGRAPHIC_OBSERVATION':
      integer(r['reference_year'],'reference_year');decimal(r['value'],'value');den=decimal(r['denominator'],'denominator',True)
      if den is not None and den<=0:raise BusinessRuleError('Denominador inválido')
+     if not self.db.scalar(select(DemographicIndicator).where(DemographicIndicator.code==r['indicator_code'].upper())):raise BusinessRuleError(f'El indicador {r["indicator_code"]} no está registrado')
+     self.validate_geography_mapping(r['geography_level'].upper(),r)
     elif profile=='CANONICAL_DEMOGRAPHIC_INDICATOR' and not r['indicator_code']:raise BusinessRuleError('Código requerido')
     elif profile=='CANONICAL_ELECTORAL_ROLL_SNAPSHOT':
      process=self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper(),ElectoralProcess.is_active.is_(True))) if r['process_code'] else None
@@ -127,6 +136,33 @@ class DataImportService:
      key=(r['process_code'].upper(),snapshot_date,level,province.id if province else None,canton.id if canton else None,parish.id if parish else None)
      if key in roll_keys:raise BusinessRuleError('Registro electoral duplicado')
      roll_keys.add(key)
+    elif profile=='CANONICAL_POLLING_PLACE':
+     if not self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper())):raise BusinessRuleError('Proceso electoral inexistente')
+     if not r['polling_place_code'] or not r['polling_place_name']:raise BusinessRuleError('Código y nombre de recinto requeridos')
+     province=self.db.scalar(select(Province).where(Province.code==r['province_dpa'])) if r['province_dpa'] else None
+     canton=self.db.scalar(select(Canton).where(Canton.dpa_code==r['canton_dpa'])) if r['canton_dpa'] else None
+     parish=self.db.scalar(select(Parish).where(Parish.dpa_code==r['parish_dpa'])) if r['parish_dpa'] else None
+     if not province:raise BusinessRuleError('Provincia no encontrada para el DPA indicado')
+     if not canton:raise BusinessRuleError('Cantón no encontrado para el DPA indicado')
+     if not parish:raise BusinessRuleError('Parroquia no encontrada para el DPA indicado')
+     if canton.province_id!=province.id:raise BusinessRuleError('El cantón no pertenece a la provincia indicada')
+     if parish.canton_id!=canton.id:raise BusinessRuleError('La parroquia no pertenece al cantón indicado')
+     coordinate(r['polling_place_latitude'],'polling_place_latitude',-90,90)
+     coordinate(r['polling_place_longitude'],'polling_place_longitude',-180,180)
+     key=(r['process_code'].upper(),r['polling_place_code'].upper())
+     if key in polling_place_keys:raise BusinessRuleError('Código de recinto duplicado en el archivo')
+     polling_place_keys.add(key)
+    elif profile=='CANONICAL_ELECTORAL_BOARD':
+     process=self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper()))
+     if not process:raise BusinessRuleError('Proceso electoral inexistente')
+     if not r['polling_place_code'] or not r['board_code']:raise BusinessRuleError('Código de recinto y de junta requeridos')
+     place=self.db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code==r['polling_place_code'].upper()))
+     if not place:raise BusinessRuleError(f'El recinto {r["polling_place_code"]} no está registrado para este proceso')
+     if integer(r['board_number'],'board_number')<1:raise BusinessRuleError('Número de junta inválido')
+     if r['registered_voters'] and integer(r['registered_voters'],'registered_voters')<0:raise BusinessRuleError('Electores no pueden ser negativos')
+     key=(place.id,r['board_code'].upper())
+     if key in board_keys:raise BusinessRuleError('Código de junta duplicado en el archivo')
+     board_keys.add(key)
    except (ValueError,BusinessRuleError) as e:issues.append((n,None,'INVALID_ROW',str(e),None))
   return issues
  def validate_geography_mapping(self,level,r):
@@ -163,7 +199,27 @@ class DataImportService:
    elif profile=='CANONICAL_ELECTORAL_CANDIDATE_RESULT':inserted,updated=self.upsert_result(r,source,job,inserted,updated)
    elif profile=='CANONICAL_DEMOGRAPHIC_OBSERVATION':inserted,updated=self.upsert_observation(r,source,job,inserted,updated)
    elif profile=='CANONICAL_ELECTORAL_ROLL_SNAPSHOT':inserted,updated=self.upsert_roll_snapshot(r,source,job,inserted,updated)
+   elif profile=='CANONICAL_POLLING_PLACE':inserted,updated=self.upsert_polling_place(r,source,job,inserted,updated)
+   elif profile=='CANONICAL_ELECTORAL_BOARD':inserted,updated=self.upsert_electoral_board(r,source,job,inserted,updated)
   self.db.flush();return inserted,updated
+ def upsert_polling_place(self,r,source,job,ins,upd):
+  process=self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper()))
+  parish=self.db.scalar(select(Parish).where(Parish.dpa_code==r['parish_dpa']));canton=self.db.get(Canton,parish.canton_id)
+  code=r['polling_place_code'].upper();obj=self.db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code==code))
+  values=dict(name=r['polling_place_name'],address=r['polling_place_address'] or None,latitude=coordinate(r['polling_place_latitude'],'polling_place_latitude',-90,90),longitude=coordinate(r['polling_place_longitude'],'polling_place_longitude',-180,180),province_id=canton.province_id,canton_id=canton.id,parish_id=parish.id,data_source_id=source.id,import_job_id=job.id,is_active=True)
+  if obj:
+   for k,v in values.items():setattr(obj,k,v)
+   return ins,upd+1
+  self.db.add(PollingPlace(electoral_process_id=process.id,official_code=code,**values));return ins+1,upd
+ def upsert_electoral_board(self,r,source,job,ins,upd):
+  process=self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper()))
+  place=self.db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code==r['polling_place_code'].upper()))
+  code=r['board_code'].upper();obj=self.db.scalar(select(ElectoralBoard).where(ElectoralBoard.polling_place_id==place.id,ElectoralBoard.official_code==code))
+  values=dict(board_number=integer(r['board_number'],'board_number'),sex_category=r['sex_category'].upper() if r['sex_category'] else None,registered_voters=integer(r['registered_voters'],'registered_voters') if r['registered_voters'] else None,data_source_id=source.id,import_job_id=job.id,is_active=True)
+  if obj:
+   for k,v in values.items():setattr(obj,k,v)
+   return ins,upd+1
+  self.db.add(ElectoralBoard(polling_place_id=place.id,official_code=code,**values));return ins+1,upd
  def upsert_roll_snapshot(self,r,source,job,ins,upd):
   process=self.db.scalar(select(ElectoralProcess).where(ElectoralProcess.code==r['process_code'].upper())) if r['process_code'] else None
   snapshot_date=date.fromisoformat(r['snapshot_date']);snapshot=self.db.scalar(select(ElectoralRollSnapshot).where(ElectoralRollSnapshot.source_id==source.id,ElectoralRollSnapshot.snapshot_date==snapshot_date,ElectoralRollSnapshot.electoral_process_id==(process.id if process else None)))

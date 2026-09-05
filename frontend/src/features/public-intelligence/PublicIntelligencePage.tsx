@@ -89,11 +89,12 @@ export default function PublicIntelligencePage() {
     code: '',
     name: '',
     publisher: '',
-    source_type: 'RSS',
+    source_type: 'OFFICIAL_WEBSITE',
     base_url: '',
     feed_url: '',
-    retrieval_method: 'RSS',
-    refresh_interval_minutes: 60,
+    api_url: '',
+    retrieval_method: 'MANUAL',
+    refresh_interval_minutes: null as number | null,
     official: true,
   });
   const summary = useQuery({
@@ -116,7 +117,13 @@ export default function PublicIntelligencePage() {
     mutationFn: () =>
       apiRequest(`/campaigns/${campaignId}/public-sources`, {
         method: 'POST',
-        body: JSON.stringify({ ...form, feed_url: form.feed_url || null, api_url: null }),
+        body: JSON.stringify({
+          ...form,
+          feed_url: form.retrieval_method === 'RSS' ? form.feed_url || null : null,
+          api_url: form.retrieval_method === 'API' ? form.api_url || null : null,
+          refresh_interval_minutes:
+            form.retrieval_method === 'MANUAL' ? null : form.refresh_interval_minutes,
+        }),
       }),
     onSuccess: async () => {
       setOpen(false);
@@ -340,24 +347,61 @@ export default function PublicIntelligencePage() {
               [
                 ['code', 'Código'],
                 ['name', 'Nombre'],
-                ['publisher', 'Publisher'],
+                ['publisher', 'Publicador'],
                 ['base_url', 'URL base'],
-                ['feed_url', 'RSS URL (opcional)'],
               ] as const
             ).map(([key, label]) => (
               <TextField
                 key={key}
-                required={key !== 'feed_url'}
+                required
                 label={label}
                 value={form[key]}
                 onChange={(event) => setForm({ ...form, [key]: event.target.value })}
               />
             ))}
+            {form.retrieval_method === 'RSS' && (
+              <TextField
+                required
+                label="RSS URL"
+                value={form.feed_url}
+                onChange={(event) => setForm({ ...form, feed_url: event.target.value })}
+              />
+            )}
+            {form.retrieval_method === 'API' && (
+              <TextField
+                required
+                label="API URL"
+                value={form.api_url}
+                onChange={(event) => setForm({ ...form, api_url: event.target.value })}
+              />
+            )}
+            <TextField
+              select
+              label="Método de recuperación"
+              value={form.retrieval_method}
+              onChange={(event) => {
+                const retrieval_method = event.target.value;
+                setForm({
+                  ...form,
+                  retrieval_method,
+                  refresh_interval_minutes:
+                    retrieval_method === 'MANUAL' ? null : (form.refresh_interval_minutes ?? 60),
+                });
+              }}
+            >
+              <MenuItem value="MANUAL">Manual</MenuItem>
+              <MenuItem value="RSS">RSS</MenuItem>
+              <MenuItem value="API">API</MenuItem>
+            </TextField>
+            {form.retrieval_method === 'MANUAL' && (
+              <Alert severity="info">Fuente de actualización manual</Alert>
+            )}
             <TextField
               required
               type="number"
               label="Intervalo actualización (min)"
-              value={form.refresh_interval_minutes}
+              value={form.refresh_interval_minutes ?? ''}
+              disabled={form.retrieval_method === 'MANUAL'}
               onChange={(event) =>
                 setForm({ ...form, refresh_interval_minutes: Number(event.target.value) })
               }

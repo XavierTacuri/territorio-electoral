@@ -12,7 +12,7 @@ class SurveyStudy(Base):
     __tablename__ = "survey_studies"
     __table_args__ = (
         UniqueConstraint("campaign_id", "code", name="uq_survey_studies_campaign_code"),
-        CheckConstraint("study_type IN ('POLL','TRACKING_POLL','EXIT_POLL','OTHER')", name="study_type"),
+        CheckConstraint("study_type IN ('GENERAL_SURVEY','CNE_EXIT_POLL','POLL','TRACKING_POLL','EXIT_POLL','OTHER')", name="study_type"),
         CheckConstraint("status IN ('DRAFT','VALIDATED','PUBLISHED','ARCHIVED')", name="status"),
         CheckConstraint("geography_level IN ('CANTON','PARISH')", name="geography_level"),
         CheckConstraint("sample_size_total > 0", name="sample_size_positive"),
@@ -44,6 +44,9 @@ class SurveyStudy(Base):
     sponsor_name: Mapped[str | None] = mapped_column(String(180))
     source_type: Mapped[str] = mapped_column(String(40), nullable=False)
     source_url: Mapped[str | None] = mapped_column(String(1000))
+    source_name: Mapped[str | None] = mapped_column(String(180))
+    source_document: Mapped[str | None] = mapped_column(String(500))
+    imported_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     notes: Mapped[str | None] = mapped_column(Text)
     is_official: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     study_series_code: Mapped[str | None] = mapped_column(String(80))
@@ -77,12 +80,16 @@ class SurveyStudyTerritory(Base):
 class SurveyStudyOption(Base):
     __tablename__ = "survey_study_options"
     __table_args__ = (
-        UniqueConstraint("study_id", "code", name="uq_survey_study_options_study_code"),
+        UniqueConstraint("study_id", "question_code", "code", name="uq_survey_study_options_question_code"),
         CheckConstraint("option_type IN ('CANDIDATE','UNDECIDED','BLANK','NULL_VOTE','OTHER','NO_RESPONSE')", name="option_type"),
+        CheckConstraint("question_type IN ('SINGLE_CHOICE','MULTIPLE_CHOICE','SCALE','RATING','VOTE_INTENTION')", name="question_type"),
         CheckConstraint("display_order >= 0", name="display_order"),
     )
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     study_id: Mapped[UUID] = mapped_column(ForeignKey("survey_studies.id", ondelete="CASCADE"), nullable=False)
+    question_code: Mapped[str] = mapped_column(String(80), nullable=False, default="Q1", server_default="Q1")
+    question_text: Mapped[str] = mapped_column(Text, nullable=False, default="Pregunta agregada", server_default="Pregunta agregada")
+    question_type: Mapped[str] = mapped_column(String(30), nullable=False, default="SINGLE_CHOICE", server_default="SINGLE_CHOICE")
     code: Mapped[str] = mapped_column(String(80), nullable=False)
     label: Mapped[str] = mapped_column(String(180), nullable=False)
     option_type: Mapped[str] = mapped_column(String(20), nullable=False)

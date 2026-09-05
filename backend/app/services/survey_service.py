@@ -15,6 +15,7 @@ from app.models.territory import Parish,Community,Sector
 from app.models.user import User
 from app.schemas.survey import *
 from app.services.campaign_access_service import CampaignAccessService
+from app.services.campaign_permissions import CAMPAIGN_EXECUTIVE_ROLES
 from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundError
 from app.services.operational_service import OperationalService
 
@@ -25,10 +26,13 @@ def safe_text(value:str|None)->str|None:
     if PERSONAL.search(value):raise BusinessRuleError('Elimine datos personales del texto')
     return value
 class SurveyService:
-    MANAGERS={'CAMPAIGN_MANAGER'}
+    MANAGERS=CAMPAIGN_EXECUTIVE_ROLES
     def __init__(self,db:Session,today_provider=date.today):self.db=db;self.access=CampaignAccessService(db);self.today=today_provider;self.ops=OperationalService(db,today_provider)
     def roles(self,u):return {r.code for r in u.roles}
-    def campaign(self,cid,user,manage=False):return self.access.require_management(cid,user) if manage else self.access.require_access(cid,user)
+    def campaign(self,cid,user,manage=False):
+        if manage and not self.access.admin(user) and not self.roles(user).intersection(CAMPAIGN_EXECUTIVE_ROLES):
+            raise PermissionError('Sin permisos de gestión')
+        return self.access.require_access(cid,user)
     def survey(self,cid,sid,user,manage=False,active=True):
         self.campaign(cid,user,manage);obj=self.db.get(Survey,sid)
         if not obj or obj.campaign_id!=cid or (active and not obj.is_active):raise NotFoundError('Encuesta no encontrada')
@@ -136,7 +140,7 @@ class SurveyService:
             if not a or a.campaign_id!=campaign.id or (a.parish_id,a.community_id,a.sector_id)!=(s.parish_id,s.community_id,s.sector_id):raise BusinessRuleError('Actividad o territorio inválido')
     def can_submit(self,user,cid,s):
         roles=self.roles(user)
-        if self.access.admin(user) or 'CAMPAIGN_MANAGER' in roles:return
+        if self.access.admin(user) or roles.intersection(CAMPAIGN_EXECUTIVE_ROLES):return
         if 'TERRITORIAL_COORDINATOR' not in roles:raise PermissionError('Sin permiso para registrar respuestas')
         if not self.ops.territorial_access(user,cid,s.parish_id,s.community_id,s.sector_id):raise PermissionError('Sin acceso territorial')
     def digest(self,key):return hmac.new(settings.survey_submission_hmac_secret.encode(),key.encode(),hashlib.sha256).hexdigest()
@@ -256,5 +260,5 @@ class SurveyService:
             items.append(SurveyTerritorialResult(territory_id=str(value),territory_name=territory.name if territory else str(value),response_count=len(grouped),suppressed=suppressed,result=detail))
         return SurveyComparisonRead(level=level,question_code=q.code,items=items)
     def export(self,cid,sid,user,**f):
-        if not (self.access.admin(user) or self.roles(user).intersection({'CAMPAIGN_MANAGER','ANALYST'})):raise PermissionError('Sin permiso de exportación')
+        if not (self.access.admin(user) or self.roles(user).intersection(CAMPAIGN_EXECUTIVE_ROLES|{'ANALYST'})):raise PermissionError('Sin permiso de exportación')
         return {'survey':self.detail(cid,sid,user),'responses':[self.response(cid,sid,x.id,user) for x in self.response_query(cid,sid,user,**f)]}

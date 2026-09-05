@@ -7,18 +7,18 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   await browserLogin(page);
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
-  await page.getByRole('link', { name: 'Alertas' }).click();
+  await page.getByRole('link', { name: 'Centro de alertas' }).click();
   let response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
   await page.getByRole('button', { name: 'Evaluar reglas' }).click();
   expect((await response).status()).toBe(200);
   const openResponse = page.waitForResponse((r) => r.url().includes('status=OPEN'));
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'OPEN' }).click();
+  await page.getByRole('option', { name: 'Pendiente' }).click();
   expect((await openResponse).status()).toBe(200);
   const rowsBefore = await page.getByRole('row').count();
   const row = page
     .getByRole('row')
-    .filter({ has: page.getByRole('cell', { name: 'OPEN', exact: true }) })
+    .filter({ has: page.getByRole('cell', { name: 'Pendiente', exact: true }) })
     .first();
   const title = (await row.getByRole('cell').first().textContent())!;
   await row.getByRole('button', { name: 'Gestionar' }).click();
@@ -28,11 +28,12 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   await dialog.getByRole('button', { name: 'Confirmar' }).click();
   expect((await response).status()).toBe(200);
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'ACKNOWLEDGED' }).click();
+  await page.getByRole('option', { name: 'Revisada' }).click();
   await page
     .getByRole('row')
     .filter({ hasText: title })
     .getByRole('button', { name: 'Gestionar' })
+    .first()
     .click();
   dialog = page.getByRole('dialog');
   await dialog.getByLabel('Acción').click();
@@ -41,10 +42,10 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   await dialog.getByRole('button', { name: 'Confirmar' }).click();
   expect((await response).status()).toBe(200);
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'RESOLVED' }).click();
-  await expect(page.getByRole('row').filter({ hasText: title })).toBeVisible();
+  await page.getByRole('option', { name: 'Resuelta' }).click();
+  await expect(page.getByRole('row').filter({ hasText: title }).first()).toBeVisible();
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'OPEN' }).click();
+  await page.getByRole('option', { name: 'Pendiente' }).click();
   response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
   await page.getByRole('button', { name: 'Evaluar reglas' }).click();
   expect((await response).status()).toBe(200);

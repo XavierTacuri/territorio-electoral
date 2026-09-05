@@ -21,6 +21,7 @@ import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
 import { useAuth } from '../../auth/AuthProvider';
 import { canManageCampaign } from '../../auth/permissions';
+import { RETRIEVAL_METHOD_LABELS, SOURCE_TYPE_LABELS } from './labels';
 import type { FetchRun, PublicSource } from './types';
 const status: Record<string, string> = {
   QUEUED: 'En cola',
@@ -48,6 +49,9 @@ export function PublicSourcesAdmin({
 }) {
   const { user } = useAuth();
   const canManage = canManageCampaign(user);
+  const supportsRefresh = (source: PublicSource) =>
+    (source.retrieval_method === 'RSS' && !!source.feed_url) ||
+    (source.retrieval_method === 'API' && !!source.api_url);
   const [editing, setEditing] = useState<PublicSource>(),
     [confirm, setConfirm] = useState<PublicSource>(),
     [history, setHistory] = useState<PublicSource>(),
@@ -81,6 +85,7 @@ export function PublicSourcesAdmin({
   });
   const freshness = (s: PublicSource) => {
     if (!s.active) return 'Inactiva';
+    if (!supportsRefresh(s)) return 'Actualización manual';
     if (!s.last_success_at) return 'Nunca actualizada';
     if (!s.refresh_interval_minutes) return 'Actualizada';
     const limit = new Date(s.last_success_at).getTime() + s.refresh_interval_minutes * 60000 * 1.25;
@@ -113,8 +118,19 @@ export function PublicSourcesAdmin({
                   {s.official && <Chip label="Fuente oficial" color="primary" />}
                 </Stack>
                 <Typography>{s.publisher}</Typography>
+                <Typography>
+                  {SOURCE_TYPE_LABELS[s.source_type] ?? s.source_type} ·{' '}
+                  {supportsRefresh(s)
+                    ? (RETRIEVAL_METHOD_LABELS[s.retrieval_method] ?? 'Manual')
+                    : 'Actualización manual'}
+                </Typography>
                 <Typography>Última actualización correcta: {dt(s.last_success_at)}</Typography>
                 <Typography>Estado: {freshness(s)}</Typography>
+                {!supportsRefresh(s) && (
+                  <Alert severity="info" sx={{ mt: 1 }}>
+                    Esta fuente no tiene actualización automática configurada.
+                  </Alert>
+                )}
                 {s.last_success_at && s.refresh_interval_minutes && (
                   <Typography>
                     Próxima actualización estimada:{' '}
@@ -131,7 +147,7 @@ export function PublicSourcesAdmin({
                   Ver
                 </Button>
                 {canManage && <Button onClick={() => setEditing({ ...s })}>Editar</Button>}
-                {canManage && (
+                {canManage && supportsRefresh(s) && (
                   <Button
                     disabled={!s.active || fetchNow.isPending || s.retrieval_method === 'MANUAL'}
                     onClick={() => fetchNow.mutate(s.id)}
@@ -178,7 +194,7 @@ export function PublicSourcesAdmin({
                   (
                     {
                       name: 'Nombre',
-                      publisher: 'Publisher',
+                      publisher: 'Publicador',
                       base_url: 'URL base',
                       feed_url: 'RSS URL',
                       api_url: 'API URL',
@@ -209,12 +225,16 @@ export function PublicSourcesAdmin({
             <TextField
               select
               label="Método"
-              value={editing?.retrieval_method ?? 'MANUAL'}
+              value={
+                editing && RETRIEVAL_METHOD_LABELS[editing.retrieval_method]
+                  ? editing.retrieval_method
+                  : 'MANUAL'
+              }
               onChange={(e) =>
                 setEditing((x) => (x ? { ...x, retrieval_method: e.target.value } : x))
               }
             >
-              {['MANUAL', 'RSS', 'API', 'WEB_PAGE', 'FILE_DOWNLOAD'].map((x) => (
+              {['MANUAL', 'RSS', 'API'].map((x) => (
                 <MenuItem key={x} value={x}>
                   {x}
                 </MenuItem>
@@ -240,7 +260,9 @@ export function PublicSourcesAdmin({
                   refresh_interval_minutes: editing.refresh_interval_minutes,
                   terms_notes: editing.terms_notes,
                   license_notes: editing.license_notes,
-                  retrieval_method: editing.retrieval_method,
+                  ...(RETRIEVAL_METHOD_LABELS[editing.retrieval_method]
+                    ? { retrieval_method: editing.retrieval_method }
+                    : {}),
                 },
               })
             }
@@ -277,10 +299,13 @@ export function PublicSourcesAdmin({
                 <Typography>
                   Inicio: {dt(r.started_at)} · Fin: {dt(r.finished_at)} · Trigger: {r.trigger_type}
                 </Typography>
-                <Typography>
-                  Descubiertos {r.items_discovered} · Nuevos {r.items_created} · Actualizados{' '}
-                  {r.items_updated} · Sin cambios {r.items_unchanged} · Errores {r.items_failed}
-                </Typography>
+                {r.status !== 'FAILED' && (
+                  <Typography>
+                    Descubiertos {r.items_discovered} · Nuevos {r.items_created} · Actualizados{' '}
+                    {r.items_updated} · Sin cambios {r.items_unchanged} · Items con error{' '}
+                    {r.items_failed}
+                  </Typography>
+                )}
                 {['FAILED', 'PARTIAL'].includes(r.status) && (
                   <Alert severity="warning">{safeError(r.error_summary)}</Alert>
                 )}

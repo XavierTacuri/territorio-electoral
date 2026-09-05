@@ -78,6 +78,12 @@ class ReportTemplateRead(BaseModel):
     is_active: bool
 
 
+# Debe mantenerse igual al catálogo de app.reports.theme_catalog.THEMES — se
+# repite aquí en lugar de importarlo para no acoplar el esquema a la capa de
+# servicios.
+THEMES = {"VIALIDAD", "AGUA", "SEGURIDAD", "CONECTIVIDAD", "EMPLEO", "SALUD", "EDUCACION", "TRANSPORTE", "VIVIENDA", "AMBIENTE", "PRESUPUESTO", "OBRAS_PUBLICAS", "OTROS"}
+
+
 class ReportGenerationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     template_code: str
@@ -94,6 +100,22 @@ class ReportGenerationRequest(BaseModel):
     electoral_process_ids: list[UUID] = Field(default_factory=list, max_length=10)
     demographic_indicator_codes: list[str] = Field(default_factory=list, max_length=50)
     include_comparisons: bool = True
+    theme: str | None = None
+    include_surveys: bool = True
+    include_public_intelligence: bool = True
+    include_evidence: bool = True
+    include_demo: bool = True
+    include_citations: bool = True
+
+    @field_validator("theme")
+    @classmethod
+    def normalize_theme(cls, value: str | None):
+        if value is None:
+            return None
+        normalized = value.strip().upper()
+        if normalized not in THEMES:
+            raise ValueError(f"Tema inválido. Use uno de: {', '.join(sorted(THEMES))}")
+        return normalized
 
     @model_validator(mode="after")
     def validate_request(self):
@@ -103,7 +125,62 @@ class ReportGenerationRequest(BaseModel):
             raise ValueError("community_id requiere parish_id")
         if self.sector_id and not self.community_id:
             raise ValueError("sector_id requiere community_id")
+        if self.template_code == "THEMATIC_REPORT" and not self.theme:
+            raise ValueError("El informe temático requiere un tema")
+        if self.template_code == "DEBATE_BRIEF_REPORT" and not self.theme:
+            raise ValueError("La preparación para debate requiere un tema")
+        if self.template_code == "PARISH_TERRITORIAL_PROFILE" and not self.parish_id:
+            raise ValueError("El informe territorial por parroquia requiere parish_id")
         return self
+
+
+class ReportCitationRead(BaseModel):
+    id: str
+    source_type: str
+    title: str
+    source_name: str
+    source_url: str | None = None
+    deep_link: str | None = None
+    evidence_class: str
+    record_date: date | None = None
+
+
+class ReportNarrativeRead(BaseModel):
+    titulo_sugerido: str
+    resumen_ejecutivo: str
+    hallazgos_principales: list[str]
+    limitations: list[str] = Field(default_factory=list)
+    provider: str
+
+
+class ReportSectionPreview(BaseModel):
+    title: str
+    subtitle: str | None = None
+    text: str | None = None
+    headers: list[str] = Field(default_factory=list)
+    rows: list[list[Any]] = Field(default_factory=list)
+
+
+class ReportPreviewResponse(BaseModel):
+    report_kind: str
+    title: str
+    subtitle: str | None = None
+    generated_at: date
+    generated_by: str
+    is_demo: bool
+    narrative: ReportNarrativeRead
+    sections: list[ReportSectionPreview]
+    citations: list[ReportCitationRead]
+    limitations: list[str] = Field(default_factory=list)
+
+
+class ReportTypeRead(BaseModel):
+    code: str
+    name: str
+    description: str
+    requires_parish: bool = False
+    requires_theme: bool = False
+    allowed_formats: list[str]
 
 
 class ReportArtifactRead(BaseModel):
@@ -130,6 +207,9 @@ class ReportRunRead(BaseModel):
     error_code: str | None = None
     error_message: str | None = None
     artifact: ReportArtifactRead | None = None
+    # Parámetros originales de generación (parish_id, theme, include_*, etc.):
+    # permiten reconstruir el wizard exactamente al pedir una versión actualizada.
+    filters: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReportGenerationResponse(ReportRunRead):

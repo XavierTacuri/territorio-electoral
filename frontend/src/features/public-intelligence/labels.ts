@@ -26,3 +26,15 @@ export const FETCH_STATUS_LABELS: Record<string, string> = {
   PARTIAL: 'Parcial',
   FAILED: 'Fallida',
 };
+export const RETRIEVAL_METHOD_LABELS: Record<string, string> = {
+  MANUAL: 'Manual',
+  RSS: 'RSS',
+  API: 'API',
+};
+export const PUBLIC_TOPIC_LABELS: Record<string, string> = {
+  WATER_SANITATION: 'Agua y saneamiento', WATER: 'Agua y saneamiento', BUDGET: 'Presupuesto',
+  EDUCATION: 'Educación', HEALTH: 'Salud', OTHER: 'Otros', PUBLIC_WORKS: 'Obras públicas',
+  SECURITY: 'Seguridad', ROAD_INFRASTRUCTURE: 'Vialidad', ROADS: 'Vialidad', TRANSPORT: 'Transporte',
+  ENVIRONMENT: 'Ambiente', HOUSING: 'Vivienda', EMPLOYMENT: 'Empleo', CONNECTIVITY: 'Conectividad',
+};
+export const publicTopicLabel = (code: string, fallback?: string) => PUBLIC_TOPIC_LABELS[code] ?? fallback ?? 'Otros';

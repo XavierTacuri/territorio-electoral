@@ -67,7 +67,7 @@ test('recorrido real Gualaceo V2.5, consola, red y responsive', async ({ page })
   for (const label of [
     'Código',
     'Nombre',
-    'Publisher',
+    'Publicador',
     'URL base',
     'RSS URL (opcional)',
     'Intervalo actualización (min)',

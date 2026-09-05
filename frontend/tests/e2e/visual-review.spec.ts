@@ -13,9 +13,13 @@ const sizes = [
 async function adminData(request: APIRequestContext) {
   const access = await apiToken(request);
   const headers = { Authorization: `Bearer ${access}` };
-  const campaign = (
+  const campaigns = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
-  ).items[0];
+  ).items;
+  const campaign = campaigns.find(
+    (item: { slug: string }) => item.slug === 'gualaceo-e2e-2027',
+  );
+  expect(campaign).toBeTruthy();
   const activities = await (
     await request.get(`/api/v1/campaigns/${campaign.id}/activities?page=1&page_size=10`, {
       headers,

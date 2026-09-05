@@ -25,6 +25,7 @@ def utcnow():return datetime.now(timezone.utc)
 def canonical(url):
     p=urlsplit(url);return urlunsplit((p.scheme.lower(),p.netloc.lower(),p.path.rstrip("/") or "/",p.query,""))
 STALE_TOLERANCE_RATIO=.25 # proportional scheduler-jitter tolerance
+SUPPORTED_RETRIEVAL_METHODS={"MANUAL","RSS","API"}
 class PublicIntelligenceService:
     def __init__(self,db:Session,http_client=None):self.db=db;self.access=CampaignAccessService(db);self.audit=SecurityAuditService(db);self.http_client=http_client
     def manage(self,cid,user):return self.access.require_management(cid,user)
@@ -34,15 +35,20 @@ class PublicIntelligenceService:
         return obj
     def create_source(self,cid,user,data):
         self.manage(cid,user)
+        if data.retrieval_method not in SUPPORTED_RETRIEVAL_METHODS:
+            raise BusinessRuleError("El método de recuperación no está disponible para nuevas fuentes.")
         for url in (data.base_url,data.feed_url,data.api_url):
             if url:validate_public_url(url)
         obj=PublicSource(campaign_id=cid,**data.model_dump(mode="json"));self.db.add(obj);self.db.flush();self.audit.record("source_created","SUCCESS","Fuente pública creada",user_id=user.id,campaign_id=cid,resource_type="PUBLIC_SOURCE",resource_id=obj.id);self.db.commit();self.db.refresh(obj);return obj
     def update_source(self,sid,user,data):
         obj=self.source(sid);self.manage(obj.campaign_id,user);was_active=obj.active
         values=data.model_dump(exclude_unset=True,mode="json")
+        if values.get("retrieval_method") not in (None,*SUPPORTED_RETRIEVAL_METHODS):
+            raise BusinessRuleError("El método de recuperación no está disponible para nuevas configuraciones.")
         for key in ("base_url","feed_url","api_url"):
             if values.get(key):validate_public_url(values[key])
         for k,v in values.items():setattr(obj,k,v)
+        if obj.retrieval_method=="MANUAL":obj.refresh_interval_minutes=None;obj.consecutive_failures=0;self._resolve_stale(obj)
         event="source_disabled" if values.get("active") is False else "source_reactivated" if values.get("active") is True and not was_active else "source_updated";self.audit.record(event,"SUCCESS","Fuente pública actualizada",user_id=user.id,campaign_id=obj.campaign_id,resource_type="PUBLIC_SOURCE",resource_id=obj.id);self.db.commit();self.db.refresh(obj);return obj
     def sources(self,cid,user):self.access.require_access(cid,user);return list(self.db.scalars(select(PublicSource).where(PublicSource.campaign_id==cid).order_by(PublicSource.name)))
     def _get(self,client,url,headers):
@@ -58,11 +64,14 @@ class PublicIntelligenceService:
             return response
     def fetch(self,sid,user,trigger="MANUAL"):
         source=self.source(sid);self.manage(source.campaign_id,user)
+        if source.retrieval_method=="MANUAL":raise BusinessRuleError("SOURCE_REFRESH_NOT_SUPPORTED: Esta fuente no tiene actualización automática configurada.")
+        if source.retrieval_method=="RSS":url=source.feed_url
+        elif source.retrieval_method=="API":url=source.api_url
+        else:raise BusinessRuleError("SOURCE_REFRESH_NOT_SUPPORTED: Esta fuente no tiene actualización automática configurada.")
+        if not url:raise BusinessRuleError("SOURCE_REFRESH_NOT_SUPPORTED: Esta fuente no tiene actualización automática configurada.")
         if not source.active:raise BusinessRuleError("La fuente está inactiva")
         run=PublicSourceFetchRun(source_id=sid,started_at=utcnow(),status="RUNNING",trigger_type=trigger);self.db.add(run);self.db.flush();source.last_fetch_at=run.started_at
         try:
-            url=source.feed_url if source.retrieval_method=="RSS" else source.api_url if source.retrieval_method=="API" else source.base_url
-            if source.retrieval_method=="MANUAL":raise BusinessRuleError("Las fuentes manuales no admiten actualización automática")
             headers={"User-Agent":settings.public_fetch_user_agent,"Accept":"application/rss+xml, application/atom+xml, application/json, text/xml;q=0.9"}
             if source.etag:headers["If-None-Match"]=source.etag
             if source.last_modified:headers["If-Modified-Since"]=source.last_modified
@@ -90,6 +99,7 @@ class PublicIntelligenceService:
     def freshness(self,source,now=None):
         now=now or utcnow()
         if not source.active:return ("INACTIVE",None,None)
+        if source.retrieval_method=="MANUAL":return ("MANUAL",None,None)
         if not source.last_success_at:return ("NEVER",None,None)
         if not source.refresh_interval_minutes:return ("CURRENT",None,None)
         interval=timedelta(minutes=source.refresh_interval_minutes);next_at=source.last_success_at+interval;stale_at=next_at+interval*STALE_TOLERANCE_RATIO

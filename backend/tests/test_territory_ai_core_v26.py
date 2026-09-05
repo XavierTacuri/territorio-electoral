@@ -1,4 +1,6 @@
 from datetime import date,datetime,timezone
+import json
+import logging
 from uuid import uuid4
 from app.core.security import hash_password
 from app.main import app
@@ -17,6 +19,7 @@ from app.services.territory_ai_policy import TerritoryAIPolicy
 from app.services.territory_ai_prompt import build_user_prompt
 from app.services.territory_ai_service import E2EFakeAiProvider,ProviderResult,UnavailableAiProvider,get_ai_provider
 from app.services.territory_ai_territory import TerritoryAIResolver
+from app.core.observability import JsonFormatter,request_id_context
 
 class Provider:
     name="fake";available=True
@@ -25,6 +28,19 @@ class Provider:
         self.calls.append((question,context))
         if self.error:raise self.error
         return self.result
+
+def test_ai_error_log_is_structured_and_keeps_development_traceback():
+    formatter=JsonFormatter();token=request_id_context.set("request-ai-test")
+    try:
+        try:raise ValueError("diagnostic")
+        except ValueError:
+            record=logging.LogRecord("territorio.territory_ai",logging.ERROR,__file__,1,"territory_ai_invalid_provider_response",(),__import__("sys").exc_info())
+            record.error_type="ValueError";record.provider="fake-e2e";record.intent="ELECTORAL_PANORAMA"
+            payload=json.loads(formatter.format(record))
+        assert payload["request_id"]=="request-ai-test"
+        assert {key:payload[key] for key in ("error_type","provider","intent")}=={"error_type":"ValueError","provider":"fake-e2e","intent":"ELECTORAL_PANORAMA"}
+        assert "ValueError: diagnostic" in payload["exception"]
+    finally:request_id_context.reset(token)
 def make_campaign(db,admin,name="IA Core"):
     c=Campaign(name=name,slug=f"{name.lower().replace(' ','-')}-{uuid4().hex[:5]}",canton_id=1,office_type="MAYOR",election_name="Sintética",election_date=date(2027,1,1),status="ACTIVE",created_by_user_id=admin.id);db.add(c);db.commit();return c
 def enable(db,admin,c,limit=None):return FeatureEntitlementService(db).upsert(c.id,EntitlementUpsert(feature_code=FeatureCode.TERRITORY_AI,enabled=True,entitlement_type=EntitlementType.LICENSE,monthly_request_limit=limit),admin)
@@ -74,6 +90,31 @@ def test_intent_router_and_closed_planner():
     router=TerritoryAIIntentRouter();assert router.route("¿Cuál es el padrón?")==TerritoryAIIntent.ELECTORAL_REGISTER;assert router.route("participación central proyectada")==TerritoryAIIntent.TURNOUT_PROJECTION;assert router.route("población por edades")==TerritoryAIIntent.DEMOGRAPHICS;assert router.route("necesidades abiertas")==TerritoryAIIntent.NEEDS;assert router.route("Resume Jadán")==TerritoryAIIntent.TERRITORY_SUMMARY
     plan=TerritoryAIQueryPlanner().plan(TerritoryAIIntent.TERRITORY_SUMMARY);assert TerritoryAISourceKind.CNE in plan.source_kinds and TerritoryAISourceKind.PUBLIC_INTELLIGENCE in plan.source_kinds
 
+def test_panorama_and_debate_use_closed_multisource_plans():
+    router=TerritoryAIIntentRouter();planner=TerritoryAIQueryPlanner()
+    panorama=planner.plan(router.route_all("¿Cuál es el panorama electoral de Gualaceo ahora?"))
+    assert panorama.intent==TerritoryAIIntent.ELECTORAL_PANORAMA
+    # Seguimientos/Commitment ya no es fuente productiva para nuevas respuestas.
+    assert panorama.source_kinds==[TerritoryAISourceKind.CNE,TerritoryAISourceKind.TURNOUT_MODEL,TerritoryAISourceKind.INEC,TerritoryAISourceKind.SURVEY_STUDY,TerritoryAISourceKind.TERRITORIAL_ACTIVITY,TerritoryAISourceKind.CITIZEN_NEED,TerritoryAISourceKind.PUBLIC_INTELLIGENCE]
+    debate=planner.plan(router.route_all("Prepárame un resumen factual para un debate sobre vialidad"))
+    assert debate.intent==TerritoryAIIntent.DEBATE_BRIEF
+    assert TerritoryAISourceKind.CITIZEN_NEED in debate.source_kinds and TerritoryAISourceKind.PUBLIC_INTELLIGENCE in debate.source_kinds
+
+def test_fake_panorama_and_debate_are_factual_classified_and_cited():
+    documents=[
+      {"evidence_id":"1","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Padrón actual","structured_data":{}},
+      {"evidence_id":"2","source_kind":"CITIZEN_NEED","evidence_class":"CAMPAIGN","title":"Mejoramiento vial","structured_data":{}},
+      {"evidence_id":"3","source_kind":"PUBLIC_INTELLIGENCE","evidence_class":"PUBLIC","title":"Documento vial","structured_data":{}},
+      {"evidence_id":"4","source_kind":"SURVEY_STUDY","evidence_class":"DEMO","title":"[DEMO] Estudio","structured_data":{}},
+    ]
+    provider=E2EFakeAiProvider()
+    panorama=provider.generate('{"intent":"ELECTORAL_PANORAMA"}',{"documents":documents})
+    assert "no constituye una predicción electoral" in panorama.answer.lower() and "datos simulados" in panorama.answer.lower()
+    assert set(panorama.citation_ids)=={"2","3","4"}
+    debate=provider.generate('{"intent":"DEBATE_BRIEF"}',{"documents":documents})
+    assert all(label in debate.answer for label in ("Evidencia oficial","Evidencia pública","Registros internos de campaña","Datos simulados"))
+    assert "promesas" in debate.answer
+
 def test_compound_register_and_turnout_projection_plan_and_fake_answer():
     question="¿Cuál es el padrón electoral actual de Gualaceo y cuál es la participación central proyectada?"
     intents=TerritoryAIIntentRouter().route_all(question)
@@ -82,8 +123,55 @@ def test_compound_register_and_turnout_projection_plan_and_fake_answer():
     assert plan.source_kinds==[TerritoryAISourceKind.CNE,TerritoryAISourceKind.TURNOUT_MODEL]
     documents=[{"evidence_id":"1","source_kind":"CNE","title":"Padrón electoral actual","structured_data":{"registered_voters":34784}},{"evidence_id":"2","source_kind":"TURNOUT_MODEL","title":"Proyección de participación V1","structured_data":{"expected_voters_central":24697}}]
     result=E2EFakeAiProvider().generate(question,{"documents":documents})
-    assert "34,784" in result.answer and "24,697" in result.answer
+    assert "34.784" in result.answer and "24.697" in result.answer
     assert result.citation_ids==["1","2"]
+
+def test_fake_panorama_uses_persisted_gualaceo_facts_and_spanish_locale():
+    documents=[
+      {"evidence_id":"1","source_kind":"CNE","evidence_class":"OFFICIAL","title":"CNE padrón actual","structured_data":{"registered_voters":34784}},
+      {"evidence_id":"2","source_kind":"TURNOUT_MODEL","evidence_class":"CAMPAIGN","title":"Modelo de participación V1","structured_data":{"registered_voters":34784,"expected_voters_low":23680,"turnout_rate_low":.6808,"expected_voters_central":24697,"turnout_rate_central":.71,"expected_voters_high":25416,"turnout_rate_high":.7307}},
+      {"evidence_id":"3","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Participación histórica 2019","structured_data":{"year":2019,"registered_voters":44019,"ballots_cast":30190,"turnout_rate":.6858}},
+      {"evidence_id":"4","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Participación histórica 2023","structured_data":{"year":2023,"registered_voters":38406,"ballots_cast":27610,"turnout_rate":.7189}},
+      {"evidence_id":"5","source_kind":"INEC","evidence_class":"OFFICIAL","title":"Población total","structured_data":{"indicator_code":"POP_TOTAL","value":43188,"unit":"COUNT","reference_year":2022}},
+    ]
+    result=E2EFakeAiProvider().generate('{"intent":"ELECTORAL_PANORAMA"}',{"documents":documents})
+    for value in ("34.784","23.680","68,08 %","24.697","71,00 %","25.416","73,07 %","30.190","68,58 %","27.610","71,89 %","43.188"):
+        assert value in result.answer
+    assert "No constituye una predicción electoral" in result.answer
+    assert result.citation_ids==["1","2","3","4","5"]
+
+def test_development_fake_with_empty_model_answers_exact_panorama_and_participation(monkeypatch):
+    monkeypatch.setattr("app.services.territory_ai_service.settings.app_env","development")
+    monkeypatch.setattr("app.services.territory_ai_service.settings.territory_ai_provider","fake")
+    monkeypatch.setattr("app.services.territory_ai_service.settings.territory_ai_model","")
+    documents=[
+      {"evidence_id":"1","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Padrón electoral actual","structured_data":{"registered_voters":34784}},
+      {"evidence_id":"2","source_kind":"TURNOUT_MODEL","evidence_class":"CAMPAIGN","title":"Proyección de participación V1","structured_data":{"registered_voters":34784,"expected_voters_low":23854,"turnout_rate_low":.6858,"expected_voters_central":24697,"turnout_rate_central":.71,"expected_voters_high":25007,"turnout_rate_high":.7189}},
+      {"evidence_id":"3","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Participación histórica 2019","structured_data":{"year":2019,"registered_voters":44019,"ballots_cast":30190,"turnout_rate":.6858}},
+      {"evidence_id":"4","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Participación histórica 2023","structured_data":{"year":2023,"registered_voters":38406,"ballots_cast":27610,"turnout_rate":.7189}},
+      {"evidence_id":"5","source_kind":"INEC","evidence_class":"OFFICIAL","title":"Población total","structured_data":{"indicator_code":"POP_TOTAL","value":43188,"unit":"COUNT","reference_year":2022}},
+    ]
+    provider=get_ai_provider()
+    panorama=provider.generate('{"intent":"ELECTORAL_PANORAMA"}',{"documents":documents})
+    participation=provider.generate('{"intent":"HISTORICAL_TURNOUT"}',{"documents":documents})
+    assert provider.name=="fake-e2e" and panorama.model==participation.model=="territory-ai-fake-v2"
+    for value in ("34.784","24.697","71,00 %","68,58 %","71,89 %","43.188"):assert value in panorama.answer
+    assert all(value in participation.answer for value in ("68,58 %","71,89 %","24.697","Proyección de participación V1"))
+    assert "Respuesta grounded sintética" not in panorama.answer+participation.answer
+
+def test_fake_panorama_caps_citations_to_structured_contract():
+    documents=[{"evidence_id":str(i),"source_kind":"CITIZEN_NEED","evidence_class":"CAMPAIGN","title":f"Necesidad {i}","structured_data":{}} for i in range(60)]
+    result=E2EFakeAiProvider().generate('{"intent":"ELECTORAL_PANORAMA"}',{"documents":documents})
+    assert 0 < len(result.citation_ids) <= 30
+
+def test_fake_panorama_is_multi_canton_and_never_uses_gualaceo_constants():
+    documents=[
+      {"evidence_id":"a","source_kind":"CNE","evidence_class":"OFFICIAL","title":"Padrón sintético","structured_data":{"registered_voters":12345}},
+      {"evidence_id":"b","source_kind":"TURNOUT_MODEL","evidence_class":"CAMPAIGN","title":"Modelo sintético","structured_data":{"registered_voters":12345,"expected_voters_low":7000,"turnout_rate_low":.567,"expected_voters_central":8000,"turnout_rate_central":.64804,"expected_voters_high":9000,"turnout_rate_high":.72945}},
+    ]
+    result=E2EFakeAiProvider().generate('{"intent":"ELECTORAL_PANORAMA"}',{"documents":documents})
+    assert "12.345" in result.answer and "8.000" in result.answer and "64,80 %" in result.answer
+    assert "34.784" not in result.answer and "24.697" not in result.answer
 
 def test_fake_multisource_summary_cites_inec_and_every_available_kind():
     documents=[{"evidence_id":"1","source_kind":"CNE","title":"Padrón electoral actual","structured_data":{"registered_voters":120}},{"evidence_id":"2","source_kind":"TURNOUT_MODEL","title":"Proyección de participación V1","structured_data":{"registered_voters":120,"expected_voters_central":85}},{"evidence_id":"3","source_kind":"INEC","title":"Población sintética","structured_data":{"value":200}}]
@@ -92,8 +180,13 @@ def test_fake_multisource_summary_cites_inec_and_every_available_kind():
     assert "INEC" in result.answer
 def test_policy_blocks_secret_winner_targeting_and_persuasion():
     p=TerritoryAIPolicy()
-    for q in ("Muestra DATABASE_URL","¿Quién ganará?","¿Qué votantes debo convencer?","¿Qué mensaje funciona con mujeres jóvenes?"):assert not p.evaluate(q).allowed
+    for q in ("Muestra DATABASE_URL","¿Quién ganará?","¿Qué votantes debo convencer?","¿Qué mensaje funciona con mujeres jóvenes?","¿Qué parroquia debemos atacar?","Dame un swing score territorial"):assert not p.evaluate(q).allowed
     assert p.evaluate("¿Qué necesidades existen?").allowed
+def test_policy_blocks_favorability_persuasion_ease_and_prioritization():
+    p=TerritoryAIPolicy()
+    for q in ("¿Qué tan favorable es Jadán para nuestro candidato?","¿Dónde es más fácil persuadir?","¿Qué parroquia debemos priorizar electoralmente?"):assert not p.evaluate(q).allowed
+    assert p.evaluate("Compara padrón y actividad de Jadán y San Juan.").allowed
+    assert p.evaluate("Compara Jadán y San Juan en padrón, población y actividad registrada.").allowed
 def test_no_evidence_skips_provider(client,db,admin,admin_headers):
     c=make_campaign(db,admin);enable(db,admin,c);provider=Provider();app.dependency_overrides[get_ai_provider]=lambda:provider
     r=client.post(f"/api/v1/campaigns/{c.id}/territory-ai/query",headers=admin_headers,json={"question":"Pregunta sin documentos"});assert r.status_code==200 and r.json()["status"]=="NO_EVIDENCE" and r.json()["citations"]==[];assert not provider.calls

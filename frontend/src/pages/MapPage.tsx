@@ -20,7 +20,6 @@ const LAYERS = [
   ['communities', 'Comunidades', 'circle'],
   ['activities?cluster=true', 'Actividades', 'circle'],
   ['needs', 'Necesidades', 'fill'],
-  ['commitments', 'Compromisos', 'fill'],
 ] as const;
 export default function MapPage() {
   const { campaignId = '' } = useParams();

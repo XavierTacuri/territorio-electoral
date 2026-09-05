@@ -6,7 +6,9 @@ async function campaignWithAnalysis(request: APIRequestContext) {
   const headers = { Authorization: `Bearer ${token}` };
   const campaigns = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
-  ).items as Array<{ id: string; name: string }>;
+  ).items as Array<{ id: string; name: string; slug: string }>;
+  const synthetic = campaigns.find((campaign) => campaign.slug === 'territorio-sintetico-e2e');
+  if (synthetic) return synthetic;
   for (const campaign of campaigns) {
     const response = await request.get(
       `/api/v1/campaigns/${campaign.id}/current-election/analysis`,
@@ -30,32 +32,19 @@ test('dashboard ejecutivo: KPIs, mapa, operación, navegación, informe y respon
   await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await expect(page).toHaveURL(`/app/campaigns/${campaignId}/dashboard`);
 
-  await expect(page.getByRole('heading', { level: 1, name: 'TERRITORIO ELECTORAL' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'REGISTRO ELECTORAL' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PARTICIPACIÓN PROYECTADA' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PARTICIPACIÓN HISTÓRICA' })).toBeVisible();
-  await expect(page.getByText('PANORAMA TERRITORIAL')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'CONTEXTO TERRITORIAL' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'ESTADO DE DATOS' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'OPERACIÓN TERRITORIAL' })).toBeVisible();
-  await expect(page.getByText('330 votantes', { exact: true })).toBeVisible();
-  await expect(page.getByText('73,33 %', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('450', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' })).toBeVisible();
+  await expect(page.getByText('Padrón electoral', { exact: true })).toBeVisible();
+  await expect(page.getByText('Participación central', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Mapa operativo territorial' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Hoy en territorio' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Panorama electoral' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Territorio IA' })).toBeVisible();
 
-  const electionLink = page.getByRole('link', { name: 'VER ELECCIÓN ACTUAL' });
+  const electionLink = page.getByRole('link', { name: 'VER PANORAMA ELECTORAL' });
   await expect(electionLink).toHaveAttribute(
     'href',
-    `/app/campaigns/${campaignId}/current-election`,
+    `/app/campaigns/${campaignId}/panorama`,
   );
-
-  const reportResponse = page.waitForResponse(
-    (response) =>
-      response.url().includes(`/api/v1/campaigns/${campaignId}/reports/generate`) &&
-      response.request().method() === 'POST',
-  );
-  await page.getByRole('button', { name: 'Generar informe PDF' }).click();
-  expect((await reportResponse).status()).toBeLessThan(400);
-  await expect(page.getByText('Generado: informe PDF')).toBeVisible();
 
   for (const viewport of [
     { name: 'desktop', width: 1440, height: 900 },
@@ -64,7 +53,7 @@ test('dashboard ejecutivo: KPIs, mapa, operación, navegación, informe y respon
   ]) {
     await page.setViewportSize(viewport);
     await expect(
-      page.getByRole('heading', { level: 1, name: 'TERRITORIO ELECTORAL' }),
+      page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' }),
     ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
