@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.models.campaign import Campaign
 from app.models.historical import DataSource,ElectoralProcess,ElectoralRollSnapshot,ElectoralRollSnapshotEntry,ParticipationProjectionResult,ParticipationProjectionRun
 from app.models.territory import Canton,Parish,Province
-from app.models.assignments import CampaignUser
+from app.models.assignments import CampaignUser,TerritorialAssignment
 from app.models.user import User
 from app.core.security import hash_password
 from app.services.role_service import RoleService
@@ -50,3 +50,34 @@ def test_campaign_member_cannot_read_another_campaign_current_election(client,db
     assert client.get(f"/api/v1/campaigns/{campaign_a.id}/current-election/analysis",headers=headers).status_code==200
     denied=client.get(f"/api/v1/campaigns/{campaign_b.id}/current-election/analysis",headers=headers)
     assert denied.status_code==403
+
+
+def test_current_election_coordinator_sees_only_assigned_parish(client,db,admin,admin_headers):
+    province=Province(id=780,code="78",name="Provincia 78");db.add(province);db.flush()
+    canton=Canton(id=780,province_id=province.id,code="05",dpa_code="7805",name="Cantón Coordinador");db.add(canton);db.flush()
+    parish_a=Parish(id=7801,canton_id=canton.id,code="01",dpa_code="780101",name="Parroquia Asignada",parish_type="RURAL")
+    parish_b=Parish(id=7802,canton_id=canton.id,code="02",dpa_code="780102",name="Parroquia No Asignada",parish_type="RURAL")
+    db.add(parish_a);db.add(parish_b);db.flush()
+    campaign=Campaign(name="Campaña Coordinador",slug=f"campaign-coord-{uuid4().hex[:4]}",canton_id=canton.id,office_type="MAYOR",election_name="Elección Coordinador",election_date=date(2027,2,1),status="ACTIVE",created_by_user_id=admin.id);db.add(campaign);db.flush()
+    source=DataSource(code=f"V27-COORD-{uuid4().hex[:4]}",institution="Fuente sintética",dataset_name="Dataset coordinador",dataset_type="CNE_ELECTORAL_ROLL_SNAPSHOT",created_by_user_id=admin.id);db.add(source);db.flush()
+    process=ElectoralProcess(code=f"V27-P-COORD-{uuid4().hex[:4]}",name="Proceso coordinador",process_type="SECTIONAL",election_date=date(2027,2,1),year=2027,status="VALIDATED",is_final=True,source_id=source.id,is_active=True);db.add(process);db.flush()
+    snapshot=ElectoralRollSnapshot(source_id=source.id,electoral_process_id=process.id,snapshot_date=date(2026,5,1),name="Snapshot coordinador",status="VALIDATED",is_final=True,created_by_user_id=admin.id);db.add(snapshot);db.flush()
+    for parish,registered in ((parish_a,500),(parish_b,600)):
+        db.add(ElectoralRollSnapshotEntry(snapshot_id=snapshot.id,geography_level="PARISH",province_id=province.id,canton_id=canton.id,parish_id=parish.id,province_dpa=province.code,canton_dpa=canton.dpa_code,parish_dpa=parish.dpa_code,registered_voters=registered,male_voters=registered//2,female_voters=registered-registered//2,electoral_zones=1,juntas=2))
+    db.flush()
+    run=ParticipationProjectionRun(campaign_id=campaign.id,electoral_process_id=process.id,snapshot_id=snapshot.id,model_code="TURNOUT_HISTORICAL_WEIGHTED_V1",model_version="1.0",historical_process_ids=[],parameters={},run_date=date(2026,5,1),created_by_user_id=admin.id);db.add(run);db.flush()
+    for parish,registered,central in ((parish_a,500,350),(parish_b,600,420)):
+        db.add(ParticipationProjectionResult(run_id=run.id,parish_id=parish.id,registered_voters=registered,turnout_rate_low=Decimal("0.60"),turnout_rate_central=Decimal(str(central/registered)),turnout_rate_high=Decimal("0.80"),expected_voters_low=int(registered*.6),expected_voters_central=central,expected_voters_high=int(registered*.8),data_quality_status="MEDIUM",explanation="Fixture coordinador"))
+    role=RoleService(db).repository.get_by_code("TERRITORIAL_COORDINATOR")
+    user=User(email="v27-coord@example.test",username="v27-coord",first_name="V27",last_name="Coord",hashed_password=hash_password("CoordPass123"),is_active=True,roles=[role])
+    db.add(user);db.flush()
+    db.add(CampaignUser(campaign_id=campaign.id,user_id=user.id,assigned_by_user_id=admin.id,is_active=True))
+    db.add(TerritorialAssignment(campaign_id=campaign.id,user_id=user.id,parish_id=parish_a.id,assigned_by_user_id=admin.id,is_active=True))
+    db.commit()
+    login=client.post("/api/v1/auth/login",data={"username":"v27-coord","password":"CoordPass123"})
+    headers={"Authorization":f"Bearer {login.json()['access_token']}"}
+    response=client.get(f"/api/v1/campaigns/{campaign.id}/current-election/analysis",headers=headers)
+    assert response.status_code==200
+    assert {p["name"] for p in response.json()["parishes"]}=={"Parroquia Asignada"}
+    admin_response=client.get(f"/api/v1/campaigns/{campaign.id}/current-election/analysis",headers=admin_headers)
+    assert {p["name"] for p in admin_response.json()["parishes"]}=={"Parroquia Asignada","Parroquia No Asignada"}

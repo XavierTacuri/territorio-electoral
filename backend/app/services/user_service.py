@@ -2,7 +2,7 @@ from math import ceil
 from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.core.security import hash_password
+from app.core.security import hash_password, validate_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserListResponse, UserRead, UserUpdate
@@ -66,10 +66,25 @@ class UserService:
         except IntegrityError as exc: self.db.rollback(); raise ConflictError("Email o username ya registrado") from exc
         return self.repository.get_by_id(user.id) or user
 
-    def change_password(self, user_id: UUID, new_password: str) -> None:
+    def change_password(self, user_id: UUID, new_password: str, actor: User | None = None) -> None:
         user = self.get(user_id)
         user.hashed_password = hash_password(new_password)
         BrowserAuthService(self.db).revoke_user_sessions(user, "PASSWORD_CHANGED")
         SecurityAuditService(self.db).record("PASSWORD_CHANGED", "SUCCESS",
-            "Contraseña actualizada y sesiones revocadas", user_id=user.id)
+            "Contraseña actualizada y sesiones revocadas", user_id=user.id,
+            metadata={"user_id": str(user.id), "actor_user_id": str((actor or user).id)})
         self.db.commit()
+
+    def change_own_password(self, user: User, current_password: str, new_password: str,
+                            confirmation: str) -> None:
+        if not verify_password(current_password, user.hashed_password):
+            raise BusinessRuleError("La contraseña actual no es correcta.")
+        if new_password != confirmation:
+            raise BusinessRuleError("Las nuevas contraseñas no coinciden.")
+        if verify_password(new_password, user.hashed_password):
+            raise BusinessRuleError("La nueva contraseña debe ser distinta de la actual.")
+        try:
+            validate_password(new_password)
+        except ValueError as exc:
+            raise BusinessRuleError("La nueva contraseña no cumple los requisitos de seguridad.") from exc
+        self.change_password(user.id, new_password, actor=user)

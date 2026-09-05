@@ -60,7 +60,13 @@ export function toCampaignPayload(values: CampaignFormValues, editing: boolean) 
   };
   if (!common.election_date || !isValidDateOnly(common.election_date))
     throw new Error('Fecha electoral inválida.');
-  return editing ? common : { ...common, canton_id: Number(values.canton_id) };
+  return editing
+    ? common
+    : {
+        ...common,
+        province_id: Number(values.province_id),
+        canton_id: Number(values.canton_id),
+      };
 }
 
 export function slugify(value: string) {

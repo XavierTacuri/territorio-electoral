@@ -27,6 +27,15 @@ def current_election_analysis(campaign_id: UUID, user: User = Depends(get_curren
     if not snapshot or not run: raise HTTPException(404, 'Datos de elección actual incompletos')
     entries = list(db.scalars(select(ElectoralRollSnapshotEntry).where(ElectoralRollSnapshotEntry.snapshot_id == snapshot.id, ElectoralRollSnapshotEntry.geography_level == 'PARISH', ElectoralRollSnapshotEntry.canton_id == campaign.canton_id)))
     parish_ids = [e.parish_id for e in entries if e.parish_id is not None]
+    access = CampaignAccessService(db)
+    roles = {r.code for r in user.roles}
+    broad = access.admin(user) or bool(roles.intersection({'CANDIDATE', 'CAMPAIGN_MANAGER', 'ANALYST'}))
+    if not broad:
+        assignments = access.territorial_ids(campaign_id, user)
+        if assignments is not None:
+            allowed_parish_ids = {a.parish_id for a in assignments}
+            parish_ids = [pid for pid in parish_ids if pid in allowed_parish_ids]
+    entries = [e for e in entries if e.parish_id in parish_ids]
     parishes = {p.id: p for p in db.scalars(select(Parish).where(Parish.id.in_(parish_ids)))}
     results = {r.parish_id: r for r in db.scalars(select(ParticipationProjectionResult).where(ParticipationProjectionResult.run_id == run.id))}
     processes = list(db.scalars(select(ElectoralProcess).where(ElectoralProcess.id.in_([str(x) for x in run.historical_process_ids]))))

@@ -130,3 +130,10 @@ class PasswordChange(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class OwnPasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+    new_password_confirmation: str
+    model_config = ConfigDict(extra="forbid")

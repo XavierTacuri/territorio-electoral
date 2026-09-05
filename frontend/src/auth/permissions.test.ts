@@ -12,6 +12,18 @@ const user = (code: string, superuser = false): SessionUser => ({
   roles: [{ code, name: code }],
 });
 describe('matriz de permisos', () => {
+  it.each(['CANDIDATE', 'CAMPAIGN_MANAGER'])('comparte capacidades ejecutivas de campaña para %s', (role) => {
+    const executive = user(role);
+    expect(p.canApproveActivity(executive)).toBe(true);
+    expect(p.canManageSurvey(executive)).toBe(true);
+    expect(p.canCollectSurvey(executive)).toBe(true);
+    expect(p.canGenerateReport(executive)).toBe(true);
+    expect(p.canDeleteReport(executive)).toBe(true);
+    expect(p.canEvaluateAlerts(executive)).toBe(true);
+    expect(p.canAcknowledgeAlert(executive)).toBe(true);
+    expect(p.canDismissAlert(executive)).toBe(true);
+  });
+  it('analista no aprueba actividades', () => expect(p.canApproveActivity(user('ANALYST'))).toBe(false));
   it('ADMIN gestiona usuarios', () => expect(p.canManageUsers(user('ADMIN'))).toBe(true));
   it('CANDIDATE no gestiona usuarios', () =>
     expect(p.canManageUsers(user('CANDIDATE'))).toBe(false));
@@ -33,8 +45,8 @@ describe('matriz de permisos', () => {
   });
   it('solo admin importa geometría', () => expect(p.canImportGeometry(user('ADMIN'))).toBe(true));
   it('analista genera informes', () => expect(p.canGenerateReport(user('ANALYST'))).toBe(true));
-  it('candidato no genera informes', () =>
-    expect(p.canGenerateReport(user('CANDIDATE'))).toBe(false));
+  it('candidato genera informes', () =>
+    expect(p.canGenerateReport(user('CANDIDATE'))).toBe(true));
   it('manager elimina informes', () =>
     expect(p.canDeleteReport(user('CAMPAIGN_MANAGER'))).toBe(true));
   it('analista evalúa alertas', () => expect(p.canEvaluateAlerts(user('ANALYST'))).toBe(true));
@@ -42,9 +54,10 @@ describe('matriz de permisos', () => {
     expect(p.canAcknowledgeAlert(user('TERRITORIAL_COORDINATOR'))).toBe(true);
     expect(p.canDismissAlert(user('TERRITORIAL_COORDINATOR'))).toBe(false);
   });
-  it('candidato solo consulta alertas', () => {
-    expect(p.canAcknowledgeAlert(user('CANDIDATE'))).toBe(false);
-    expect(p.canResolveAlert(user('CANDIDATE'))).toBe(false);
+  it('el ejecutivo de campaÃ±a puede gestionar alertas', () => {
+    expect(p.canAcknowledgeAlert(user('CANDIDATE'))).toBe(true);
+    expect(p.canResolveAlert(user('CANDIDATE'))).toBe(true);
+    expect(p.canDismissAlert(user('CANDIDATE'))).toBe(true);
   });
   it('auditoría queda reservada a admin', () => {
     expect(p.canViewSecurityAudit(user('ADMIN'))).toBe(true);

@@ -1,7 +1,13 @@
 export type OfficeType = 'MAYOR' | 'URBAN_COUNCILOR' | 'RURAL_COUNCILOR' | 'PARISH_BOARD';
 export type CampaignStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 
-export type Province = { id: number; code: string; name: string; is_active: boolean };
+export type Province = {
+  id: number;
+  code: string;
+  dpa_code: string;
+  name: string;
+  is_active: boolean;
+};
 export type Canton = {
   id: number;
   province_id: number;

@@ -1,6 +1,8 @@
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
+from sqlalchemy import select
+
 from app.core.security import hash_password
 from app.models.assignments import CampaignUser
 from app.models.campaign import Campaign
@@ -10,6 +12,8 @@ from app.models.user import User
 from app.services.organization_service import OrganizationAccessService, OrganizationError, PlanLimitService, SubscriptionService
 from app.services.campaign_access_service import CampaignAccessService
 from app.services.role_service import RoleService
+from app.schemas.campaign import CampaignUserAssign
+from app.services.territorial_assignment_service import TerritorialAssignmentService
 
 
 def _organization(db, name, plan="STANDARD", max_campaigns=None, max_users=None):
@@ -138,3 +142,97 @@ def test_trial_expiration_is_evaluated_dynamically(db):
     subscription.trial_ends_at = datetime.now(timezone.utc) - timedelta(seconds=1)
     db.commit()
     assert SubscriptionService(db).effective(subscription) is False
+
+
+def test_campaign_assignment_creates_minimum_membership_and_grants_access(client, db, admin):
+    organization = _organization(db, "Assignment membership", max_users=2)
+    user = _user(db, "assignment-member")
+    campaign = _campaign(db, admin, organization, 7); db.commit()
+
+    assigned = TerritorialAssignmentService(db).assign_user(
+        campaign.id, CampaignUserAssign(user_id=user.id), admin,
+    )
+
+    membership = db.scalar(select(OrganizationMembership).where(
+        OrganizationMembership.organization_id == organization.id,
+        OrganizationMembership.user_id == user.id,
+    ))
+    assert assigned.is_active is True
+    assert membership is not None
+    assert membership.organization_role == "MEMBER"
+    assert membership.status == "ACTIVE"
+    assert campaign.id in CampaignAccessService(db).accessible_ids(user)
+    listing = client.get("/api/v1/campaigns", headers=_headers(client, user))
+    assert listing.status_code == 200
+    assert str(campaign.id) in {item["id"] for item in listing.json()["items"]}
+
+
+def test_campaign_assignment_preserves_admin_membership_and_removal_keeps_it(db, admin):
+    organization = _organization(db, "Assignment admin")
+    user = _user(db, "assignment-admin")
+    membership = OrganizationMembership(
+        organization_id=organization.id, user_id=user.id,
+        organization_role="ADMIN", status="ACTIVE",
+    )
+    db.add(membership)
+    campaign = _campaign(db, admin, organization, 8); db.commit()
+
+    TerritorialAssignmentService(db).assign_user(
+        campaign.id, CampaignUserAssign(user_id=user.id), admin,
+    )
+    assert membership.organization_role == "ADMIN"
+    TerritorialAssignmentService(db).remove_user(campaign.id, user.id, admin)
+    assert membership.status == "ACTIVE"
+    assert membership.organization_role == "ADMIN"
+
+
+def test_platform_admin_cross_org_assignment_creates_beta_membership(client, db, admin):
+    alpha = _organization(db, "Assignment Alpha")
+    beta = _organization(db, "Assignment Beta")
+    user = _user(db, "assignment-cross-org")
+    db.add(OrganizationMembership(
+        organization_id=alpha.id, user_id=user.id,
+        organization_role="MEMBER", status="ACTIVE",
+    ))
+    campaign = _campaign(db, admin, beta, 9); db.commit()
+
+    denied = client.post(
+        f"/api/v1/campaigns/{campaign.id}/users",
+        json={"user_id": str(user.id)}, headers=_headers(client, user),
+    )
+    assert denied.status_code == 403
+
+    TerritorialAssignmentService(db).assign_user(
+        campaign.id, CampaignUserAssign(user_id=user.id), admin,
+    )
+
+    beta_membership = db.scalar(select(OrganizationMembership).where(
+        OrganizationMembership.organization_id == beta.id,
+        OrganizationMembership.user_id == user.id,
+    ))
+    assert beta_membership.organization_role == "MEMBER"
+    assert beta_membership.status == "ACTIVE"
+    assert campaign.id in CampaignAccessService(db).accessible_ids(user)
+
+
+def test_campaign_assignment_honors_user_limit_without_orphan(client, db, admin, admin_headers):
+    organization = _organization(db, "Assignment limit", max_users=1)
+    existing = _user(db, "assignment-existing")
+    external = _user(db, "assignment-external")
+    db.add(OrganizationMembership(
+        organization_id=organization.id, user_id=existing.id,
+        organization_role="MEMBER", status="ACTIVE",
+    ))
+    campaign = _campaign(db, admin, organization, 10); db.commit()
+
+    response = client.post(
+        f"/api/v1/campaigns/{campaign.id}/users",
+        json={"user_id": str(external.id)}, headers=admin_headers,
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "PLAN_USER_LIMIT_REACHED"
+
+    assert db.scalar(select(CampaignUser).where(
+        CampaignUser.campaign_id == campaign.id,
+        CampaignUser.user_id == external.id,
+    )) is None

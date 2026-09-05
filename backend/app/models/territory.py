@@ -18,6 +18,8 @@ class Province(TechnicalFields, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     code: Mapped[str] = mapped_column(String(2), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    @property
+    def dpa_code(self) -> str: return self.code
     @validates("code")
     def clean_code(self, _k: str, v: str) -> str: return v.strip()
     @validates("name")
@@ -37,7 +39,7 @@ class Canton(TechnicalFields, Base):
 
 class Parish(TechnicalFields, Base):
     __tablename__ = "parishes"
-    __table_args__ = (UniqueConstraint("canton_id", "code", name="uq_parishes_canton_code"), UniqueConstraint("canton_id", "name", name="uq_parishes_canton_name"), CheckConstraint("parish_type IN ('URBAN','RURAL')", name="parish_type"), Index("ix_parishes_dpa_code", "dpa_code", unique=True), Index("ix_parishes_canton_id", "canton_id"), Index("ix_parishes_geometry_gist", "geometry", postgresql_using="gist"))
+    __table_args__ = (UniqueConstraint("canton_id", "code", name="uq_parishes_canton_code"), CheckConstraint("parish_type IN ('URBAN','RURAL')", name="parish_type"), Index("ix_parishes_dpa_code", "dpa_code", unique=True), Index("ix_parishes_canton_id", "canton_id"), Index("ix_parishes_geometry_gist", "geometry", postgresql_using="gist"))
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     canton_id: Mapped[int] = mapped_column(ForeignKey("cantons.id", ondelete="RESTRICT"), nullable=False)
     code: Mapped[str] = mapped_column(String(2), nullable=False)

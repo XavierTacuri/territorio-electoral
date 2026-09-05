@@ -10,7 +10,7 @@ def clean(v:str)->str:
     if not v: raise ValueError("El valor no puede estar vacío")
     return v
 class CampaignCreate(BaseModel):
-    name:str; slug:str; canton_id:int; organization_id:UUID|None=None; office_type:OfficeType; election_name:str; election_date:date; start_date:date|None=None; end_date:date|None=None; status:CampaignStatus=CampaignStatus.DRAFT; description:str|None=None; is_active:bool=True
+    name:str; slug:str; canton_id:int; province_id:int|None=None; organization_id:UUID|None=None; office_type:OfficeType; election_name:str; election_date:date; start_date:date|None=None; end_date:date|None=None; status:CampaignStatus=CampaignStatus.DRAFT; description:str|None=None; is_active:bool=True
     model_config=ConfigDict(extra="forbid")
     _names=field_validator("name","election_name")(clean)
     @field_validator("slug")

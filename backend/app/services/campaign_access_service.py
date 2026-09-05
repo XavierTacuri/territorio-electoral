@@ -69,7 +69,7 @@ class CampaignAccessService:
         if not self.admin(user) and "CAMPAIGN_MANAGER" not in {r.code for r in user.roles}:raise PermissionError("Sin permisos de gestión")
         return campaign
     def territorial_ids(self,campaign_id:UUID,user:User):
-        if self.admin(user) or "CANDIDATE" in {r.code for r in user.roles}:return None
+        if self.admin(user) or {"CANDIDATE","CAMPAIGN_MANAGER"}.intersection(r.code for r in user.roles):return None
         campaign=self.db.get(Campaign,campaign_id)
         if campaign and self.db.scalar(select(OrganizationMembership.id).where(OrganizationMembership.organization_id==campaign.organization_id,OrganizationMembership.user_id==user.id,OrganizationMembership.status=="ACTIVE",OrganizationMembership.organization_role.in_(("OWNER","ADMIN")))):return None
         return list(self.db.scalars(select(TerritorialAssignment).where(TerritorialAssignment.campaign_id==campaign_id,TerritorialAssignment.user_id==user.id,TerritorialAssignment.is_active.is_(True))))

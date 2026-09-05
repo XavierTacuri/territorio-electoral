@@ -7,10 +7,11 @@ from app.db.session import get_db
 from app.models.user import User
 from app.core.config import settings
 from app.schemas.auth import BrowserLogin, BrowserSession, BrowserToken, Token
-from app.schemas.user import UserRead
+from app.schemas.user import MessageResponse, OwnPasswordChange, UserRead
 from app.services.auth_service import AuthService
 from app.services.browser_auth_service import BrowserAuthService
-from app.services.exceptions import AuthenticationError, InactiveUserError
+from app.services.exceptions import AuthenticationError, BusinessRuleError, InactiveUserError
+from app.services.user_service import UserService
 from app.services.auth_rate_limit import check_login_rate_limit, clear_login_failures, record_login_failure
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -33,6 +34,17 @@ def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Ses
 
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_active_user)) -> User: return user
+
+
+@router.post("/change-password", response_model=MessageResponse)
+def change_own_password(data: OwnPasswordChange, user: User = Depends(get_current_active_user),
+                        db: Session = Depends(get_db)) -> MessageResponse:
+    try:
+        UserService(db).change_own_password(user, data.current_password, data.new_password,
+                                            data.new_password_confirmation)
+    except BusinessRuleError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return MessageResponse(message="Contraseña actualizada correctamente. Inicia sesión nuevamente.")
 
 
 REFRESH_COOKIE = "te_refresh"

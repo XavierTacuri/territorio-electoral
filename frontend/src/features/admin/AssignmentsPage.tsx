@@ -5,10 +5,12 @@ import { apiRequest } from '../../api/client';
 import { ApiError } from '../../api/errors';
 import { DataTable } from '../../components/tables/DataTable';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { commercialErrorMessages } from '../../lib/labels';
+import { parishOptionLabel } from '../../lib/territoryLabels';
 
 type Campaign = { id: string; name: string; canton_id: number };
 type User = { id: string; username: string; first_name: string; last_name: string };
-type Parish = { id: number; name: string; canton_id: number };
+type Parish = { id: number; name: string; canton_id: number; dpa_code?: string; parish_type?: 'URBAN' | 'RURAL' };
 type Community = { id: string; name: string; parish_id: number };
 type Sector = { id: string; name: string; community_id: string };
 type Assignment = {
@@ -37,11 +39,20 @@ export function assignmentPayload(
   };
 }
 
-function assignmentError(error: unknown) {
+export function assignmentError(error: unknown) {
   if (error instanceof ApiError) {
+    const responseDetail =
+      error.detail && typeof error.detail === 'object' && 'detail' in error.detail
+        ? error.detail.detail
+        : error.detail;
+    const code =
+      responseDetail && typeof responseDetail === 'object' && 'code' in responseDetail
+        ? String(responseDetail.code)
+        : '';
+    if (code in commercialErrorMessages) return commercialErrorMessages[code];
     return (
       {
-        403: 'Acceso denegado.',
+        403: 'No tienes permisos para asignar usuarios a esta campaña.',
         404: 'Territorio no encontrado.',
         409: 'La asignacion ya existe.',
         422: 'Revise la jerarquia territorial.',
@@ -254,7 +265,7 @@ export default function AssignmentsPage() {
               >
                 {(parishes.data ?? []).map((p) => (
                   <MenuItem key={p.id} value={p.id}>
-                    {p.name}
+                    {parishOptionLabel(p, parishes.data ?? [])}
                   </MenuItem>
                 ))}
               </TextField>

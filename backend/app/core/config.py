@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     report_output_dir: str = "/app/generated-reports"
     report_max_file_mb: int = 50
     report_max_rows: int = 50000
+    evidence_output_dir: str = "/app/generated-evidence"
+    evidence_max_file_mb: int = 15
     report_artifact_retention_days: int = 30
     report_max_active_artifacts_per_campaign: int = 100
     report_max_selected_surveys: int = 20
@@ -69,6 +71,9 @@ class Settings(BaseSettings):
     public_fetch_user_agent: str = "TerritorioElectoral-PublicIntelligence/2.5"
     public_fetch_allow_private_hosts: bool = False
     territory_ai_provider: str = "unavailable"
+    territory_ai_model: str = ""
+    territory_ai_timeout_seconds: float = 15.0
+    openai_api_key: str | None = None
     territory_ai_rate_limit_per_minute: int = 20
     auth_rate_limit_attempts: int = 10
     auth_rate_limit_window_seconds: int = 300
@@ -83,6 +88,8 @@ class Settings(BaseSettings):
         report_limits = (self.report_max_file_mb, self.report_max_rows, self.report_artifact_retention_days, self.report_max_active_artifacts_per_campaign, self.report_max_selected_surveys, self.report_max_selected_processes, self.report_max_selected_indicators, self.report_pdf_max_table_rows, self.alert_max_open_per_campaign, self.alert_default_inactivity_days, self.alert_default_data_stale_days)
         if not self.report_output_dir.strip() or any(value <= 0 for value in report_limits):
             raise ValueError("La configuración de informes y alertas debe ser positiva")
+        if not self.evidence_output_dir.strip() or self.evidence_max_file_mb <= 0:
+            raise ValueError("La configuración de evidencia debe ser positiva")
         if not self.secret_key.strip():
             raise ValueError("SECRET_KEY no puede estar vacía")
         if self.jwt_algorithm != "HS256":
@@ -112,8 +119,11 @@ class Settings(BaseSettings):
         if self.auth_rate_limit_attempts <= 0 or self.auth_rate_limit_window_seconds <= 0:
             raise ValueError("La configuracion del limite de autenticacion es invalida")
         self.territory_ai_provider = self.territory_ai_provider.strip().lower()
-        if self.territory_ai_provider not in {"unavailable", "fake"}:
-            raise ValueError("TERRITORY_AI_PROVIDER debe ser unavailable o fake")
+        if self.territory_ai_provider not in {"unavailable", "fake", "openai"}:
+            raise ValueError("TERRITORY_AI_PROVIDER debe ser unavailable, fake u openai")
+        self.territory_ai_model = self.territory_ai_model.strip()
+        if self.territory_ai_timeout_seconds <= 0:
+            raise ValueError("TERRITORY_AI_TIMEOUT_SECONDS debe ser positivo")
         if not 0 <= self.survey_result_percentage_tolerance <= 0.02:
             raise ValueError("SURVEY_RESULT_PERCENTAGE_TOLERANCE debe estar entre 0 y 0.02")
         if self.app_env.lower() == "production" and self.survey_submission_hmac_secret.lower() in {"replace-with-secure-random-secret", "change-me", "secret", ""}:
@@ -125,6 +135,10 @@ class Settings(BaseSettings):
                 raise ValueError("APP_DEBUG debe estar desactivado en produccion")
             if self.territory_ai_provider == "fake":
                 raise ValueError("TERRITORY_AI_PROVIDER no puede ser fake en produccion")
+            if self.territory_ai_provider == "openai" and (not self.openai_api_key or not self.openai_api_key.strip()):
+                raise ValueError("OPENAI_API_KEY debe configurarse para usar OpenAI en produccion")
+            if self.territory_ai_provider == "openai" and not self.territory_ai_model:
+                raise ValueError("TERRITORY_AI_MODEL debe configurarse para usar OpenAI en produccion")
             if len(self.secret_key) < 32 or len(self.browser_refresh_token_hmac_secret) < 32:
                 raise ValueError("Los secretos de produccion deben tener al menos 32 caracteres")
             unsafe_values = {"", "replace_me", "territorio_password", "changethispassword123", "change-me", "secret"}

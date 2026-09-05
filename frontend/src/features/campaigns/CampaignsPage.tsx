@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import { useEffect } from 'react';
 import {
   Alert,
   Button,
@@ -16,6 +17,7 @@ import { apiRequest } from '../../api/client';
 import { useCampaign } from '../../app/CampaignProvider';
 import { useAuth } from '../../auth/AuthProvider';
 import { canAdministerCampaigns } from '../../auth/permissions';
+import { canSeeCampaignAdministration } from '../../layouts/navigation';
 import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly, formatDateRange } from '../../lib/dates';
@@ -52,6 +54,13 @@ export default function CampaignsPage() {
       queryFn: () => apiRequest<CampaignRead>(`/campaigns/${item.id}`),
     })),
   });
+  useEffect(() => {
+    const onlyCampaign = campaigns.data?.items[0];
+    if (campaigns.data?.items.length === 1 && onlyCampaign && !canSeeCampaignAdministration(user)) {
+      setActive(onlyCampaign);
+      navigate(`/app/campaigns/${onlyCampaign.id}/dashboard`, { replace: true });
+    }
+  }, [campaigns.data?.items, navigate, setActive, user]);
   const location = (cantonId: number) => {
     const canton = cantons.data?.find((item) => item.id === cantonId);
     const province = provinces.data?.find((item) => item.id === canton?.province_id);

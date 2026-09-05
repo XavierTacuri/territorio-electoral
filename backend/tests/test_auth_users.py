@@ -59,6 +59,7 @@ def test_user_crud_filters_and_password(client, admin_headers):
     created = client.post("/api/v1/users", json=payload(), headers=admin_headers)
     assert created.status_code == 201
     body = created.json(); user_id = body["id"]
+    assert body["is_active"] is True
     assert len(body["roles"]) == 2 and "hashed_password" not in created.text
     assert client.get(f"/api/v1/users/{user_id}", headers=admin_headers).status_code == 200
     listing = client.get("/api/v1/users?search=person&role_code=ANALYST&is_active=true&page=1&page_size=1", headers=admin_headers)

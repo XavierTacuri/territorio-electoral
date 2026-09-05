@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import AssignmentsPage, { assignmentPayload } from './AssignmentsPage';
+import { ApiError } from '../../api/errors';
+import AssignmentsPage, { assignmentError, assignmentPayload } from './AssignmentsPage';
 
 const server = setupServer();
 const nativeFetch = globalThis.fetch;
@@ -101,6 +102,21 @@ describe('asignaciones territoriales con RTL y MSW', () => {
   });
   it('rechaza sector sin comunidad', () =>
     expect(() => assignmentPayload('u', '1', '', 's')).toThrow(/comunidad/));
+  it('traduce errores comerciales al asignar usuarios', () => {
+    expect(
+      assignmentError(
+        new ApiError(409, 'conflict', { detail: { code: 'PLAN_USER_LIMIT_REACHED' } }),
+      ),
+    ).toBe('Has alcanzado el límite de usuarios de tu plan.');
+    expect(
+      assignmentError(
+        new ApiError(403, 'forbidden', { detail: { code: 'ORGANIZATION_SUSPENDED' } }),
+      ),
+    ).toBe('Esta organización está suspendida.');
+    expect(assignmentError(new ApiError(403, 'forbidden'))).toBe(
+      'No tienes permisos para asignar usuarios a esta campaña.',
+    );
+  });
   it('carga hijos y limpia comunidad y sector al cambiar parroquia', async () => {
     handlers();
     renderPage();
@@ -156,6 +172,8 @@ describe('asignaciones territoriales con RTL y MSW', () => {
     await choose('Usuario coordinador', 'Usuario E2E (coordinator)');
     await choose('Parroquia', parishA.name);
     await userEvent.click(screen.getByRole('button', { name: 'Asignar territorio' }));
-    expect(await screen.findByText('Acceso denegado.')).toBeVisible();
+    expect(
+      await screen.findByText('No tienes permisos para asignar usuarios a esta campaña.'),
+    ).toBeVisible();
   });
 });

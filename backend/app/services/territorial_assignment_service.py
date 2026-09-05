@@ -4,11 +4,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.assignments import CampaignUser,TerritorialAssignment
 from app.models.candidate import Candidate
+from app.models.organization import Organization,OrganizationMembership
 from app.models.territory import Community,Parish,Sector
 from app.models.user import User
 from app.schemas.campaign import CampaignUserAssign,TerritorialAssignmentCreate
 from app.services.campaign_access_service import CampaignAccessService
 from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundError
+from app.services.organization_service import OrganizationError,PlanLimitService
 
 class TerritorialAssignmentService:
     ALLOWED={"TERRITORIAL_COORDINATOR","CAMPAIGN_MANAGER","ANALYST"}
@@ -19,9 +21,21 @@ class TerritorialAssignmentService:
         user=self.db.get(User,data.user_id)
         if not user or not user.is_active:raise BusinessRuleError("Usuario inactivo o inexistente")
         if not self.access.admin(actor) and (user.is_superuser or "ADMIN" in {r.code for r in user.roles}):raise BusinessRuleError("Un director no puede asignar administradores")
-        obj=CampaignUser(campaign_id=campaign_id,user_id=user.id,assigned_by_user_id=actor.id);self.db.add(obj)
+        organization=self.db.get(Organization,campaign.organization_id)
+        if organization and organization.status=="SUSPENDED":raise OrganizationError("ORGANIZATION_SUSPENDED","La organizacion esta suspendida")
+        if organization:
+            PlanLimitService(self.db).require_user_slot(organization.id,user.id)
+            membership=self.db.scalar(select(OrganizationMembership).where(OrganizationMembership.organization_id==organization.id,OrganizationMembership.user_id==user.id))
+            if not membership:
+                membership=OrganizationMembership(organization_id=organization.id,user_id=user.id,organization_role="MEMBER",status="ACTIVE");self.db.add(membership)
+            elif membership.status!="ACTIVE":membership.status="ACTIVE"
+        obj=self.db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==campaign_id,CampaignUser.user_id==user.id))
+        if obj:
+            obj.is_active=True;obj.assigned_by_user_id=actor.id
+        else:
+            obj=CampaignUser(campaign_id=campaign_id,user_id=user.id,assigned_by_user_id=actor.id);self.db.add(obj)
         try:self.db.commit();self.db.refresh(obj)
-        except IntegrityError as e:self.db.rollback();raise ConflictError("Usuario ya asignado") from e
+        except IntegrityError as e:self.db.rollback();raise ConflictError("No se pudo asignar el usuario") from e
         return obj
     def users(self,campaign_id:UUID,actor:User):
         self.access.require_management(campaign_id,actor)

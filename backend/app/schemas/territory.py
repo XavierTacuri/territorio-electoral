@@ -8,7 +8,7 @@ def clean(v: str) -> str:
     if not v: raise ValueError("El valor no puede estar vacío")
     return v
 class ProvinceRead(BaseModel):
-    id:int; code:str; name:str; is_active:bool
+    id:int; code:str; dpa_code:str; name:str; is_active:bool
     model_config=ConfigDict(from_attributes=True)
 class CantonBase(BaseModel):
     province_id:int; code:str; dpa_code:str; name:str; is_active:bool=True

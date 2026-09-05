@@ -19,7 +19,11 @@ class CampaignService:
         canton=self.db.get(Canton,data.canton_id)
         if not canton:raise NotFoundError("Cantón no encontrado")
         if not canton.is_active:raise BusinessRuleError("El cantón está inactivo")
-        values=data.model_dump();organization_id=values.pop("organization_id")
+        if data.province_id is not None:
+            province=self.db.get(Province,data.province_id)
+            if not province or not province.is_active:raise NotFoundError("Provincia no encontrada")
+            if canton.province_id!=province.id:raise BusinessRuleError("El cantón seleccionado no pertenece a la provincia indicada.")
+        values=data.model_dump();organization_id=values.pop("organization_id");values.pop("province_id")
         org_access=OrganizationAccessService(self.db)
         if organization_id is None:
             initial_id=UUID("00000000-0000-0000-0000-000000002801")

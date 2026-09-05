@@ -49,10 +49,15 @@ test('V2.8 aisla organizaciones y rechaza IDOR de campaña', async ({ request })
   expect(alphaAi.status()).toBe(200);
   const betaAi = await request.post(`/api/v1/campaigns/${betaCampaign.id}/territory-ai/query`, {
     headers: betaHeaders,
-    data: { question: 'Resume la campaña' },
+    data: { question: '¿Cuál es el panorama electoral de Gualaceo ahora?' },
   });
-  expect(betaAi.status()).toBe(403);
-  expect((await betaAi.json()).detail.code).toBe('FEATURE_NOT_ENTITLED');
+  expect(betaAi.status()).toBe(200);
+  const betaGrounded = (await betaAi.json()) as { citations: { internal_path?: string }[] };
+  expect(
+    betaGrounded.citations.every(
+      (citation) => !citation.internal_path || !citation.internal_path.includes(alphaCampaign.id),
+    ),
+  ).toBe(true);
 
   const limit = await request.post('/api/v1/campaigns', {
     headers: betaHeaders,

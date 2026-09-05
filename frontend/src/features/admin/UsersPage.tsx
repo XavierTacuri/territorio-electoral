@@ -16,6 +16,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { apiRequest } from '../../api/client';
+import { ApiError } from '../../api/errors';
 import { DataTable } from '../../components/tables/DataTable';
 import { PageHeader } from '../../components/layout/PageHeader';
 type Role = { code: string; name: string };
@@ -42,6 +43,8 @@ export default function UsersPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [error, setError] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
   const users = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => apiRequest<{ items: User[] }>('/users?page=1&page_size=100'),
@@ -72,18 +75,41 @@ export default function UsersPage() {
                 is_active: v.is_active,
                 role_codes: v.role_codes,
               }
-            : v,
+            : {
+                email: v.email,
+                username: v.username,
+                first_name: v.first_name,
+                last_name: v.last_name,
+                password: v.password,
+                role_codes: v.role_codes,
+              },
         ),
       }),
     onSuccess: () => {
       setOpen(false);
       qc.invalidateQueries({ queryKey: ['admin-users'] });
     },
-    onError: () => setError('No se pudo guardar el usuario. Revise los campos y permisos.'),
+    onError: (requestError) => {
+      if (requestError instanceof ApiError && requestError.status === 422) {
+        setError(
+          editing
+            ? 'No se pudo actualizar el usuario. Revisa los datos ingresados.'
+            : 'No se pudo crear el usuario. Revisa los datos ingresados.',
+        );
+        return;
+      }
+      setError(
+        editing
+          ? 'No se pudo actualizar el usuario. Revisa los datos y permisos.'
+          : 'No se pudo crear el usuario. Revisa los datos y permisos.',
+      );
+    },
   });
   const show = (u?: User) => {
     setEditing(u || null);
     setError('');
+    setResetPassword('');
+    setResetMessage('');
     form.reset(
       u
         ? { ...u, password: '', role_codes: u.roles.map((r) => r.code) }
@@ -157,20 +183,33 @@ export default function UsersPage() {
                 </MenuItem>
               ))}
             </TextField>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={form.watch('is_active')}
-                  onChange={(e) => form.setValue('is_active', e.target.checked)}
-                />
-              }
-              label="Usuario activo"
-            />
+            {editing && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.watch('is_active')}
+                    onChange={(e) => form.setValue('is_active', e.target.checked)}
+                  />
+                }
+                label="Usuario activo"
+              />
+            )}
             {editing && !form.watch('is_active') && (
               <Typography color="warning.main">
                 Al desactivar se invalidan las sesiones según la política backend.
               </Typography>
             )}
+            {editing && <Stack spacing={1} sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
+              <Typography fontWeight={700}>Restablecer contraseña</Typography>
+              <Typography variant="body2" color="text.secondary">Esta acción cerrará todas las sesiones de la persona.</Typography>
+              <TextField label="Nueva contraseña temporal" type="password" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} inputProps={{ autoComplete: 'new-password' }} />
+              {resetMessage && <Alert severity="success">{resetMessage}</Alert>}
+              <Button variant="outlined" disabled={!resetPassword} onClick={async () => {
+                setError(''); setResetMessage('');
+                try { const response = await apiRequest<{ message: string }>(`/users/${editing.id}/change-password`, { method: 'POST', body: JSON.stringify({ new_password: resetPassword }) }); setResetPassword(''); setResetMessage(response.message); }
+                catch { setError('No fue posible restablecer la contraseña. Revisa los requisitos de seguridad.'); }
+              }}>Restablecer contraseña</Button>
+            </Stack>}
           </Stack>
         </DialogContent>
         <DialogActions>

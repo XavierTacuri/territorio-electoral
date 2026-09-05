@@ -67,8 +67,12 @@ test('V2.7 aisla campanas, licencia y cache visual al cambiar de canton', async 
     { headers },
   );
   expect(proCne.status()).toBe(200);
-  expect(standardCne.status()).toBe(404);
-  expect((await proCne.json()).snapshot.registered_voters).toBeGreaterThan(0);
+  expect(standardCne.status()).toBe(200);
+  const proCneBody = await proCne.json();
+  const standardCneBody = await standardCne.json();
+  expect(proCneBody.snapshot.registered_voters).toBeGreaterThan(0);
+  expect(standardCneBody.snapshot.registered_voters).toBe(34784);
+  expect(proCneBody.snapshot.registered_voters).not.toBe(standardCneBody.snapshot.registered_voters);
 
   const proInec = await request.get(`/api/v1/campaigns/${pro.id}/dashboard/demographics`, {
     headers,
@@ -123,12 +127,20 @@ test('V2.7 aisla campanas, licencia y cache visual al cambiar de canton', async 
       (citation) => !citation.campaign_id || citation.campaign_id === pro.id,
     ),
   ).toBe(true);
-  const denied = await request.post(`/api/v1/campaigns/${standard.id}/territory-ai/query`, {
+  const standardPanorama = await request.post(`/api/v1/campaigns/${standard.id}/territory-ai/query`, {
     headers,
-    data: { question: 'Resume la campaÃ±a' },
+    data: { question: '¿Cuál es el panorama electoral de Gualaceo ahora?' },
   });
-  expect(denied.status()).toBe(403);
-  expect((await denied.json()).detail.code).toBe('FEATURE_NOT_ENTITLED');
+  expect(standardPanorama.status()).toBe(200);
+  const standardGrounded = (await standardPanorama.json()) as {
+    citations: { internal_path?: string }[];
+  };
+  expect(standardGrounded.citations.length).toBeGreaterThan(0);
+  expect(
+    standardGrounded.citations.every(
+      (citation) => !citation.internal_path || citation.internal_path.includes(standard.id),
+    ),
+  ).toBe(true);
 
   await browserLogin(page);
   await page.goto(`/app/campaigns/${pro.id}/activities`);
@@ -154,6 +166,7 @@ test('V2.7 rechaza RBAC cross-campaign en todos los modulos sensibles', async ({
     `/api/v1/campaigns/${inaccessible.id}/survey-studies`,
     `/api/v1/campaigns/${inaccessible.id}/activities`,
     `/api/v1/campaigns/${inaccessible.id}/needs`,
+    `/api/v1/campaigns/${inaccessible.id}/current-election/analysis`,
   ]) {
     const response = await request.get(path, { headers: analystHeaders });
     expect(response.status(), path).toBe(403);

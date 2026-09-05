@@ -10,9 +10,9 @@ from app.services.exceptions import ConflictError, NotFoundError
 
 class TerritoryService:
     def __init__(self, db:Session): self.db=db
-    def provinces(self): return list(self.db.scalars(select(Province).where(Province.is_active.is_(True)).order_by(Province.code)))
+    def provinces(self): return list(self.db.scalars(select(Province).where(Province.is_active.is_(True)).order_by(Province.name)))
     def cantons(self, province_id:int|None=None):
-        q=select(Canton).order_by(Canton.dpa_code)
+        q=select(Canton).where(Canton.is_active.is_(True)).order_by(Canton.name)
         if province_id:q=q.where(Canton.province_id==province_id)
         return list(self.db.scalars(q))
     def canton(self,id:int):
@@ -22,10 +22,10 @@ class TerritoryService:
     def create_canton(self,data:CantonCreate): return self._create(Canton, data.model_dump(), "Cantón duplicado")
     def update_canton(self,id:int,data:CantonUpdate): return self._update(self.canton(id),data)
     def parishes(self,canton_id:int|None=None,parish_type:str|None=None,is_active:bool|None=None):
-        q=select(Parish).order_by(Parish.dpa_code)
+        q=select(Parish).order_by(Parish.name)
         if canton_id:q=q.where(Parish.canton_id==canton_id)
         if parish_type:q=q.where(Parish.parish_type==parish_type)
-        if is_active is not None:q=q.where(Parish.is_active.is_(is_active))
+        q=q.where(Parish.is_active.is_(True if is_active is None else is_active))
         return list(self.db.scalars(q))
     def parish(self,id:int):
         value=self.db.get(Parish,id)

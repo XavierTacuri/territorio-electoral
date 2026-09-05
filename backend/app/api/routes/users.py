@@ -41,7 +41,7 @@ def update_user(user_id: UUID, data: UserUpdate, actor: User = Depends(require_a
 
 
 @router.post("/{user_id}/change-password", response_model=MessageResponse)
-def change_password(user_id: UUID, data: PasswordChange, _: User = Depends(require_admin), db: Session = Depends(get_db)):
-    try: UserService(db).change_password(user_id, data.new_password)
+def change_password(user_id: UUID, data: PasswordChange, actor: User = Depends(require_admin), db: Session = Depends(get_db)):
+    try: UserService(db).change_password(user_id, data.new_password, actor=actor)
     except NotFoundError as exc: raise translate(exc)
     return MessageResponse(message="Contraseña actualizada correctamente")

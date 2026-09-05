@@ -15,10 +15,11 @@ class SecurityAuditService:
     def record(self, event_type: str, outcome: str, description: str, *, user_id: UUID | None = None,
                campaign_id: UUID | None = None, resource_type: str | None = None,
                resource_id: UUID | None = None, metadata: dict | None = None) -> SecurityAuditEvent:
-        safe_metadata = {k: v for k, v in (metadata or {}).items() if k.lower() not in {
-            "password", "token", "refresh_token", "csrf_token", "ip", "user_agent", "path",
-            "submission_key", "hash"
-        }}
+        sensitive_fragments = ("password", "contraseña", "token", "secret", "api_key", "hash")
+        safe_metadata = {k: v for k, v in (metadata or {}).items()
+            if not any(fragment in k.lower() for fragment in sensitive_fragments) and k.lower() not in {
+                "ip", "user_agent", "path", "submission_key"
+            }}
         event = SecurityAuditEvent(event_type=event_type, outcome=outcome, event_date=date.today(),
             user_id=user_id, campaign_id=campaign_id, resource_type=resource_type,
             resource_id=resource_id, description=description, event_metadata=safe_metadata)
