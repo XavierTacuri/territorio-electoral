@@ -26,15 +26,17 @@ services:
       BROWSER_REFRESH_TOKEN_HMAC_SECRET: ${E2E_REFRESH_SECRET:?E2E_REFRESH_SECRET is required}
       SURVEY_SUBMISSION_HMAC_SECRET: ${E2E_SURVEY_SECRET:?E2E_SURVEY_SECRET is required}
       E2E_USER_PASSWORD: ${E2E_USER_PASSWORD:?E2E_USER_PASSWORD is required}
-      FRONTEND_ORIGINS: http://localhost:15173
-      BROWSER_ALLOWED_ORIGINS: http://localhost:15173
-      TRUSTED_HOSTS: localhost,127.0.0.1,api
+      FRONTEND_ORIGINS: http://localhost:15173,http://frontend:8080,http://host.docker.internal:15173
+      BROWSER_ALLOWED_ORIGINS: http://localhost:15173,http://frontend:8080,http://host.docker.internal:15173
+      TRUSTED_HOSTS: localhost,127.0.0.1,api,frontend,host.docker.internal
       REPORT_OUTPUT_DIR: /app/generated-reports
+      EVIDENCE_OUTPUT_DIR: /app/generated-evidence
       PUBLIC_FETCH_ALLOW_PRIVATE_HOSTS: "true"
     ports:
       - "18000:8000"
     volumes:
       - reports_e2e:/app/generated-reports
+      - evidence_e2e:/app/generated-evidence
     depends_on:
       db:
         condition: service_healthy
@@ -63,3 +65,4 @@ services:
 volumes:
   postgres_e2e:
   reports_e2e:
+  evidence_e2e:

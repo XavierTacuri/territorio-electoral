@@ -30,6 +30,25 @@ En PowerShell: `Copy-Item backend/.env.example backend/.env`. Cambia `SECRET_KEY
 
 Los códigos son estables, únicos y se normalizan a mayúsculas. La inicialización es idempotente y los roles inactivos no pueden asignarse.
 
+## Guía de roles
+
+Qué puede hacer cada rol en el producto actual (RBAC real es el backend; esto es una guía operativa):
+
+- **CANDIDATE / CAMPAIGN_MANAGER** (roles ejecutivos de campaña): acceso completo a su(s) campaña(s) — Centro de Comando, Panorama, Inteligencia territorial, Encuestas, Territorio IA, Centro de Informes, Preparación para debate, Calendario, Actividades/Necesidades, y Jornada Electoral completa (activar/cerrar jornada, crear recintos/juntas, asignar y reemplazar personal, resolver incidencias). Ambos comparten el mismo alcance ejecutivo; `CAMPAIGN_MANAGER` además puede administrar miembros de campaña (`/campaigns/{id}/users`).
+- **ANALYST**: lectura across todos los módulos de análisis de su(s) campaña(s) asignada(s), sin controles de escritura (no activa jornada, no reemplaza personal, no gestiona alertas salvo que el rol lo permita explícitamente). Puede generar informes y usar Territorio IA.
+- **TERRITORIAL_COORDINATOR**: alcance limitado a su(s) parroquia(s) asignada(s) (`TerritorialAssignment`) o a los recintos donde tiene una asignación de Jornada Electoral propia. Usa la PWA de Operación de campo (actividades/necesidades offline), "Mi Jornada" (check-in, incidencias, documentos), y ve Informes/Territorio IA acotados a su parroquia. Nunca activa/cierra la jornada ni reemplaza personal.
+- **ADMIN** (global/plataforma, `is_superuser` o rol `ADMIN`): acceso total a todas las organizaciones y campañas. Administra usuarios, roles, asignaciones, Data Hub (fuentes e importaciones), configuración de IA, auditoría de seguridad, calendario electoral oficial y organizaciones.
+- **Organization Admin/Owner** (`OrganizationMembership.organization_role` en `OWNER`/`ADMIN`, independiente del rol de plataforma): administra su propia organización — miembros, suscripción/plan, campañas de su organización — sin necesitar una fila `CampaignUser` explícita por campaña (ver `CampaignAccessService.accessible_ids`). No accede a organizaciones ajenas.
+
+## Mapa de producto (superficies actuales)
+
+- **Inicio**: Centro de Comando (Dashboard); Operación de campo y Mi Jornada (solo Coordinator).
+- **Análisis**: Panorama electoral, Inteligencia territorial, Encuestas y estudios, Territorio IA, Calendario de campaña, Centro de Informes, Centro de alertas, Preparación para debate, Jornada Electoral.
+- **Operación**: Operación territorial, Actividades, Necesidades.
+- **Administración** (según rol): Campañas, Mi organización, Centro de datos (Data Hub), Organizaciones, Usuarios, Roles, Asignaciones, Fuentes de datos, Licencia y funcionalidades, Importar CNE/INEC, Registro electoral, Límites territoriales, Importaciones, Plantillas de informes, Auditoría, Configuración de IA, Calendario electoral oficial.
+
+`Seguimientos`/`Commitments` es dominio legacy: el backend conserva el endpoint por compatibilidad, pero no existe ninguna ruta de navegación ni enlace visible hacia él en el producto actual (0 superficie visible).
+
 ## Puesta en marcha
 
 ```bash
@@ -127,6 +146,16 @@ docker compose exec api python -m app.scripts.seed_gualaceo
 docker compose exec api pytest
 docker compose exec api alembic check
 ```
+
+### Inteligencia Pública: fuentes y recuperación
+
+Inteligencia Pública admite únicamente tres formas de incorporación de información:
+
+1. ingreso manual;
+2. RSS configurado explícitamente;
+3. API configurada explícitamente.
+
+`OFFICIAL_WEBSITE` describe el tipo institucional de una fuente; no implica scraping. Por ejemplo, `CNE_ECUADOR` usa `OFFICIAL_WEBSITE` con recuperación `MANUAL`. El producto no realiza crawling general de sitios web ni scraping HTML de redes sociales. Las integraciones futuras con redes sociales deberán usar sus APIs oficiales, OAuth y los permisos correspondientes.
 
 ### Campaña y candidato
 
@@ -584,3 +613,40 @@ docker compose exec api alembic check
 ```
 
 No se programan automáticamente informes, alertas ni limpieza. Esa orquestación queda fuera de esta fase.
+
+## Fase final: SaaS, Centro de Comando, Expediente Territorial, PWA, Centro de Informes y Asistente de Debate
+
+Fases construidas después de Fase 9 y nunca documentadas en este README hasta esta consolidación (todas ya cubiertas por la suite de pruebas):
+
+- **SaaS / Organizations**: `Organization`, `OrganizationMembership` (`OWNER`/`ADMIN`/`MEMBER`), `OrganizationSubscription` (plan, límite de campañas/usuarios), selector de tenant en la UI, suspensión/reactivación de organización. Un Org Admin/Owner accede a todas las campañas de su organización sin necesitar una fila `CampaignUser` explícita (`CampaignAccessService.accessible_ids`).
+- **Catálogo territorial Ecuador**: importación del catálogo nacional INEC 2026 (`import_territorial_catalog.py`, `territorial_catalog_service.py`), desactivación idempotente de parroquias ya no vigentes.
+- **Centro de Comando** (`/app/campaigns/{id}/dashboard`): KPIs ejecutivos, mapa (`CommandCenterMap.tsx`, coropletas por parroquia), accesos directos a los demás módulos.
+- **Expediente Territorial** (`/app/campaigns/{id}/territories` → detalle por parroquia): ficha narrativa combinando participación histórica, demografía, encuestas y actividad de campaña para una parroquia.
+- **PWA de campo** (`/app/campaigns/{id}/field`, rol `TERRITORIAL_COORDINATOR`): registro de actividades/necesidades sin conexión, evidencia fotográfica (sniffing por firma + checksum + idempotencia por `client_generated_id`), cola de sincronización explícita (nunca automática ni oculta), resolución de conflictos `REQUIRES_REVIEW`. Cierre estructurado de actividades con motivo de suspensión.
+- **Centro de Informes** (`/app/campaigns/{id}/reports`): plantillas ejecutiva, territorial por parroquia, operación territorial, temática, electoral descriptiva, brief de debate y jornada electoral; narrativa "grounded" con fallback determinista sin proveedor de IA; exportación PDF/XLSX con almacenamiento y descarga protegida (`nosniff`, sin URL pública).
+- **Asistente de Debate** (`/app/campaigns/{id}/debate`): brief de preguntas con fuentes factuales y verificación de afirmaciones devolviendo un nivel de respaldo (nunca verdadero/falso binario); bloquea solicitudes de manipulación o ataques personales.
+- **Configuración de IA** (`/app/admin/ai-configuration`, solo `ADMIN`): selección de proveedor (`unavailable`/`fake`/`openai`), prueba con `FakeProvider`; `fake` está bloqueado en producción por validación de arranque (`Settings.__init__` falla rápido).
+
+## Modo Jornada Electoral
+
+Centro operativo del día de la elección: recintos electorales, juntas receptoras del voto, personal asignado, cobertura, check-in (online y offline vía PWA), incidencias y documentación recibida (nunca OCR'ed, nunca comparada contra resultados). **Nunca es un sistema de conteo de votos**: los resultados oficiales siguen viniendo exclusivamente de CNE/Ecuador Data Hub.
+
+- Modelo: `ElectionDayOperation` (una fila mutable por campaña+proceso, transiciona `PREPARATION → ACTIVE → CLOSED`), `PollingPlace`/`ElectoralBoard` (llave por `electoral_process_id`, no por campaña — infraestructura compartida entre campañas del mismo cantón/proceso), `ElectionDayAssignment` (check-in vive en la misma fila; un reemplazo marca la fila original `REPLACED` preservando su check-in), `ElectionDayIncident`, `ElectionDayDocument`.
+- UI: `/app/campaigns/{id}/election-day` (Command Center: KPIs, mapa operativo, activar/cerrar jornada), `/election-day/polling-places/{id}` (detalle: juntas, personal, reemplazo, incidencias, documentos), `/election-day/my` (PWA "Mi Jornada" para el Coordinator asignado — check-in, incidencia, documento, siempre borrador-primero con sincronización explícita).
+- RBAC: activar/cerrar jornada y reemplazar personal requieren rol ejecutivo (`CANDIDATE`/`CAMPAIGN_MANAGER`) o `ADMIN`. El alcance territorial del Coordinator se calcula por `TerritorialAssignment` **o** por sus propias asignaciones de jornada (`ElectionDayAssignment`) — un delegado asignado solo para el día opera su propio recinto sin necesitar una asignación territorial permanente.
+- Alertas: `ELECTION_PLACE_UNCOVERED`, `BOARD_UNCOVERED`, `ASSIGNED_PERSON_NOT_CHECKED_IN`, `OPEN_ELECTION_INCIDENT`, `BOARD_DOCUMENT_MISSING`, `OFFLINE_SYNC_FAILURE`. Territorio IA: intent `ELECTION_DAY_OPERATIONS`, estrictamente factual (nunca predicción/ventaja). Centro de Informes: plantilla `ELECTION_DAY_REPORT` ("Informe de jornada electoral").
+- Migración `20260908_0001` crea las tablas; `20260908_0002` añade `ELECTION_DAY` a `report_templates.report_type`.
+
+### Data Hub — recintos y juntas
+
+Los recintos/juntas pueden cargarse en masa vía el mismo pipeline de importación oficial (`DataImportService`), no un importador aparte:
+
+- Dataset types: `CNE_POLLING_PLACES` (perfil `CANONICAL_POLLING_PLACE`), `CNE_ELECTORAL_BOARDS` (perfil `CANONICAL_ELECTORAL_BOARD`). Migración `20260909_0001` los agrega al `CHECK` de `data_sources.dataset_type`.
+- Columnas CSV de recintos: `process_code,province_dpa,canton_dpa,parish_dpa,polling_place_code,polling_place_name,polling_place_address,polling_place_latitude,polling_place_longitude` (address/lat/lng llevan el prefijo `polling_place_` para no colisionar con `FORBIDDEN_HEADERS`, que ya bloquea `address`/`latitude`/`longitude` a secas por microdatos). Columnas de juntas: `process_code,polling_place_code,board_code,board_number,sex_category,registered_voters`.
+- Validación: jerarquía provincia⊃cantón⊃parroquia, coordenadas en rango, códigos duplicados dentro del archivo, junta requiere un recinto ya importado para el mismo proceso. Idempotente por código oficial (upsert), checksum de archivo bloquea reimportar el mismo CSV sin `force`.
+- UI: Administración → Centro de datos → catálogo → "Recintos electorales"/"Juntas receptoras del voto" → Nueva importación (`/app/admin/official-data/election-day/polling-places` y `.../boards`), reutilizando el mismo componente de importación simple (fuente → CSV → validar → ejecutar → plantilla descargable) que el resto de perfiles CNE/INEC.
+
+```bash
+docker compose exec api alembic upgrade head
+docker compose exec api pytest tests/test_election_day.py tests/test_data_hub_polling_places.py -q
+```

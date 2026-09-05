@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 !.env.production.example
+# Cualquier otro archivo de entorno local con secretos (p. ej. .e2e.env para
+# levantar el stack E2E localmente) — el patrón anterior solo cubría nombres
+# que empiezan por ".env", no los que terminan en ".env".
+*.env
+!*.env.example
 
 # Python
 __pycache__/
@@ -35,6 +40,9 @@ frontend/test-results/
 
 # Generated reports
 backend/quality-artifacts/
+
+# Evidencia generada por Actividades (subida en runtime, nunca versionada)
+backend/generated-evidence/
 
 # Logs
 *.log

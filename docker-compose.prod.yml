@@ -17,6 +17,7 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
     volumes:
       - report_artifacts:/app/generated-reports
+      - evidence_artifacts:/app/generated-evidence
     depends_on:
       db: { condition: service_healthy }
     healthcheck:
@@ -38,3 +39,4 @@ services:
 volumes:
   postgres_prod:
   report_artifacts:
+  evidence_artifacts:

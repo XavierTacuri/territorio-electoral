@@ -21,6 +21,7 @@ jobs:
       BROWSER_REFRESH_TOKEN_HMAC_SECRET: ci-refresh-secret-with-at-least-32-characters
       SURVEY_SUBMISSION_HMAC_SECRET: ci-survey-secret-with-at-least-32-characters
       REPORT_OUTPUT_DIR: /tmp/territorio-electoral-reports
+      EVIDENCE_OUTPUT_DIR: /tmp/territorio-electoral-evidence
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -44,6 +45,8 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Create report output directory
         run: mkdir -p "$REPORT_OUTPUT_DIR"
+      - name: Create evidence output directory
+        run: mkdir -p "$EVIDENCE_OUTPUT_DIR"
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
       - name: Apply migrations
@@ -54,6 +57,10 @@ jobs:
         run: python -m pytest -q
       - name: Compile backend
         run: python -m compileall -q app
+      - name: Verify OpenAPI contract matches frontend/openapi.json
+        run: |
+          python -m app.scripts.export_openapi /tmp/openapi_live.json
+          diff -u ../frontend/openapi.json /tmp/openapi_live.json
       - name: Build backend image
         run: docker build -t territorio-api:ci .
 

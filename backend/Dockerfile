@@ -12,8 +12,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 RUN addgroup --system app && adduser --system --ingroup app app \
-    && mkdir -p /app/generated-reports \
-    && chown -R app:app /app/generated-reports
+    && mkdir -p /app/generated-reports /app/generated-evidence \
+    && chown -R app:app /app/generated-reports /app/generated-evidence
 
 USER app
 
