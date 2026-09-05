@@ -30,7 +30,12 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  vi.restoreAllMocks();
+  // vi.restoreAllMocks() would reset the vi.mock('./useFieldContext') auto-mock
+  // to its default (undefined-returning) implementation. If the component's
+  // debounced autosave timer is still pending when this runs, the next render
+  // reads field.parishes on undefined and crashes. clearAllMocks() only drops
+  // call history; beforeEach always re-establishes the return value anyway.
+  vi.clearAllMocks();
   const db = await getFieldDb();
   await db.clear('drafts');
 });
