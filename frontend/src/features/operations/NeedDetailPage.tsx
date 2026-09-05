@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Button, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
@@ -110,11 +102,25 @@ export default function NeedDetailPage() {
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h2">Origen</Typography>
-              <Typography>{needSourceLabels[n.source_type] ?? source[n.source_type] ?? 'No disponible'}</Typography>
-              <Typography>Actividad de origen: {originActivity?.title ?? (n.activity_id ? 'Actividad territorial' : 'Registro manual')}</Typography>
-              <Typography variant="h3" sx={{ mt: 2 }}>Otras actividades relacionadas</Typography>
-              {otherActivities?.length ? otherActivities.map((title) => <Typography key={title}>{title}</Typography>) : <Typography color="text.secondary">Sin otras actividades identificadas.</Typography>}
-              <Typography variant="h3" sx={{ mt: 2 }}>Observaciones</Typography>
+              <Typography>
+                {needSourceLabels[n.source_type] ?? source[n.source_type] ?? 'No disponible'}
+              </Typography>
+              <Typography>
+                Actividad de origen:{' '}
+                {originActivity?.title ??
+                  (n.activity_id ? 'Actividad territorial' : 'Registro manual')}
+              </Typography>
+              <Typography variant="h3" sx={{ mt: 2 }}>
+                Otras actividades relacionadas
+              </Typography>
+              {otherActivities?.length ? (
+                otherActivities.map((title) => <Typography key={title}>{title}</Typography>)
+              ) : (
+                <Typography color="text.secondary">Sin otras actividades identificadas.</Typography>
+              )}
+              <Typography variant="h3" sx={{ mt: 2 }}>
+                Observaciones
+              </Typography>
               <Typography>{n.evidence_notes || 'Sin observaciones'}</Typography>
             </CardContent>
           </Card>
@@ -144,16 +150,16 @@ export default function NeedDetailPage() {
           </CardContent>
         </Card>
       ))}
-      <Typography variant="h2" sx={{ mt: 3 }}>Historial</Typography>
+      <Typography variant="h2" sx={{ mt: 3 }}>
+        Historial
+      </Typography>
       <Stack spacing={1}>
         {history.data?.map((x) => (
           <Card variant="outlined" key={x.id}>
             <CardContent>
               <Typography fontWeight={700}>{formatDateOnly(x.event_date)}</Typography>
               <Typography>{x.description}</Typography>
-              {x.metadata?.reason && (
-                <Alert severity="warning">Motivo: {x.metadata.reason}</Alert>
-              )}
+              {x.metadata?.reason && <Alert severity="warning">Motivo: {x.metadata.reason}</Alert>}
             </CardContent>
           </Card>
         ))}

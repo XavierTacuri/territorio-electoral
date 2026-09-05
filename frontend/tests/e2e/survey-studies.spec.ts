@@ -56,7 +56,13 @@ test('cierre portable de encuestas y estudios territoriales', async ({ page, req
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    )
+    .toBe(true);
   await page.screenshot({ path: '../quality-artifacts/survey-study-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto(
@@ -130,7 +136,13 @@ test('responsive sin overflow global en lista detalle comparador e importación'
 
 test('candidate_demo consulta publicada sin controles de escritura', async ({ page, request }) => {
   const token = await apiToken(request, 'candidate_demo');
-  const campaigns = (await (await request.get('/api/v1/campaigns?page_size=100', { headers: { Authorization: `Bearer ${token}` } })).json()).items as { id: string; slug: string }[];
+  const campaigns = (
+    await (
+      await request.get('/api/v1/campaigns?page_size=100', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    ).json()
+  ).items as { id: string; slug: string }[];
   const campaign = campaigns.find((item) => item.slug === 'gualaceo2026')!;
   await browserLogin(page, 'candidate_demo');
   await page.goto(`/app/campaigns/${campaign.id}/surveys`);

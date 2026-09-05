@@ -101,7 +101,10 @@ function renderPage() {
             path="/app/campaigns/:campaignId/territories"
             element={<TerritorialIntelligencePage />}
           />
-          <Route path="/app/campaigns/:campaignId/territories/:parishId" element={<div>Expediente</div>} />
+          <Route
+            path="/app/campaigns/:campaignId/territories/:parishId"
+            element={<div>Expediente</div>}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

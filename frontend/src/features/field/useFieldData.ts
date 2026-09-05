@@ -28,7 +28,11 @@ export function useFieldData(scope: OwnerScope | null) {
         setAttachments([]);
         return;
       }
-      const [d, q, a] = await Promise.all([listDrafts(scope), listQueue(scope), listAttachmentsForOwner(scope)]);
+      const [d, q, a] = await Promise.all([
+        listDrafts(scope),
+        listQueue(scope),
+        listAttachmentsForOwner(scope),
+      ]);
       if (!cancelled) {
         setDrafts(d);
         setQueue(q);
@@ -44,7 +48,9 @@ export function useFieldData(scope: OwnerScope | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey, refreshToken]);
 
-  const queuePendingCount = queue.filter((item) => item.status === 'PENDING' || item.status === 'FAILED').length;
+  const queuePendingCount = queue.filter(
+    (item) => item.status === 'PENDING' || item.status === 'FAILED',
+  ).length;
   const attachmentsPendingCount = attachments.filter(
     (item) => item.sync_status === 'PENDING' || item.sync_status === 'FAILED',
   ).length;
@@ -52,5 +58,13 @@ export function useFieldData(scope: OwnerScope | null) {
   // waiting to upload, so Sincronizar ahora stays enabled while either kind
   // has work left (e.g. only an attachment retry is outstanding).
   const pendingCount = queuePendingCount + attachmentsPendingCount;
-  return { drafts, queue, attachments, pendingCount, queuePendingCount, attachmentsPendingCount, refresh };
+  return {
+    drafts,
+    queue,
+    attachments,
+    pendingCount,
+    queuePendingCount,
+    attachmentsPendingCount,
+    refresh,
+  };
 }

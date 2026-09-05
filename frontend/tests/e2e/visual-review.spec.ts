@@ -16,9 +16,7 @@ async function adminData(request: APIRequestContext) {
   const campaigns = (
     await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
   ).items;
-  const campaign = campaigns.find(
-    (item: { slug: string }) => item.slug === 'gualaceo-e2e-2027',
-  );
+  const campaign = campaigns.find((item: { slug: string }) => item.slug === 'gualaceo-e2e-2027');
   expect(campaign).toBeTruthy();
   const activities = await (
     await request.get(`/api/v1/campaigns/${campaign.id}/activities?page=1&page_size=10`, {

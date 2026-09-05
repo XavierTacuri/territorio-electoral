@@ -35,7 +35,13 @@ type Form = {
   parish_id: number;
   responsible_user_id: string;
 };
-export const FOLLOW_UP_TABLE_HEADERS = ['Seguimiento', 'Responsable', 'Origen', 'Estado', 'Acciones'] as const;
+export const FOLLOW_UP_TABLE_HEADERS = [
+  'Seguimiento',
+  'Responsable',
+  'Origen',
+  'Estado',
+  'Acciones',
+] as const;
 
 export function followUpPayload(v: Form) {
   return {
@@ -161,12 +167,19 @@ export default function CommitmentsPage() {
             {
               key: 'responsible',
               label: 'Responsable',
-              render: (x) => x.responsible_name ?? (x.responsible_user_id ? 'Responsable asignado' : 'Sin asignar'),
+              render: (x) =>
+                x.responsible_name ??
+                (x.responsible_user_id ? 'Responsable asignado' : 'Sin asignar'),
             },
             {
               key: 'origin',
               label: 'Origen',
-              render: (x) => x.activity_id ? 'Actividad relacionada' : x.need_id ? 'Necesidad registrada' : 'Registro manual',
+              render: (x) =>
+                x.activity_id
+                  ? 'Actividad relacionada'
+                  : x.need_id
+                    ? 'Necesidad registrada'
+                    : 'Registro manual',
             },
             {
               key: 'status',

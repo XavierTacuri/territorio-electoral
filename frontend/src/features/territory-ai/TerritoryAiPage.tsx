@@ -40,7 +40,13 @@ type Citation = {
   internal_path: string | null;
   external_url: string | null;
   freshness: string;
-  metadata?: { fieldwork_start?: string; fieldwork_end?: string; sample_size?: number; methodology?: string; coverage?: string };
+  metadata?: {
+    fieldwork_start?: string;
+    fieldwork_end?: string;
+    sample_size?: number;
+    methodology?: string;
+    coverage?: string;
+  };
 };
 type Answer = {
   answer: string;
@@ -62,8 +68,20 @@ type Message = {
   created_at: string;
 };
 type Conversation = { id: string; title: string; messages: Message[] };
-const suggestions = ['¿Cuál es el panorama electoral actual?','¿Cómo ha cambiado la participación electoral?','¿Qué necesidades se han registrado por parroquia?','¿Qué temas se repiten en las actividades?','¿Qué estudios agregados están disponibles?','Resume la evidencia disponible sobre vialidad.'];
-export const evidenceClassLabels = { OFFICIAL: 'Oficial', PUBLIC: 'Fuente pública', CAMPAIGN: 'Registro de campaña', DEMO: 'Datos simulados' } as const;
+const suggestions = [
+  '¿Cuál es el panorama electoral actual?',
+  '¿Cómo ha cambiado la participación electoral?',
+  '¿Qué necesidades se han registrado por parroquia?',
+  '¿Qué temas se repiten en las actividades?',
+  '¿Qué estudios agregados están disponibles?',
+  'Resume la evidencia disponible sobre vialidad.',
+];
+export const evidenceClassLabels = {
+  OFFICIAL: 'Oficial',
+  PUBLIC: 'Fuente pública',
+  CAMPAIGN: 'Registro de campaña',
+  DEMO: 'Datos simulados',
+} as const;
 function errorMessage(error: Error) {
   if (error instanceof ApiError) {
     const body = error.detail as { detail?: { code?: string; message?: string } } | undefined;
@@ -322,8 +340,13 @@ export default function TerritoryAiPage() {
               <b>Tipo:</b>{' '}
               {territoryAiSourceLabels[citation.source_type] ?? 'Fuente de información'}
             </Typography>
-            <Chip label={evidenceClassLabels[citation.evidence_class] ?? 'Registro de campaña'} color={citation.evidence_class === 'DEMO' ? 'warning' : 'default'} />
-            {citation.evidence_class === 'DEMO' && <Alert severity="warning">Datos simulados para demostración.</Alert>}
+            <Chip
+              label={evidenceClassLabels[citation.evidence_class] ?? 'Registro de campaña'}
+              color={citation.evidence_class === 'DEMO' ? 'warning' : 'default'}
+            />
+            {citation.evidence_class === 'DEMO' && (
+              <Alert severity="warning">Datos simulados para demostración.</Alert>
+            )}
             <Typography>
               <b>Título:</b> {citation.title}
             </Typography>
@@ -339,7 +362,27 @@ export default function TerritoryAiPage() {
             <Typography>
               <b>Territorio:</b> {citation.territory?.name ?? 'Cantonal'}
             </Typography>
-            {citation.source_type === 'SURVEY_STUDY' && <Paper variant="outlined" sx={{ p: 2 }}><Typography><b>Encuesta:</b> {citation.title}</Typography><Typography><b>Trabajo de campo:</b> {citation.metadata?.fieldwork_start ?? 'No disponible'} – {citation.metadata?.fieldwork_end ?? 'No disponible'}</Typography><Typography><b>Muestra:</b> {citation.metadata?.sample_size ?? 'No disponible'}</Typography><Typography><b>Metodología:</b> {citation.metadata?.methodology ?? 'No disponible'}</Typography><Typography><b>Cobertura:</b> {citation.metadata?.coverage === 'PARISH' ? 'Parroquial' : 'Cantonal'}</Typography></Paper>}
+            {citation.source_type === 'SURVEY_STUDY' && (
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Typography>
+                  <b>Encuesta:</b> {citation.title}
+                </Typography>
+                <Typography>
+                  <b>Trabajo de campo:</b> {citation.metadata?.fieldwork_start ?? 'No disponible'} –{' '}
+                  {citation.metadata?.fieldwork_end ?? 'No disponible'}
+                </Typography>
+                <Typography>
+                  <b>Muestra:</b> {citation.metadata?.sample_size ?? 'No disponible'}
+                </Typography>
+                <Typography>
+                  <b>Metodología:</b> {citation.metadata?.methodology ?? 'No disponible'}
+                </Typography>
+                <Typography>
+                  <b>Cobertura:</b>{' '}
+                  {citation.metadata?.coverage === 'PARISH' ? 'Parroquial' : 'Cantonal'}
+                </Typography>
+              </Paper>
+            )}
             <Typography>
               <b>Nivel:</b>{' '}
               {citation.territory?.level === 'CANTON'

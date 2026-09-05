@@ -24,17 +24,30 @@ vi.mock('../../auth/AuthProvider', () => ({ useAuth: () => ({ user: auth.user })
 const server = setupServer();
 const nativeFetch = globalThis.fetch;
 let catalog: DataHubCatalog = {
-  summary: { active_sources: 0, datasets: 0, recent_imports: 0, imports_with_errors: 0, datasets_without_active_version: 0 },
+  summary: {
+    active_sources: 0,
+    datasets: 0,
+    recent_imports: 0,
+    imports_with_errors: 0,
+    datasets_without_active_version: 0,
+  },
   entries: [],
 };
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-    nativeFetch(new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'), init)) as typeof fetch;
+    nativeFetch(
+      new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'),
+      init,
+    )) as typeof fetch;
   server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
-  auth.user = { ...auth.user, is_superuser: false, roles: [{ code: 'ADMIN', name: 'Administrador' }] };
+  auth.user = {
+    ...auth.user,
+    is_superuser: false,
+    roles: [{ code: 'ADMIN', name: 'Administrador' }],
+  };
   server.resetHandlers();
 });
 afterAll(() => {
@@ -63,7 +76,16 @@ function renderPage() {
 
 describe('Centro de datos — catálogo', () => {
   it('muestra estado vacío cuando no hay datasets', async () => {
-    catalog = { summary: { active_sources: 0, datasets: 0, recent_imports: 0, imports_with_errors: 0, datasets_without_active_version: 0 }, entries: [] };
+    catalog = {
+      summary: {
+        active_sources: 0,
+        datasets: 0,
+        recent_imports: 0,
+        imports_with_errors: 0,
+        datasets_without_active_version: 0,
+      },
+      entries: [],
+    };
     handlers();
     renderPage();
     expect(await screen.findByText('No hay datasets administrados todavía.')).toBeVisible();
@@ -71,7 +93,13 @@ describe('Centro de datos — catálogo', () => {
 
   it('muestra KPIs y datasets con advertencia de versión faltante', async () => {
     catalog = {
-      summary: { active_sources: 2, datasets: 1, recent_imports: 3, imports_with_errors: 1, datasets_without_active_version: 1 },
+      summary: {
+        active_sources: 2,
+        datasets: 1,
+        recent_imports: 3,
+        imports_with_errors: 1,
+        datasets_without_active_version: 1,
+      },
       entries: [
         {
           dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
@@ -80,10 +108,19 @@ describe('Centro de datos — catálogo', () => {
           version_kind_label: 'Histórico por corte',
           sources: [
             {
-              id: 's1', code: 'CNE_ECUADOR', institution: 'Consejo Nacional Electoral', dataset_name: 'Registro',
-              dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', official_url: null, publication_date: null,
-              reference_date: null, reference_year: null, license_or_terms: null, description: null,
-              is_official: true, is_active: true,
+              id: 's1',
+              code: 'CNE_ECUADOR',
+              institution: 'Consejo Nacional Electoral',
+              dataset_name: 'Registro',
+              dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+              official_url: null,
+              publication_date: null,
+              reference_date: null,
+              reference_year: null,
+              license_or_terms: null,
+              description: null,
+              is_official: true,
+              is_active: true,
             } as any,
           ],
           active_version: null,
@@ -108,7 +145,16 @@ describe('Centro de datos — catálogo', () => {
 
   it('permite el acceso de solo lectura a ANALYST', async () => {
     auth.user = { ...auth.user, roles: [{ code: 'ANALYST', name: 'Analista' }] };
-    catalog = { summary: { active_sources: 0, datasets: 0, recent_imports: 0, imports_with_errors: 0, datasets_without_active_version: 0 }, entries: [] };
+    catalog = {
+      summary: {
+        active_sources: 0,
+        datasets: 0,
+        recent_imports: 0,
+        imports_with_errors: 0,
+        datasets_without_active_version: 0,
+      },
+      entries: [],
+    };
     handlers();
     renderPage();
     expect(await screen.findByText('Centro de datos de Ecuador')).toBeVisible();

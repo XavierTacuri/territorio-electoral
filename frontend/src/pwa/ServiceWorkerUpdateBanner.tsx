@@ -7,7 +7,10 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 // time this banner can even appear (autosave writes on every change), but we
 // still wait for an explicit tap before reloading.
 export function ServiceWorkerUpdateBanner() {
-  const { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker } = useRegisterSW({
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
     onRegisterError: () => {
       // Installability/offline-shell is a progressive enhancement; a
       // registration failure must never block the app from working online.

@@ -1,4 +1,10 @@
-export type StudyType = 'GENERAL_SURVEY' | 'CNE_EXIT_POLL' | 'POLL' | 'TRACKING_POLL' | 'EXIT_POLL' | 'OTHER';
+export type StudyType =
+  | 'GENERAL_SURVEY'
+  | 'CNE_EXIT_POLL'
+  | 'POLL'
+  | 'TRACKING_POLL'
+  | 'EXIT_POLL'
+  | 'OTHER';
 export type StudyStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
 export type Study = {
   id: string;

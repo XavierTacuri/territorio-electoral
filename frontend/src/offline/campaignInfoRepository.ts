@@ -21,7 +21,9 @@ export async function cacheCampaignInfo(
   return entry;
 }
 
-export async function getCachedCampaignInfo(campaignId: string): Promise<CachedCampaignInfo | undefined> {
+export async function getCachedCampaignInfo(
+  campaignId: string,
+): Promise<CachedCampaignInfo | undefined> {
   const db = await getFieldDb();
   return db.get('cachedCampaignInfo', campaignId);
 }

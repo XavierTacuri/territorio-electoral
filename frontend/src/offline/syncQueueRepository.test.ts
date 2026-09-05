@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { createDraft } from './draftsRepository';
-import { countPending, enqueue, listQueue, removeFromQueue, setQueueStatus } from './syncQueueRepository';
+import {
+  countPending,
+  enqueue,
+  listQueue,
+  removeFromQueue,
+  setQueueStatus,
+} from './syncQueueRepository';
 import type { OwnerScope } from './types';
 
-const scope: OwnerScope = { user_id: 'queue-user', organization_id: 'org-1', campaign_id: 'campaign-queue' };
+const scope: OwnerScope = {
+  user_id: 'queue-user',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-queue',
+};
 
 describe('syncQueueRepository', () => {
   it('enqueues a draft once and counts it as pending', async () => {

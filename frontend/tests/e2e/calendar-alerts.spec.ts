@@ -8,8 +8,9 @@ function jwtUserId(token: string): string {
 }
 
 async function gualaceoCampaign(request: APIRequestContext, headers: Record<string, string>) {
-  const campaigns = (await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json())
-    .items as { id: string; slug: string; canton_id: number; office_type: string }[];
+  const campaigns = (
+    await (await request.get('/api/v1/campaigns?page_size=100', { headers })).json()
+  ).items as { id: string; slug: string; canton_id: number; office_type: string }[];
   const campaign = campaigns.find((item) => item.slug === 'gualaceo-e2e-2027');
   if (!campaign) throw new Error('El fixture E2E requiere gualaceo-e2e-2027');
   return campaign;
@@ -107,8 +108,11 @@ test('Calendario de campaña y Centro de alertas: actividades, hitos oficiales r
   const assignments = (await (
     await request.get(`/api/v1/campaigns/${campaign.id}/territorial-assignments`, { headers })
   ).json()) as { user_id: string; parish_id: number; is_active: boolean }[];
-  const coordinatorAssignment = assignments.find((a) => a.user_id === coordinatorUserId && a.is_active);
-  if (!coordinatorAssignment) throw new Error('coordinator_e2e requiere una asignación territorial activa en el fixture E2E');
+  const coordinatorAssignment = assignments.find(
+    (a) => a.user_id === coordinatorUserId && a.is_active,
+  );
+  if (!coordinatorAssignment)
+    throw new Error('coordinator_e2e requiere una asignación territorial activa en el fixture E2E');
   const coordinatorParishId = coordinatorAssignment.parish_id;
   await request.post(`/api/v1/campaigns/${campaign.id}/activities`, {
     headers: coordinatorHeaders,
@@ -134,9 +138,7 @@ test('Calendario de campaña y Centro de alertas: actividades, hitos oficiales r
     await page.getByLabel('Título').fill(milestoneTitle);
     await page.getByLabel('Tipo de hito').click();
     await page.getByRole('option', { name: 'Debate' }).click();
-    await page
-      .getByLabel('Fecha y hora')
-      .fill(milestoneDate.toISOString().slice(0, 16));
+    await page.getByLabel('Fecha y hora').fill(milestoneDate.toISOString().slice(0, 16));
     await page.getByLabel('Fuente oficial').click();
     await page.getByRole('option', { name: new RegExp(source.dataset_name) }).click();
     const created = page.waitForResponse(

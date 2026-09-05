@@ -199,17 +199,44 @@ export default function UsersPage() {
                 Al desactivar se invalidan las sesiones según la política backend.
               </Typography>
             )}
-            {editing && <Stack spacing={1} sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
-              <Typography fontWeight={700}>Restablecer contraseña</Typography>
-              <Typography variant="body2" color="text.secondary">Esta acción cerrará todas las sesiones de la persona.</Typography>
-              <TextField label="Nueva contraseña temporal" type="password" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} inputProps={{ autoComplete: 'new-password' }} />
-              {resetMessage && <Alert severity="success">{resetMessage}</Alert>}
-              <Button variant="outlined" disabled={!resetPassword} onClick={async () => {
-                setError(''); setResetMessage('');
-                try { const response = await apiRequest<{ message: string }>(`/users/${editing.id}/change-password`, { method: 'POST', body: JSON.stringify({ new_password: resetPassword }) }); setResetPassword(''); setResetMessage(response.message); }
-                catch { setError('No fue posible restablecer la contraseña. Revisa los requisitos de seguridad.'); }
-              }}>Restablecer contraseña</Button>
-            </Stack>}
+            {editing && (
+              <Stack spacing={1} sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
+                <Typography fontWeight={700}>Restablecer contraseña</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Esta acción cerrará todas las sesiones de la persona.
+                </Typography>
+                <TextField
+                  label="Nueva contraseña temporal"
+                  type="password"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  inputProps={{ autoComplete: 'new-password' }}
+                />
+                {resetMessage && <Alert severity="success">{resetMessage}</Alert>}
+                <Button
+                  variant="outlined"
+                  disabled={!resetPassword}
+                  onClick={async () => {
+                    setError('');
+                    setResetMessage('');
+                    try {
+                      const response = await apiRequest<{ message: string }>(
+                        `/users/${editing.id}/change-password`,
+                        { method: 'POST', body: JSON.stringify({ new_password: resetPassword }) },
+                      );
+                      setResetPassword('');
+                      setResetMessage(response.message);
+                    } catch {
+                      setError(
+                        'No fue posible restablecer la contraseña. Revisa los requisitos de seguridad.',
+                      );
+                    }
+                  }}
+                >
+                  Restablecer contraseña
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>

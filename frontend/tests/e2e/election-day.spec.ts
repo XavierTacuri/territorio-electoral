@@ -19,17 +19,25 @@ async function syntheticCampaign(request: APIRequestContext, headers: Record<str
   return campaign;
 }
 
-async function pollingPlaces(request: APIRequestContext, headers: Record<string, string>, campaignId: string) {
-  const body = (
-    await (await request.get(`/api/v1/campaigns/${campaignId}/election-day/polling-places`, { headers })).json()
-  ) as { items: { id: string; official_code: string; parish_id: number }[] };
+async function pollingPlaces(
+  request: APIRequestContext,
+  headers: Record<string, string>,
+  campaignId: string,
+) {
+  const body = (await (
+    await request.get(`/api/v1/campaigns/${campaignId}/election-day/polling-places`, { headers })
+  ).json()) as { items: { id: string; official_code: string; parish_id: number }[] };
   return body.items;
 }
 
-async function assignments(request: APIRequestContext, headers: Record<string, string>, campaignId: string) {
-  const body = (
-    await (await request.get(`/api/v1/campaigns/${campaignId}/election-day/assignments`, { headers })).json()
-  ) as {
+async function assignments(
+  request: APIRequestContext,
+  headers: Record<string, string>,
+  campaignId: string,
+) {
+  const body = (await (
+    await request.get(`/api/v1/campaigns/${campaignId}/election-day/assignments`, { headers })
+  ).json()) as {
     items: {
       id: string;
       user_id: string;
@@ -66,7 +74,9 @@ test.describe('Modo Jornada Electoral', () => {
     await expect(page.getByText('Casa Comunal Sintética', { exact: true })).toBeVisible();
     await expect(page.getByText('Incidencias recientes')).toBeVisible();
     await expect(
-      page.getByText('cobertura, presencia, incidencias y documentación. No es un sistema de resultados.'),
+      page.getByText(
+        'cobertura, presencia, incidencias y documentación. No es un sistema de resultados.',
+      ),
     ).toBeVisible();
   });
 
@@ -189,7 +199,9 @@ test.describe('Modo Jornada Electoral', () => {
     });
 
     await context.setOffline(true);
-    await expect(page.getByText('Sin conexión: los registros se guardan en el dispositivo')).toBeVisible();
+    await expect(
+      page.getByText('Sin conexión: los registros se guardan en el dispositivo'),
+    ).toBeVisible();
 
     await page.getByRole('button', { name: 'CONFIRMAR PRESENCIA' }).click();
     await expect(
@@ -285,10 +297,17 @@ test.describe('Modo Jornada Electoral', () => {
     );
     expect(denied.status()).toBe(403);
 
-    const deniedIncident = await request.post(`/api/v1/campaigns/${campaign.id}/election-day/incidents`, {
-      headers: coordinatorHeaders,
-      data: { polling_place_id: place2.id, category: 'OTHER', description: 'Fuera de alcance E2E' },
-    });
+    const deniedIncident = await request.post(
+      `/api/v1/campaigns/${campaign.id}/election-day/incidents`,
+      {
+        headers: coordinatorHeaders,
+        data: {
+          polling_place_id: place2.id,
+          category: 'OTHER',
+          description: 'Fuera de alcance E2E',
+        },
+      },
+    );
     expect(deniedIncident.status()).toBe(403);
   });
 

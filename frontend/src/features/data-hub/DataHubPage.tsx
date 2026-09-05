@@ -100,8 +100,7 @@ export default function DataHubPage() {
                   render: (x) =>
                     x.last_job ? (
                       <>
-                        <StatusBadge value={x.last_job.status} />{' '}
-                        {x.last_job.original_filename}
+                        <StatusBadge value={x.last_job.status} /> {x.last_job.original_filename}
                       </>
                     ) : (
                       '—'

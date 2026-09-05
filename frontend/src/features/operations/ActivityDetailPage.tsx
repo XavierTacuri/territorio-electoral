@@ -87,7 +87,10 @@ export default function ActivityDetailPage() {
     queryFn: () => apiRequest<Catalog[]>('/need-categories'),
     enabled: activity.data?.approval_status === 'APPROVED',
   });
-  const types = useQuery({ queryKey: ['activity-types'], queryFn: () => apiRequest<Catalog[]>('/activity-types') });
+  const types = useQuery({
+    queryKey: ['activity-types'],
+    queryFn: () => apiRequest<Catalog[]>('/activity-types'),
+  });
   const parishes = useQuery({
     queryKey: ['parishes', active?.canton_id],
     queryFn: () => apiRequest<Parish[]>('/parishes?canton_id=' + active!.canton_id),
@@ -145,7 +148,9 @@ export default function ActivityDetailPage() {
       body: unknown;
     }) => apiRequest(path, { method, body: JSON.stringify(body) }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, 'activity', activityId] });
+      await queryClient.invalidateQueries({
+        queryKey: ['campaign', campaignId, 'activity', activityId],
+      });
       await queryClient.invalidateQueries({
         queryKey: ['activity', campaignId, activityId, 'participants'],
       });
@@ -159,13 +164,20 @@ export default function ActivityDetailPage() {
     },
   });
   const approvalAction = useMutation({
-    mutationFn: (mode: 'approve' | 'reject') => apiRequest<Activity>(`/campaigns/${campaignId}/activities/${activityId}/${mode}`, {
-      method: 'POST',
-      body: mode === 'reject' ? JSON.stringify({ rejection_reason: rejectionReason.trim() }) : undefined,
-    }),
+    mutationFn: (mode: 'approve' | 'reject') =>
+      apiRequest<Activity>(`/campaigns/${campaignId}/activities/${activityId}/${mode}`, {
+        method: 'POST',
+        body:
+          mode === 'reject'
+            ? JSON.stringify({ rejection_reason: rejectionReason.trim() })
+            : undefined,
+      }),
     onSuccess: async () => {
-      setApprovalDialog(null); setRejectionReason('');
-      await queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, 'activity', activityId] });
+      setApprovalDialog(null);
+      setRejectionReason('');
+      await queryClient.invalidateQueries({
+        queryKey: ['campaign', campaignId, 'activity', activityId],
+      });
       await queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, 'activities'] });
     },
   });
@@ -182,10 +194,26 @@ export default function ActivityDetailPage() {
         title={item.title}
         description={'Actividad del ' + formatDateOnly(item.activity_date)}
         action={
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-            {canApprove && <Button variant="contained" onClick={() => setApprovalDialog('approve')}>Aprobar</Button>}
-            {canApprove && <Button color="error" variant="outlined" onClick={() => setApprovalDialog('reject')}>Rechazar</Button>}
-            {canCorrect && <Button variant="contained" onClick={() => setEditing(true)}>Editar y corregir</Button>}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
+            {canApprove && (
+              <Button variant="contained" onClick={() => setApprovalDialog('approve')}>
+                Aprobar
+              </Button>
+            )}
+            {canApprove && (
+              <Button color="error" variant="outlined" onClick={() => setApprovalDialog('reject')}>
+                Rechazar
+              </Button>
+            )}
+            {canCorrect && (
+              <Button variant="contained" onClick={() => setEditing(true)}>
+                Editar y corregir
+              </Button>
+            )}
             <Button
               component={RouterLink}
               to={`/app/campaigns/${campaignId}/territory-ai?activity_id=${activityId}&question=${encodeURIComponent(`Resume la actividad ${item.title}`)}`}
@@ -200,10 +228,19 @@ export default function ActivityDetailPage() {
       />
       {item.approval_status === 'REJECTED' && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          <Typography><strong>Estado de aprobación:</strong> Rechazada</Typography>
-          <Typography><strong>Motivo del rechazo:</strong> {item.rejection_reason || 'No disponible'}</Typography>
-          <Typography><strong>Fecha:</strong> {item.rejected_at ? formatDateOnly(item.rejected_at.slice(0, 10)) : 'No disponible'}</Typography>
-          <Typography><strong>Rechazado por:</strong> {formatActivityActor(item.rejected_by)}</Typography>
+          <Typography>
+            <strong>Estado de aprobación:</strong> Rechazada
+          </Typography>
+          <Typography>
+            <strong>Motivo del rechazo:</strong> {item.rejection_reason || 'No disponible'}
+          </Typography>
+          <Typography>
+            <strong>Fecha:</strong>{' '}
+            {item.rejected_at ? formatDateOnly(item.rejected_at.slice(0, 10)) : 'No disponible'}
+          </Typography>
+          <Typography>
+            <strong>Rechazado por:</strong> {formatActivityActor(item.rejected_by)}
+          </Typography>
         </Alert>
       )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
@@ -224,7 +261,64 @@ export default function ActivityDetailPage() {
         <StatusBadge value={operationStatusLabel(item.status)} />
       </Stack>
       <Grid container spacing={2}>
-        {(item.completion_summary || item.cancellation_reason || item.suspension_reason) && <Grid size={{ xs: 12 }}><Card variant="outlined"><CardContent><Typography variant="h2">Historial de actividad</Typography>{item.completion_summary && <><Typography><strong>Resumen</strong></Typography><Typography>{item.completion_summary}</Typography><Typography>Fecha de cierre: {item.completed_at ? formatDateOnly(item.completed_at.slice(0, 10)) : 'No disponible'}</Typography><Typography><strong>Completado por:</strong> {formatActivityActor(item.completed_by)}</Typography></>}{item.outcome_notes && <><Typography><strong>Resultados / observaciones</strong></Typography><Typography>{item.outcome_notes}</Typography></>}{item.suspension_reason && <><Typography><strong>Motivo de suspensión</strong></Typography><Typography>{item.suspension_reason}</Typography><Typography><strong>Suspendido por:</strong> {formatActivityActor(item.suspended_by)}</Typography>{item.resumed_by && <Typography><strong>Reanudado por:</strong> {formatActivityActor(item.resumed_by)}</Typography>}</>}{item.cancellation_reason && <><Typography><strong>Motivo de cancelación (legacy)</strong></Typography><Typography>{item.cancellation_reason}</Typography></>}</CardContent></Card></Grid>}
+        {(item.completion_summary || item.cancellation_reason || item.suspension_reason) && (
+          <Grid size={{ xs: 12 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h2">Historial de actividad</Typography>
+                {item.completion_summary && (
+                  <>
+                    <Typography>
+                      <strong>Resumen</strong>
+                    </Typography>
+                    <Typography>{item.completion_summary}</Typography>
+                    <Typography>
+                      Fecha de cierre:{' '}
+                      {item.completed_at
+                        ? formatDateOnly(item.completed_at.slice(0, 10))
+                        : 'No disponible'}
+                    </Typography>
+                    <Typography>
+                      <strong>Completado por:</strong> {formatActivityActor(item.completed_by)}
+                    </Typography>
+                  </>
+                )}
+                {item.outcome_notes && (
+                  <>
+                    <Typography>
+                      <strong>Resultados / observaciones</strong>
+                    </Typography>
+                    <Typography>{item.outcome_notes}</Typography>
+                  </>
+                )}
+                {item.suspension_reason && (
+                  <>
+                    <Typography>
+                      <strong>Motivo de suspensión</strong>
+                    </Typography>
+                    <Typography>{item.suspension_reason}</Typography>
+                    <Typography>
+                      <strong>Suspendido por:</strong> {formatActivityActor(item.suspended_by)}
+                    </Typography>
+                    {item.resumed_by && (
+                      <Typography>
+                        <strong>Reanudado por:</strong> {formatActivityActor(item.resumed_by)}
+                      </Typography>
+                    )}
+                  </>
+                )}
+                {item.cancellation_reason && (
+                  <>
+                    <Typography>
+                      <strong>Motivo de cancelación (legacy)</strong>
+                    </Typography>
+                    <Typography>{item.cancellation_reason}</Typography>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined">
             <CardContent>
@@ -233,71 +327,83 @@ export default function ActivityDetailPage() {
                 <Typography>{item.description || 'Sin descripción'}</Typography>
                 <Typography>Parroquia: {item.parish_name ?? 'No disponible'}</Typography>
                 <Typography>Ubicación: {item.location_name || 'No registrada'}</Typography>
-                {item.approval_status === 'APPROVED' && <Typography><strong>Aprobado por:</strong> {formatActivityActor(item.approved_by)}</Typography>}
+                {item.approval_status === 'APPROVED' && (
+                  <Typography>
+                    <strong>Aprobado por:</strong> {formatActivityActor(item.approved_by)}
+                  </Typography>
+                )}
               </Stack>
             </CardContent>
           </Card>
         </Grid>
-        {executionAvailable && <>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h2">Participantes agregados</Typography>
-              {participants.data ? (
-                <Stack>
-                  <Typography>
-                    Asistentes estimados: {participants.data.estimated_attendees}
-                  </Typography>
-                  <Typography>Organizaciones: {participants.data.organizations_count}</Typography>
-                  <Typography>
-                    Líderes comunitarios: {participants.data.community_leaders_count}
-                  </Typography>
-                  <Typography>
-                    Equipo de campaña: {participants.data.campaign_team_count}
-                  </Typography>
-                </Stack>
-              ) : (
-                <Typography>No registrados</Typography>
-              )}
-              <Button onClick={() => setDialog('participants')}>Registrar resumen</Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h2">Necesidades</Typography>
-              {needs.data?.items.map((x) => (
-                <Typography key={x.id} component={RouterLink} to={`/app/campaigns/${campaignId}/needs/${x.id}`}>
-                  {x.title} · {x.mentions_count} menciones
-                </Typography>
-              ))}
-              {!needs.data?.items.length && <Typography>No hay necesidades</Typography>}
-              <Button onClick={() => setDialog('need')}>Registrar necesidad</Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h2">Evidencias URL</Typography>
-              {evidence.data?.map((x) => (
-                <Link
-                  key={x.id}
-                  href={x.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  display="block"
-                >
-                  {x.title} ({evidenceTypeLabel(x.evidence_type)})
-                </Link>
-              ))}
-              {!evidence.data?.length && <Typography>No hay evidencias</Typography>}
-              <Button onClick={() => setDialog('evidence')}>Agregar evidencia</Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        </>}
+        {executionAvailable && (
+          <>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="h2">Participantes agregados</Typography>
+                  {participants.data ? (
+                    <Stack>
+                      <Typography>
+                        Asistentes estimados: {participants.data.estimated_attendees}
+                      </Typography>
+                      <Typography>
+                        Organizaciones: {participants.data.organizations_count}
+                      </Typography>
+                      <Typography>
+                        Líderes comunitarios: {participants.data.community_leaders_count}
+                      </Typography>
+                      <Typography>
+                        Equipo de campaña: {participants.data.campaign_team_count}
+                      </Typography>
+                    </Stack>
+                  ) : (
+                    <Typography>No registrados</Typography>
+                  )}
+                  <Button onClick={() => setDialog('participants')}>Registrar resumen</Button>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="h2">Necesidades</Typography>
+                  {needs.data?.items.map((x) => (
+                    <Typography
+                      key={x.id}
+                      component={RouterLink}
+                      to={`/app/campaigns/${campaignId}/needs/${x.id}`}
+                    >
+                      {x.title} · {x.mentions_count} menciones
+                    </Typography>
+                  ))}
+                  {!needs.data?.items.length && <Typography>No hay necesidades</Typography>}
+                  <Button onClick={() => setDialog('need')}>Registrar necesidad</Button>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="h2">Evidencias URL</Typography>
+                  {evidence.data?.map((x) => (
+                    <Link
+                      key={x.id}
+                      href={x.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      display="block"
+                    >
+                      {x.title} ({evidenceTypeLabel(x.evidence_type)})
+                    </Link>
+                  ))}
+                  {!evidence.data?.length && <Typography>No hay evidencias</Typography>}
+                  <Button onClick={() => setDialog('evidence')}>Agregar evidencia</Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          </>
+        )}
       </Grid>
       <ActivityForm
         open={editing}
@@ -307,20 +413,55 @@ export default function ActivityDetailPage() {
         submitLabel="Guardar y reenviar"
         onClose={() => setEditing(false)}
         onSubmit={async (value: ActivityFormValue) => {
-          await apiRequest(`/campaigns/${campaignId}/activities/${activityId}`, { method: 'PATCH', body: JSON.stringify(value) });
-          await apiRequest(`/campaigns/${campaignId}/activities/${activityId}/submit-for-approval`, { method: 'POST' });
-          await queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, 'activity', activityId] });
+          await apiRequest(`/campaigns/${campaignId}/activities/${activityId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(value),
+          });
+          await apiRequest(
+            `/campaigns/${campaignId}/activities/${activityId}/submit-for-approval`,
+            { method: 'POST' },
+          );
+          await queryClient.invalidateQueries({
+            queryKey: ['campaign', campaignId, 'activity', activityId],
+          });
           await queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, 'activities'] });
         }}
       />
       <Dialog open={Boolean(approvalDialog)} onClose={() => setApprovalDialog(null)} fullWidth>
-        <DialogTitle>{approvalDialog === 'approve' ? 'Aprobar actividad' : 'Rechazar actividad'}</DialogTitle>
+        <DialogTitle>
+          {approvalDialog === 'approve' ? 'Aprobar actividad' : 'Rechazar actividad'}
+        </DialogTitle>
         <DialogContent>
-          {approvalDialog === 'approve' ? <Alert severity="info" sx={{ mt: 1 }}>Confirma la aprobación de {item.title}.</Alert> : <TextField autoFocus required fullWidth multiline minRows={3} sx={{ mt: 1 }} label="Motivo del rechazo" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} />}
+          {approvalDialog === 'approve' ? (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              Confirma la aprobación de {item.title}.
+            </Alert>
+          ) : (
+            <TextField
+              autoFocus
+              required
+              fullWidth
+              multiline
+              minRows={3}
+              sx={{ mt: 1 }}
+              label="Motivo del rechazo"
+              value={rejectionReason}
+              onChange={(event) => setRejectionReason(event.target.value)}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setApprovalDialog(null)}>Cancelar</Button>
-          <Button variant="contained" color={approvalDialog === 'reject' ? 'error' : 'primary'} disabled={approvalAction.isPending || (approvalDialog === 'reject' && !rejectionReason.trim())} onClick={() => approvalDialog && approvalAction.mutate(approvalDialog)}>Confirmar</Button>
+          <Button
+            variant="contained"
+            color={approvalDialog === 'reject' ? 'error' : 'primary'}
+            disabled={
+              approvalAction.isPending || (approvalDialog === 'reject' && !rejectionReason.trim())
+            }
+            onClick={() => approvalDialog && approvalAction.mutate(approvalDialog)}
+          >
+            Confirmar
+          </Button>
         </DialogActions>
       </Dialog>
       <Dialog open={dialog === 'participants'} onClose={() => setDialog(null)} fullWidth>

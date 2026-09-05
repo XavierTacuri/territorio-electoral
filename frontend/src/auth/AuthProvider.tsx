@@ -2,7 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { ApiError } from '../api/errors';
 import { apiRequest, tokenStore } from '../api/client';
 import { queryClient } from '../app/queryClient';
-import { clearSessionSnapshot, getSessionSnapshot, saveSessionSnapshot } from '../offline/sessionRepository';
+import {
+  clearSessionSnapshot,
+  getSessionSnapshot,
+  saveSessionSnapshot,
+} from '../offline/sessionRepository';
 import type { SessionUser } from './permissions';
 
 type AuthContextValue = {

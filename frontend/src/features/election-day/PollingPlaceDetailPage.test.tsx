@@ -87,7 +87,10 @@ function handlers() {
       '*/api/v1/campaigns/campaign-1/election-day/polling-places/place-1/boards',
       async ({ request }) => {
         if (boardCreateStatus !== 201)
-          return HttpResponse.json({ detail: 'Ya existe una junta con ese código' }, { status: boardCreateStatus });
+          return HttpResponse.json(
+            { detail: 'Ya existe una junta con ese código' },
+            { status: boardCreateStatus },
+          );
         createdBoard = await request.json();
         return HttpResponse.json({ id: 'board-new', ...createdBoard }, { status: 201 });
       },
@@ -102,7 +105,10 @@ function handlers() {
       if (incidentCreateStatus !== 201)
         return HttpResponse.json({ detail: 'error' }, { status: incidentCreateStatus });
       createdIncident = await request.json();
-      return HttpResponse.json({ id: 'inc-new', ...createdIncident, status: 'OPEN' }, { status: 201 });
+      return HttpResponse.json(
+        { id: 'inc-new', ...createdIncident, status: 'OPEN' },
+        { status: 201 },
+      );
     }),
     http.get('*/api/v1/campaigns/campaign-1/election-day/documents', () =>
       HttpResponse.json({ items: documents }),
@@ -112,15 +118,12 @@ function handlers() {
         return HttpResponse.json({ detail: 'error' }, { status: documentUploadStatus });
       return HttpResponse.json({ id: 'doc-new', status: 'RECEIVED' }, { status: 201 });
     }),
-    http.post(
-      '*/api/v1/campaigns/campaign-1/election-day/incidents/:id/resolve',
-      ({ params }) => {
-        if (resolveStatus !== 200)
-          return HttpResponse.json({ detail: 'error' }, { status: resolveStatus });
-        resolvedIncidentId = String(params.id);
-        return HttpResponse.json({ ...incidents[0], status: 'RESOLVED' });
-      },
-    ),
+    http.post('*/api/v1/campaigns/campaign-1/election-day/incidents/:id/resolve', ({ params }) => {
+      if (resolveStatus !== 200)
+        return HttpResponse.json({ detail: 'error' }, { status: resolveStatus });
+      resolvedIncidentId = String(params.id);
+      return HttpResponse.json({ ...incidents[0], status: 'RESOLVED' });
+    }),
     http.get('*/api/v1/campaigns/campaign-1/election-day/eligible-users', () =>
       HttpResponse.json(eligibleUsers),
     ),
@@ -367,7 +370,9 @@ describe('Detalle de recinto electoral', () => {
     await userEvent.click(screen.getByLabelText('Nuevo usuario'));
     await userEvent.click(await screen.findByRole('option', { name: /delegado_b/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar reemplazo' }));
-    expect(await screen.findByText('No fue posible reemplazar al personal asignado.')).toBeVisible();
+    expect(
+      await screen.findByText('No fue posible reemplazar al personal asignado.'),
+    ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Reemplazar personal asignado' })).toBeVisible();
   });
 

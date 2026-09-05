@@ -104,7 +104,18 @@ const operation = {
 };
 const activitiesPage = {
   items: [
-    { id: 'a1', campaign_id: 'campaign-1', activity_type_id: 1, title: 'Reunión territorial', activity_date: '2026-08-28', status: 'COMPLETED', approval_status: 'APPROVED', parish_id: 1, is_active: true, created_by_user_id: 'u1' },
+    {
+      id: 'a1',
+      campaign_id: 'campaign-1',
+      activity_type_id: 1,
+      title: 'Reunión territorial',
+      activity_date: '2026-08-28',
+      status: 'COMPLETED',
+      approval_status: 'APPROVED',
+      parish_id: 1,
+      is_active: true,
+      created_by_user_id: 'u1',
+    },
   ],
   page: 1,
   page_size: 5,
@@ -113,14 +124,38 @@ const activitiesPage = {
 };
 const needsPage = {
   items: [
-    { id: 'n1', activity_id: null, need_category_id: 10, title: 'Vialidad rural', mentions_count: 2, priority: 'MEDIUM', urgency: 'MEDIUM', status: 'REPORTED', parish_id: 1, source_type: 'FIELD_VISIT', reported_date: '2026-08-27', assigned_to_user_id: null, is_active: true },
+    {
+      id: 'n1',
+      activity_id: null,
+      need_category_id: 10,
+      title: 'Vialidad rural',
+      mentions_count: 2,
+      priority: 'MEDIUM',
+      urgency: 'MEDIUM',
+      status: 'REPORTED',
+      parish_id: 1,
+      source_type: 'FIELD_VISIT',
+      reported_date: '2026-08-27',
+      assigned_to_user_id: null,
+      is_active: true,
+    },
   ],
   page: 1,
   page_size: 5,
   total: 2,
   total_pages: 1,
 };
-const studiesPage = { items: [{ id: 's1', name: 'Encuesta general', fieldwork_end_date: '2026-08-20', sample_size_total: 400, pollster_name: 'Firma X' }] };
+const studiesPage = {
+  items: [
+    {
+      id: 's1',
+      name: 'Encuesta general',
+      fieldwork_end_date: '2026-08-20',
+      sample_size_total: 400,
+      pollster_name: 'Firma X',
+    },
+  ],
+};
 const publicItemsPage = { items: [] };
 const needCategories = [{ id: 10, code: 'ROADS', name: 'Vialidad' }];
 const cantonRow = { id: 5, province_id: 7, name: 'Gualaceo' };
@@ -145,7 +180,10 @@ function seed(client: QueryClient, parishId: number, parish: typeof jadan) {
   client.setQueryData(['territory-public-items', 'campaign-1', String(parishId)], publicItemsPage);
 }
 
-function renderPage(parishId = 1, seedClient: (client: QueryClient) => void = (c) => seed(c, parishId, jadan)) {
+function renderPage(
+  parishId = 1,
+  seedClient: (client: QueryClient) => void = (c) => seed(c, parishId, jadan),
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
   });
@@ -233,14 +271,20 @@ describe('expediente territorial', () => {
       await screen.findByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
     ).toBeVisible();
     expect(
-      await screen.findByText('No fue posible cargar las necesidades territoriales.', {}, { timeout: 5000 }),
+      await screen.findByText(
+        'No fue posible cargar las necesidades territoriales.',
+        {},
+        { timeout: 5000 },
+      ),
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'OPERACIÓN TERRITORIAL' })).toBeVisible();
   });
   it('no incluye la sección de Seguimientos retirada del expediente', async () => {
     renderPage();
     await screen.findByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' });
-    expect(screen.queryByRole('heading', { name: 'SEGUIMIENTOS DE CAMPAÑA' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'SEGUIMIENTOS DE CAMPAÑA' }),
+    ).not.toBeInTheDocument();
   });
   it('filtra la cronología territorial', async () => {
     renderPage();

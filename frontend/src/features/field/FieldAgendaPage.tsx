@@ -20,9 +20,9 @@ function useOfficialMilestones(campaignId: string, online: boolean) {
   const query = useQuery({
     queryKey: ['field-official-milestones', campaignId, from, to],
     queryFn: () =>
-      apiRequest<{ events: { id: string; event_type: string; title: string; starts_at: string }[] }>(
-        `/campaigns/${campaignId}/calendar?date_from=${from}&date_to=${to}`,
-      ),
+      apiRequest<{
+        events: { id: string; event_type: string; title: string; starts_at: string }[];
+      }>(`/campaigns/${campaignId}/calendar?date_from=${from}&date_to=${to}`),
     enabled: online && !!campaignId,
     staleTime: 15 * 60 * 1000,
   });
@@ -50,7 +50,9 @@ export default function FieldAgendaPage() {
   const today = todayDateOnly();
   const tomorrow = todayDateOnly(new Date(Date.now() + 86400000));
   const groups: Record<string, typeof agenda.items> = { Hoy: [], Mañana: [], 'Próximos días': [] };
-  for (const item of [...agenda.items].sort((a, b) => a.activity_date.localeCompare(b.activity_date))) {
+  for (const item of [...agenda.items].sort((a, b) =>
+    a.activity_date.localeCompare(b.activity_date),
+  )) {
     groups[bucket(item.activity_date, today, tomorrow)].push(item);
   }
 
@@ -62,7 +64,12 @@ export default function FieldAgendaPage() {
       {agenda.fromCache && (
         <Alert severity="info">
           Última actualización:{' '}
-          {agenda.fetchedAt ? new Date(agenda.fetchedAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : 'no disponible'}
+          {agenda.fetchedAt
+            ? new Date(agenda.fetchedAt).toLocaleTimeString('es-EC', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : 'no disponible'}
           . No se actualiza en tiempo real sin conexión.
         </Alert>
       )}
@@ -81,7 +88,9 @@ export default function FieldAgendaPage() {
                 <ListItemButton
                   key={item.id}
                   divider
-                  onClick={() => navigate(`/app/campaigns/${campaignId}/field/activities/${item.id}`)}
+                  onClick={() =>
+                    navigate(`/app/campaigns/${campaignId}/field/activities/${item.id}`)
+                  }
                 >
                   <ListItemText
                     primary={item.title}
@@ -90,7 +99,9 @@ export default function FieldAgendaPage() {
                   <Chip
                     size="small"
                     label={operationStatusLabel(
-                      item.approval_status === 'PENDING_APPROVAL' ? item.approval_status : item.status,
+                      item.approval_status === 'PENDING_APPROVAL'
+                        ? item.approval_status
+                        : item.status,
                     )}
                   />
                 </ListItemButton>
@@ -107,7 +118,10 @@ export default function FieldAgendaPage() {
           <List disablePadding>
             {milestones.items.map((item) => (
               <ListItemButton key={item.id} divider disableRipple sx={{ cursor: 'default' }}>
-                <ListItemText primary={item.title} secondary={formatDateOnly(item.starts_at.slice(0, 10))} />
+                <ListItemText
+                  primary={item.title}
+                  secondary={formatDateOnly(item.starts_at.slice(0, 10))}
+                />
                 <Chip size="small" color="primary" label="Oficial" />
               </ListItemButton>
             ))}
@@ -115,7 +129,10 @@ export default function FieldAgendaPage() {
           {milestones.fetchedAt && (
             <Typography variant="caption" color="text.secondary">
               Última actualización:{' '}
-              {new Date(milestones.fetchedAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
+              {new Date(milestones.fetchedAt).toLocaleTimeString('es-EC', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </Typography>
           )}
         </Stack>

@@ -9,8 +9,16 @@ import {
 import { createDraft } from './draftsRepository';
 import type { OwnerScope } from './types';
 
-const userA: OwnerScope = { user_id: 'attach-user-a', organization_id: 'org-1', campaign_id: 'campaign-attach' };
-const userB: OwnerScope = { user_id: 'attach-user-b', organization_id: 'org-1', campaign_id: 'campaign-attach' };
+const userA: OwnerScope = {
+  user_id: 'attach-user-a',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-attach',
+};
+const userB: OwnerScope = {
+  user_id: 'attach-user-b',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-attach',
+};
 
 function jpegFile(name = 'foto.jpg') {
   return new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0])], name, { type: 'image/jpeg' });
@@ -19,7 +27,9 @@ function jpegFile(name = 'foto.jpg') {
 describe('attachmentsRepository', () => {
   it('rejects a disallowed MIME type before ever touching IndexedDB', async () => {
     const draft = await createDraft(userA, 'ACTIVITY', 41, { title: 'A' }, 'attach-client-1');
-    const badFile = new File([new Uint8Array([1, 2, 3])], 'archivo.exe', { type: 'application/x-msdownload' });
+    const badFile = new File([new Uint8Array([1, 2, 3])], 'archivo.exe', {
+      type: 'application/x-msdownload',
+    });
     const result = await addPendingAttachment(userA, draft.id, badFile, 'Evidencia');
     expect(result.error).toBeTruthy();
     expect(result.attachment).toBeUndefined();
@@ -28,7 +38,12 @@ describe('attachmentsRepository', () => {
 
   it('stores the real Blob (not base64) with a fresh client_generated_id per attachment', async () => {
     const draft = await createDraft(userA, 'ACTIVITY', 41, { title: 'A' }, 'attach-client-2');
-    const { attachment } = await addPendingAttachment(userA, draft.id, jpegFile(), 'Evidencia de campo');
+    const { attachment } = await addPendingAttachment(
+      userA,
+      draft.id,
+      jpegFile(),
+      'Evidencia de campo',
+    );
     expect(attachment).toBeDefined();
     expect(attachment!.blob).toBeInstanceOf(Blob);
     expect(attachment!.client_generated_id).toMatch(/^[0-9a-f-]{36}$/);

@@ -44,9 +44,7 @@ describe('AuthProvider offline-shell fallback', () => {
       is_superuser: false,
       roles: [{ code: 'TERRITORIAL_COORDINATOR', name: 'Coordinador' }],
     });
-    server.use(
-      http.get('/api/v1/auth/browser/session', () => HttpResponse.error()),
-    );
+    server.use(http.get('/api/v1/auth/browser/session', () => HttpResponse.error()));
     render(
       <AuthProvider>
         <Probe />
@@ -58,9 +56,7 @@ describe('AuthProvider offline-shell fallback', () => {
 
   it('logs out when the session check fails offline with no cached snapshot', async () => {
     setOnline(false);
-    server.use(
-      http.get('/api/v1/auth/browser/session', () => HttpResponse.error()),
-    );
+    server.use(http.get('/api/v1/auth/browser/session', () => HttpResponse.error()));
     render(
       <AuthProvider>
         <Probe />
@@ -82,7 +78,9 @@ describe('AuthProvider offline-shell fallback', () => {
       roles: [],
     });
     server.use(
-      http.get('/api/v1/auth/browser/session', () => HttpResponse.json({ detail: 'nope' }, { status: 401 })),
+      http.get('/api/v1/auth/browser/session', () =>
+        HttpResponse.json({ detail: 'nope' }, { status: 401 }),
+      ),
     );
     render(
       <AuthProvider>

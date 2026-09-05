@@ -36,13 +36,7 @@ import { formatDateEsEc } from '../../lib/formatEsEc';
 import { needStatusLabel } from '../../lib/labels';
 import { todayDateOnly } from '../../lib/dates';
 import { operationStatusLabel } from '../operations/statusLabels';
-import type {
-  Activity,
-  Catalog,
-  Need,
-  Page,
-  Parish as ParishRef,
-} from '../operations/types';
+import type { Activity, Catalog, Need, Page, Parish as ParishRef } from '../operations/types';
 import {
   ageKeys,
   available,
@@ -68,7 +62,13 @@ type PublicItem = {
   topics: { name: string }[];
 };
 type TimelineKind = 'activity' | 'need' | 'study' | 'public';
-type TimelineItem = { date: string; kind: TimelineKind; label: string; title: string; href?: string };
+type TimelineItem = {
+  date: string;
+  kind: TimelineKind;
+  label: string;
+  title: string;
+  href?: string;
+};
 const TIMELINE_FILTERS: { value: 'all' | TimelineKind; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'activity', label: 'Actividades' },
@@ -231,7 +231,10 @@ export default function TerritorialProfilePage() {
   const registrationChanges = [
     [
       '2019 → 2023',
-      delta(selected.historical_2019?.registered_voters, selected.historical_2023?.registered_voters),
+      delta(
+        selected.historical_2019?.registered_voters,
+        selected.historical_2023?.registered_voters,
+      ),
     ],
     [
       '2023 → actual',
@@ -428,21 +431,29 @@ export default function TerritorialProfilePage() {
               <Grid size={4}>
                 <Metric
                   label="Hombres"
-                  value={selected.male_voters == null ? 'Sin datos disponibles' : integer(selected.male_voters)}
+                  value={
+                    selected.male_voters == null
+                      ? 'Sin datos disponibles'
+                      : integer(selected.male_voters)
+                  }
                 />
               </Grid>
               <Grid size={4}>
                 <Metric
                   label="Mujeres"
                   value={
-                    selected.female_voters == null ? 'Sin datos disponibles' : integer(selected.female_voters)
+                    selected.female_voters == null
+                      ? 'Sin datos disponibles'
+                      : integer(selected.female_voters)
                   }
                 />
               </Grid>
               <Grid size={4}>
                 <Metric
                   label="Juntas"
-                  value={selected.juntas == null ? 'Sin datos disponibles' : integer(selected.juntas)}
+                  value={
+                    selected.juntas == null ? 'Sin datos disponibles' : integer(selected.juntas)
+                  }
                 />
               </Grid>
             </Grid>
@@ -637,9 +648,7 @@ export default function TerritorialProfilePage() {
                   <Chip
                     size="small"
                     color={studies.data?.items.length ? 'success' : 'default'}
-                    label={
-                      studies.data?.items.length ? 'Disponible' : 'Sin cobertura parroquial'
-                    }
+                    label={studies.data?.items.length ? 'Disponible' : 'Sin cobertura parroquial'}
                   />
                 )}
               </Stack>
@@ -864,7 +873,9 @@ export default function TerritorialProfilePage() {
               exclusive
               size="small"
               value={timelineFilter}
-              onChange={(_, value: 'all' | TimelineKind | null) => value && setTimelineFilter(value)}
+              onChange={(_, value: 'all' | TimelineKind | null) =>
+                value && setTimelineFilter(value)
+              }
               sx={{ flexWrap: 'wrap' }}
             >
               {TIMELINE_FILTERS.map((f) => (

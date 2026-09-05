@@ -1,6 +1,11 @@
 import { getFieldDb } from './db';
 import { notifyQueueChanged } from './offlineEvents';
-import { ownerKey, type AttachmentSyncStatus, type OwnerScope, type PendingAttachment } from './types';
+import {
+  ownerKey,
+  type AttachmentSyncStatus,
+  type OwnerScope,
+  type PendingAttachment,
+} from './types';
 import { validateAttachment } from './attachmentLimits';
 
 // Blobs are stored as-is in IndexedDB (structured clone supports Blob

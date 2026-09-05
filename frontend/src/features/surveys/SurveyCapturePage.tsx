@@ -59,8 +59,7 @@ export default function SurveyCapturePage() {
   });
   const parishes = useQuery({
     queryKey: ['parishes', active?.canton_id],
-    queryFn: () =>
-      apiRequest<ParishOption[]>('/parishes?canton_id=' + active!.canton_id),
+    queryFn: () => apiRequest<ParishOption[]>('/parishes?canton_id=' + active!.canton_id),
     enabled: Boolean(active?.canton_id),
   });
   const {

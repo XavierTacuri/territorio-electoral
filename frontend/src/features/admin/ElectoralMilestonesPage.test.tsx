@@ -28,13 +28,20 @@ let lastCreate: any = null;
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-    nativeFetch(new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'), init)) as typeof fetch;
+    nativeFetch(
+      new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'),
+      init,
+    )) as typeof fetch;
   server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
   milestones = [];
   lastCreate = null;
-  auth.user = { ...auth.user, is_superuser: true, roles: [{ code: 'ADMIN', name: 'Administrador' }] };
+  auth.user = {
+    ...auth.user,
+    is_superuser: true,
+    roles: [{ code: 'ADMIN', name: 'Administrador' }],
+  };
   server.resetHandlers();
 });
 afterAll(() => {
@@ -50,7 +57,14 @@ function handlers() {
     ),
     http.get('*/api/v1/data-sources', () =>
       HttpResponse.json([
-        { id: 's1', code: 'CNE', institution: 'Consejo Nacional Electoral', dataset_name: 'Calendario', dataset_type: 'OTHER_AGGREGATED_OFFICIAL', is_active: true },
+        {
+          id: 's1',
+          code: 'CNE',
+          institution: 'Consejo Nacional Electoral',
+          dataset_name: 'Calendario',
+          dataset_type: 'OTHER_AGGREGATED_OFFICIAL',
+          is_active: true,
+        },
       ]),
     ),
     http.post('*/api/v1/electoral-milestones', async ({ request }) => {
@@ -61,7 +75,9 @@ function handlers() {
 }
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/app/admin/electoral-milestones']}>
@@ -86,15 +102,25 @@ describe('Calendario electoral oficial (admin)', () => {
     const dateField = screen.getByLabelText('Fecha y hora');
     await userEvent.type(dateField, '2027-01-05T09:00');
     await userEvent.click(screen.getByLabelText('Fuente oficial'));
-    await userEvent.click(await screen.findByRole('option', { name: /Consejo Nacional Electoral/ }));
+    await userEvent.click(
+      await screen.findByRole('option', { name: /Consejo Nacional Electoral/ }),
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Crear hito' }));
     await waitFor(() =>
-      expect(lastCreate).toMatchObject({ title: 'Convocatoria sintética', electoral_process_id: 'p1', source_id: 's1' }),
+      expect(lastCreate).toMatchObject({
+        title: 'Convocatoria sintética',
+        electoral_process_id: 'p1',
+        source_id: 's1',
+      }),
     );
   });
 
   it('rechaza el acceso a roles sin administración global', async () => {
-    auth.user = { ...auth.user, is_superuser: false, roles: [{ code: 'ANALYST', name: 'Analista' }] };
+    auth.user = {
+      ...auth.user,
+      is_superuser: false,
+      roles: [{ code: 'ANALYST', name: 'Analista' }],
+    };
     handlers();
     renderPage();
     expect(await screen.findByText('Acceso denegado')).toBeVisible();

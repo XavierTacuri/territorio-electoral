@@ -53,7 +53,9 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
     await page.goto('/app/admin/data-hub');
     await expect(page.getByRole('heading', { name: 'Centro de datos de Ecuador' })).toBeVisible();
     await page.getByRole('link', { name: 'CNE · Registro electoral preelectoral' }).click();
-    await expect(page.getByRole('heading', { name: 'CNE · Registro electoral preelectoral' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'CNE · Registro electoral preelectoral' }),
+    ).toBeVisible();
   });
 
   await test.step('nueva importación V1 y creación de proceso electoral', async () => {
@@ -66,7 +68,9 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
       mimeType: 'text/csv',
       buffer: Buffer.from(rollCsv(processCode, v1Date, 1000)),
     });
-    await expect(page.getByText('Este archivo requiere un proceso electoral que todavía no existe.')).toBeVisible();
+    await expect(
+      page.getByText('Este archivo requiere un proceso electoral que todavía no existe.'),
+    ).toBeVisible();
     await page.getByLabel('Nombre').fill(`Proceso sintético Data Hub ${runId}`);
     await page.getByLabel('Fecha electoral (DD/MM/AAAA)').fill(v1ElectionDate);
     await page.getByRole('button', { name: 'CREAR PROCESO ELECTORAL' }).last().click();
@@ -106,12 +110,16 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
     await expect(rowV1).toBeVisible();
     await expect(rowV2).toBeVisible();
     await rowV1.getByRole('button', { name: 'Activar' }).click();
-    let response = page.waitForResponse((r) => r.url().includes('/data-hub/versions/') && r.url().endsWith('/activate'));
+    let response = page.waitForResponse(
+      (r) => r.url().includes('/data-hub/versions/') && r.url().endsWith('/activate'),
+    );
     await page.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
     await expect(page.getByText(`Versión vigente: ${v1Label}`)).toBeVisible();
     await rowV2.getByRole('button', { name: 'Activar' }).click();
-    response = page.waitForResponse((r) => r.url().includes('/data-hub/versions/') && r.url().endsWith('/activate'));
+    response = page.waitForResponse(
+      (r) => r.url().includes('/data-hub/versions/') && r.url().endsWith('/activate'),
+    );
     await page.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
     await expect(page.getByText(`Versión vigente: ${v2Label}`)).toBeVisible();
@@ -124,7 +132,9 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
     await browserLogin(page, e2eUsers.analyst);
     await page.goto('/app/admin/data-hub/CNE_ELECTORAL_ROLL_SNAPSHOT');
-    await expect(page.getByRole('heading', { name: 'CNE · Registro electoral preelectoral' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'CNE · Registro electoral preelectoral' }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Nueva importación' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Activar' })).toHaveCount(0);
   });

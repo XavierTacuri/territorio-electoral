@@ -26,15 +26,25 @@ export function SyncNowButton({
     setRunning(true);
     setProgress(null);
     try {
-      const summary = await syncQueue(scope, ({ index, total }) => setProgress(`Sincronizando ${index} de ${total}...`));
+      const summary = await syncQueue(scope, ({ index, total }) =>
+        setProgress(`Sincronizando ${index} de ${total}...`),
+      );
       const parts: string[] = [];
-      if (summary.synced > 0) parts.push(`${summary.synced} registro${summary.synced === 1 ? '' : 's'} sincronizado${summary.synced === 1 ? '' : 's'}.`);
-      if (summary.conflicts > 0) parts.push(`${summary.conflicts} en conflicto, requieren revisión.`);
+      if (summary.synced > 0)
+        parts.push(
+          `${summary.synced} registro${summary.synced === 1 ? '' : 's'} sincronizado${summary.synced === 1 ? '' : 's'}.`,
+        );
+      if (summary.conflicts > 0)
+        parts.push(`${summary.conflicts} en conflicto, requieren revisión.`);
       if (summary.failed > 0) parts.push(`${summary.failed} no se pudieron sincronizar.`);
       if (summary.attachmentsSynced > 0)
-        parts.push(`${summary.attachmentsSynced} evidencia${summary.attachmentsSynced === 1 ? '' : 's'} sincronizada${summary.attachmentsSynced === 1 ? '' : 's'}.`);
+        parts.push(
+          `${summary.attachmentsSynced} evidencia${summary.attachmentsSynced === 1 ? '' : 's'} sincronizada${summary.attachmentsSynced === 1 ? '' : 's'}.`,
+        );
       if (summary.attachmentsFailed > 0)
-        parts.push(`${summary.attachmentsFailed} evidencia${summary.attachmentsFailed === 1 ? '' : 's'} requieren revisión.`);
+        parts.push(
+          `${summary.attachmentsFailed} evidencia${summary.attachmentsFailed === 1 ? '' : 's'} requieren revisión.`,
+        );
       if (summary.attachmentsPending > 0)
         parts.push(
           `${summary.attachmentsPending} evidencia${summary.attachmentsPending === 1 ? '' : 's'} pendiente${summary.attachmentsPending === 1 ? '' : 's'} de sincronizar.`,

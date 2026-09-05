@@ -36,7 +36,9 @@ test('candidato abre el Expediente Territorial desde Inteligencia Territorial', 
   await page.getByRole('option', { name: /^Jadán/ }).click();
   await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
 
-  await expect(page.getByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
+  ).toBeVisible();
   const breadcrumb = page.getByRole('navigation').filter({ hasText: 'Centro de Comando' });
   await expect(breadcrumb.getByText('Centro de Comando')).toBeVisible();
   await expect(breadcrumb.getByText('Inteligencia territorial')).toBeVisible();

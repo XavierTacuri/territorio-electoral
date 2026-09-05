@@ -99,7 +99,12 @@ export default function DatasetDetailPage() {
             {canRunImports(user) && (
               <Button
                 variant="outlined"
-                onClick={() => downloadReport(`/data-import-profiles/${datasetType}/template`, `plantilla_${datasetType.toLowerCase()}.csv`)}
+                onClick={() =>
+                  downloadReport(
+                    `/data-import-profiles/${datasetType}/template`,
+                    `plantilla_${datasetType.toLowerCase()}.csv`,
+                  )
+                }
               >
                 Descargar plantilla CSV
               </Button>
@@ -107,8 +112,8 @@ export default function DatasetDetailPage() {
           </Stack>
           {canRunImports(user) && (
             <Alert severity="info">
-              Los códigos DPA contienen ceros iniciales. Trate estas columnas como texto al abrir
-              la plantilla en Excel.
+              Los códigos DPA contienen ceros iniciales. Trate estas columnas como texto al abrir la
+              plantilla en Excel.
             </Alert>
           )}
           <div>
@@ -131,7 +136,9 @@ export default function DatasetDetailPage() {
                     key: 'reference',
                     label: 'Referencia',
                     render: (x) =>
-                      x.reference_date ? formatDateOnly(x.reference_date) : (x.reference_year ?? '—'),
+                      x.reference_date
+                        ? formatDateOnly(x.reference_date)
+                        : (x.reference_year ?? '—'),
                   },
                   {
                     key: 'status',
@@ -169,7 +176,9 @@ export default function DatasetDetailPage() {
                   {
                     key: 'status',
                     label: 'Estado',
-                    render: (x) => <StatusBadge value={VERSION_STATUS_LABELS[x.status] ?? x.status} />,
+                    render: (x) => (
+                      <StatusBadge value={VERSION_STATUS_LABELS[x.status] ?? x.status} />
+                    ),
                   },
                   {
                     key: 'activated',
@@ -184,18 +193,20 @@ export default function DatasetDetailPage() {
                         <Button size="small" onClick={() => setDiffFor(x.id)}>
                           Ver diferencia
                         </Button>
-                        {canRunImports(user) && x.status !== 'ACTIVE' && x.status !== 'ARCHIVED' && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              setConfirmVersion(x);
-                              setConfirmAction('activate');
-                            }}
-                          >
-                            {activateLabel}
-                          </Button>
-                        )}
+                        {canRunImports(user) &&
+                          x.status !== 'ACTIVE' &&
+                          x.status !== 'ARCHIVED' && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                setConfirmVersion(x);
+                                setConfirmAction('activate');
+                              }}
+                            >
+                              {activateLabel}
+                            </Button>
+                          )}
                         {canRunImports(user) &&
                           (x.status === 'ACTIVE' || x.status === 'SUPERSEDED') && (
                             <Button
@@ -232,13 +243,16 @@ export default function DatasetDetailPage() {
                       </Alert>
                     ))
                   ) : (
-                    <Alert severity="info">No hay una comparación disponible para esta versión.</Alert>
+                    <Alert severity="info">
+                      No hay una comparación disponible para esta versión.
+                    </Alert>
                   )}
                 </Stack>
               ) : (
                 <Stack spacing={1}>
                   <Typography>
-                    {diff.data.previous_value} → {diff.data.new_value} ({diff.data.delta! >= 0 ? '+' : ''}
+                    {diff.data.previous_value} → {diff.data.new_value} (
+                    {diff.data.delta! >= 0 ? '+' : ''}
                     {diff.data.delta})
                   </Typography>
                   {diff.data.warnings.map((warning, index) => (
@@ -284,7 +298,9 @@ export default function DatasetDetailPage() {
           setConfirmAction(null);
         }}
         onConfirm={() =>
-          confirmVersion && confirmAction && act.mutate({ id: confirmVersion.id, action: confirmAction })
+          confirmVersion &&
+          confirmAction &&
+          act.mutate({ id: confirmVersion.id, action: confirmAction })
         }
       >
         {confirmAction === 'archive' ? (
@@ -300,10 +316,10 @@ export default function DatasetDetailPage() {
           </Typography>
         ) : (
           <Typography>
-            Se marcará "{confirmVersion?.version_label}" como versión de referencia administrativa. Si
-            otra versión está marcada, pasará a estado "Reemplazada". Esta acción cambia la referencia
-            administrativa. No restaura automáticamente los valores reemplazados durante importaciones
-            anteriores.
+            Se marcará "{confirmVersion?.version_label}" como versión de referencia administrativa.
+            Si otra versión está marcada, pasará a estado "Reemplazada". Esta acción cambia la
+            referencia administrativa. No restaura automáticamente los valores reemplazados durante
+            importaciones anteriores.
           </Typography>
         )}
       </ConfirmDialog>

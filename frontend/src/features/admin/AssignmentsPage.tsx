@@ -10,7 +10,13 @@ import { parishOptionLabel } from '../../lib/territoryLabels';
 
 type Campaign = { id: string; name: string; canton_id: number };
 type User = { id: string; username: string; first_name: string; last_name: string };
-type Parish = { id: number; name: string; canton_id: number; dpa_code?: string; parish_type?: 'URBAN' | 'RURAL' };
+type Parish = {
+  id: number;
+  name: string;
+  canton_id: number;
+  dpa_code?: string;
+  parish_type?: 'URBAN' | 'RURAL';
+};
 type Community = { id: string; name: string; parish_id: number };
 type Sector = { id: string; name: string; community_id: string };
 type Assignment = {

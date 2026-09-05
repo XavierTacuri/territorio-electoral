@@ -28,30 +28,68 @@ let detail: DatasetDetail;
 let activated: string | null = null;
 
 const source = {
-  id: 's1', code: 'CNE_ECUADOR', institution: 'Consejo Nacional Electoral', dataset_name: 'Registro',
-  dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', official_url: null, publication_date: null,
-  reference_date: '2026-07-16', reference_year: null, license_or_terms: null, description: null,
-  is_official: true, is_active: true,
+  id: 's1',
+  code: 'CNE_ECUADOR',
+  institution: 'Consejo Nacional Electoral',
+  dataset_name: 'Registro',
+  dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+  official_url: null,
+  publication_date: null,
+  reference_date: '2026-07-16',
+  reference_year: null,
+  license_or_terms: null,
+  description: null,
+  is_official: true,
+  is_active: true,
 } as any;
 const version = {
-  id: 'v1', data_source_id: 's1', dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', reference_date: '2026-07-16',
-  version_label: 'Corte 2026-07-16', checksum: 'abc', import_job_id: 'j1', status: 'VALIDATED',
-  activated_at: null, activated_by_user_id: null, superseded_by_id: null,
+  id: 'v1',
+  data_source_id: 's1',
+  dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+  reference_date: '2026-07-16',
+  version_label: 'Corte 2026-07-16',
+  checksum: 'abc',
+  import_job_id: 'j1',
+  status: 'VALIDATED',
+  activated_at: null,
+  activated_by_user_id: null,
+  superseded_by_id: null,
 };
 const job = {
-  id: 'j1', source_id: 's1', dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', original_filename: 'roll.csv',
-  file_sha256: 'abc', file_size_bytes: 100, status: 'COMPLETED', validation_only: false, rows_read: 10,
-  rows_valid: 10, rows_inserted: 10, rows_updated: 0, rows_skipped: 0, rows_failed: 0, encoding_used: 'utf-8',
-  delimiter_used: ',', mapping_profile: 'CANONICAL_ELECTORAL_ROLL_SNAPSHOT', error_summary: null,
+  id: 'j1',
+  source_id: 's1',
+  dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+  original_filename: 'roll.csv',
+  file_sha256: 'abc',
+  file_size_bytes: 100,
+  status: 'COMPLETED',
+  validation_only: false,
+  rows_read: 10,
+  rows_valid: 10,
+  rows_inserted: 10,
+  rows_updated: 0,
+  rows_skipped: 0,
+  rows_failed: 0,
+  encoding_used: 'utf-8',
+  delimiter_used: ',',
+  mapping_profile: 'CANONICAL_ELECTORAL_ROLL_SNAPSHOT',
+  error_summary: null,
 };
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-    nativeFetch(new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'), init)) as typeof fetch;
+    nativeFetch(
+      new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'),
+      init,
+    )) as typeof fetch;
   server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
-  auth.user = { ...auth.user, is_superuser: false, roles: [{ code: 'ADMIN', name: 'Administrador' }] };
+  auth.user = {
+    ...auth.user,
+    is_superuser: false,
+    roles: [{ code: 'ADMIN', name: 'Administrador' }],
+  };
   activated = null;
   server.resetHandlers();
 });
@@ -71,7 +109,9 @@ function handlers() {
 }
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/app/admin/data-hub/CNE_ELECTORAL_ROLL_SNAPSHOT']}>
@@ -86,15 +126,35 @@ function renderPage() {
 
 describe('Centro de datos — detalle de dataset', () => {
   it('muestra advertencia cuando no hay versión vigente', async () => {
-    detail = { dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', dataset_label: 'CNE · Registro electoral', version_kind: 'SNAPSHOT_VERSIONED', version_kind_label: 'Histórico por corte', sources: [source], active_version: null, versions: [version], jobs: [job] };
+    detail = {
+      dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+      dataset_label: 'CNE · Registro electoral',
+      version_kind: 'SNAPSHOT_VERSIONED',
+      version_kind_label: 'Histórico por corte',
+      sources: [source],
+      active_version: null,
+      versions: [version],
+      jobs: [job],
+    };
     handlers();
     renderPage();
-    expect(await screen.findByText('Este dataset no tiene una versión vigente activada.')).toBeVisible();
+    expect(
+      await screen.findByText('Este dataset no tiene una versión vigente activada.'),
+    ).toBeVisible();
     expect(screen.getByText('Corte 2026-07-16')).toBeVisible();
   });
 
   it('permite a ADMIN activar una versión', async () => {
-    detail = { dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', dataset_label: 'CNE · Registro electoral', version_kind: 'SNAPSHOT_VERSIONED', version_kind_label: 'Histórico por corte', sources: [source], active_version: null, versions: [version], jobs: [job] };
+    detail = {
+      dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+      dataset_label: 'CNE · Registro electoral',
+      version_kind: 'SNAPSHOT_VERSIONED',
+      version_kind_label: 'Histórico por corte',
+      sources: [source],
+      active_version: null,
+      versions: [version],
+      jobs: [job],
+    };
     handlers();
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: 'Activar' }));
@@ -104,7 +164,16 @@ describe('Centro de datos — detalle de dataset', () => {
 
   it('oculta las acciones de administración para ANALYST', async () => {
     auth.user = { ...auth.user, roles: [{ code: 'ANALYST', name: 'Analista' }] };
-    detail = { dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', dataset_label: 'CNE · Registro electoral', version_kind: 'SNAPSHOT_VERSIONED', version_kind_label: 'Histórico por corte', sources: [source], active_version: null, versions: [version], jobs: [job] };
+    detail = {
+      dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+      dataset_label: 'CNE · Registro electoral',
+      version_kind: 'SNAPSHOT_VERSIONED',
+      version_kind_label: 'Histórico por corte',
+      sources: [source],
+      active_version: null,
+      versions: [version],
+      jobs: [job],
+    };
     handlers();
     renderPage();
     await screen.findByText('Corte 2026-07-16');
@@ -114,14 +183,32 @@ describe('Centro de datos — detalle de dataset', () => {
 
   it('rechaza el acceso para roles sin visibilidad', async () => {
     auth.user = { ...auth.user, roles: [{ code: 'CANDIDATE', name: 'Candidato' }] };
-    detail = { dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', dataset_label: 'CNE · Registro electoral', version_kind: 'SNAPSHOT_VERSIONED', version_kind_label: 'Histórico por corte', sources: [], active_version: null, versions: [], jobs: [] };
+    detail = {
+      dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+      dataset_label: 'CNE · Registro electoral',
+      version_kind: 'SNAPSHOT_VERSIONED',
+      version_kind_label: 'Histórico por corte',
+      sources: [],
+      active_version: null,
+      versions: [],
+      jobs: [],
+    };
     handlers();
     renderPage();
     expect(await screen.findByText('Acceso denegado')).toBeVisible();
   });
 
   it('muestra estado vacío de versiones e importaciones', async () => {
-    detail = { dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT', dataset_label: 'CNE · Registro electoral', version_kind: 'SNAPSHOT_VERSIONED', version_kind_label: 'Histórico por corte', sources: [], active_version: null, versions: [], jobs: [] };
+    detail = {
+      dataset_type: 'CNE_ELECTORAL_ROLL_SNAPSHOT',
+      dataset_label: 'CNE · Registro electoral',
+      version_kind: 'SNAPSHOT_VERSIONED',
+      version_kind_label: 'Histórico por corte',
+      sources: [],
+      active_version: null,
+      versions: [],
+      jobs: [],
+    };
     handlers();
     renderPage();
     expect(await screen.findByText('Todavía no hay versiones para este dataset.')).toBeVisible();

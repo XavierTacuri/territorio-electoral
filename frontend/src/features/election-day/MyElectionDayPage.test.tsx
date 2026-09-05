@@ -107,13 +107,13 @@ describe('Mi Jornada', () => {
       await screen.findByText('Guardado en el dispositivo. Se sincronizará con el servidor.'),
     ).toBeVisible();
     const db = await getFieldDb();
-    const drafts = await db.getAllFromIndex(
-      'drafts',
-      'owner',
-      'u1::org-1::campaign-1',
-    );
+    const drafts = await db.getAllFromIndex('drafts', 'owner', 'u1::org-1::campaign-1');
     const checkIn = drafts.find((d) => d.entity_type === 'ELECTION_DAY_CHECK_IN');
-    expect(checkIn?.payload).toMatchObject({ assignment_id: 'a1', latitude: -2.9, longitude: -78.8 });
+    expect(checkIn?.payload).toMatchObject({
+      assignment_id: 'a1',
+      latitude: -2.9,
+      longitude: -78.8,
+    });
     const queue = await db.getAllFromIndex('syncQueue', 'owner', 'u1::org-1::campaign-1');
     expect(queue.some((q) => q.draft_id === checkIn?.id)).toBe(true);
     // apiRequest is never invoked for the mutation itself — only the initial GETs.
@@ -138,7 +138,9 @@ describe('Mi Jornada', () => {
     await userEvent.type(screen.getByLabelText('Descripción'), 'Sin energía eléctrica');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar incidencia' }));
     expect(
-      await screen.findByText('Incidencia guardada en el dispositivo. Se sincronizará con el servidor.'),
+      await screen.findByText(
+        'Incidencia guardada en el dispositivo. Se sincronizará con el servidor.',
+      ),
     ).toBeVisible();
     const db = await getFieldDb();
     const drafts = await db.getAllFromIndex('drafts', 'owner', 'u1::org-1::campaign-1');
@@ -167,7 +169,9 @@ describe('Mi Jornada', () => {
     renderPage();
     expect(await screen.findByText('Escuela Central')).toBeVisible();
     expect(
-      screen.getByText('Sin conexión: los registros se guardan en el dispositivo y se sincronizan al reconectar.'),
+      screen.getByText(
+        'Sin conexión: los registros se guardan en el dispositivo y se sincronizan al reconectar.',
+      ),
     ).toBeVisible();
   });
 });

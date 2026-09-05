@@ -107,7 +107,9 @@ export function useFieldContext(): FieldContext {
           parishes: cached?.parishes ?? [],
           fromCache: true,
           cachedAt: cached?.fetched_at ?? null,
-          error: cached ? null : 'Sin datos guardados en este dispositivo para este territorio todavía.',
+          error: cached
+            ? null
+            : 'Sin datos guardados en este dispositivo para este territorio todavía.',
         });
     }
     void load();

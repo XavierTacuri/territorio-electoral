@@ -8,7 +8,8 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 // sessionStorage so a real missing-module error (a genuine bug) still
 // surfaces instead of reload-looping forever.
 const RELOAD_KEY = 'territorio.chunkReloadAttempted';
-const STALE_CHUNK_PATTERN = /Failed to fetch dynamically imported module|Importing a module script failed/;
+const STALE_CHUNK_PATTERN =
+  /Failed to fetch dynamically imported module|Importing a module script failed/;
 
 export function lazyWithReload<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,

@@ -47,9 +47,7 @@ describe('Importación de juntas receptoras del voto', () => {
   it('advierte que el recinto debe existir primero y solo lista fuentes de juntas', async () => {
     server.use(http.get('*/api/v1/data-sources', () => HttpResponse.json([source])));
     renderPage();
-    expect(
-      await screen.findByText(/Los recintos deben importarse primero/),
-    ).toBeVisible();
+    expect(await screen.findByText(/Los recintos deben importarse primero/)).toBeVisible();
     await userEvent.click(screen.getByLabelText('Fuente'));
     expect(await screen.findByRole('option', { name: /CNE · Juntas/ })).toBeVisible();
   });
@@ -77,7 +75,9 @@ describe('Importación de juntas receptoras del voto', () => {
     await userEvent.click(await screen.findByRole('option', { name: /CNE · Juntas/ }));
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     const csv = new File(
-      ['process_code,polling_place_code,board_code,board_number,sex_category,registered_voters\nSEC_2027,R01,J01,1,MIXED,300\n'],
+      [
+        'process_code,polling_place_code,board_code,board_number,sex_category,registered_voters\nSEC_2027,R01,J01,1,MIXED,300\n',
+      ],
       'juntas.csv',
       { type: 'text/csv' },
     );

@@ -19,10 +19,7 @@ export default function AgendaPage() {
   const { activities, pending_approval } = query.data;
   return (
     <>
-      <PageHeader
-        title="Agenda territorial"
-        description="Actividades aprobadas de la campaña."
-      />
+      <PageHeader title="Agenda territorial" description="Actividades aprobadas de la campaña." />
       <Typography variant="h2" component="h2" sx={{ mb: 2 }}>
         Actividades confirmadas
       </Typography>

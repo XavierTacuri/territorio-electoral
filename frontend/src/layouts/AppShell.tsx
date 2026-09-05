@@ -146,17 +146,45 @@ export function AppShell() {
               </Badge>
             </IconButton>
           )}
-          <IconButton color="inherit" aria-label="Abrir menú de usuario" onClick={(event) => setAccountAnchor(event.currentTarget)}>
+          <IconButton
+            color="inherit"
+            aria-label="Abrir menú de usuario"
+            onClick={(event) => setAccountAnchor(event.currentTarget)}
+          >
             <AccountCircleIcon />
           </IconButton>
-          <Menu anchorEl={accountAnchor} open={Boolean(accountAnchor)} onClose={() => setAccountAnchor(null)}>
-            <MenuItem onClick={() => { setAccountAnchor(null); navigate('/app/account'); }}>Mi cuenta</MenuItem>
-            <MenuItem onClick={() => { setAccountAnchor(null); requestLogout(); }}>
-              <LogoutIcon fontSize="small" sx={{ mr: 1 }} />Cerrar sesión
+          <Menu
+            anchorEl={accountAnchor}
+            open={Boolean(accountAnchor)}
+            onClose={() => setAccountAnchor(null)}
+          >
+            <MenuItem
+              onClick={() => {
+                setAccountAnchor(null);
+                navigate('/app/account');
+              }}
+            >
+              Mi cuenta
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setAccountAnchor(null);
+                requestLogout();
+              }}
+            >
+              <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
+              Cerrar sesión
             </MenuItem>
           </Menu>
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={requestLogout} aria-label="Cerrar sesión">
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Cerrar sesión</Box>
+          <Button
+            color="inherit"
+            startIcon={<LogoutIcon />}
+            onClick={requestLogout}
+            aria-label="Cerrar sesión"
+          >
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Cerrar sesión
+            </Box>
           </Button>
         </Toolbar>
       </AppBar>
@@ -165,8 +193,9 @@ export function AppShell() {
         <DialogContent>
           <DialogContentText>
             Tienes {pendingSyncCount} registro{pendingSyncCount === 1 ? '' : 's'} pendiente
-            {pendingSyncCount === 1 ? '' : 's'} de sincronizar. Se mantienen guardados en este dispositivo y
-            volverán a estar disponibles la próxima vez que inicies sesión con la misma cuenta.
+            {pendingSyncCount === 1 ? '' : 's'} de sincronizar. Se mantienen guardados en este
+            dispositivo y volverán a estar disponibles la próxima vez que inicies sesión con la
+            misma cuenta.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

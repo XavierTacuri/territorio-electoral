@@ -44,7 +44,11 @@ function statusColor(event: CalendarEvent): 'success' | 'info' {
 const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const AGENDA_GROUPS = ['HOY', 'MAÑANA', 'PRÓXIMAMENTE', 'REALIZADAS RECIENTEMENTE'] as const;
 
-function agendaGroupOf(event: CalendarEvent, todayIso: string, tomorrowIso: string): (typeof AGENDA_GROUPS)[number] {
+function agendaGroupOf(
+  event: CalendarEvent,
+  todayIso: string,
+  tomorrowIso: string,
+): (typeof AGENDA_GROUPS)[number] {
   if (isDone(event)) return 'REALIZADAS RECIENTEMENTE';
   const day = event.starts_at.slice(0, 10);
   if (day === todayIso) return 'HOY';
@@ -52,7 +56,13 @@ function agendaGroupOf(event: CalendarEvent, todayIso: string, tomorrowIso: stri
   return 'PRÓXIMAMENTE';
 }
 
-function EventCard({ event, onSelect }: { event: CalendarEvent; onSelect: (event: CalendarEvent) => void }) {
+function EventCard({
+  event,
+  onSelect,
+}: {
+  event: CalendarEvent;
+  onSelect: (event: CalendarEvent) => void;
+}) {
   return (
     <Card variant="outlined">
       <CardContent
@@ -61,11 +71,18 @@ function EventCard({ event, onSelect }: { event: CalendarEvent; onSelect: (event
         role="button"
         aria-label={event.title}
       >
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          flexWrap="wrap"
+          gap={1}
+        >
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={700}>{event.title}</Typography>
             <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-              {formatDateOnly(event.starts_at.slice(0, 10))} · {event.start_time ?? 'Hora no registrada'}
+              {formatDateOnly(event.starts_at.slice(0, 10))} ·{' '}
+              {event.start_time ?? 'Hora no registrada'}
               {event.parish_name ? ` · ${event.parish_name}` : ''}
             </Typography>
           </Box>
@@ -192,7 +209,10 @@ export default function CalendarPage() {
       ) : query.isError ? (
         <ErrorState retry={() => query.refetch()} />
       ) : !events.length ? (
-        <EmptyState title={emptyMessage} detail="Ajusta el filtro o cambia de periodo para ver más actividades." />
+        <EmptyState
+          title={emptyMessage}
+          detail="Ajusta el filtro o cambia de periodo para ver más actividades."
+        />
       ) : view === 'AGENDA' ? (
         <Stack spacing={2.5}>
           {agendaGroups.map((group) => (
@@ -242,7 +262,10 @@ export default function CalendarPage() {
                       label={e.title}
                       color={statusColor(e)}
                       onClick={() => setSelected(e)}
-                      sx={{ maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+                      sx={{
+                        maxWidth: '100%',
+                        '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+                      }}
                     />
                   ))}
                   {dayEvents.length > 2 && (

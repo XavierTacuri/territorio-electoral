@@ -34,7 +34,9 @@ async function cleanupByTitle(
   const token = await apiToken(request);
   const headers = { Authorization: `Bearer ${token}` };
   const items = (
-    await (await request.get(`/api/v1/campaigns/${campaignId}/${resource}?page_size=100`, { headers })).json()
+    await (
+      await request.get(`/api/v1/campaigns/${campaignId}/${resource}?page_size=100`, { headers })
+    ).json()
   ).items as { id: string; title: string }[];
   for (const item of items.filter((i) => i.title === title)) {
     await request.delete(`/api/v1/campaigns/${campaignId}/${resource}/${item.id}`, { headers });
@@ -89,7 +91,9 @@ test('coordinador registra una necesidad sin conexión y sincroniza sin duplicar
   const token = await apiToken(request, e2eUsers.coordinator);
   const headers = { Authorization: `Bearer ${token}` };
   const needs = (
-    await (await request.get(`/api/v1/campaigns/${campaign.id}/needs?page_size=100`, { headers })).json()
+    await (
+      await request.get(`/api/v1/campaigns/${campaign.id}/needs?page_size=100`, { headers })
+    ).json()
   ).items as { title: string }[];
   expect(needs.filter((n) => n.title === title)).toHaveLength(1);
 
@@ -130,7 +134,9 @@ test('coordinador registra una actividad sin conexión, sincroniza y queda PENDI
   const token = await apiToken(request, e2eUsers.coordinator);
   const headers = { Authorization: `Bearer ${token}` };
   const activities = (
-    await (await request.get(`/api/v1/campaigns/${campaign.id}/activities?page_size=100`, { headers })).json()
+    await (
+      await request.get(`/api/v1/campaigns/${campaign.id}/activities?page_size=100`, { headers })
+    ).json()
   ).items as { title: string; approval_status: string }[];
   const created = activities.filter((a) => a.title === title);
   expect(created).toHaveLength(1);
@@ -204,7 +210,9 @@ test('los borradores de un coordinador no son visibles para otro usuario en el m
   // The pending item is still queued: logging out must warn before discarding
   // the session, and only actually log out once confirmed (section 38).
   await page.getByRole('button', { name: 'Cerrar sesión' }).first().click();
-  await expect(page.getByRole('heading', { name: 'Registros pendientes de sincronizar' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Registros pendientes de sincronizar' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Cerrar sesión de todas formas' }).click();
   await expect(page).toHaveURL(/\/login/);
 
@@ -266,7 +274,9 @@ test('actividad offline con foto: sincroniza, espera aprobación y luego sincron
   const token = await apiToken(request, e2eUsers.coordinator);
   const headers = { Authorization: `Bearer ${token}` };
   const activities = (
-    await (await request.get(`/api/v1/campaigns/${campaign.id}/activities?page_size=100`, { headers })).json()
+    await (
+      await request.get(`/api/v1/campaigns/${campaign.id}/activities?page_size=100`, { headers })
+    ).json()
   ).items as { id: string; title: string; approval_status: string }[];
   const created = activities.find((a) => a.title === title)!;
   expect(created.approval_status).toBe('PENDING_APPROVAL');
@@ -283,20 +293,24 @@ test('actividad offline con foto: sincroniza, espera aprobación y luego sincron
   // Coordinator retries sync: now the same queued attachment uploads for real.
   await page.reload();
   await page.getByRole('button', { name: 'Sincronizar ahora' }).click();
-  await expect(page.getByRole('alert').getByText(/evidencia.*sincronizada/)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('alert').getByText(/evidencia.*sincronizada/)).toBeVisible({
+    timeout: 15000,
+  });
 
-  const evidence = (
-    await (
-      await request.get(`/api/v1/campaigns/${campaign.id}/activities/${created.id}/evidence`, { headers })
-    ).json()
-  ) as { id: string; mime_type: string | null }[];
+  const evidence = (await (
+    await request.get(`/api/v1/campaigns/${campaign.id}/activities/${created.id}/evidence`, {
+      headers,
+    })
+  ).json()) as { id: string; mime_type: string | null }[];
   expect(evidence).toHaveLength(1);
   expect(evidence[0].mime_type).toBe('image/jpeg');
 
   await cleanupByTitle(request, campaign.id, 'activities', title);
 });
 
-test('reintentar la carga de una evidencia con el mismo client_generated_id no la duplica', async ({ request }) => {
+test('reintentar la carga de una evidencia con el mismo client_generated_id no la duplica', async ({
+  request,
+}) => {
   const campaign = await resolveCampaign(request);
   const token = await apiToken(request);
   const headers = { Authorization: `Bearer ${token}` };
@@ -309,7 +323,9 @@ test('reintentar la carga de una evidencia con el mismo client_generated_id no l
       status: 'PLANNED',
       parish_id: (
         await (
-          await request.get(`/api/v1/campaigns/${campaign.id}/current-election/analysis`, { headers })
+          await request.get(`/api/v1/campaigns/${campaign.id}/current-election/analysis`, {
+            headers,
+          })
         ).json()
       ).parishes.find((p: { name: string }) => p.name === 'Gualaceo').parish_id,
     },
@@ -340,11 +356,11 @@ test('reintentar la carga de una evidencia con el mismo client_generated_id no l
   expect(retry.status()).toBe(201);
   expect((await retry.json()).id).toBe((await first.json()).id);
 
-  const evidence = (
-    await (
-      await request.get(`/api/v1/campaigns/${campaign.id}/activities/${activity.id}/evidence`, { headers })
-    ).json()
-  ) as unknown[];
+  const evidence = (await (
+    await request.get(`/api/v1/campaigns/${campaign.id}/activities/${activity.id}/evidence`, {
+      headers,
+    })
+  ).json()) as unknown[];
   expect(evidence).toHaveLength(1);
 
   await cleanupByTitle(request, campaign.id, 'activities', activity.title);
@@ -376,7 +392,11 @@ test('un conflicto del servidor muestra REQUIRES_REVIEW y "Conservar servidor" r
   // syncEngine code produces REQUIRES_REVIEW — not an injected fake state.
   await page.route('**/api/v1/campaigns/**/needs', async (route) => {
     if (route.request().method() === 'POST') {
-      await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ detail: 'Conflicto de datos' }) });
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Conflicto de datos' }),
+      });
     } else {
       await route.continue();
     }
@@ -387,7 +407,9 @@ test('un conflicto del servidor muestra REQUIRES_REVIEW y "Conservar servidor" r
 
   await expect(page.getByText(/· Requiere revisión/)).toBeVisible();
   await page.getByRole('button', { name: 'Revisar' }).click();
-  await expect(page.getByRole('heading', { name: 'Este registro requiere revisión' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Este registro requiere revisión' }),
+  ).toBeVisible();
   await expect(page.getByText('Versión del dispositivo')).toBeVisible();
   await expect(page.getByText('Versión del servidor')).toBeVisible();
 
@@ -397,12 +419,18 @@ test('un conflicto del servidor muestra REQUIRES_REVIEW y "Conservar servidor" r
   const token = await apiToken(request, e2eUsers.coordinator);
   const headers = { Authorization: `Bearer ${token}` };
   const needs = (
-    await (await request.get(`/api/v1/campaigns/${campaign.id}/needs?page_size=100`, { headers })).json()
+    await (
+      await request.get(`/api/v1/campaigns/${campaign.id}/needs?page_size=100`, { headers })
+    ).json()
   ).items as { title: string }[];
   expect(needs.filter((n) => n.title === title)).toHaveLength(0);
 });
 
-test('"Revisar borrador" ante un conflicto abre el formulario de edición', async ({ page, request, context }) => {
+test('"Revisar borrador" ante un conflicto abre el formulario de edición', async ({
+  page,
+  request,
+  context,
+}) => {
   test.setTimeout(60000);
   const campaign = await resolveCampaign(request);
   const title = `Necesidad a revisar ${Date.now()}`;
@@ -421,7 +449,11 @@ test('"Revisar borrador" ante un conflicto abre el formulario de edición', asyn
   await context.setOffline(false);
   await page.route('**/api/v1/campaigns/**/needs', async (route) => {
     if (route.request().method() === 'POST') {
-      await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ detail: 'Conflicto de datos' }) });
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Conflicto de datos' }),
+      });
     } else {
       await route.continue();
     }
@@ -456,7 +488,9 @@ test('Operación de campo es usable en viewports móviles sin overflow horizonta
     for (const path of ['field', 'field/agenda', 'field/drafts', 'field/needs/new']) {
       await page.goto(`/app/campaigns/${campaign.id}/${path}`);
       expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth),
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
         `${path} ${size.width}`,
       ).toBe(true);
     }

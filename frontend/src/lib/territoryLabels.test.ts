@@ -10,9 +10,7 @@ const options: ParishOption[] = [
 describe('etiquetas territoriales parroquiales', () => {
   it('desambigua por tipo oficial y DPA sólo cuando se repite el nombre', () => {
     expect(parishOptionLabel(options[0], options)).toBe('Gualaquiza · Urbana · 140201');
-    expect(parishOptionLabel(options[1], options)).toBe(
-      'Gualaquiza · Cabecera cantonal · 140250',
-    );
+    expect(parishOptionLabel(options[1], options)).toBe('Gualaquiza · Cabecera cantonal · 140250');
     expect(parishOptionLabel(options[2], options)).toBe('Amazonas');
   });
 });

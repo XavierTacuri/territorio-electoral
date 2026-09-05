@@ -13,7 +13,11 @@ vi.mock('./useOfflineCatalog');
 const mockedUseFieldContext = vi.mocked(useFieldContext);
 const mockedUseOfflineCatalog = vi.mocked(useOfflineCatalog);
 
-const scope = { user_id: 'need-form-user', organization_id: 'org-1', campaign_id: 'campaign-need-form' };
+const scope = {
+  user_id: 'need-form-user',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-need-form',
+};
 
 beforeEach(() => {
   mockedUseFieldContext.mockReturnValue({
@@ -64,12 +68,20 @@ describe('FieldNeedFormPage — regla de producto: Need sin prioridad visible', 
 
     await waitFor(async () => {
       const db = await getFieldDb();
-      const drafts = await db.getAllFromIndex('drafts', 'owner', `${scope.user_id}::${scope.organization_id}::${scope.campaign_id}`);
+      const drafts = await db.getAllFromIndex(
+        'drafts',
+        'owner',
+        `${scope.user_id}::${scope.organization_id}::${scope.campaign_id}`,
+      );
       expect(drafts.length).toBeGreaterThan(0);
     });
 
     const db = await getFieldDb();
-    const drafts = await db.getAllFromIndex('drafts', 'owner', `${scope.user_id}::${scope.organization_id}::${scope.campaign_id}`);
+    const drafts = await db.getAllFromIndex(
+      'drafts',
+      'owner',
+      `${scope.user_id}::${scope.organization_id}::${scope.campaign_id}`,
+    );
     const draft = drafts[0];
     expect(draft.payload).not.toHaveProperty('priority');
     expect(draft.payload).not.toHaveProperty('priority_score');

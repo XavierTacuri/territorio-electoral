@@ -72,7 +72,9 @@ test('V2.7 aisla campanas, licencia y cache visual al cambiar de canton', async 
   const standardCneBody = await standardCne.json();
   expect(proCneBody.snapshot.registered_voters).toBeGreaterThan(0);
   expect(standardCneBody.snapshot.registered_voters).toBe(34784);
-  expect(proCneBody.snapshot.registered_voters).not.toBe(standardCneBody.snapshot.registered_voters);
+  expect(proCneBody.snapshot.registered_voters).not.toBe(
+    standardCneBody.snapshot.registered_voters,
+  );
 
   const proInec = await request.get(`/api/v1/campaigns/${pro.id}/dashboard/demographics`, {
     headers,
@@ -127,10 +129,13 @@ test('V2.7 aisla campanas, licencia y cache visual al cambiar de canton', async 
       (citation) => !citation.campaign_id || citation.campaign_id === pro.id,
     ),
   ).toBe(true);
-  const standardPanorama = await request.post(`/api/v1/campaigns/${standard.id}/territory-ai/query`, {
-    headers,
-    data: { question: '¿Cuál es el panorama electoral de Gualaceo ahora?' },
-  });
+  const standardPanorama = await request.post(
+    `/api/v1/campaigns/${standard.id}/territory-ai/query`,
+    {
+      headers,
+      data: { question: '¿Cuál es el panorama electoral de Gualaceo ahora?' },
+    },
+  );
   expect(standardPanorama.status()).toBe(200);
   const standardGrounded = (await standardPanorama.json()) as {
     citations: { internal_path?: string }[];

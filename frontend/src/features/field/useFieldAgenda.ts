@@ -30,7 +30,9 @@ export function useFieldAgenda(scope: OwnerScope | null) {
       setLoading(true);
       if (online) {
         try {
-          const data = await apiRequest<AgendaResponse>(`/campaigns/${scope.campaign_id}/operations/agenda`);
+          const data = await apiRequest<AgendaResponse>(
+            `/campaigns/${scope.campaign_id}/operations/agenda`,
+          );
           const merged = [...data.activities, ...data.pending_approval].map(toFieldItem);
           await cacheAgenda(scope, merged);
           if (!cancelled) {

@@ -92,13 +92,26 @@ export default function FieldHomePage() {
         >
           Registrar necesidad
         </Button>
-        <Button size="large" startIcon={<EventNoteIcon />} onClick={() => navigate(`${base}/field/agenda`)}>
+        <Button
+          size="large"
+          startIcon={<EventNoteIcon />}
+          onClick={() => navigate(`${base}/field/agenda`)}
+        >
           Mi agenda
         </Button>
-        <Button size="large" startIcon={<DescriptionIcon />} onClick={() => navigate(`${base}/field/drafts`)}>
+        <Button
+          size="large"
+          startIcon={<DescriptionIcon />}
+          onClick={() => navigate(`${base}/field/drafts`)}
+        >
           Borradores {pendingCount > 0 ? `(${pendingCount})` : ''}
         </Button>
-        <SyncNowButton scope={field.scope} onDone={refresh} icon={<SyncIcon />} pendingCount={pendingCount} />
+        <SyncNowButton
+          scope={field.scope}
+          onDone={refresh}
+          icon={<SyncIcon />}
+          pendingCount={pendingCount}
+        />
         <Button
           size="large"
           startIcon={<SmartToyIcon />}
@@ -110,7 +123,11 @@ export default function FieldHomePage() {
           Territorio IA
         </Button>
       </Stack>
-      <Snackbar open={offlineIaNotice} autoHideDuration={4000} onClose={() => setOfflineIaNotice(false)}>
+      <Snackbar
+        open={offlineIaNotice}
+        autoHideDuration={4000}
+        onClose={() => setOfflineIaNotice(false)}
+      >
         <Alert severity="info" onClose={() => setOfflineIaNotice(false)} sx={{ width: '100%' }}>
           Territorio IA necesita conexión a internet.
         </Alert>

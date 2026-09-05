@@ -2,7 +2,11 @@ import { Box, Chip, Paper, Typography } from '@mui/material';
 import { formatIntegerEsEc, formatPercentEsEc } from '../../lib/formatEsEc';
 import type { ElectionMapParish } from '../historical/CurrentElectionMap';
 
-export type History = { registered_voters: number; ballots_cast: number; turnout_rate: number | null };
+export type History = {
+  registered_voters: number;
+  ballots_cast: number;
+  turnout_rate: number | null;
+};
 export type Availability = {
   cne_2019: boolean;
   cne_2023: boolean;
@@ -138,7 +142,11 @@ export function Metric({
   );
 }
 const SIN_DATOS = 'Sin datos disponibles';
-export function KpiMetric({ label, value, formatter = integer }: {
+export function KpiMetric({
+  label,
+  value,
+  formatter = integer,
+}: {
   label: string;
   value: number | null | undefined;
   formatter?: (value: number) => string;

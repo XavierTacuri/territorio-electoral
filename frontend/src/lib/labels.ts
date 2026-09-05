@@ -89,20 +89,43 @@ export function labelFor<T extends string>(labels: Partial<Record<T, string>>, v
 }
 
 export const needPriorityLabels: Record<string, string> = {
-  LOW: 'Baja', MEDIUM: 'Media', HIGH: 'Alta', CRITICAL: 'Crítica',
+  LOW: 'Baja',
+  MEDIUM: 'Media',
+  HIGH: 'Alta',
+  CRITICAL: 'Crítica',
 };
 export const needStatusLabels: Record<string, string> = {
-  IDENTIFIED: 'Identificada', REPORTED: 'Reportada', UNDER_REVIEW: 'En revisión',
-  VALIDATED: 'Validada', IN_PLAN: 'En plan', INCLUDED_IN_PLAN: 'Incluida en el plan',
-  CLOSED: 'Cerrada', ARCHIVED: 'Archivada', DISCARDED: 'Descartada',
+  IDENTIFIED: 'Identificada',
+  REPORTED: 'Reportada',
+  UNDER_REVIEW: 'En revisión',
+  VALIDATED: 'Validada',
+  IN_PLAN: 'En plan',
+  INCLUDED_IN_PLAN: 'Incluida en el plan',
+  CLOSED: 'Cerrada',
+  ARCHIVED: 'Archivada',
+  DISCARDED: 'Descartada',
 };
 export const needSourceLabels: Record<string, string> = {
-  ASSEMBLY: 'Asamblea', COMMUNITY_MEETING: 'Reunión comunitaria', FIELD_VISIT: 'Visita de campo',
-  CAMPAIGN_ACTIVITY: 'Actividad de campaña', CITIZEN_REPORT: 'Reporte ciudadano', TEAM_REPORT: 'Reporte del equipo', OTHER: 'Otro',
+  ASSEMBLY: 'Asamblea',
+  COMMUNITY_MEETING: 'Reunión comunitaria',
+  FIELD_VISIT: 'Visita de campo',
+  CAMPAIGN_ACTIVITY: 'Actividad de campaña',
+  CITIZEN_REPORT: 'Reporte ciudadano',
+  TEAM_REPORT: 'Reporte del equipo',
+  OTHER: 'Otro',
 };
-export const needScopeLabels: Record<string, string> = { LOCAL: 'Sector/local', PARISH: 'Parroquial', CANTON: 'Cantonal' };
+export const needScopeLabels: Record<string, string> = {
+  LOCAL: 'Sector/local',
+  PARISH: 'Parroquial',
+  CANTON: 'Cantonal',
+};
 export const evidenceTypeLabels: Record<string, string> = {
-  PHOTO: 'Fotografía', VIDEO: 'Video', DOCUMENT: 'Documento', NEWS_LINK: 'Enlace de noticia', SOCIAL_LINK: 'Enlace social', OTHER: 'Otro',
+  PHOTO: 'Fotografía',
+  VIDEO: 'Video',
+  DOCUMENT: 'Documento',
+  NEWS_LINK: 'Enlace de noticia',
+  SOCIAL_LINK: 'Enlace social',
+  OTHER: 'Otro',
 };
 export const priorityLabel = (value: string) => needPriorityLabels[value] ?? 'No disponible';
 export const needStatusLabel = (value: string) => needStatusLabels[value] ?? 'No disponible';

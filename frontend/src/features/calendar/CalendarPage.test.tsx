@@ -15,7 +15,10 @@ let lastUrl = '';
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-    nativeFetch(new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'), init)) as typeof fetch;
+    nativeFetch(
+      new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost'),
+      init,
+    )) as typeof fetch;
   server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
@@ -44,7 +47,10 @@ function renderPage() {
       <MemoryRouter initialEntries={['/app/campaigns/campaign-1/calendar']}>
         <Routes>
           <Route path="/app/campaigns/:campaignId/calendar" element={<CalendarPage />} />
-          <Route path="/app/campaigns/:campaignId/activities/:activityId" element={<div>Detalle actividad</div>} />
+          <Route
+            path="/app/campaigns/:campaignId/activities/:activityId"
+            element={<div>Detalle actividad</div>}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

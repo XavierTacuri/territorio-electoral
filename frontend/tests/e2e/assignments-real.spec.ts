@@ -37,9 +37,7 @@ test('asignaciones reales de parroquia, comunidad y sector respetan la jerarquia
         headers: auth(admin),
       })
     ).json();
-    const match = communities.items.find(
-      (item: { code: string }) => item.code === 'E2E_COMMUNITY',
-    );
+    const match = communities.items.find((item: { code: string }) => item.code === 'E2E_COMMUNITY');
     if (match) {
       assignedParish = parish;
       community = match;
@@ -50,9 +48,7 @@ test('asignaciones reales de parroquia, comunidad y sector respetan la jerarquia
   expect(community).toBeDefined();
   const fixtureParish = assignedParish!;
   const fixtureCommunity = community!;
-  const outsideParish = parishes.find(
-    (parish: { id: string }) => parish.id !== fixtureParish.id,
-  );
+  const outsideParish = parishes.find((parish: { id: string }) => parish.id !== fixtureParish.id);
   const sectors = await (
     await request.get('/api/v1/sectors?community_id=' + fixtureCommunity.id + '&page_size=100', {
       headers: auth(admin),
@@ -136,7 +132,9 @@ test('asignaciones reales de parroquia, comunidad y sector respetan la jerarquia
   ).toBe(200);
   expect(
     (
-      await request.get('/api/v1/communities/' + fixtureCommunity.id, { headers: auth(coordinator) })
+      await request.get('/api/v1/communities/' + fixtureCommunity.id, {
+        headers: auth(coordinator),
+      })
     ).status(),
   ).toBe(200);
   expect(

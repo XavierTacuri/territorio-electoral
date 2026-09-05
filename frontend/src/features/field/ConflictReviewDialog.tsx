@@ -64,18 +64,23 @@ export function ConflictReviewDialog({
           {isForbidden ? (
             <Alert severity="warning">Ya no tienes acceso a este territorio.</Alert>
           ) : (
-            <Alert severity="info">{draft.last_error || 'El servidor ya tiene un registro similar.'}</Alert>
+            <Alert severity="info">
+              {draft.last_error || 'El servidor ya tiene un registro similar.'}
+            </Alert>
           )}
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="overline" color="text.secondary">
               Versión del dispositivo
             </Typography>
-            <Typography fontWeight={700}>{(draft.payload.title as string | undefined) || 'Sin título'}</Typography>
+            <Typography fontWeight={700}>
+              {(draft.payload.title as string | undefined) || 'Sin título'}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {(draft.payload.description as string | undefined) || 'Sin descripción'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Guardado en el dispositivo: {new Date(draft.updated_offline_at).toLocaleString('es-EC')}
+              Guardado en el dispositivo:{' '}
+              {new Date(draft.updated_offline_at).toLocaleString('es-EC')}
             </Typography>
           </Paper>
           <Paper variant="outlined" sx={{ p: 2 }}>
@@ -94,20 +99,40 @@ export function ConflictReviewDialog({
           </Paper>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', gap: 1, px: 3, pb: 2 }}>
+      <DialogActions
+        sx={{
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: 'stretch',
+          gap: 1,
+          px: 3,
+          pb: 2,
+        }}
+      >
         <Button onClick={onClose} sx={{ width: { xs: '100%', sm: 'auto' } }}>
           Cancelar
         </Button>
         {isForbidden ? (
-          <Button color="error" onClick={() => void deleteDraftOnly()} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+          <Button
+            color="error"
+            onClick={() => void deleteDraftOnly()}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
             Eliminar borrador
           </Button>
         ) : (
-          <Button color="warning" onClick={() => void keepServer()} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+          <Button
+            color="warning"
+            onClick={() => void keepServer()}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
             Conservar servidor
           </Button>
         )}
-        <Button variant="contained" onClick={reviewDraft} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+        <Button
+          variant="contained"
+          onClick={reviewDraft}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
           Revisar borrador
         </Button>
       </DialogActions>

@@ -62,13 +62,11 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page
       .getByRole('textbox', { name: 'Perfil explícito (opcional)' })
       .fill('CANONICAL_ELECTORAL_PROCESS');
-    await page
-      .locator('input[type=file]')
-      .setInputFiles({
-        name: 'electoral-process.csv',
-        mimeType: 'text/csv',
-        buffer: Buffer.from(csv),
-      });
+    await page.locator('input[type=file]').setInputFiles({
+      name: 'electoral-process.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv),
+    });
     let response = page.waitForResponse((r) => r.url().endsWith('/data-imports/validate'));
     await page.getByRole('button', { name: '1. Validar' }).click();
     expect((await response).status()).toBe(200);
@@ -186,9 +184,7 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     for (const format of ['PDF', 'XLSX']) {
       await page.getByLabel('Título del informe').fill('Descarga ' + format + ' ' + suffix);
       await page.getByLabel('Formato de exportación').click();
-      await page
-        .getByRole('option', { name: format === 'PDF' ? 'PDF' : 'Excel (XLSX)' })
-        .click();
+      await page.getByRole('option', { name: format === 'PDF' ? 'PDF' : 'Excel (XLSX)' }).click();
       const generateResponse = page.waitForResponse(
         (r) => r.url().endsWith('/reports/generate') && r.request().method() === 'POST',
       );

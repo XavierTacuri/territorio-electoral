@@ -31,7 +31,16 @@ import {
 import { apiRequest } from '../../api/client';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { ageKeys, Card, Metric, integer, percent, type Analysis, type Operation, type Parish } from './territoryShared';
+import {
+  ageKeys,
+  Card,
+  Metric,
+  integer,
+  percent,
+  type Analysis,
+  type Operation,
+  type Parish,
+} from './territoryShared';
 
 export default function TerritorialIntelligencePage() {
   const { campaignId = '' } = useParams();

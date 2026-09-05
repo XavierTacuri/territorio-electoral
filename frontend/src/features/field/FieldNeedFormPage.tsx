@@ -43,7 +43,8 @@ export default function FieldNeedFormPage() {
   useEffect(() => {
     async function loadExisting() {
       if (!draftIdParam) {
-        if (field.parishes.length === 1) setForm((prev) => ({ ...prev, parish_id: field.parishes[0].parish_id }));
+        if (field.parishes.length === 1)
+          setForm((prev) => ({ ...prev, parish_id: field.parishes[0].parish_id }));
         return;
       }
       const existing = await getDraft(draftIdParam);
@@ -62,7 +63,13 @@ export default function FieldNeedFormPage() {
       if (draftId) {
         await updateDraftPayload(draftId, next);
       } else {
-        const created = await createDraft(field.scope, 'NEED', Number(next.parish_id), next, clientGeneratedId.current);
+        const created = await createDraft(
+          field.scope,
+          'NEED',
+          Number(next.parish_id),
+          next,
+          clientGeneratedId.current,
+        );
         setDraftId(created.id);
         // Attach the draft id to the URL (no new history entry) so a reload
         // right after the first autosave still finds this exact draft
@@ -90,7 +97,8 @@ export default function FieldNeedFormPage() {
   }
 
   if (field.loading) return <LoadingSkeleton />;
-  if (field.parishes.length === 0) return <Alert severity="warning">No tienes parroquias asignadas activas.</Alert>;
+  if (field.parishes.length === 0)
+    return <Alert severity="warning">No tienes parroquias asignadas activas.</Alert>;
 
   return (
     <Stack spacing={2} component="form" onSubmit={(e) => e.preventDefault()}>
@@ -138,7 +146,9 @@ export default function FieldNeedFormPage() {
       />
 
       <Typography variant="caption" color="text.secondary">
-        {savedAt ? `Guardado en el dispositivo · ${savedAt.toLocaleTimeString('es-EC')}` : 'Sin cambios guardados aún'}
+        {savedAt
+          ? `Guardado en el dispositivo · ${savedAt.toLocaleTimeString('es-EC')}`
+          : 'Sin cambios guardados aún'}
       </Typography>
 
       <Button

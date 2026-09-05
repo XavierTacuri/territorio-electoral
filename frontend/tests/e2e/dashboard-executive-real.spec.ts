@@ -32,7 +32,9 @@ test('dashboard ejecutivo: KPIs, mapa, operación, navegación, informe y respon
   await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await expect(page).toHaveURL(`/app/campaigns/${campaignId}/dashboard`);
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' }),
+  ).toBeVisible();
   await expect(page.getByText('Padrón electoral', { exact: true })).toBeVisible();
   await expect(page.getByText('Participación central', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Mapa operativo territorial' })).toBeVisible();
@@ -41,10 +43,7 @@ test('dashboard ejecutivo: KPIs, mapa, operación, navegación, informe y respon
   await expect(page.getByRole('heading', { name: 'Territorio IA' })).toBeVisible();
 
   const electionLink = page.getByRole('link', { name: 'VER PANORAMA ELECTORAL' });
-  await expect(electionLink).toHaveAttribute(
-    'href',
-    `/app/campaigns/${campaignId}/panorama`,
-  );
+  await expect(electionLink).toHaveAttribute('href', `/app/campaigns/${campaignId}/panorama`);
 
   for (const viewport of [
     { name: 'desktop', width: 1440, height: 900 },

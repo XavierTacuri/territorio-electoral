@@ -117,7 +117,9 @@ export default function PollingPlaceDetailPage() {
   });
   const userLabel = (id: string) => {
     const found = eligibleUsers.data?.find((u) => u.id === id);
-    return found ? `${found.first_name} ${found.last_name} (${found.username})` : 'Persona asignada';
+    return found
+      ? `${found.first_name} ${found.last_name} (${found.username})`
+      : 'Persona asignada';
   };
 
   const createBoard = useMutation({
@@ -163,7 +165,8 @@ export default function PollingPlaceDetailPage() {
         `/campaigns/${campaignId}/election-day/incidents/${incidentId}/resolve`,
         { method: 'POST', body: JSON.stringify({ status: 'RESOLVED' }) },
       ),
-    onError: () => setToast({ severity: 'error', message: 'No fue posible resolver la incidencia.' }),
+    onError: () =>
+      setToast({ severity: 'error', message: 'No fue posible resolver la incidencia.' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['election-day-incidents', campaignId, placeId] });
       setToast({ severity: 'success', message: 'Incidencia resuelta.' });

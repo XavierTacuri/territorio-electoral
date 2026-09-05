@@ -60,7 +60,8 @@ type Milestone = {
 
 function messageFor(error: unknown) {
   if (!(error instanceof ApiError)) return 'No se pudo guardar el hito electoral.';
-  if (error.status === 409) return 'Ya existe un hito idéntico para este proceso (mismo tipo, fecha y título).';
+  if (error.status === 409)
+    return 'Ya existe un hito idéntico para este proceso (mismo tipo, fecha y título).';
   if (error.status === 422) return 'Revisa los campos indicados.';
   if (error.status === 403) return 'No tienes permisos para administrar el calendario oficial.';
   return 'No se pudo guardar el hito electoral.';
@@ -159,8 +160,16 @@ export default function ElectoralMilestonesPage() {
               label: 'Tipo',
               render: (x) => MILESTONE_TYPE_LABELS[x.milestone_type] ?? x.milestone_type,
             },
-            { key: 'process', label: 'Proceso', render: (x) => processName(x.electoral_process_id) },
-            { key: 'starts', label: 'Fecha', render: (x) => formatDateOnly(x.starts_at.slice(0, 10)) },
+            {
+              key: 'process',
+              label: 'Proceso',
+              render: (x) => processName(x.electoral_process_id),
+            },
+            {
+              key: 'starts',
+              label: 'Fecha',
+              render: (x) => formatDateOnly(x.starts_at.slice(0, 10)),
+            },
             { key: 'status', label: 'Estado', render: (x) => <StatusBadge value={x.status} /> },
             {
               key: 'actions',
@@ -169,7 +178,10 @@ export default function ElectoralMilestonesPage() {
                 <Button
                   size="small"
                   onClick={() =>
-                    setStatus.mutate({ id: x.id, status: x.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE' })
+                    setStatus.mutate({
+                      id: x.id,
+                      status: x.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE',
+                    })
                   }
                 >
                   {x.status === 'ACTIVE' ? 'Archivar' : 'Activar'}
@@ -206,7 +218,10 @@ export default function ElectoralMilestonesPage() {
               label="Tipo de hito"
               value={form.milestone_type}
               onChange={(e) =>
-                setForm({ ...form, milestone_type: e.target.value as (typeof MILESTONE_TYPES)[number] })
+                setForm({
+                  ...form,
+                  milestone_type: e.target.value as (typeof MILESTONE_TYPES)[number],
+                })
               }
             >
               {MILESTONE_TYPES.map((t) => (
@@ -246,7 +261,11 @@ export default function ElectoralMilestonesPage() {
           <Button
             variant="contained"
             disabled={
-              create.isPending || !form.electoral_process_id || !form.title.trim() || !form.starts_at || !form.source_id
+              create.isPending ||
+              !form.electoral_process_id ||
+              !form.title.trim() ||
+              !form.starts_at ||
+              !form.source_id
             }
             onClick={() => create.mutate()}
           >

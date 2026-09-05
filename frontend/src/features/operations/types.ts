@@ -5,7 +5,12 @@ export type Page<T> = {
   total: number;
   total_pages: number;
 };
-export type ActivityActor = { id: string; display_name: string; username: string; role_codes: string[] };
+export type ActivityActor = {
+  id: string;
+  display_name: string;
+  username: string;
+  role_codes: string[];
+};
 export type Activity = {
   id: string;
   campaign_id: string;

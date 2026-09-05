@@ -1,5 +1,11 @@
 import { getFieldDb } from './db';
-import { ownerKey, type ConflictReason, type DraftEntityType, type OfflineDraft, type OwnerScope } from './types';
+import {
+  ownerKey,
+  type ConflictReason,
+  type DraftEntityType,
+  type OfflineDraft,
+  type OwnerScope,
+} from './types';
 
 function draftId(entityType: DraftEntityType, clientGeneratedId: string) {
   return `${entityType}:${clientGeneratedId}`;
@@ -42,7 +48,11 @@ export async function updateDraftPayload(
   const db = await getFieldDb();
   const existing = await db.get('drafts', id);
   if (!existing) return undefined;
-  const updated: OfflineDraft = { ...existing, payload, updated_offline_at: new Date().toISOString() };
+  const updated: OfflineDraft = {
+    ...existing,
+    payload,
+    updated_offline_at: new Date().toISOString(),
+  };
   await db.put('drafts', updated);
   return updated;
 }
@@ -50,7 +60,11 @@ export async function updateDraftPayload(
 export async function setDraftStatus(
   id: string,
   status: OfflineDraft['sync_status'],
-  options: { lastError?: string | null; serverId?: string | null; conflictReason?: ConflictReason } = {},
+  options: {
+    lastError?: string | null;
+    serverId?: string | null;
+    conflictReason?: ConflictReason;
+  } = {},
 ): Promise<OfflineDraft | undefined> {
   const db = await getFieldDb();
   const existing = await db.get('drafts', id);
@@ -61,7 +75,8 @@ export async function setDraftStatus(
     updated_offline_at: new Date().toISOString(),
     last_error: options.lastError !== undefined ? options.lastError : existing.last_error,
     server_id: options.serverId !== undefined ? options.serverId : existing.server_id,
-    conflict_reason: options.conflictReason !== undefined ? options.conflictReason : existing.conflict_reason,
+    conflict_reason:
+      options.conflictReason !== undefined ? options.conflictReason : existing.conflict_reason,
   };
   await db.put('drafts', updated);
   return updated;

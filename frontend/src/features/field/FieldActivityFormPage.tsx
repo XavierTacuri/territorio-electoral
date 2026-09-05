@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Button,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -60,7 +53,8 @@ export default function FieldActivityFormPage() {
   useEffect(() => {
     async function loadExisting() {
       if (!draftIdParam) {
-        if (field.parishes.length === 1) setForm((prev) => ({ ...prev, parish_id: field.parishes[0].parish_id }));
+        if (field.parishes.length === 1)
+          setForm((prev) => ({ ...prev, parish_id: field.parishes[0].parish_id }));
         return;
       }
       const existing = await getDraft(draftIdParam);
@@ -109,7 +103,11 @@ export default function FieldActivityFormPage() {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const next = { ...form, latitude: position.coords.latitude, longitude: position.coords.longitude };
+        const next = {
+          ...form,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
         setForm(next);
         void persist(next);
         setLocating(false);
@@ -124,7 +122,13 @@ export default function FieldActivityFormPage() {
     if (!file || !field.scope) return;
     let currentDraftId = draftId;
     if (!currentDraftId) {
-      const created = await createDraft(field.scope, 'ACTIVITY', Number(form.parish_id), form, clientGeneratedId.current);
+      const created = await createDraft(
+        field.scope,
+        'ACTIVITY',
+        Number(form.parish_id),
+        form,
+        clientGeneratedId.current,
+      );
       currentDraftId = created.id;
       setDraftId(currentDraftId);
       setSearchParams({ draft: currentDraftId }, { replace: true });
@@ -143,7 +147,8 @@ export default function FieldActivityFormPage() {
   }
 
   if (field.loading) return <LoadingSkeleton />;
-  if (field.parishes.length === 0) return <Alert severity="warning">No tienes parroquias asignadas activas.</Alert>;
+  if (field.parishes.length === 0)
+    return <Alert severity="warning">No tienes parroquias asignadas activas.</Alert>;
 
   return (
     <Stack spacing={2} component="form" onSubmit={(e) => e.preventDefault()}>
@@ -204,7 +209,11 @@ export default function FieldActivityFormPage() {
       />
 
       <Stack direction="row" spacing={2} alignItems="center">
-        <Button startIcon={<MyLocationIcon />} onClick={() => void captureLocation()} disabled={locating}>
+        <Button
+          startIcon={<MyLocationIcon />}
+          onClick={() => void captureLocation()}
+          disabled={locating}
+        >
           {form.latitude != null ? 'Ubicación capturada' : 'Capturar ubicación (opcional)'}
         </Button>
         {form.latitude != null && (
@@ -227,14 +236,16 @@ export default function FieldActivityFormPage() {
         </Button>
         {attachments.length > 0 && (
           <Typography variant="caption" color="text.secondary">
-            {attachments.length} adjunto(s) guardado(s) en el dispositivo. Se subirán al sincronizar, una vez que la
-            actividad esté aprobada.
+            {attachments.length} adjunto(s) guardado(s) en el dispositivo. Se subirán al
+            sincronizar, una vez que la actividad esté aprobada.
           </Typography>
         )}
       </Stack>
 
       <Typography variant="caption" color="text.secondary">
-        {savedAt ? `Guardado en el dispositivo · ${savedAt.toLocaleTimeString('es-EC')}` : 'Sin cambios guardados aún'}
+        {savedAt
+          ? `Guardado en el dispositivo · ${savedAt.toLocaleTimeString('es-EC')}`
+          : 'Sin cambios guardados aún'}
       </Typography>
 
       <Button

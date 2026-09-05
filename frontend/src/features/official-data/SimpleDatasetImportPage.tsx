@@ -69,7 +69,9 @@ export function SimpleDatasetImportPage({
     setBusy(true);
     setError('');
     try {
-      setResult(await runOfficialImport(action, sourceId, datasetType, file, false, mappingProfile));
+      setResult(
+        await runOfficialImport(action, sourceId, datasetType, file, false, mappingProfile),
+      );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo procesar el archivo.');
     } finally {
@@ -172,9 +174,7 @@ export function SimpleDatasetImportPage({
                   ))}
                 </Stack>
               )}
-              {result.status === 'COMPLETED' && (
-                <Alert severity="success">{successMessage}</Alert>
-              )}
+              {result.status === 'COMPLETED' && <Alert severity="success">{successMessage}</Alert>}
             </Paper>
           )}
         </Stack>

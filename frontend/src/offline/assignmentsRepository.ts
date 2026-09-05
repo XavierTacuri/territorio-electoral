@@ -18,7 +18,9 @@ export async function cacheAssignments(
   return entry;
 }
 
-export async function getCachedAssignments(scope: OwnerScope): Promise<CachedAssignment | undefined> {
+export async function getCachedAssignments(
+  scope: OwnerScope,
+): Promise<CachedAssignment | undefined> {
   const db = await getFieldDb();
   return db.get('cachedAssignments', ownerKey(scope));
 }

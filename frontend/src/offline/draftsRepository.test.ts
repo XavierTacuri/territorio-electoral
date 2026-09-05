@@ -1,10 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { createDraft, deleteDraft, getDraft, listDrafts, pruneSyncedDrafts, setDraftStatus, updateDraftPayload } from './draftsRepository';
+import {
+  createDraft,
+  deleteDraft,
+  getDraft,
+  listDrafts,
+  pruneSyncedDrafts,
+  setDraftStatus,
+  updateDraftPayload,
+} from './draftsRepository';
 import type { OwnerScope } from './types';
 
-const userA: OwnerScope = { user_id: 'user-a', organization_id: 'org-1', campaign_id: 'campaign-1' };
-const userB: OwnerScope = { user_id: 'user-b', organization_id: 'org-1', campaign_id: 'campaign-1' };
-const campaignB: OwnerScope = { user_id: 'user-a', organization_id: 'org-1', campaign_id: 'campaign-2' };
+const userA: OwnerScope = {
+  user_id: 'user-a',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-1',
+};
+const userB: OwnerScope = {
+  user_id: 'user-b',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-1',
+};
+const campaignB: OwnerScope = {
+  user_id: 'user-a',
+  organization_id: 'org-1',
+  campaign_id: 'campaign-2',
+};
 
 describe('draftsRepository', () => {
   it('creates a draft with a stable id derived from entity type and client_generated_id', async () => {
@@ -60,7 +80,11 @@ describe('draftsRepository', () => {
   });
 
   it('prunes only synced drafts, keeping failed/requires-review ones', async () => {
-    const scope: OwnerScope = { user_id: 'prune-user', organization_id: 'org-1', campaign_id: 'campaign-prune' };
+    const scope: OwnerScope = {
+      user_id: 'prune-user',
+      organization_id: 'org-1',
+      campaign_id: 'campaign-prune',
+    };
     const synced = await createDraft(scope, 'ACTIVITY', 41, { title: 'Synced' }, 'prune-synced');
     const failed = await createDraft(scope, 'ACTIVITY', 41, { title: 'Failed' }, 'prune-failed');
     await setDraftStatus(synced.id, 'SYNCED');

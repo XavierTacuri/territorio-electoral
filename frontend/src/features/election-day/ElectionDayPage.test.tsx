@@ -80,7 +80,8 @@ afterAll(() => {
 function handlers() {
   server.use(
     http.get('*/api/v1/campaigns/campaign-1/election-day/operation', () => {
-      if (operationStatus !== 200) return HttpResponse.json({ detail: 'not found' }, { status: 404 });
+      if (operationStatus !== 200)
+        return HttpResponse.json({ detail: 'not found' }, { status: 404 });
       return HttpResponse.json(operation);
     }),
     http.get('*/api/v1/electoral-processes', () => HttpResponse.json(processes)),
@@ -96,7 +97,9 @@ function handlers() {
       lastAction = 'close';
       return HttpResponse.json({ ...operation, status: 'CLOSED' });
     }),
-    http.get('*/api/v1/campaigns/campaign-1/election-day/coverage', () => HttpResponse.json(coverage)),
+    http.get('*/api/v1/campaigns/campaign-1/election-day/coverage', () =>
+      HttpResponse.json(coverage),
+    ),
     http.get('*/api/v1/campaigns/campaign-1/election-day/polling-places', () =>
       HttpResponse.json({ items: places }),
     ),
@@ -313,6 +316,8 @@ describe('Jornada Electoral — Command Center', () => {
     places = [];
     handlers();
     renderPage();
-    expect(await screen.findByText('No existen recintos cargados para este proceso.')).toBeVisible();
+    expect(
+      await screen.findByText('No existen recintos cargados para este proceso.'),
+    ).toBeVisible();
   });
 });

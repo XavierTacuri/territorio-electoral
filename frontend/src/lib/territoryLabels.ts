@@ -11,9 +11,10 @@ function territorialType(parish: ParishOption) {
 }
 
 export function parishOptionLabel(parish: ParishOption, options: ParishOption[]) {
-  const ambiguous = options.filter(
-    (item) => item.name.localeCompare(parish.name, 'es', { sensitivity: 'base' }) === 0,
-  ).length > 1;
+  const ambiguous =
+    options.filter(
+      (item) => item.name.localeCompare(parish.name, 'es', { sensitivity: 'base' }) === 0,
+    ).length > 1;
   if (!ambiguous) return parish.name;
   return `${parish.name} · ${territorialType(parish)} · ${parish.dpa_code ?? 'DPA no disponible'}`;
 }

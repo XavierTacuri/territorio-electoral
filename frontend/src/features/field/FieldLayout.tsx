@@ -1,10 +1,4 @@
-import {
-  BottomNavigation,
-  BottomNavigationAction,
-  Box,
-  Paper,
-  Typography,
-} from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Box, Paper, Typography } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -45,7 +39,14 @@ export function FieldLayout() {
       <Outlet />
       <Paper
         elevation={3}
-        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: { xs: 'block', sm: 'none' }, zIndex: 10 }}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: { xs: 'block', sm: 'none' },
+          zIndex: 10,
+        }}
       >
         <BottomNavigation
           showLabels

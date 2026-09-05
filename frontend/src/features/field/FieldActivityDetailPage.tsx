@@ -53,7 +53,9 @@ export default function FieldActivityDetailPage() {
               <Chip
                 size="small"
                 label={operationStatusLabel(
-                  activity.approval_status === 'PENDING_APPROVAL' ? activity.approval_status : activity.status,
+                  activity.approval_status === 'PENDING_APPROVAL'
+                    ? activity.approval_status
+                    : activity.status,
                 )}
               />
             }

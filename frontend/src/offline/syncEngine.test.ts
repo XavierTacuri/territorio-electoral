@@ -59,7 +59,13 @@ beforeEach(() => {
 describe('syncEngine.syncQueue', () => {
   it('syncs a successful activity and marks the draft SYNCED with the server id', async () => {
     const scope = scopeFor('sync-success');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Asamblea' }, 'sync-success-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Asamblea' },
+      'sync-success-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     mockedApiRequest.mockResolvedValueOnce({ id: 'server-activity-1' });
 
@@ -75,7 +81,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('does not resend an already-synced item on a second sync pass (double sync)', async () => {
     const scope = scopeFor('sync-double');
-    const draft = await createDraft(scope, 'NEED', 41, { title: 'Necesidad' }, 'sync-double-client');
+    const draft = await createDraft(
+      scope,
+      'NEED',
+      41,
+      { title: 'Necesidad' },
+      'sync-double-client',
+    );
     await enqueue(scope, draft.id, 'NEED');
     mockedApiRequest.mockResolvedValueOnce({ id: 'server-need-1' });
 
@@ -88,7 +100,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('marks a 403 as requiring review with a friendly message, never the raw error', async () => {
     const scope = scopeFor('sync-403');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Sin acceso' }, 'sync-403-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Sin acceso' },
+      'sync-403-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     mockedApiRequest.mockRejectedValueOnce(new ApiError(403, 'Forbidden'));
 
@@ -97,12 +115,20 @@ describe('syncEngine.syncQueue', () => {
     expect(summary.failed).toBe(1);
     const updated = await getDraft(draft.id);
     expect(updated?.sync_status).toBe('REQUIRES_REVIEW');
-    expect(updated?.last_error).toBe('Ya no tienes acceso a este territorio. Este registro requiere revisión.');
+    expect(updated?.last_error).toBe(
+      'Ya no tienes acceso a este territorio. Este registro requiere revisión.',
+    );
   });
 
   it('marks a network failure as a friendly, non-raw sync error', async () => {
     const scope = scopeFor('sync-network');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Red caída' }, 'sync-network-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Red caída' },
+      'sync-network-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     mockedApiRequest.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
@@ -117,7 +143,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('syncs an activity before a need linked to it, resolving the real server id', async () => {
     const scope = scopeFor('sync-order');
-    const activityDraft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Actividad padre' }, 'sync-order-activity');
+    const activityDraft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Actividad padre' },
+      'sync-order-activity',
+    );
     const needDraft = await createDraft(
       scope,
       'NEED',
@@ -139,7 +171,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('uploads a pending attachment once its activity has a real server id, and marks it SYNCED', async () => {
     const scope = scopeFor('sync-attachment-success');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Con evidencia' }, 'sync-attachment-success-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Con evidencia' },
+      'sync-attachment-success-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     const attachment = fakeAttachment({ draft_id: draft.id });
     mockedListAttachmentsForOwner.mockResolvedValue([attachment]);
@@ -156,13 +194,21 @@ describe('syncEngine.syncQueue', () => {
       expect.objectContaining({ serverId: 'server-evidence-1' }),
     );
     const [uploadUrl, uploadInit] = mockedApiRequest.mock.calls[1];
-    expect(uploadUrl).toBe('/campaigns/sync-attachment-success/activities/server-activity-evidence/evidence/upload');
+    expect(uploadUrl).toBe(
+      '/campaigns/sync-attachment-success/activities/server-activity-evidence/evidence/upload',
+    );
     expect((uploadInit as RequestInit).body).toBeInstanceOf(FormData);
   });
 
   it('keeps an attachment PENDING (not FAILED) when the activity is not approved yet, for a later retry', async () => {
     const scope = scopeFor('sync-attachment-not-approved');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Sin aprobar' }, 'sync-attachment-pending-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Sin aprobar' },
+      'sync-attachment-pending-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     const attachment = fakeAttachment({ draft_id: draft.id });
     mockedListAttachmentsForOwner.mockResolvedValue([attachment]);
@@ -182,7 +228,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('marks an attachment REQUIRES_REVIEW on 403 without downgrading the already-synced activity draft', async () => {
     const scope = scopeFor('sync-attachment-403');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Acceso perdido' }, 'sync-attachment-403-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Acceso perdido' },
+      'sync-attachment-403-client',
+    );
     await enqueue(scope, draft.id, 'ACTIVITY');
     const attachment = fakeAttachment({ draft_id: draft.id });
     mockedListAttachmentsForOwner.mockResolvedValue([attachment]);
@@ -202,7 +254,13 @@ describe('syncEngine.syncQueue', () => {
 
   it('does not attempt to upload an attachment whose activity draft has not synced yet', async () => {
     const scope = scopeFor('sync-attachment-not-yet');
-    const draft = await createDraft(scope, 'ACTIVITY', 41, { title: 'Aún local' }, 'sync-attachment-not-yet-client');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Aún local' },
+      'sync-attachment-not-yet-client',
+    );
     // Deliberately not enqueued: the activity draft stays in DRAFT status.
     const attachment = fakeAttachment({ draft_id: draft.id });
     mockedListAttachmentsForOwner.mockResolvedValue([attachment]);

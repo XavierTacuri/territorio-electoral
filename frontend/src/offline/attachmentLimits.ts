@@ -8,6 +8,7 @@ export const MAX_ATTACHMENT_SIZE_BYTES = 15 * 1024 * 1024;
 
 export function validateAttachment(file: File): string | null {
   if (!ALLOWED_ATTACHMENT_MIME_TYPES.includes(file.type)) return 'Formato de archivo no permitido.';
-  if (file.size > MAX_ATTACHMENT_SIZE_BYTES) return 'El archivo supera el tamaño máximo permitido (15 MB).';
+  if (file.size > MAX_ATTACHMENT_SIZE_BYTES)
+    return 'El archivo supera el tamaño máximo permitido (15 MB).';
   return null;
 }

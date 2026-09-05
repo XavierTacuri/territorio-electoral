@@ -54,9 +54,7 @@ describe('Importación de recintos electorales', () => {
   it('advierte cuando no existe una fuente activa del tipo correcto', async () => {
     server.use(http.get('*/api/v1/data-sources', () => HttpResponse.json([])));
     renderPage();
-    expect(
-      await screen.findByText(/No existe una fuente activa de este tipo/),
-    ).toBeVisible();
+    expect(await screen.findByText(/No existe una fuente activa de este tipo/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'VALIDAR' })).toBeDisabled();
   });
 
@@ -103,8 +101,16 @@ describe('Importación de recintos electorales', () => {
           rows_valid: 0,
           rows_failed: 2,
           errors: [
-            { row_number: 2, error_code: 'INVALID_ROW', message: 'La parroquia no pertenece al cantón indicado' },
-            { row_number: 3, error_code: 'INVALID_ROW', message: 'La parroquia no pertenece al cantón indicado' },
+            {
+              row_number: 2,
+              error_code: 'INVALID_ROW',
+              message: 'La parroquia no pertenece al cantón indicado',
+            },
+            {
+              row_number: 3,
+              error_code: 'INVALID_ROW',
+              message: 'La parroquia no pertenece al cantón indicado',
+            },
           ],
         }),
       ),

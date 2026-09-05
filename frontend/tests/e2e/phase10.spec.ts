@@ -36,7 +36,9 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
   });
   const id = await test.step('03 Selección de campaña', () => selectCampaign(page));
   await test.step('04 Dashboard ejecutivo', async () =>
-    expect(page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' })).toBeVisible());
+    expect(
+      page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' }),
+    ).toBeVisible());
   await test.step('05 Crear actividad', async () => {
     const title = 'Actividad Playwright ' + suffix;
     await nav(page, 'Actividades');
@@ -133,7 +135,9 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     await dialog.getByLabel('Porcentaje').nth(1).fill('45');
     await dialog.getByLabel('Base N').nth(1).fill('45');
     await dialog.getByRole('button', { name: 'Crear encuesta' }).click();
-    await expect(page.getByRole('heading', { name: 'Encuesta Playwright ' + suffix })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Encuesta Playwright ' + suffix }),
+    ).toBeVisible();
     await expect(page.getByText('Opción A')).toBeVisible();
   });
   await test.step('14 Publicar encuesta', async () => {

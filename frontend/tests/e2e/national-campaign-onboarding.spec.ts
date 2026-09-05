@@ -17,7 +17,8 @@ async function createCampaign(page: Page, province: string, canton: string, base
   await page.getByLabel('Tipo o nombre de elección').fill('Elecciones Seccionales 2027');
   await page.getByLabel('Fecha electoral').fill('14/02/2027');
   const createResponse = page.waitForResponse(
-    (response) => response.request().method() === 'POST' && response.url().endsWith('/api/v1/campaigns'),
+    (response) =>
+      response.request().method() === 'POST' && response.url().endsWith('/api/v1/campaigns'),
   );
   await page.getByRole('button', { name: 'Guardar campaña' }).click();
   const response = await createResponse;
@@ -30,10 +31,17 @@ async function createCampaign(page: Page, province: string, canton: string, base
 test('crea campañas nacionales Cuenca y Quito con cantones dependientes', async ({ page }) => {
   await browserLogin(page);
   const cuencaName = await createCampaign(page, 'Azuay', 'Cuenca', '[DEMO] Cuenca territorial');
-  const quitoName = await createCampaign(page, 'Pichincha', 'Distrito Metropolitano de Quito', '[DEMO] Quito territorial');
+  const quitoName = await createCampaign(
+    page,
+    'Pichincha',
+    'Distrito Metropolitano de Quito',
+    '[DEMO] Quito territorial',
+  );
 
   await page.getByRole('combobox', { name: 'Campaña' }).click();
-  await expect(page.getByRole('option').filter({ hasText: cuencaName })).toContainText('Cuenca · Azuay');
+  await expect(page.getByRole('option').filter({ hasText: cuencaName })).toContainText(
+    'Cuenca · Azuay',
+  );
   await expect(page.getByRole('option').filter({ hasText: quitoName })).toContainText(
     'Distrito Metropolitano de Quito · Pichincha',
   );

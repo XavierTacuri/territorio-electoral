@@ -152,7 +152,10 @@ export default function NeedsPage() {
         description="Temas registrados por el equipo durante el trabajo territorial de la campaña."
         action={
           <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-            <Button component={RouterLink} to={`/app/campaigns/${campaignId}/reports?type=THEMATIC_REPORT`}>
+            <Button
+              component={RouterLink}
+              to={`/app/campaigns/${campaignId}/reports?type=THEMATIC_REPORT`}
+            >
               Generar informe temático
             </Button>
             <Button
@@ -197,12 +200,16 @@ export default function NeedsPage() {
             {
               key: 'parish',
               label: 'Parroquia',
-              render: (x) => parishes.data?.find((p) => p.id === x.parish_id)?.name ?? 'No disponible',
+              render: (x) =>
+                parishes.data?.find((p) => p.id === x.parish_id)?.name ?? 'No disponible',
             },
             {
               key: 'source',
               label: 'Origen',
-              render: (x) => x.activity_id ? 'Actividad relacionada' : (needSourceLabels[x.source_type] ?? 'Registro manual'),
+              render: (x) =>
+                x.activity_id
+                  ? 'Actividad relacionada'
+                  : (needSourceLabels[x.source_type] ?? 'Registro manual'),
             },
           ]}
           onView={(x) => navigate(`/app/campaigns/${campaignId}/needs/${x.id}`)}
@@ -282,7 +289,7 @@ export default function NeedsPage() {
                     'OTHER',
                   ].map((x) => (
                     <MenuItem key={x} value={x}>
-                    {needSourceLabels[x] ?? 'No disponible'}
+                      {needSourceLabels[x] ?? 'No disponible'}
                     </MenuItem>
                   ))}
                 </TextField>

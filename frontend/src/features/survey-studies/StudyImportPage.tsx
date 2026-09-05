@@ -60,9 +60,12 @@ export default function StudyImportPage() {
       />
       <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Alert severity="info" sx={{ mb: 2 }}>
-          Plantilla nacional: preguntas y resultados agregados. parish_dpa vacío representa cobertura cantonal.
+          Plantilla nacional: preguntas y resultados agregados. parish_dpa vacío representa
+          cobertura cantonal.
         </Alert>
-        <Button href={`${BASE_URL}/campaigns/${campaignId}/survey-imports/template`} sx={{ mb: 2 }}>DESCARGAR PLANTILLA</Button>
+        <Button href={`${BASE_URL}/campaigns/${campaignId}/survey-imports/template`} sx={{ mb: 2 }}>
+          DESCARGAR PLANTILLA
+        </Button>
         <Button component="label" variant="outlined">
           Seleccionar CSV
           <input
@@ -119,7 +122,9 @@ export default function StudyImportPage() {
           <Typography sx={{ mt: 2 }}>
             <b>Estudio detectado:</b> {result.studies.join(', ') || 'Ninguno'}
           </Typography>
-          <Typography><b>Parroquias detectadas:</b> {result.parishes?.join(', ') || 'Resultado cantonal'}</Typography>
+          <Typography>
+            <b>Parroquias detectadas:</b> {result.parishes?.join(', ') || 'Resultado cantonal'}
+          </Typography>
           {result.errors.map((item, index) => (
             <Alert severity="warning" key={index}>
               {item.row_number ? `Fila ${item.row_number}: ` : ''}
