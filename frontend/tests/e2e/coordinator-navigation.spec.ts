@@ -197,8 +197,11 @@ test('TERRITORIAL_COORDINATOR no tiene herramientas ejecutivas en Panorama ni en
     await expect(page.getByRole('link', { name: 'CONSULTAR EN TERRITORIO IA' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'GENERAR INFORME' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Preguntas rápidas' })).toHaveCount(0);
-    await expect(page.getByText('Electores actuales')).toBeVisible();
-    await expect(page.getByText('Operación territorial')).toBeVisible();
+    // Esta página no tiene loading state propio (a diferencia de Dashboard/
+    // Expediente): los KPIs dependen de que la query de análisis resuelva,
+    // así que se les da el mismo margen que al heading principal.
+    await expect(page.getByText('Electores actuales')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Operación territorial' })).toBeVisible();
   });
 
   await test.step('Inteligencia Territorial → Expediente: sin Territorio IA ni generación de informes', async () => {
