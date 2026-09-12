@@ -2,6 +2,8 @@ import { Alert, Button, Card, CardContent, Grid, Stack, Typography } from '@mui/
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
+import { useAuth } from '../../auth/AuthProvider';
+import { isCoordinatorOnly } from '../../auth/permissions';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatIntegerEsEc, formatPercentEsEc } from '../../lib/formatEsEc';
 
@@ -48,7 +50,7 @@ export const panoramaQuestions = [
 
 function Metric({ title, value, note }: { title: string; value: string; note?: string }) {
   return (
-    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+    <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
       <Card variant="outlined" sx={{ height: '100%' }}>
         <CardContent>
           <Typography color="text.secondary" variant="body2">
@@ -81,15 +83,11 @@ function Detail({ title, children }: { title: string; children: React.ReactNode 
     </Grid>
   );
 }
-const DemoNote = ({ count = 0 }: { count?: number }) =>
-  count > 0 ? (
-    <Alert severity="info" icon={false} sx={{ mt: 1 }}>
-      Datos simulados para demostración.
-    </Alert>
-  ) : null;
 
 export default function ElectoralPanoramaPage() {
   const { campaignId = '' } = useParams();
+  const { user } = useAuth();
+  const isCoordinator = isCoordinatorOnly(user);
   const analysis = useQuery({
     queryKey: ['panorama-analysis', campaignId],
     queryFn: () => apiRequest<Analysis>(`/campaigns/${campaignId}/current-election/analysis`),
@@ -126,8 +124,13 @@ export default function ElectoralPanoramaPage() {
     (sum, parish) => sum + (parish.demographics.POP_TOTAL ?? 0),
     0,
   );
+  const totalParishes = o?.coverage.total_parishes ?? 0;
+  const withActivities = o?.coverage.with_activities ?? 0;
+  const activitiesTotal = o?.activities.total ?? o?.activities.completed ?? 0;
+  const needsTotal = o?.needs.total ?? o?.needs.open ?? 0;
   const demoStudies =
     studies.data?.items.filter((study) => study.name.startsWith('[DEMO]')).length ?? 0;
+  const hasDemoData = demoStudies > 0 || !!o?.activities.demo || !!o?.needs.demo;
   const publicCount = publicInfo.data?.recent_items ?? publicInfo.data?.total_items ?? 0;
   return (
     <>
@@ -135,26 +138,33 @@ export default function ElectoralPanoramaPage() {
         title="Panorama electoral"
         description="Síntesis descriptiva y trazable de la campaña seleccionada. No constituye una predicción electoral."
         action={
-          <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-            <Button
-              component={RouterLink}
-              to={aiPath('¿Cuál es el panorama electoral actual?')}
-              variant="contained"
-            >
-              CONSULTAR EN TERRITORIO IA
-            </Button>
-            <Button
-              component={RouterLink}
-              to={`/app/campaigns/${campaignId}/reports?type=CURRENT_ELECTION_EXECUTIVE`}
-            >
-              GENERAR INFORME
-            </Button>
-          </Stack>
+          !isCoordinator && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <Button
+                component={RouterLink}
+                to={aiPath('¿Cuál es el panorama electoral actual?')}
+                variant="contained"
+              >
+                CONSULTAR EN TERRITORIO IA
+              </Button>
+              <Button
+                component={RouterLink}
+                to={`/app/campaigns/${campaignId}/reports?type=CURRENT_ELECTION_EXECUTIVE`}
+              >
+                GENERAR INFORME
+              </Button>
+            </Stack>
+          )
         }
       />
       {(analysis.isError || operation.isError) && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Parte de la información no está disponible en este momento.
+        </Alert>
+      )}
+      {hasDemoData && (
+        <Alert severity="info" icon={false} sx={{ mb: 2 }}>
+          Esta campaña contiene datos de demostración.
         </Alert>
       )}
       <Grid
@@ -165,70 +175,62 @@ export default function ElectoralPanoramaPage() {
       >
         {registered != null && (
           <Metric
-            title="Padrón actual"
+            title="Electores actuales"
             value={formatIntegerEsEc(registered)}
             note="Electores registrados · CNE"
-          />
-        )}
-        {centralRate != null && (
-          <Metric
-            title="Participación central"
-            value={formatPercentEsEc(centralRate)}
-            note="Modelo de participación V1"
           />
         )}
         {central != null && (
           <Metric
             title="Votantes esperados"
             value={formatIntegerEsEc(central)}
-            note="Escenario central V1"
+            note="Escenario estimado"
           />
         )}
-        {a?.historical['2019'] && (
+        {centralRate != null && (
           <Metric
-            title="Participación 2019"
-            value={formatPercentEsEc(a.historical['2019'].turnout_rate)}
-            note={`${formatIntegerEsEc(a.historical['2019'].ballots_cast)} votos emitidos`}
-          />
-        )}
-        {a?.historical['2023'] && (
-          <Metric
-            title="Participación 2023"
-            value={formatPercentEsEc(a.historical['2023'].turnout_rate)}
-            note={`${formatIntegerEsEc(a.historical['2023'].ballots_cast)} votos emitidos`}
-          />
-        )}
-        {o && (
-          <Metric
-            title="Necesidades registradas"
-            value={formatIntegerEsEc(o.needs.total ?? o.needs.open ?? 0)}
-            note="Registro territorial agregado"
+            title="Participación estimada"
+            value={formatPercentEsEc(centralRate)}
+            note="Modelo de participación"
           />
         )}
         {o && (
           <Metric
             title="Actividades"
-            value={formatIntegerEsEc(o.activities.total ?? o.activities.completed ?? 0)}
+            value={formatIntegerEsEc(activitiesTotal)}
             note="Cobertura operativa agregada"
           />
         )}
-        <Metric
-          title="Estudios"
-          value={formatIntegerEsEc(studies.data?.items.length ?? 0)}
-          note="Estudios agregados disponibles"
-        />
+        {o && (
+          <Metric
+            title="Necesidades"
+            value={formatIntegerEsEc(needsTotal)}
+            note="Registro territorial agregado"
+          />
+        )}
+        {o && (
+          <Metric
+            title="Parroquias con actividad"
+            value={`${formatIntegerEsEc(withActivities)} / ${formatIntegerEsEc(totalParishes)}`}
+          />
+        )}
       </Grid>
       <Grid container spacing={2}>
         <Detail title="Antecedentes electorales">
           {a?.historical['2019'] || a?.historical['2023'] ? (
-            <Stack spacing={0.5}>
+            <Stack spacing={1.5}>
               {['2019', '2023'].map(
                 (year) =>
                   a.historical[year] && (
-                    <Typography key={year}>
-                      {year}: {formatIntegerEsEc(a.historical[year].ballots_cast)} votos emitidos ·{' '}
-                      {formatPercentEsEc(a.historical[year].turnout_rate)}
-                    </Typography>
+                    <Stack key={year} spacing={0.25}>
+                      <Typography fontWeight={700}>{year}</Typography>
+                      <Typography>
+                        Participación: {formatPercentEsEc(a.historical[year].turnout_rate)}
+                      </Typography>
+                      <Typography>
+                        Votantes: {formatIntegerEsEc(a.historical[year].ballots_cast)}
+                      </Typography>
+                    </Stack>
                   ),
               )}
             </Stack>
@@ -238,11 +240,28 @@ export default function ElectoralPanoramaPage() {
             </Typography>
           )}
         </Detail>
+        <Detail title="Operación territorial">
+          {o ? (
+            <Stack spacing={0.5}>
+              <Typography>Actividades: {formatIntegerEsEc(activitiesTotal)}</Typography>
+              <Typography>Necesidades: {formatIntegerEsEc(needsTotal)}</Typography>
+              <Typography>
+                Parroquias con actividad: {formatIntegerEsEc(withActivities)} de{' '}
+                {formatIntegerEsEc(totalParishes)}
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography color="text.secondary">No hay información operativa disponible.</Typography>
+          )}
+        </Detail>
         <Detail title="Contexto demográfico">
           {population ? (
-            <Typography>
-              Población INEC CPV {a?.demographics.year}: {formatIntegerEsEc(population)} habitantes.
-            </Typography>
+            <Stack spacing={0.5}>
+              <Typography variant="h3">{formatIntegerEsEc(population)} habitantes</Typography>
+              <Typography color="text.secondary" variant="body2">
+                INEC · Censo {a?.demographics.year}
+              </Typography>
+            </Stack>
           ) : (
             <Typography color="text.secondary">
               No hay información demográfica disponible.
@@ -252,53 +271,42 @@ export default function ElectoralPanoramaPage() {
             VER DEMOGRAFÍA
           </Button>
         </Detail>
-        <Detail title="Necesidades territoriales">
-          <Typography>
-            {o
-              ? `${formatIntegerEsEc(o.needs.total ?? o.needs.open ?? 0)} necesidades registradas; ${formatIntegerEsEc(o.needs.open ?? 0)} abiertas.`
-              : 'No hay información de necesidades disponible.'}
-          </Typography>
-          <DemoNote count={o?.needs.demo} />
-        </Detail>
-        <Detail title="Cobertura operativa">
-          <Typography>
-            {o
-              ? `${formatIntegerEsEc(o.activities.total ?? o.activities.completed ?? 0)} actividades; cobertura en ${formatIntegerEsEc(o.coverage.with_activities ?? 0)} de ${formatIntegerEsEc(o.coverage.total_parishes ?? 0)} parroquias.`
-              : 'No hay información operativa disponible.'}
-          </Typography>
-          <DemoNote count={o?.activities.demo} />
-        </Detail>
         <Detail title="Estudios y encuestas">
           {studies.data?.items.length ? (
             <Stack spacing={0.5}>
-              <Typography>
-                <b>Estudios publicados:</b> {studies.data.items.length}
+              <Typography fontWeight={700}>
+                {studies.data.items.length} estudios publicados
               </Typography>
-              <Typography>
-                <b>Última medición:</b> {studies.data.items[0].name}
+              <Typography color="text.secondary" variant="body2">
+                Último estudio
               </Typography>
+              <Typography>{studies.data.items[0].name.replace(/^\[DEMO\]\s*/, '')}</Typography>
               <Typography>
-                <b>Fecha de campo:</b> {studies.data.items[0].fieldwork_start_date} –{' '}
-                {studies.data.items[0].fieldwork_end_date}
+                Muestra: {formatIntegerEsEc(studies.data.items[0].sample_size_total)}
               </Typography>
-              <Typography>
-                <b>Muestra:</b> {formatIntegerEsEc(studies.data.items[0].sample_size_total)}
-              </Typography>
-              <Typography>
-                <b>Cobertura:</b>{' '}
-                {studies.data.items[0].geography_level === 'PARISH' ? 'Parroquial' : 'Cantonal'}
-              </Typography>
-              {latestStudy.data?.results?.slice(0, 3).map((result) => (
-                <Typography key={result.option_id}>
-                  {result.option_label}: {formatPercentEsEc(result.percentage)} observado en el
-                  estudio.
-                </Typography>
-              ))}
+              {(latestStudy.data?.results?.length ?? 0) > 0 && (
+                <>
+                  <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
+                    Principales resultados
+                  </Typography>
+                  {latestStudy.data?.results?.slice(0, 3).map((result) => (
+                    <Typography key={result.option_id}>
+                      {result.option_label}: {formatPercentEsEc(result.percentage)}
+                    </Typography>
+                  ))}
+                </>
+              )}
+              <Button
+                component={RouterLink}
+                to={`/app/campaigns/${campaignId}/survey-studies/${studies.data.items[0].id}`}
+                sx={{ mt: 1 }}
+              >
+                VER ESTUDIO
+              </Button>
             </Stack>
           ) : (
             <Typography color="text.secondary">No hay estudios publicados.</Typography>
           )}
-          <DemoNote count={demoStudies} />
         </Detail>
         <Detail title="Información pública">
           {publicCount > 0 ? (
@@ -307,29 +315,34 @@ export default function ElectoralPanoramaPage() {
               fuente complementaria.
             </Typography>
           ) : (
-            <Typography color="text.secondary">
-              No hay información pública reciente disponible.
-            </Typography>
+            <Typography color="text.secondary">Sin información reciente.</Typography>
           )}
         </Detail>
-        <Detail title="Limitaciones y calidad">
-          <Typography>
-            Los datos dependen de la disponibilidad, fecha de corte y procedencia de cada fuente. El
-            escenario V1 se muestra tal como está persistido; no se recalcula. No se calculan
-            probabilidades de ganador, apoyo político ni puntuaciones de persuasión.
-          </Typography>
-        </Detail>
       </Grid>
-      <Typography variant="h2" sx={{ mt: 3, mb: 1 }}>
-        Preguntas rápidas
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+        Los datos dependen de la disponibilidad, fecha de corte y procedencia de cada fuente. El
+        escenario de participación se muestra tal como está persistido; no se recalcula. No se
+        calculan probabilidades de ganador, apoyo político ni puntuaciones de persuasión.
       </Typography>
-      <Stack direction="row" flexWrap="wrap" gap={1}>
-        {panoramaQuestions.map((question) => (
-          <Button key={question} component={RouterLink} to={aiPath(question)} variant="outlined">
-            {question}
-          </Button>
-        ))}
-      </Stack>
+      {!isCoordinator && (
+        <>
+          <Typography variant="h2" sx={{ mt: 3, mb: 1 }}>
+            Preguntas rápidas
+          </Typography>
+          <Stack direction="row" flexWrap="wrap" gap={1}>
+            {panoramaQuestions.map((question) => (
+              <Button
+                key={question}
+                component={RouterLink}
+                to={aiPath(question)}
+                variant="outlined"
+              >
+                {question}
+              </Button>
+            ))}
+          </Stack>
+        </>
+      )}
     </>
   );
 }

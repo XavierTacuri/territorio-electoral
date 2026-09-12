@@ -19,7 +19,22 @@ vi.mock('../historical/CurrentElectionMap', () => ({
 
 const mockApiRequest = vi.mocked(apiRequest);
 
+const auth = vi.hoisted(() => ({
+  user: {
+    id: 'u1',
+    username: 'candidate',
+    email: 'candidate@example.test',
+    first_name: 'Candidata',
+    last_name: 'Test',
+    is_active: true,
+    is_superuser: false,
+    roles: [{ code: 'CANDIDATE', name: 'Candidato' }],
+  } as { roles: { code: string; name: string }[]; is_superuser: boolean; [key: string]: unknown },
+}));
+vi.mock('../../auth/AuthProvider', () => ({ useAuth: () => ({ user: auth.user }) }));
+
 beforeEach(() => {
+  auth.user.roles = [{ code: 'CANDIDATE', name: 'Candidato' }];
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -213,6 +228,21 @@ describe('expediente territorial', () => {
     expect(screen.getAllByText('Jadán').length).toBeGreaterThan(0);
     expect(screen.getAllByText('3.382').length).toBeGreaterThan(0);
     expect(screen.getByRole('region', { name: 'Mapa de elección actual' })).toBeVisible();
+    expect(screen.getAllByText('Electores actuales').length).toBeGreaterThan(0);
+    expect(screen.getByText('Votantes esperados')).toBeVisible();
+    expect(screen.getAllByText('Datos oficiales del CNE').length).toBeGreaterThan(0);
+    expect(screen.getByText('Estimación de participación')).toBeVisible();
+    expect(screen.getByText('Bajo')).toBeVisible();
+    expect(screen.getByText('Estimado')).toBeVisible();
+    expect(screen.getByText('Alto')).toBeVisible();
+    expect(screen.getByText('Estimación basada en elecciones anteriores')).toBeVisible();
+    expect(screen.queryByText(/OBSERVADO · CNE/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/PROYECTADO · ESCENARIOS V1/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/TURNOUT_HISTORICAL_WEIGHTED_V1/)).not.toBeInTheDocument();
+    expect(screen.queryByText('BAJO')).not.toBeInTheDocument();
+    expect(screen.queryByText('CENTRAL')).not.toBeInTheDocument();
+    expect(screen.queryByText('ALTO')).not.toBeInTheDocument();
+    expect(screen.queryByText('Padrón electoral')).not.toBeInTheDocument();
   });
   it('muestra "Sin datos disponibles" en vez de un cero artificial cuando falta información', async () => {
     renderPage(2, (c) => seed(c, 2, sanJuanSinDatos));
@@ -303,5 +333,32 @@ describe('expediente territorial', () => {
       'href',
       expect.stringContaining('/app/campaigns/campaign-1/territory-ai?parish_id=1'),
     );
+  });
+});
+
+describe('expediente territorial · TERRITORIAL_COORDINATOR', () => {
+  beforeEach(() => {
+    auth.user.roles = [{ code: 'TERRITORIAL_COORDINATOR', name: 'Coordinador territorial' }];
+  });
+
+  it('no ofrece ninguna acción de Territorio IA ni de generación de informes, pero conserva el mapa', async () => {
+    renderPage();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
+    ).toBeVisible();
+    expect(screen.queryByText('PREGUNTAR A TERRITORIO IA')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'TERRITORIO IA' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('¿Qué necesidades se han registrado en Jadán?'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'DESCARGAR EXPEDIENTE' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'GENERAR PDF' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'GENERAR XLSX' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'GENERAR INFORME EN EL CENTRO DE INFORMES' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'VER EN MAPA' })).toBeVisible();
+    expect(screen.getAllByText('Jadán').length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: 'FUENTES' })).toBeVisible();
   });
 });

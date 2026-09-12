@@ -78,4 +78,64 @@ describe('CurrentElectionMapLegend', () => {
     expect(screen.getByText('Sin dato')).toBeVisible();
     unmount();
   });
+
+  it('usa etiquetas humanas por familia de métrica en vez de "Rango N"', () => {
+    const values = [1000, 2000, 3000, 4000];
+    const counts = buildMetricScale(
+      'registered_voters_current',
+      'Electores actuales',
+      'count',
+      values,
+    );
+    expect(counts.items.map((i) => i.label)).toEqual([
+      'Muy bajo',
+      'Bajo',
+      'Medio',
+      'Alto',
+      'Sin dato',
+    ]);
+    expect(counts.items.some((i) => i.label.startsWith('Rango'))).toBe(false);
+
+    const change = buildMetricScale(
+      'registration_change_2019',
+      'Cambio del registro 2019 → actual',
+      'percent',
+      [-0.4, -0.28, -0.2, -0.05],
+    );
+    expect(change.items.map((i) => i.label)).toEqual([
+      'Disminución alta',
+      'Disminución media',
+      'Disminución leve',
+      'Cambio menor',
+      'Sin dato',
+    ]);
+
+    const density = buildMetricScale(
+      'population_density',
+      'Densidad poblacional',
+      'density',
+      values,
+    );
+    expect(density.items.map((i) => i.label)).toEqual([
+      'Baja densidad',
+      'Densidad media',
+      'Densidad alta',
+      'Densidad muy alta',
+      'Sin dato',
+    ]);
+
+    const participation = buildMetricScale(
+      'turnout_2019',
+      'Participación observada 2019',
+      'percent',
+      [0.5, 0.6, 0.7, 0.8],
+    );
+    expect(participation.items.map((i) => i.label)).toEqual([
+      'Baja',
+      'Media',
+      'Alta',
+      'Muy alta',
+      'Sin dato',
+    ]);
+  });
 });

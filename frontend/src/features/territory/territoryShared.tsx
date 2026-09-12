@@ -84,6 +84,11 @@ export const quality: Record<string, string> = {
   LOW: 'Baja',
   INSUFFICIENT_DATA: 'Datos insuficientes',
 };
+export const participationScenarioLabels = {
+  low: 'Bajo',
+  central: 'Estimado',
+  high: 'Alto',
+} as const;
 export const ageKeys = [
   ['0–14', 'AGE_0_14'],
   ['15–29', 'AGE_15_29'],

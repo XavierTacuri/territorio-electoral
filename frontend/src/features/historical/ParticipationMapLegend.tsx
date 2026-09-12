@@ -9,12 +9,59 @@ export const PARTICIPATION_COLORS = {
   veryLow: '#D6E6F2',
   noData: '#E5E7EB',
 } as const;
-const DYNAMIC_COLORS = [
-  PARTICIPATION_COLORS.veryLow,
-  PARTICIPATION_COLORS.low,
-  PARTICIPATION_COLORS.medium,
-  PARTICIPATION_COLORS.high,
-] as const;
+// Familias de color por tipo de dato (§24 del refinamiento UX): cada métrica del
+// mapa se pinta con una rampa distinta según qué representa, en vez de reusar
+// siempre la misma escala azul de participación. El rojo nunca se usa de forma
+// automática para "malo"/prioridad política — son puramente descriptivas.
+const COUNT_COLORS = ['#E3EEFA', '#9DC3EA', '#4C86A8', '#0B3C5D'] as const; // electores/padrón/votantes: azul
+const PARTICIPATION_FALLBACK_COLORS = ['#E1F5F0', '#8FD4C4', '#3F9E8C', '#0F6656'] as const; // participación (no central): verde/turquesa
+const CHANGE_COLORS = ['#7E5109', '#D68910', '#F5B041', '#FDEBD0'] as const; // cambio del registro: rampa cálida por magnitud (índice 0 = mayor disminución)
+const DEMOGRAPHIC_COLORS = ['#F3EEE4', '#D8C9A3', '#B79A5B', '#8C6D2E'] as const; // demografía/densidad: neutro arena
+export type MetricFamily = 'count' | 'change' | 'demographic' | 'participation';
+export function metricFamily(metric: string): MetricFamily {
+  if (metric.startsWith('registration_change')) return 'change';
+  if (metric.startsWith('inec_population') || metric === 'population_density') return 'demographic';
+  if (metric.startsWith('turnout') || metric.startsWith('projected')) return 'participation';
+  return 'count';
+}
+function familyColors(family: MetricFamily): readonly string[] {
+  switch (family) {
+    case 'change':
+      return CHANGE_COLORS;
+    case 'demographic':
+      return DEMOGRAPHIC_COLORS;
+    case 'participation':
+      return PARTICIPATION_FALLBACK_COLORS;
+    default:
+      return COUNT_COLORS;
+  }
+}
+function familyWords(family: MetricFamily, unit: MetricUnit): readonly string[] {
+  switch (family) {
+    case 'change':
+      return ['Disminución alta', 'Disminución media', 'Disminución leve', 'Cambio menor'];
+    case 'demographic':
+      return unit === 'density'
+        ? ['Baja densidad', 'Densidad media', 'Densidad alta', 'Densidad muy alta']
+        : ['Bajo', 'Medio', 'Alto', 'Muy alto'];
+    case 'participation':
+      return ['Baja', 'Media', 'Alta', 'Muy alta'];
+    default:
+      return ['Muy bajo', 'Bajo', 'Medio', 'Alto'];
+  }
+}
+// Reparte las 4 palabras "base" de una familia entre el número real de buckets
+// (1 a 4, según cuántos cuantiles únicos existan) sin tocar el cálculo de
+// cuantiles en sí — solo decide qué palabra le corresponde a cada posición.
+function graduatedLabels(total: number, words: readonly string[]): string[] {
+  if (total <= 0) return [];
+  if (total >= words.length) return [...words];
+  if (total === 1) return [words[Math.floor((words.length - 1) / 2)]];
+  return Array.from({ length: total }, (_, i) => {
+    const index = Math.round((i * (words.length - 1)) / (total - 1));
+    return words[index];
+  });
+}
 export type MetricUnit = 'percent' | 'count' | 'density';
 export type MapScaleItem = { label: string; detail: string; color: string };
 export type MapMetricScale = {
@@ -65,27 +112,33 @@ export function buildMetricScale(
   const quantiles = [0.25, 0.5, 0.75]
     .map((q) => sorted[Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * q))])
     .filter((v, i, a) => Number.isFinite(v) && (i === 0 || v !== a[i - 1]));
+  const family = metricFamily(metric);
+  const colors = familyColors(family);
+  const labels = graduatedLabels(
+    quantiles.length + (sorted.length ? 1 : 0),
+    familyWords(family, unit),
+  );
   const stops = quantiles.map((value, index) => ({
     value,
-    color: DYNAMIC_COLORS[index + 1] ?? PARTICIPATION_COLORS.high,
+    color: colors[index + 1] ?? colors[colors.length - 1],
   }));
   const minimum = sorted[0];
   const dataItems: MapScaleItem[] = sorted.length
     ? [
         {
-          label: 'Rango inferior',
+          label: labels[0],
           detail: quantiles.length
             ? `${format(minimum, unit)} – < ${format(quantiles[0], unit)}`
             : format(minimum, unit),
-          color: DYNAMIC_COLORS[0],
+          color: colors[0],
         },
         ...quantiles.map((value, index) => ({
-          label: index === quantiles.length - 1 ? 'Rango superior' : `Rango ${index + 2}`,
+          label: labels[index + 1],
           detail:
             index === quantiles.length - 1
               ? `≥ ${format(value, unit)}`
               : `${format(value, unit)} – < ${format(quantiles[index + 1], unit)}`,
-          color: DYNAMIC_COLORS[index + 1] ?? PARTICIPATION_COLORS.high,
+          color: colors[index + 1] ?? colors[colors.length - 1],
         })),
       ]
     : [];
@@ -94,7 +147,7 @@ export function buildMetricScale(
     title,
     unit,
     stops,
-    baseColor: DYNAMIC_COLORS[0],
+    baseColor: colors[0],
     noDataColor: PARTICIPATION_COLORS.noData,
     items: [...dataItems, { label: 'Sin dato', detail: '—', color: PARTICIPATION_COLORS.noData }],
   };

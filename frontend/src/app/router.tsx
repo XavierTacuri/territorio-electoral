@@ -47,7 +47,6 @@ const CurrentElection = lazy(() => import('../features/historical/CurrentElectio
 const TerritorialIntelligence = lazy(
   () => import('../features/territory/TerritorialIntelligencePage'),
 );
-const TerritorialProfile = lazy(() => import('../features/territory/TerritorialProfilePage'));
 const Reports = lazy(() => import('../features/reports/ReportCenterPage'));
 const ReportRunDetail = lazy(() => import('../features/reports/ReportRunDetailPage'));
 const DebateAssistant = lazy(() => import('../features/debate/DebateAssistantPage'));
@@ -131,12 +130,8 @@ export const router = createBrowserRouter([
             element: lazyElement(<CurrentElection />),
           },
           {
-            path: campaign.slice(5) + '/territories',
+            path: campaign.slice(5) + '/territories/:parishId?',
             element: lazyElement(<TerritorialIntelligence />),
-          },
-          {
-            path: campaign.slice(5) + '/territories/:parishId',
-            element: lazyElement(<TerritorialProfile />),
           },
           { path: campaign.slice(5) + '/activities', element: lazyElement(<Activities />) },
           {

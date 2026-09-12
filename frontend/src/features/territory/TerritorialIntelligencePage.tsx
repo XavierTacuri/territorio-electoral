@@ -1,12 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
   Box,
-  Button,
   Grid,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -29,10 +27,12 @@ import {
   YAxis,
 } from 'recharts';
 import { apiRequest } from '../../api/client';
-import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
+import { useAuth } from '../../auth/AuthProvider';
+import { isCoordinatorOnly } from '../../auth/permissions';
+import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { TerritorialProfileContent } from './TerritorialProfileContent';
 import {
-  ageKeys,
   Card,
   Metric,
   integer,
@@ -43,29 +43,46 @@ import {
 } from './territoryShared';
 
 export default function TerritorialIntelligencePage() {
-  const { campaignId = '' } = useParams();
+  const { campaignId = '', parishId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCoordinator = isCoordinatorOnly(user);
   const [comparison, setComparison] = useState<Parish[]>([]);
-  const [chosen, setChosen] = useState<Parish | null>(null);
   const analysis = useQuery({
     queryKey: ['current-election-analysis', campaignId],
     queryFn: ({ signal }) =>
       apiRequest<Analysis>(`/campaigns/${campaignId}/current-election/analysis`, { signal }),
     enabled: !!campaignId,
   });
+  // Territory comparison is not part of the coordinator's experience (see
+  // below), so its data source is never requested for that role.
   const operation = useQuery({
     queryKey: ['territory-operation-summary', campaignId],
     queryFn: ({ signal }) =>
       apiRequest<{ parishes: Operation[] }>(`/campaigns/${campaignId}/territories/summary`, {
         signal,
       }),
-    enabled: !!campaignId,
+    enabled: !!campaignId && !isCoordinator,
     retry: 1,
   });
   const operationByParish = useMemo(
     () => new Map((operation.data?.parishes ?? []).map((item) => [item.parish_id, item])),
     [operation.data],
   );
+  const assignedParishes = analysis.data?.parishes ?? [];
+  // A coordinator with exactly one assigned parish never sees a selector:
+  // Inteligencia Territorial goes straight to that parish's Expediente
+  // Territorial, replacing history so "back" doesn't return to a page the
+  // coordinator never meaningfully saw.
+  useEffect(() => {
+    if (isCoordinator && !parishId && assignedParishes.length === 1) {
+      navigate(`/app/campaigns/${campaignId}/territories/${assignedParishes[0].parish_id}`, {
+        replace: true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoordinator, campaignId, assignedParishes.length, parishId]);
+
   if (analysis.isLoading) return <LoadingSkeleton />;
   if (analysis.isError || !analysis.data)
     return (
@@ -75,13 +92,121 @@ export default function TerritorialIntelligencePage() {
       />
     );
   const data = analysis.data;
-  const goToExpediente = (parish: Parish) =>
-    navigate(`/app/campaigns/${campaignId}/territories/${parish.parish_id}`);
+
+  if (isCoordinator) {
+    if (assignedParishes.length === 0) {
+      return (
+        <>
+          <PageHeader title="INTELIGENCIA TERRITORIAL" />
+          <EmptyState
+            title="No tienes parroquias asignadas para esta campaña."
+            detail="Solicita a tu Campaign Manager o Administrador que registre tu asignación territorial para poder consultar tu Expediente Territorial."
+          />
+        </>
+      );
+    }
+    if (parishId) {
+      return <TerritorialProfileContent campaignId={campaignId} parishId={parishId} />;
+    }
+    if (assignedParishes.length === 1) {
+      // Redirecting via the effect above; render nothing but a loading state
+      // in the meantime so the selector/comparison UI never flashes.
+      return <LoadingSkeleton />;
+    }
+    return (
+      <>
+        <PageHeader
+          title="INTELIGENCIA TERRITORIAL"
+          description="Seleccione una de sus parroquias asignadas para abrir su Expediente Territorial."
+        />
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Autocomplete
+            options={assignedParishes}
+            getOptionLabel={(item) => `${item.name} · DPA ${item.dpa_code}`}
+            isOptionEqualToValue={(a, b) => a.parish_id === b.parish_id}
+            onChange={(_, value) =>
+              value && navigate(`/app/campaigns/${campaignId}/territories/${value.parish_id}`)
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Seleccionar parroquia"
+                placeholder="Buscar por nombre o DPA"
+              />
+            )}
+          />
+        </Paper>
+      </>
+    );
+  }
+
+  // Candidate/Campaign Manager: seleccionar una parroquia renderiza su
+  // Expediente Territorial de inmediato, DEBAJO del mismo selector — sin
+  // navegar a una pantalla distinta. El selector permanece visible (con la
+  // parroquia activa como valor) para poder cambiar de parroquia sin
+  // regresar; la URL sigue reflejando la parroquia seleccionada para que
+  // refresh/back/forward/deep link funcionen igual que antes.
+  const selectedParish = parishId
+    ? (data.parishes.find((item) => String(item.parish_id) === parishId) ?? null)
+    : null;
+
+  const selector = (
+    <Autocomplete
+      options={data.parishes}
+      value={selectedParish}
+      // Seleccionar una parroquia actualiza de inmediato el Expediente
+      // Territorial que se muestra debajo, sin paso intermedio de
+      // confirmación ni botón "VER EXPEDIENTE" (§3-6). Limpiar la selección
+      // vuelve a la vista comparativa, en la misma página.
+      onChange={(_, value) =>
+        navigate(
+          value
+            ? `/app/campaigns/${campaignId}/territories/${value.parish_id}`
+            : `/app/campaigns/${campaignId}/territories`,
+        )
+      }
+      getOptionLabel={(item) => `${item.name} · DPA ${item.dpa_code}`}
+      isOptionEqualToValue={(a, b) => a.parish_id === b.parish_id}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Seleccionar parroquia"
+          placeholder="Buscar por nombre o DPA"
+        />
+      )}
+    />
+  );
+
+  if (parishId) {
+    return (
+      <>
+        <Typography variant="overline" color="text.secondary">
+          INTELIGENCIA TERRITORIAL
+        </Typography>
+        <Paper variant="outlined" sx={{ p: 2, mb: 2, mt: 0.5 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, md: 3 }}>
+              <Metric label="CAMPAÑA" value={data.context.campaign_name} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <Metric label="CANTÓN" value={data.context.canton_name} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Metric label="PROCESO" value={data.context.election_name} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>{selector}</Grid>
+          </Grid>
+        </Paper>
+        <TerritorialProfileContent campaignId={campaignId} parishId={parishId} />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
         title="INTELIGENCIA TERRITORIAL"
-        description="Panorama comparado de las parroquias de la campaña. Seleccione una parroquia para abrir su Expediente Territorial."
+        description="Panorama comparado de las parroquias de la campaña. Seleccione una parroquia para abrir de inmediato su Expediente Territorial."
       />
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
@@ -94,42 +219,8 @@ export default function TerritorialIntelligencePage() {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Metric label="PROCESO" value={data.context.election_name} />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Autocomplete
-              options={data.parishes}
-              value={chosen}
-              onChange={(_, value) => setChosen(value)}
-              getOptionLabel={(item) => `${item.name} · DPA ${item.dpa_code}`}
-              isOptionEqualToValue={(a, b) => a.parish_id === b.parish_id}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Seleccionar parroquia"
-                  placeholder="Buscar por nombre o DPA"
-                />
-              )}
-            />
-          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>{selector}</Grid>
         </Grid>
-        {chosen && (
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-            alignItems={{ sm: 'center' }}
-            justifyContent="space-between"
-            sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}
-          >
-            <Typography>
-              {chosen.name} · Padrón {integer(chosen.registered_voters_current)} · Población{' '}
-              {chosen.demographics.POP_TOTAL != null
-                ? integer(chosen.demographics.POP_TOTAL)
-                : 'Sin datos disponibles'}
-            </Typography>
-            <Button variant="contained" onClick={() => goToExpediente(chosen)}>
-              VER EXPEDIENTE
-            </Button>
-          </Stack>
-        )}
       </Paper>
       <Comparison
         parishes={data.parishes}
@@ -152,38 +243,22 @@ function Comparison({
   onChange: (value: Parish[]) => void;
   operations: Map<number, Operation>;
 }) {
+  // Comparación simplificada a exactamente 5 indicadores: electores
+  // actuales, votantes esperados (proyección V1 ya persistida por el backend
+  // — nunca recalculada aquí), población, actividades y necesidades. LOW/HIGH,
+  // participación histórica, densidad, crecimiento y grupos etarios quedan
+  // fuera de esta tabla (siguen disponibles en el Expediente Territorial).
   const metrics = (p: Parish): Record<string, number | undefined> => ({
     electores: p.registered_voters_current,
-    '2019': p.historical_2019?.turnout_rate ?? undefined,
-    '2023': p.historical_2023?.turnout_rate ?? undefined,
-    low: p.projection?.low,
-    central: p.projection?.central,
-    high: p.projection?.high,
     votantes: p.projection?.expected_voters_central,
     poblacion: p.demographics.POP_TOTAL,
-    crecimiento: p.population_growth_2010_2022 ?? undefined,
-    densidad: p.demographics.POPULATION_DENSITY ?? p.demographics.DENSITY,
-    ...Object.fromEntries(
-      ageKeys.map(([label, key]) => [
-        label,
-        (p.demographics[key] ?? 0) / (p.demographics.POP_TOTAL ?? 1),
-      ]),
-    ),
     actividades: operations.get(p.parish_id)?.activities ?? 0,
     necesidades: operations.get(p.parish_id)?.needs_open ?? 0,
   });
   const rows: [string, string, 'integer' | 'percent' | 'plain'][] = [
     ['Electores actuales', 'electores', 'integer'],
-    ['Participación 2019', '2019', 'percent'],
-    ['Participación 2023', '2023', 'percent'],
-    ['LOW', 'low', 'percent'],
-    ['CENTRAL', 'central', 'percent'],
-    ['HIGH', 'high', 'percent'],
-    ['Votantes centrales', 'votantes', 'integer'],
+    ['Votantes esperados', 'votantes', 'integer'],
     ['Población', 'poblacion', 'integer'],
-    ['Crecimiento', 'crecimiento', 'percent'],
-    ['Densidad', 'densidad', 'plain'],
-    ...ageKeys.map(([label]) => [`${label} %`, label, 'percent'] as [string, string, 'percent']),
     ['Actividades', 'actividades', 'integer'],
     ['Necesidades', 'necesidades', 'integer'],
   ];

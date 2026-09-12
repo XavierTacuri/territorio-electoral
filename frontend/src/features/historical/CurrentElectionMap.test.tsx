@@ -116,7 +116,7 @@ describe('CurrentElectionMap', () => {
     expect(screen.getByRole('region', { name: 'Mapa de elección actual' })).toHaveStyle({
       minHeight: '480px',
     });
-    expect(screen.getByLabelText('Leyenda — Participación central')).toBeVisible();
+    expect(screen.getByLabelText('Leyenda — Participación estimada')).toBeVisible();
     expect(mapOptions).toHaveBeenCalledWith(expect.objectContaining({ scrollZoom: false }));
   });
 });

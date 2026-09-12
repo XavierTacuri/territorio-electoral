@@ -35,11 +35,26 @@ test('dashboard abre comparador, expediente territorial, mapa, INEC y PDF portab
   }
   for (const parish of analysis.parishes.slice(0, 3))
     await expect(page.getByRole('columnheader', { name: parish.name })).toBeVisible();
+  // Comparación simplificada a exactamente 5 indicadores.
+  for (const label of [
+    'Electores actuales',
+    'Votantes esperados',
+    'Población',
+    'Actividades',
+    'Necesidades',
+  ]) {
+    await expect(page.getByRole('cell', { name: label })).toBeVisible();
+  }
+  for (const removed of ['LOW', 'HIGH', 'Densidad', 'Crecimiento']) {
+    await expect(page.getByRole('cell', { name: removed, exact: true })).toHaveCount(0);
+  }
 
+  // Seleccionar una parroquia renderiza de inmediato su Expediente Territorial
+  // DEBAJO del mismo selector, sin navegar a otra pantalla ni paso de
+  // confirmación intermedio.
   const selector = page.getByLabel('Seleccionar parroquia');
   await selector.click();
   await page.getByRole('option', { name: new RegExp(analysis.parishes[0].name) }).click();
-  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
   await expect(page).toHaveURL(new RegExp(`/territories/${analysis.parishes[0].parish_id}$`));
   await expect(
     page.getByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
@@ -47,6 +62,10 @@ test('dashboard abre comparador, expediente territorial, mapa, INEC y PDF portab
   await expect(
     page.getByRole('heading', { level: 3, name: analysis.parishes[0].name }),
   ).toBeVisible();
+  // El selector de parroquia sigue visible: el contexto no se pierde y se
+  // puede cambiar de parroquia sin volver atrás.
+  await expect(page.getByLabel('Seleccionar parroquia')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'COMPARAR TERRITORIOS' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'ANTECEDENTES ELECTORALES' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'PARTICIPACIÓN ELECTORAL' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Mapa de elección actual' })).toBeVisible();
@@ -69,4 +88,9 @@ test('dashboard abre comparador, expediente territorial, mapa, INEC y PDF portab
       ),
     ).toBe(true);
   }
+
+  // Volver por el navegador regresa a la vista comparativa, en la misma página
+  // (sin remount de pantalla completa: misma ruta, distinto parishId).
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'COMPARAR TERRITORIOS' })).toBeVisible();
 });

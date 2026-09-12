@@ -49,7 +49,7 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
 
   const map = page.getByRole('region', { name: 'Mapa de elección actual' });
   await expect(map).toBeVisible();
-  const centralLegend = page.getByLabel('Leyenda — Participación central');
+  const centralLegend = page.getByLabel('Leyenda — Participación estimada');
   await expect(centralLegend).toBeVisible();
   await expect(centralLegend.getByText('Muy alta', { exact: true })).toBeVisible();
   await expect(centralLegend.getByText('Alta', { exact: true })).toBeVisible();
@@ -103,7 +103,7 @@ test('elección actual solicita boundaries y monta MapLibre con tamaño visible'
     .poll(async () => Number(await map.getAttribute('data-zoom')))
     .toBeLessThanOrEqual(initialZoom);
 
-  await page.getByRole('combobox').filter({ hasText: 'Participación central' }).click();
+  await page.getByRole('combobox').filter({ hasText: 'Participación estimada' }).click();
   await page.getByRole('option', { name: 'Participación observada 2019' }).click();
   await expect(page.getByLabel('Leyenda — Participación observada 2019')).toBeVisible();
   await page.screenshot({

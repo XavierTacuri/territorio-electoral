@@ -88,6 +88,8 @@ export function labelFor<T extends string>(labels: Partial<Record<T, string>>, v
   return labels[value] ?? 'No disponible';
 }
 
+export const DEMO_DATA_NOTICE = 'Datos simulados para demostración.';
+
 export const needPriorityLabels: Record<string, string> = {
   LOW: 'Baja',
   MEDIUM: 'Media',

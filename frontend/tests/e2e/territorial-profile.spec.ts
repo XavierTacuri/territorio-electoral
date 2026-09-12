@@ -34,7 +34,6 @@ test('candidato abre el Expediente Territorial desde Inteligencia Territorial', 
   await page.getByRole('link', { name: 'Inteligencia territorial', exact: true }).click();
   await page.getByLabel('Seleccionar parroquia').click();
   await page.getByRole('option', { name: /^Jadán/ }).click();
-  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
 
   await expect(
     page.getByRole('heading', { level: 1, name: 'EXPEDIENTE TERRITORIAL' }),
@@ -43,6 +42,8 @@ test('candidato abre el Expediente Territorial desde Inteligencia Territorial', 
   await expect(breadcrumb.getByText('Centro de Comando')).toBeVisible();
   await expect(breadcrumb.getByText('Inteligencia territorial')).toBeVisible();
   await expect(page.getByRole('heading', { level: 3, name: 'Jadán' })).toBeVisible();
+  // El selector de parroquia permanece visible: no hubo salto a otra pantalla.
+  await expect(page.getByLabel('Seleccionar parroquia')).toBeVisible();
   await expect(page.getByText(registeredVoters).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'OPERACIÓN TERRITORIAL' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'NECESIDADES TERRITORIALES' })).toBeVisible();

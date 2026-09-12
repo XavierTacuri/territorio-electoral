@@ -35,9 +35,9 @@ const METRICS: { value: string; label: string; unit: MetricUnit }[] = [
   { value: 'turnout_2019', label: 'Participación observada 2019', unit: 'percent' },
   { value: 'turnout_2023', label: 'Participación observada 2023', unit: 'percent' },
   { value: 'projected_low_rate', label: 'Participación baja', unit: 'percent' },
-  { value: 'projected_central_rate', label: 'Participación central', unit: 'percent' },
+  { value: 'projected_central_rate', label: 'Participación estimada', unit: 'percent' },
   { value: 'projected_high_rate', label: 'Participación alta', unit: 'percent' },
-  { value: 'expected_voters_central', label: 'Votantes esperados centrales', unit: 'count' },
+  { value: 'expected_voters_central', label: 'Votantes esperados', unit: 'count' },
   {
     value: 'registration_change_2019',
     label: 'Cambio del registro 2019 → actual',
@@ -286,11 +286,11 @@ export function CurrentElectionMap({
                 .setLngLat(event.lngLat)
                 .setHTML(
                   `<strong>${p.parish_name ?? 'Parroquia'}</strong><br>` +
-                    `Participación central: ${shown(p.projected_central_rate, true)}<br>` +
+                    `Participación estimada: ${shown(p.projected_central_rate, true)}<br>` +
                     `Escenario bajo: ${shown(p.projected_low_rate, true)}<br>` +
                     `Escenario alto: ${shown(p.projected_high_rate, true)}<br>` +
                     `Electores actuales: ${shown(p.registered_voters_current)}<br>` +
-                    `Votantes proyectados centrales: ${shown(p.expected_voters_central)}<br>` +
+                    `Votantes esperados: ${shown(p.expected_voters_central)}<br>` +
                     `Calidad: ${qualityLabel(p.model_quality)}`,
                 )
                 .addTo(map!);
