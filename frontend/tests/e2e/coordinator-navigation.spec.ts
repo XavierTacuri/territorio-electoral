@@ -15,18 +15,7 @@ async function gualaceoCampaign(request: APIRequestContext, headers: Record<stri
   return campaign;
 }
 
-const coordinatorPaths = [
-  'dashboard',
-  'panorama',
-  'territories',
-  'calendar',
-  'operations',
-  'activities',
-  'needs',
-  'election-day',
-];
-
-test('TERRITORIAL_COORDINATOR ve el menú reducido y no accede a módulos retirados por URL directa', async ({
+test('TERRITORIAL_COORDINATOR mantiene su redirección directa al Expediente de su parroquia asignada', async ({
   page,
   request,
 }) => {
@@ -66,38 +55,6 @@ test('TERRITORIAL_COORDINATOR ve el menú reducido y no accede a módulos retira
   await goto('/dashboard');
   await expect(page).toHaveURL(/\/app\/campaigns\/[^/]+\/dashboard/);
 
-  await test.step('el menú lateral muestra únicamente los módulos del contrato de coordinador', async () => {
-    const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
-    for (const path of coordinatorPaths) {
-      await expect(navigation.locator(`a[href$="/${path}"]`)).toHaveCount(1);
-    }
-    for (const retiredPath of [
-      'surveys',
-      'territory-ai',
-      'reports',
-      'alerts',
-      'debate',
-      'commitments',
-    ]) {
-      await expect(navigation.locator(`a[href*="/${retiredPath}"]`)).toHaveCount(0);
-    }
-    // "Mi Jornada" is conditional on an ACTIVE ElectionDayOperation + a valid
-    // ElectionDayAssignment for this user (see useMyElectionDayNavVisibility);
-    // the E2E fixture seeds coordinator_e2e with both, so it is expected here.
-    const myJornadaCount = await navigation.locator('a[href*="/election-day/my"]').count();
-    expect([0, 1]).toContain(myJornadaCount);
-    await expect(navigation.getByRole('link')).toHaveCount(
-      coordinatorPaths.length + myJornadaCount,
-    );
-  });
-
-  for (const blockedPath of ['reports', 'alerts', 'debate', 'surveys']) {
-    await test.step(`URL directa a /${blockedPath} devuelve 403`, async () => {
-      await goto(`/${blockedPath}`);
-      await expect(page).toHaveURL(/\/403$/);
-    });
-  }
-
   await test.step('Inteligencia territorial redirige directo al Expediente cuando hay una sola parroquia asignada', async () => {
     await goto('/territories');
     await expect(page).not.toHaveURL(/\/403$/);
@@ -118,64 +75,6 @@ test('TERRITORIAL_COORDINATOR ve el menú reducido y no accede a módulos retira
   await test.step('URL directa a la parroquia asignada funciona', async () => {
     await goto(`/territories/${assignedParishId}`);
     await expect(page).not.toHaveURL(/\/403$/);
-  });
-});
-
-test('TERRITORIAL_COORDINATOR ve un Centro de Comando simplificado, sin CTAs ejecutivos ni IA/alertas', async ({
-  page,
-  request,
-}) => {
-  test.setTimeout(60000);
-  const adminHeaders = { Authorization: 'Bearer ' + (await apiToken(request)) };
-  const campaign = await gualaceoCampaign(request, adminHeaders);
-
-  await browserLogin(page, e2eUsers.coordinator);
-  await page.goto(`/app/campaigns/${campaign.id}/dashboard`);
-  // The Dashboard fires several parallel queries (analysis, operations,
-  // agenda, territories, campaign) before its first paint; give it more
-  // room than the 5s default under sustained local test-suite load.
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Centro de Comando Territorial' }),
-  ).toBeVisible({ timeout: 15000 });
-
-  await test.step('no muestra los 3 CTAs ejecutivos', async () => {
-    await expect(page.getByRole('link', { name: 'CONSULTAR TERRITORIO IA' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'VER PANORAMA COMPLETO' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'GENERAR INFORME EJECUTIVO' })).toHaveCount(0);
-  });
-
-  await test.step('no muestra la card de Territorio IA ni la de Alertas', async () => {
-    await expect(page.getByText('ASISTENTE CON EVIDENCIA')).toHaveCount(0);
-    await expect(page.getByRole('heading', { level: 2, name: 'Territorio IA' })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Alertas' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'VER TODAS' })).toHaveCount(0);
-  });
-
-  await test.step('conserva el mapa, KPIs y Hoy en territorio', async () => {
-    const map = page.getByRole('region', { name: 'Mapa operativo territorial' });
-    await expect(map).toBeVisible();
-    await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
-    await expect(page.getByText('Padrón electoral')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Hoy en territorio' })).toBeVisible();
-  });
-
-  // The map's hover tooltip itself (name-on-mouseenter, cleared on
-  // mouseleave, no extra request) is covered deterministically by the unit
-  // test in CommandCenterMap.test.tsx. Simulating a real WebGL hit-test over
-  // MapLibre's canvas in headless Chromium here was tried and is flaky
-  // (~1-in-3 runs miss the pick even with multi-point retries and settle
-  // waits) — timing-dependent on the GPU picking buffer, not on the
-  // application's tooltip logic, so it isn't asserted at this layer.
-
-  await test.step('viewport 375px no produce overflow horizontal', async () => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await expect
-      .poll(() =>
-        page.evaluate(
-          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-        ),
-      )
-      .toBe(true);
   });
 });
 

@@ -76,7 +76,6 @@ test('cierre portable de encuestas y estudios territoriales', async ({ page, req
   const selector = page.getByLabel('Seleccionar parroquia');
   await selector.click();
   await page.getByRole('option', { name: /Parroquia Alfa/ }).click();
-  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
   await expect(page.getByRole('heading', { name: 'ENCUESTAS Y ESTUDIOS' })).toBeVisible();
   await expect(page.getByText(published.name).first()).toBeVisible();
   await page.goto(`/app/campaigns/${campaign.id}/dashboard`);

@@ -91,7 +91,6 @@ test('deep link parroquial conserva contexto y responsive no desborda', async ({
   await page.goto(`/app/campaigns/${pro.id}/territories`);
   await page.getByLabel('Seleccionar parroquia').click();
   await page.getByRole('option', { name: /Parroquia Alfa/ }).click();
-  await page.getByRole('button', { name: 'VER EXPEDIENTE' }).click();
   await page.getByRole('link', { name: 'PREGUNTAR A TERRITORIO IA' }).first().click();
   await expect(page).toHaveURL(/territory-ai.*parish_id=/);
   for (const viewport of [
