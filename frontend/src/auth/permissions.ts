@@ -41,3 +41,15 @@ export const canResolveAlert = canAcknowledgeAlert;
 export const canDismissAlert = (u: SessionUser | null) =>
   has(u, 'ADMIN', ...CAMPAIGN_EXECUTIVE_ROLES);
 export const canViewSecurityAudit = canManageUsers;
+
+// Identifies a genuinely coordinator-only profile for UI-simplification
+// decisions (e.g. which Dashboard cards/CTAs to show). Deliberately does NOT
+// use `has()`'s superuser-bypass semantics: a superuser, or a user who also
+// literally holds ADMIN/CANDIDATE/CAMPAIGN_MANAGER/ANALYST, must keep the
+// fuller experience those broader roles/privileges grant, not the reduced
+// coordinator one.
+export const isCoordinatorOnly = (u: SessionUser | null) =>
+  !!u &&
+  !u.is_superuser &&
+  u.roles.some((r) => r.code === 'TERRITORIAL_COORDINATOR') &&
+  !u.roles.some((r) => ['ADMIN', 'CANDIDATE', 'CAMPAIGN_MANAGER', 'ANALYST'].includes(r.code));
