@@ -141,8 +141,20 @@ class Settings(BaseSettings):
                 raise ValueError("TERRITORY_AI_MODEL debe configurarse para usar OpenAI en produccion")
             if len(self.secret_key) < 32 or len(self.browser_refresh_token_hmac_secret) < 32:
                 raise ValueError("Los secretos de produccion deben tener al menos 32 caracteres")
-            unsafe_values = {"", "replace_me", "territorio_password", "changethispassword123", "change-me", "secret"}
-            if self.postgres_password.strip().lower() in unsafe_values:
+            unsafe_values = {
+                "",
+                "replace_me",
+                "territorio_password",
+                "changethispassword123",
+                "change-me",
+                "secret",
+            }
+
+            if self.database_url_override is not None:
+                self.database_url_override = self.database_url_override.strip()
+                if not self.database_url_override:
+                    raise ValueError("DATABASE_URL debe configurarse correctamente en produccion")
+            elif self.postgres_password.strip().lower() in unsafe_values:
                 raise ValueError("La credencial de base de datos debe configurarse en produccion")
             if self.initial_admin_password.strip().lower() in unsafe_values:
                 raise ValueError("La credencial administrativa inicial debe configurarse en produccion")
