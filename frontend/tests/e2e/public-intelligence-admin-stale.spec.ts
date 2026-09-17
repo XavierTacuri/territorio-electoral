@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { apiToken, browserLogin, e2eUsers } from './support/auth';
+import { apiToken, browserLogin, e2eUsers, logout } from './support/auth';
 
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 async function campaign(request: APIRequestContext, token: string) {
@@ -90,11 +90,10 @@ test('administración completa y RBAC de fuentes públicas', async ({ page, requ
   await editedCard.getByRole('button', { name: 'Reactivar' }).click();
   await expect(editedCard.getByText('Activa', { exact: true })).toBeVisible();
 
-  await page
-    .getByRole('button', { name: /Usuario E2E|Cerrar sesión/ })
-    .click()
-    .catch(() => {});
-  await page.goto('/login');
+  // El botón del topbar ahora abre un menú de usuario (aria-label "Abrir
+  // menú de usuario"): "Cerrar sesión" vive dentro de ese menú, no es un
+  // botón visible directamente (ver AppShell.tsx).
+  await logout(page);
   await browserLogin(page, e2eUsers.analyst);
   await openSources(page);
   await expect(page.getByRole('button', { name: 'Nueva fuente' })).toHaveCount(0);
