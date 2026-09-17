@@ -78,6 +78,14 @@ def test_current_election_coordinator_sees_only_assigned_parish(client,db,admin,
     headers={"Authorization":f"Bearer {login.json()['access_token']}"}
     response=client.get(f"/api/v1/campaigns/{campaign.id}/current-election/analysis",headers=headers)
     assert response.status_code==200
-    assert {p["name"] for p in response.json()["parishes"]}=={"Parroquia Asignada"}
+    body=response.json()
+    assert {p["name"] for p in body["parishes"]}=={"Parroquia Asignada"}
     admin_response=client.get(f"/api/v1/campaigns/{campaign.id}/current-election/analysis",headers=admin_headers)
-    assert {p["name"] for p in admin_response.json()["parishes"]}=={"Parroquia Asignada","Parroquia No Asignada"}
+    admin_body=admin_response.json()
+    assert {p["name"] for p in admin_body["parishes"]}=={"Parroquia Asignada","Parroquia No Asignada"}
+    # Coordinator's parish listing is scoped, but official electoral totals
+    # (registered voters, projected turnout) stay cantonal for every role:
+    # territorial scope narrows *which parishes are listed*, never the
+    # aggregate figures.
+    assert body["snapshot"]["registered_voters"]==admin_body["snapshot"]["registered_voters"]==1100
+    assert body["projection"]["expected_voters_central"]==admin_body["projection"]["expected_voters_central"]==770

@@ -30,12 +30,17 @@ def current_election_analysis(campaign_id: UUID, user: User = Depends(get_curren
     access = CampaignAccessService(db)
     roles = {r.code for r in user.roles}
     broad = access.admin(user) or bool(roles.intersection({'CANDIDATE', 'CAMPAIGN_MANAGER', 'ANALYST'}))
+    scoped_parish_ids = None
     if not broad:
         assignments = access.territorial_ids(campaign_id, user)
         if assignments is not None:
-            allowed_parish_ids = {a.parish_id for a in assignments}
-            parish_ids = [pid for pid in parish_ids if pid in allowed_parish_ids]
-    entries = [e for e in entries if e.parish_id in parish_ids]
+            scoped_parish_ids = {a.parish_id for a in assignments}
+    # `parish_ids`/`entries` stay canton-wide from here on: official electoral
+    # totals (registered voters, turnout, projections) are cantonal context
+    # for every role. Only the per-parish listing returned at the end
+    # (`parishes` / `demographics.parishes`) is narrowed to a coordinator's
+    # assigned parishes via `scoped_parish_ids`, so totals never get silently
+    # reduced by territorial scope.
     parishes = {p.id: p for p in db.scalars(select(Parish).where(Parish.id.in_(parish_ids)))}
     results = {r.parish_id: r for r in db.scalars(select(ParticipationProjectionResult).where(ParticipationProjectionResult.run_id == run.id))}
     processes = list(db.scalars(select(ElectoralProcess).where(ElectoralProcess.id.in_([str(x) for x in run.historical_process_ids]))))
@@ -71,7 +76,8 @@ def current_election_analysis(campaign_id: UUID, user: User = Depends(get_curren
     canton = db.get(Canton, campaign.canton_id)
     current_process = db.get(ElectoralProcess, snapshot.electoral_process_id) if snapshot.electoral_process_id else None
     source_ids={snapshot.source_id};source_ids.update(p.source_id for p in processes);source_ids.update(obs.source_id for obs,_ in observations);sources=list(db.scalars(select(DataSource).where(DataSource.id.in_(source_ids))))
-    return {'context': {'campaign_name': campaign.name, 'canton_name': canton.name if canton else str(campaign.canton_id), 'election_name': current_process.name if current_process else campaign.election_name}, 'snapshot': {'id': str(snapshot.id), 'snapshot_date': snapshot.snapshot_date, 'name': snapshot.name, **current_total}, 'historical': historical_totals, 'projection': {'model_code': run.model_code, 'model_version': run.model_version, 'parameters': run.parameters, **projection_totals}, 'warnings': warnings, 'demographics': {'year': 2022, 'parishes': parish_rows}, 'sources': [{'code':s.code,'institution':s.institution,'dataset_name':s.dataset_name,'dataset_type':s.dataset_type,'official_url':s.official_url,'reference_year':s.reference_year,'reference_date':s.reference_date,'publication_date':s.publication_date} for s in sources], 'parishes': parish_rows}
+    exposed_parish_rows = parish_rows if scoped_parish_ids is None else [row for row in parish_rows if row['parish_id'] in scoped_parish_ids]
+    return {'context': {'campaign_name': campaign.name, 'canton_name': canton.name if canton else str(campaign.canton_id), 'election_name': current_process.name if current_process else campaign.election_name}, 'snapshot': {'id': str(snapshot.id), 'snapshot_date': snapshot.snapshot_date, 'name': snapshot.name, **current_total}, 'historical': historical_totals, 'projection': {'model_code': run.model_code, 'model_version': run.model_version, 'parameters': run.parameters, **projection_totals}, 'warnings': warnings, 'demographics': {'year': 2022, 'parishes': exposed_parish_rows}, 'sources': [{'code':s.code,'institution':s.institution,'dataset_name':s.dataset_name,'dataset_type':s.dataset_type,'official_url':s.official_url,'reference_year':s.reference_year,'reference_date':s.reference_date,'publication_date':s.publication_date} for s in sources], 'parishes': exposed_parish_rows}
 
 @router.get('/electoral-roll-snapshots', response_model=list[ElectoralRollSnapshotRead])
 def snapshots(source_id: UUID | None = None, process_id: UUID | None = None, snapshot_date: date | None = None, _: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
