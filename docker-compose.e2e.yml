@@ -16,6 +16,7 @@ services:
   api:
     build: ./backend
     environment:
+      PORT: "8000"
       APP_ENV: e2e
       APP_DEBUG: "false"
       POSTGRES_DB: territorio_e2e
