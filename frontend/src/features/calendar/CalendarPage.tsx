@@ -264,7 +264,9 @@ export default function CalendarPage() {
                           <Typography variant="body2" fontWeight={700}>
                             {e.title}
                           </Typography>
-                          {e.parish_name && <Typography variant="caption">{e.parish_name}</Typography>}
+                          {e.parish_name && (
+                            <Typography variant="caption">{e.parish_name}</Typography>
+                          )}
                           <Typography variant="caption">
                             {formatDateOnly(e.starts_at.slice(0, 10))}
                             {e.start_time ? ` · ${e.start_time}` : ''}

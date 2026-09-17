@@ -180,7 +180,9 @@ describe('Jornada Electoral — Command Center', () => {
     const field = await screen.findByLabelText('Proceso electoral');
     expect(field).not.toBeDisabled();
     await userEvent.click(field);
-    expect(await screen.findByRole('option', { name: /Elecciones Seccionales 2023/ })).toBeVisible();
+    expect(
+      await screen.findByRole('option', { name: /Elecciones Seccionales 2023/ }),
+    ).toBeVisible();
     expect(screen.getByRole('option', { name: /Elecciones Seccionales 2027/ })).toBeVisible();
   });
 
@@ -189,9 +191,7 @@ describe('Jornada Electoral — Command Center', () => {
     handlers();
     renderPage();
     await screen.findByText('Configurar Jornada Electoral');
-    expect(
-      await screen.findByText(/No existe un proceso electoral configurado/),
-    ).toBeVisible();
+    expect(await screen.findByText(/No existe un proceso electoral configurado/)).toBeVisible();
     expect(screen.queryByLabelText('Proceso electoral')).not.toBeInTheDocument();
   });
 

@@ -84,8 +84,8 @@ function CreateOperationCard({ campaignId }: { campaignId: string }) {
             <Typography color="text.secondary">Cargando proceso electoral…</Typography>
           ) : options.length === 0 ? (
             <Alert severity="warning">
-              No existe un proceso electoral configurado para el cantón y el cargo de esta
-              campaña. Solicita a un administrador que lo registre antes de configurar la jornada.
+              No existe un proceso electoral configurado para el cantón y el cargo de esta campaña.
+              Solicita a un administrador que lo registre antes de configurar la jornada.
             </Alert>
           ) : single ? (
             <TextField

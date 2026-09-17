@@ -80,7 +80,9 @@ export const theme = createTheme({
         },
       },
     },
-    MuiCardContent: { styleOverrides: { root: { padding: 20, '&:last-child': { paddingBottom: 20 } } } },
+    MuiCardContent: {
+      styleOverrides: { root: { padding: 20, '&:last-child': { paddingBottom: 20 } } },
+    },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
@@ -140,7 +142,10 @@ export const theme = createTheme({
     MuiAppBar: {
       defaultProps: { color: 'inherit', elevation: 0 },
       styleOverrides: {
-        root: { backgroundColor: tokens.background.paper, borderBottom: `1px solid ${tokens.divider}` },
+        root: {
+          backgroundColor: tokens.background.paper,
+          borderBottom: `1px solid ${tokens.divider}`,
+        },
       },
     },
     MuiTooltip: {

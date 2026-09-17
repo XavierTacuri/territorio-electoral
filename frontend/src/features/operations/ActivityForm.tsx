@@ -29,7 +29,10 @@ const schema = z.object({
   title: z.string().trim().min(3).max(220),
   description: z.string().optional(),
   activity_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Hora inválida').or(z.literal('')),
+  start_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, 'Hora inválida')
+    .or(z.literal('')),
   status: z.enum(['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'SUSPENDED', 'CANCELLED']),
   parish_id: z.coerce.number().int().positive(),
 });
