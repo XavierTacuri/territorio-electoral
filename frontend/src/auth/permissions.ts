@@ -42,6 +42,22 @@ export const canDismissAlert = (u: SessionUser | null) =>
   has(u, 'ADMIN', ...CAMPAIGN_EXECUTIVE_ROLES);
 export const canViewSecurityAudit = canManageUsers;
 
+// TERRITORIAL_COORDINATOR is an operational territorial role: it does not get
+// the executive/analyst/admin-facing global modules below, per product
+// decision. Other campaign roles keep exactly the access they had before.
+const NON_COORDINATOR_ANALYSIS_ROLES = ['ADMIN', ...CAMPAIGN_EXECUTIVE_ROLES, 'ANALYST'] as const;
+export const canAccessReportsCenter = (u: SessionUser | null) =>
+  has(u, ...NON_COORDINATOR_ANALYSIS_ROLES);
+export const canAccessAlertsCenter = (u: SessionUser | null) =>
+  has(u, ...NON_COORDINATOR_ANALYSIS_ROLES);
+export const canAccessDebateAssistant = (u: SessionUser | null) =>
+  has(u, ...NON_COORDINATOR_ANALYSIS_ROLES);
+export const canAccessSurveysModule = (u: SessionUser | null) =>
+  has(u, ...NON_COORDINATOR_ANALYSIS_ROLES);
+// Territorio IA · PRO has no direct sidebar entry for TERRITORIAL_COORDINATOR
+// (see navigation.ts), but its route is intentionally left unguarded: the
+// Field PWA links coordinators into it as an internal assistant.
+
 // Identifies a genuinely coordinator-only profile for UI-simplification
 // decisions (e.g. which Dashboard cards/CTAs to show). Deliberately does NOT
 // use `has()`'s superuser-bypass semantics: a superuser, or a user who also
@@ -53,3 +69,13 @@ export const isCoordinatorOnly = (u: SessionUser | null) =>
   !u.is_superuser &&
   u.roles.some((r) => r.code === 'TERRITORIAL_COORDINATOR') &&
   !u.roles.some((r) => ['ADMIN', 'CANDIDATE', 'CAMPAIGN_MANAGER', 'ANALYST'].includes(r.code));
+
+// Mirrors AlertAccessService.restrict_to_candidate_manager_families on the
+// backend: only a literal Candidate/Manager (no ADMIN/ANALYST role, not a
+// superuser) is restricted to the two-family alert view. Admin/Analyst keep
+// the full Centro de Alertas even if they also happen to hold this role.
+export const isCandidateOrManagerOnly = (u: SessionUser | null) =>
+  !!u &&
+  !u.is_superuser &&
+  !u.roles.some((r) => ['ADMIN', 'ANALYST'].includes(r.code)) &&
+  u.roles.some((r) => (CAMPAIGN_EXECUTIVE_ROLES as readonly string[]).includes(r.code));

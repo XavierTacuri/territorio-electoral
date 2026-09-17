@@ -36,7 +36,7 @@ import {
   type PollingPlace,
 } from './types';
 
-type ElectoralProcessOption = { id: string; name: string; year: number };
+type ElectoralProcessOption = { id: string; name: string; election_date: string };
 
 const canManage = (roles: string[]) =>
   roles.includes('CANDIDATE') || roles.includes('CAMPAIGN_MANAGER');
@@ -45,15 +45,27 @@ function CreateOperationCard({ campaignId }: { campaignId: string }) {
   const qc = useQueryClient();
   const [processId, setProcessId] = useState('');
   const [electionDate, setElectionDate] = useState('');
+  // Only processes that legitimately match this campaign's canton and office
+  // (backend-filtered, see ElectoralService.list_processes) are offered — a
+  // free picker over every process in the system let users select
+  // combinations the backend then rejected.
   const processes = useQuery({
-    queryKey: ['electoral-processes-for-election-day'],
-    queryFn: () => apiRequest<ElectoralProcessOption[]>('/electoral-processes'),
+    queryKey: ['electoral-processes-for-election-day', campaignId],
+    queryFn: () =>
+      apiRequest<ElectoralProcessOption[]>(`/electoral-processes?campaign_id=${campaignId}`),
+    enabled: !!campaignId,
   });
+  const options = processes.data ?? [];
+  const single = options.length === 1 ? options[0] : null;
+  const effectiveProcessId = single ? single.id : processId;
   const create = useMutation({
     mutationFn: () =>
       apiRequest<ElectionDayOperation>(`/campaigns/${campaignId}/election-day/operation`, {
         method: 'POST',
-        body: JSON.stringify({ electoral_process_id: processId, election_date: electionDate }),
+        body: JSON.stringify({
+          electoral_process_id: effectiveProcessId,
+          election_date: electionDate,
+        }),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['election-day-operation', campaignId] }),
   });
@@ -64,22 +76,43 @@ function CreateOperationCard({ campaignId }: { campaignId: string }) {
           Configurar Jornada Electoral
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Aún no existe una jornada configurada para esta campaña. Elige el proceso electoral y la
-          fecha de la elección para prepararla.
+          Aún no existe una jornada configurada para esta campaña. Confirma el proceso electoral y
+          define la fecha de la elección para prepararla.
         </Typography>
         <Stack spacing={2} sx={{ maxWidth: 420 }}>
-          <TextField
-            select
-            label="Proceso electoral"
-            value={processId}
-            onChange={(e) => setProcessId(e.target.value)}
-          >
-            {(processes.data ?? []).map((p) => (
-              <MenuItem key={p.id} value={p.id}>
-                {p.name} ({p.year})
-              </MenuItem>
-            ))}
-          </TextField>
+          {processes.isLoading ? (
+            <Typography color="text.secondary">Cargando proceso electoral…</Typography>
+          ) : options.length === 0 ? (
+            <Alert severity="warning">
+              No existe un proceso electoral configurado para el cantón y el cargo de esta
+              campaña. Solicita a un administrador que lo registre antes de configurar la jornada.
+            </Alert>
+          ) : single ? (
+            <TextField
+              label="Proceso electoral"
+              value={single.name}
+              disabled
+              helperText={`Fecha de elección: ${formatDateOnly(single.election_date)}`}
+            />
+          ) : (
+            <TextField
+              select
+              label="Proceso electoral"
+              value={processId}
+              onChange={(e) => setProcessId(e.target.value)}
+              helperText={
+                options.find((p) => p.id === processId)
+                  ? `Fecha de elección: ${formatDateOnly(options.find((p) => p.id === processId)!.election_date)}`
+                  : undefined
+              }
+            >
+              {options.map((p) => (
+                <MenuItem key={p.id} value={p.id}>
+                  {p.name} — {formatDateOnly(p.election_date)}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <TextField
             type="date"
             label="Fecha de la elección"
@@ -89,7 +122,7 @@ function CreateOperationCard({ campaignId }: { campaignId: string }) {
           />
           <Button
             variant="contained"
-            disabled={!processId || !electionDate || create.isPending}
+            disabled={!effectiveProcessId || !electionDate || create.isPending}
             onClick={() => create.mutate()}
           >
             Crear jornada

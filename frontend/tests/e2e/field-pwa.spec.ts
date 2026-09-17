@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { apiToken, browserLogin, e2eUsers } from './support/auth';
+import { apiToken, browserLogin, e2eUsers, logout } from './support/auth';
 
 async function gotoField(page: import('@playwright/test').Page, campaignId: string) {
   await page.goto(`/app/campaigns/${campaignId}/field`);
@@ -209,7 +209,7 @@ test('los borradores de un coordinador no son visibles para otro usuario en el m
 
   // The pending item is still queued: logging out must warn before discarding
   // the session, and only actually log out once confirmed (section 38).
-  await page.getByRole('button', { name: 'Cerrar sesión' }).first().click();
+  await logout(page);
   await expect(
     page.getByRole('heading', { name: 'Registros pendientes de sincronizar' }),
   ).toBeVisible();

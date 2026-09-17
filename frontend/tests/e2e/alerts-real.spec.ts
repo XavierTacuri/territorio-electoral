@@ -11,10 +11,12 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   let response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
   await page.getByRole('button', { name: 'Evaluar reglas' }).click();
   expect((await response).status()).toBe(200);
-  const openResponse = page.waitForResponse((r) => r.url().includes('status=OPEN'));
+  // El Centro de alertas ahora abre en Activas por defecto (§2.3); se
+  // selecciona explícitamente para no depender de ese valor inicial.
+  const activeResponse = page.waitForResponse((r) => r.url().includes('state=ACTIVE'));
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'Pendiente' }).click();
-  expect((await openResponse).status()).toBe(200);
+  await page.getByRole('option', { name: 'Activas' }).click();
+  expect((await activeResponse).status()).toBe(200);
   const rowsBefore = await page.getByRole('row').count();
   const row = page
     .getByRole('row')
@@ -27,8 +29,10 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   response = page.waitForResponse((r) => r.url().endsWith('/acknowledge'));
   await dialog.getByRole('button', { name: 'Confirmar' }).click();
   expect((await response).status()).toBe(200);
+  // Revisada (ACKNOWLEDGED) sigue agrupada bajo Activas: la fila conserva
+  // su insignia de estado "Revisada" en la celda, solo cambia el filtro.
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'Revisada' }).click();
+  await page.getByRole('option', { name: 'Activas' }).click();
   await page
     .getByRole('row')
     .filter({ hasText: title })
@@ -42,10 +46,10 @@ test('evaluación, reconocimiento, resolución y deduplicación reales de alerta
   await dialog.getByRole('button', { name: 'Confirmar' }).click();
   expect((await response).status()).toBe(200);
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'Resuelta' }).click();
+  await page.getByRole('option', { name: 'Resueltas' }).click();
   await expect(page.getByRole('row').filter({ hasText: title }).first()).toBeVisible();
   await page.getByRole('combobox', { name: /Estado/ }).click();
-  await page.getByRole('option', { name: 'Pendiente' }).click();
+  await page.getByRole('option', { name: 'Activas' }).click();
   response = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
   await page.getByRole('button', { name: 'Evaluar reglas' }).click();
   expect((await response).status()).toBe(200);

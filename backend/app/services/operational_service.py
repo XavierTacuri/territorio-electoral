@@ -30,10 +30,25 @@ class OperationalService:
     def audit(self,event,obj,user,description,metadata=None):
         SecurityAuditService(self.db).record(event,"SUCCESS",description,user_id=user.id,campaign_id=obj.campaign_id,resource_type=obj.__class__.__name__,resource_id=obj.id,metadata=metadata)
     def workflow_alert(self,code,obj,title,message):
+        # These record a one-shot event that already happened (an activity
+        # was just approved/rejected), not an ongoing condition the alert
+        # evaluator re-checks — there is no future evaluate_rule() pass that
+        # would ever flip it back to RESOLVED. They are created already
+        # RESOLVED so they read as history (visible under the Resueltas/
+        # Todas filters, alongside the audit trail this call sits next to)
+        # instead of piling up forever under "requiere atención". The
+        # fingerprint is deterministic (rule code + resource, no timestamp)
+        # so re-triggering the same event on the same activity updates the
+        # existing row instead of inserting a new one each time.
         rule=self.db.scalar(select(AlertRule).where(AlertRule.code==code,AlertRule.is_active.is_(True)))
         if not rule:return
-        fingerprint=sha256(f"{code}:{obj.id}:{datetime.now(timezone.utc).isoformat()}".encode()).hexdigest()
-        self.db.add(OperationalAlert(alert_rule_id=rule.id,campaign_id=obj.campaign_id,severity=rule.default_severity,status="OPEN",title=title,message=message,detected_date=self.today(),last_seen_date=self.today(),parish_id=obj.parish_id,resource_type="ACTIVITY",resource_id=obj.id,fingerprint=fingerprint,evidence={"approval_status":obj.approval_status},is_active=True))
+        fingerprint=sha256(f"{code}|ACTIVITY|{obj.id}".encode()).hexdigest()
+        today=self.today()
+        existing=self.db.scalar(select(OperationalAlert).where(OperationalAlert.campaign_id==obj.campaign_id,OperationalAlert.fingerprint==fingerprint))
+        if existing:
+            existing.status="RESOLVED";existing.last_seen_date=today;existing.resolved_date=today;existing.title=title;existing.message=message;existing.evidence={"approval_status":obj.approval_status}
+            return
+        self.db.add(OperationalAlert(alert_rule_id=rule.id,campaign_id=obj.campaign_id,severity=rule.default_severity,status="RESOLVED",title=title,message=message,detected_date=today,last_seen_date=today,resolved_date=today,parish_id=obj.parish_id,resource_type="ACTIVITY",resource_id=obj.id,fingerprint=fingerprint,evidence={"approval_status":obj.approval_status},is_active=True))
     def campaign(self,id:UUID,user:User,write=False):
         c=self.access.require_access(id,user)
         if write:
@@ -332,7 +347,8 @@ class OperationalService:
         activities=[x for x in self.db.scalars(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign_id,TerritorialActivity.is_active.is_(True))) if allowed(x)]
         needs=[x for x in self.db.scalars(select(CitizenNeed).where(CitizenNeed.campaign_id==campaign_id,CitizenNeed.is_active.is_(True))) if allowed(x)]
         commitments=[x for x in self.db.scalars(select(Commitment).where(Commitment.campaign_id==campaign_id,Commitment.is_active.is_(True))) if allowed(x)]
-        total=self.db.scalar(select(func.count()).select_from(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True))) or 0
+        if broad:total=self.db.scalar(select(func.count()).select_from(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True))) or 0
+        else:total=self.db.scalar(select(func.count()).select_from(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True),Parish.id.in_(select(TerritorialAssignment.parish_id).where(TerritorialAssignment.campaign_id==campaign_id,TerritorialAssignment.user_id==user.id,TerritorialAssignment.is_active.is_(True))))) or 0
         open_states={"REPORTED","IDENTIFIED","UNDER_REVIEW","VALIDATED","IN_PLAN","INCLUDED_IN_PLAN"}
         return {"activities":{"total":len(activities),"demo":sum(x.title.startswith("[DEMO]") for x in activities),"upcoming":sum(x.approval_status=="APPROVED" and x.status=="PLANNED" and x.activity_date>=today for x in activities),"pending_approval":sum(x.approval_status=="PENDING_APPROVAL" for x in activities),"completed":sum(x.status=="COMPLETED" for x in activities)},"needs":{"total":len(needs),"demo":sum(x.title.startswith("[DEMO]") for x in needs),"open":sum(x.status in open_states for x in needs),"under_review":sum(x.status=="UNDER_REVIEW" for x in needs),"validated":sum(x.status=="VALIDATED" for x in needs),"critical_unassigned":sum(x.urgency=="CRITICAL" and x.assigned_to_user_id is None and x.status in open_states for x in needs)},"commitments":{"pending":sum(x.status=="PENDING" for x in commitments),"in_progress":sum(x.status=="IN_PROGRESS" for x in commitments),"overdue":sum(bool(x.due_date and x.due_date<today and x.status in {"PENDING","IN_PROGRESS"}) for x in commitments),"completed":sum(x.status=="COMPLETED" for x in commitments)},"coverage":{"total_parishes":total,"with_activities":len({x.parish_id for x in activities}),"with_needs":len({x.parish_id for x in needs}),"with_commitments":len({x.parish_id for x in commitments})},"can_approve":self.can_approve(user)}
     def agenda(self,campaign_id,user):
@@ -447,6 +463,7 @@ class OperationalService:
         needs=[x for x in self.db.scalars(select(CitizenNeed).where(CitizenNeed.campaign_id==campaign_id,CitizenNeed.is_active.is_(True))) if allowed(x)]
         commitments=[x for x in self.db.scalars(select(Commitment).where(Commitment.campaign_id==campaign_id,Commitment.is_active.is_(True))) if allowed(x)]
         parishes=list(self.db.scalars(select(Parish).where(Parish.canton_id==campaign.canton_id,Parish.is_active.is_(True)).order_by(Parish.name)))
+        if not broad:parishes=[p for p in parishes if self.territorial_access(user,campaign_id,p.id)]
         result=[];categories={x.id:x for x in self.db.scalars(select(NeedCategory))}
         for parish in parishes:
             pa=sorted((x for x in activities if x.parish_id==parish.id),key=lambda x:(x.activity_date,x.created_at),reverse=True);pn=sorted((x for x in needs if x.parish_id==parish.id),key=lambda x:x.created_at,reverse=True);pc=sorted((x for x in commitments if x.parish_id==parish.id),key=lambda x:x.created_at,reverse=True)

@@ -14,15 +14,14 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { queryClient } from '../../app/queryClient';
-import { useCampaign } from '../../app/CampaignProvider';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
 import { ErrorState } from '../../components/feedback/States';
 import { formatDateOnly } from '../../lib/dates';
-import type { Activity, Catalog, Page, Parish } from './types';
+import { ApprovalActions } from './ApprovalActions';
+import type { Activity, Catalog, Page } from './types';
 export default function ApprovalsPage() {
   const { campaignId = '' } = useParams();
-  const { active } = useCampaign();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<Activity | null>(null);
   const [mode, setMode] = useState<'approve' | 'reject' | null>(null);
@@ -34,11 +33,6 @@ export default function ApprovalsPage() {
       apiRequest<Page<Activity>>(
         `/campaigns/${campaignId}/activities?approval_status=PENDING_APPROVAL&page_size=100`,
       ),
-  });
-  const parishes = useQuery({
-    queryKey: ['parishes', active?.canton_id],
-    queryFn: () => apiRequest<Parish[]>('/parishes?canton_id=' + active!.canton_id),
-    enabled: Boolean(active?.canton_id),
   });
   const types = useQuery({
     queryKey: ['activity-types'],
@@ -75,18 +69,13 @@ export default function ApprovalsPage() {
           columns={[
             { key: 'activity', label: 'Actividad', render: (x) => x.title },
             {
-              key: 'parish',
-              label: 'Parroquia',
-              render: (x) => parishes.data?.find((p) => p.id === x.parish_id)?.name ?? '—',
-            },
-            {
               key: 'type',
               label: 'Tipo',
               render: (x) => types.data?.find((t) => t.id === x.activity_type_id)?.name ?? '—',
             },
             { key: 'date', label: 'Fecha', render: (x) => formatDateOnly(x.activity_date) },
             { key: 'time', label: 'Hora', render: (x) => x.start_time?.slice(0, 5) ?? '—' },
-            { key: 'place', label: 'Lugar', render: (x) => x.location_name ?? '—' },
+            { key: 'place', label: 'Lugar', render: (x) => x.parish_name ?? '—' },
             {
               key: 'requested',
               label: 'Solicitada el',
@@ -99,29 +88,25 @@ export default function ApprovalsPage() {
               key: 'actions',
               label: 'Acciones',
               render: (x) => (
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
                   <Button
+                    size="small"
+                    color="inherit"
+                    sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
                     onClick={() => navigate(`/app/campaigns/${campaignId}/activities/${x.id}`)}
                   >
                     Ver detalle
                   </Button>
-                  <Button
-                    onClick={() => {
+                  <ApprovalActions
+                    onApprove={() => {
                       setSelected(x);
                       setMode('approve');
                     }}
-                  >
-                    Aprobar
-                  </Button>
-                  <Button
-                    color="error"
-                    onClick={() => {
+                    onReject={() => {
                       setSelected(x);
                       setMode('reject');
                     }}
-                  >
-                    Rechazar
-                  </Button>
+                  />
                 </Stack>
               ),
             },

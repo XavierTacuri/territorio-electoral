@@ -35,6 +35,7 @@ class AlertEvaluationService:
       "OPEN_ELECTION_INCIDENT":("Incidencia de jornada abierta","Existe una incidencia de jornada sin resolver."),
       "BOARD_DOCUMENT_MISSING":("Documentación de junta pendiente","Existe una junta sin copia de acta recibida."),
       "OFFLINE_SYNC_FAILURE":("Registro sincronizado con retraso","Un registro offline de jornada se sincronizó con un retraso significativo respecto a su creación en el dispositivo."),
+      "SURVEY_STUDY_PUBLISHED":("Nueva encuesta o estudio publicado","Se publicó un nuevo estudio o encuesta con datos agregados para esta campaña."),
     })
     def __init__(self,db):self.db=db
     @staticmethod
@@ -132,6 +133,13 @@ class AlertEvaluationService:
         elif c=="SURVEY_WITHOUT_METHODOLOGY":
             q=select(SurveyStudy).where(SurveyStudy.campaign_id==campaign.id,SurveyStudy.status=="PUBLISHED",(SurveyStudy.sampling_method.is_(None))|(SurveyStudy.sampling_method==""))
             for x in self.db.scalars(q):items.append(self._item(rule,"SURVEY_STUDY",x.id,None,{"name":x.name}))
+        elif c=="SURVEY_STUDY_PUBLISHED":
+            # Any study that legitimately reached PUBLISHED counts — the
+            # condition is the state, never who performed the transition, so
+            # a GENERAL_SURVEY published by an Analyst and a CNE_EXIT_POLL
+            # published by an Admin are equally covered (§25/§26).
+            q=select(SurveyStudy).where(SurveyStudy.campaign_id==campaign.id,SurveyStudy.status=="PUBLISHED")
+            for x in self.db.scalars(q):items.append(self._item(rule,"SURVEY_STUDY",x.id,None,{"name":x.name,"study_type":x.study_type,"is_official":x.is_official}))
         elif c=="DATA_SOURCE_WITHOUT_REFERENCE_DATE":
             count=self.db.scalar(select(func.count()).select_from(DataSource).where(DataSource.is_active.is_(True),DataSource.is_official.is_(True),DataSource.reference_date.is_(None))) or 0
             if count:items.append(self._item(rule,"DATA_SOURCE",None,None,{"sources_without_reference_date":count}))

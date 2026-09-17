@@ -182,7 +182,11 @@ class TerritoryAIEvidenceRetriever:
             out.append(self._e(cid,TerritoryAISourceKind.CAMPAIGN_SCHEDULE,m.title,{"event_type":"OFFICIAL_ELECTORAL_MILESTONE","is_official":True},source.institution if source else "Territorio Electoral",plan.territory,source_url=m.source_url or (source.official_url if source else None),record_date=m.starts_at,data_cutoff=m.starts_at,freshness="CURRENT",metadata={"official":True}))
         return out
     def _operational_alert(self,cid,user,plan,pids,question):
-        items,_=AlertService(self.db).list(cid,user,1,10,status="OPEN");out=[]
+        # Territorio IA cites alert evidence as one more retrieval source; the
+        # Candidate/Manager two-family restriction is specific to the Centro
+        # de Alertas page and the Dashboard's alert card, not to what this
+        # assistant may reference when answering a question.
+        items,_=AlertService(self.db).list(cid,user,1,10,status="OPEN",restrict_family=False);out=[]
         for a in items:
             rule=self.db.get(AlertRule,a.alert_rule_id);territory=plan.territory if plan.territory and plan.territory.id==a.parish_id else None
             # a.evidence ya es JSON-safe (persistido tal cual en la columna JSON de

@@ -28,21 +28,26 @@ function briefFixture(): ReportPreview {
     },
     sections: [
       {
-        title: 'Datos oficiales',
-        headers: ['Indicador', 'Valor', 'Fuente'],
-        rows: [['Padrón electoral actual', '34.784', 'Padrón electoral actual']],
+        title: 'Necesidades registradas',
+        headers: ['Necesidad', 'Estado', 'Prioridad'],
+        rows: [['Bache vial para debate', 'REPORTED', 'HIGH']],
       },
       {
-        title: 'Preguntas que podrían surgir',
-        headers: ['Pregunta', 'Hechos disponibles', 'Respuesta factual sugerida', 'Fuentes'],
+        title: 'Datos para explicar',
+        headers: ['Tipo', 'Elemento', 'Detalle'],
         rows: [
+          ['Actividad', 'Recorrido vial de debate', 'PLANNED · 2026-08-11'],
           [
-            '¿Qué evidencia existe sobre el estado de vialidad?',
-            'Recorrido vial',
-            'Existen 1 actividades registradas.',
-            'Recorrido vial',
+            'Dato oficial (CNE/INEC)',
+            'Padrón electoral actual',
+            '34.784 — Padrón electoral actual',
           ],
         ],
+      },
+      {
+        title: 'Evidencia disponible',
+        headers: ['Título', 'Tipo'],
+        rows: [],
       },
     ],
     citations: [],
@@ -94,13 +99,23 @@ function renderPage() {
 }
 
 describe('Preparación para debate', () => {
-  it('muestra el configurador con el tema por defecto', async () => {
+  it('muestra el configurador con el tema por defecto y bloquea la exportación hasta generar un briefing', async () => {
     renderPage();
     expect(await screen.findByRole('heading', { name: 'Preparación para debate' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Generar briefing' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Exportar briefing PDF' })).toBeDisabled();
+    expect(screen.getByText('Genera el briefing antes de exportarlo en PDF.')).toBeVisible();
+    // Formulario simplificado (§16): solo Tema, Territorio, Periodo y Demo.
+    expect(screen.getByLabelText('Tema')).toBeVisible();
+    expect(screen.getAllByLabelText('Territorio (opcional)').length).toBeGreaterThan(0);
+    expect(screen.getByText('Periodo (opcional)')).toBeVisible();
+    expect(screen.getByLabelText('Incluir datos DEMO')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Encuestas publicadas')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Información pública')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Evidencias')).not.toBeInTheDocument();
   });
 
-  it('genera el briefing y muestra las preguntas factuales con fuentes', async () => {
+  it('genera el briefing needs-first, habilita la exportación y la vuelve a bloquear si cambian los filtros', async () => {
     server.use(
       http.post('*/api/v1/campaigns/campaign-1/reports/preview', () =>
         HttpResponse.json(briefFixture()),
@@ -110,9 +125,15 @@ describe('Preparación para debate', () => {
     await screen.findByRole('heading', { name: 'Preparación para debate' });
     await userEvent.click(screen.getByRole('button', { name: 'Generar briefing' }));
     expect(await screen.findByText(/Se registraron actividades y necesidades/)).toBeVisible();
-    expect(screen.getByText('Datos oficiales')).toBeVisible();
-    expect(screen.getByText('Preguntas que podrían surgir')).toBeVisible();
-    expect(screen.getByText('¿Qué evidencia existe sobre el estado de vialidad?')).toBeVisible();
+    expect(screen.getByText('Necesidades registradas')).toBeVisible();
+    expect(screen.getByText('Datos para explicar')).toBeVisible();
+    expect(screen.getByText('Evidencia disponible')).toBeVisible();
+    expect(screen.getByText('Bache vial para debate')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Exportar briefing PDF' })).toBeEnabled();
+
+    await userEvent.click(screen.getByLabelText('Incluir datos DEMO'));
+    expect(screen.getByRole('button', { name: 'Exportar briefing PDF' })).toBeDisabled();
+    expect(screen.getByText('Genera el briefing antes de exportarlo en PDF.')).toBeVisible();
   });
 
   it('verifica una afirmación y muestra el veredicto sin usar verdadero/falso', async () => {

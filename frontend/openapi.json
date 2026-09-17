@@ -21310,6 +21310,22 @@
           },
           {
             "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
             "name": "severity",
             "required": false,
             "schema": {
@@ -21338,6 +21354,22 @@
                 }
               ],
               "title": "Module"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rule_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rule Code"
             }
           },
           {
@@ -39096,6 +39128,23 @@
                 }
               ],
               "title": "Is Final"
+            }
+          },
+          {
+            "in": "query",
+            "name": "campaign_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Campaign Id"
             }
           }
         ],

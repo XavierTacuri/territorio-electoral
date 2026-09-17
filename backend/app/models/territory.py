@@ -26,20 +26,31 @@ class Province(TechnicalFields, Base):
     def clean_name(self, _k: str, v: str) -> str: return " ".join(v.split())
 
 
+GEOMETRY_SOURCE_VALUES = ("OFFICIAL_IMPORT", "SYNTHETIC_PLACEHOLDER", "UNKNOWN")
+GEOMETRY_QUALITY_VALUES = ("VALID", "PLACEHOLDER", "UNKNOWN")
+
+
 class Canton(TechnicalFields, Base):
     __tablename__ = "cantons"
-    __table_args__ = (UniqueConstraint("province_id", "code", name="uq_cantons_province_code"), UniqueConstraint("province_id", "name", name="uq_cantons_province_name"), Index("ix_cantons_dpa_code", "dpa_code", unique=True), Index("ix_cantons_province_id", "province_id"), Index("ix_cantons_geometry_gist", "geometry", postgresql_using="gist"))
+    __table_args__ = (UniqueConstraint("province_id", "code", name="uq_cantons_province_code"), UniqueConstraint("province_id", "name", name="uq_cantons_province_name"), CheckConstraint("geometry_source IN ('OFFICIAL_IMPORT','SYNTHETIC_PLACEHOLDER','UNKNOWN')", name="canton_geometry_source"), CheckConstraint("geometry_quality IN ('VALID','PLACEHOLDER','UNKNOWN')", name="canton_geometry_quality"), Index("ix_cantons_dpa_code", "dpa_code", unique=True), Index("ix_cantons_province_id", "province_id"), Index("ix_cantons_geometry_gist", "geometry", postgresql_using="gist"))
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     province_id: Mapped[int] = mapped_column(ForeignKey("provinces.id", ondelete="RESTRICT"), nullable=False)
     code: Mapped[str] = mapped_column(String(2), nullable=False)
     dpa_code: Mapped[str] = mapped_column(String(4), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     geometry: Mapped[str | None] = mapped_column(SpatialGeometry("MULTIPOLYGON"), nullable=True)
+    # Real provenance of `geometry`, never inferred from context: OFFICIAL_IMPORT is set only by
+    # GeometryImportService after ST_IsValid/SRID/type validation; SYNTHETIC_PLACEHOLDER marks
+    # non-authoritative fixture data (e.g. seed_gualaceo.py); UNKNOWN is the default for rows
+    # created before this field existed. Consumers must never render SYNTHETIC_PLACEHOLDER as an
+    # official territorial boundary.
+    geometry_source: Mapped[str] = mapped_column(String(30), nullable=False, default="UNKNOWN", server_default="UNKNOWN")
+    geometry_quality: Mapped[str] = mapped_column(String(20), nullable=False, default="UNKNOWN", server_default="UNKNOWN")
 
 
 class Parish(TechnicalFields, Base):
     __tablename__ = "parishes"
-    __table_args__ = (UniqueConstraint("canton_id", "code", name="uq_parishes_canton_code"), CheckConstraint("parish_type IN ('URBAN','RURAL')", name="parish_type"), Index("ix_parishes_dpa_code", "dpa_code", unique=True), Index("ix_parishes_canton_id", "canton_id"), Index("ix_parishes_geometry_gist", "geometry", postgresql_using="gist"))
+    __table_args__ = (UniqueConstraint("canton_id", "code", name="uq_parishes_canton_code"), CheckConstraint("parish_type IN ('URBAN','RURAL')", name="parish_type"), CheckConstraint("geometry_source IN ('OFFICIAL_IMPORT','SYNTHETIC_PLACEHOLDER','UNKNOWN')", name="parish_geometry_source"), CheckConstraint("geometry_quality IN ('VALID','PLACEHOLDER','UNKNOWN')", name="parish_geometry_quality"), Index("ix_parishes_dpa_code", "dpa_code", unique=True), Index("ix_parishes_canton_id", "canton_id"), Index("ix_parishes_geometry_gist", "geometry", postgresql_using="gist"))
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     canton_id: Mapped[int] = mapped_column(ForeignKey("cantons.id", ondelete="RESTRICT"), nullable=False)
     code: Mapped[str] = mapped_column(String(2), nullable=False)
@@ -47,6 +58,9 @@ class Parish(TechnicalFields, Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     parish_type: Mapped[str] = mapped_column(String(10), nullable=False)
     geometry: Mapped[str | None] = mapped_column(SpatialGeometry("MULTIPOLYGON"), nullable=True)
+    # See Canton.geometry_source/geometry_quality above — same provenance contract.
+    geometry_source: Mapped[str] = mapped_column(String(30), nullable=False, default="UNKNOWN", server_default="UNKNOWN")
+    geometry_quality: Mapped[str] = mapped_column(String(20), nullable=False, default="UNKNOWN", server_default="UNKNOWN")
 
 
 class Community(TechnicalFields, Base):

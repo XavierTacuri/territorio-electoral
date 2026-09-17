@@ -32,7 +32,12 @@ RULES=[
 # Alertas inteligentes — Centro de Informes (§25/§26/§27/§30 de Fase Final).
 ("ACTIVITY_COMPLETED_WITHOUT_EVIDENCE","EVIDENCE","INFO",{}),("NEEDS_TOPIC_RECURRENCE","OPERATIONS","INFO",{"lookback_days":7,"minimum_count":3}),("REPORT_DATA_UPDATED_SINCE_GENERATION","REPORTS","INFO",{}),("SURVEY_COMPARISON_CHANGE","SURVEYS","INFO",{}),
 # Modo Jornada Electoral — alertas de jornada (§42-44 de Fase Modo Jornada).
-("ELECTION_PLACE_UNCOVERED","OPERATIONS","WARNING",{}),("BOARD_UNCOVERED","OPERATIONS","WARNING",{}),("ASSIGNED_PERSON_NOT_CHECKED_IN","OPERATIONS","WARNING",{"grace_minutes":60}),("OPEN_ELECTION_INCIDENT","OPERATIONS","WARNING",{}),("BOARD_DOCUMENT_MISSING","OPERATIONS","INFO",{}),("OFFLINE_SYNC_FAILURE","OPERATIONS","INFO",{"delay_threshold_minutes":120})]
+("ELECTION_PLACE_UNCOVERED","OPERATIONS","WARNING",{}),("BOARD_UNCOVERED","OPERATIONS","WARNING",{}),("ASSIGNED_PERSON_NOT_CHECKED_IN","OPERATIONS","WARNING",{"grace_minutes":60}),("OPEN_ELECTION_INCIDENT","OPERATIONS","WARNING",{}),("BOARD_DOCUMENT_MISSING","OPERATIONS","INFO",{}),("OFFLINE_SYNC_FAILURE","OPERATIONS","INFO",{"delay_threshold_minutes":120}),
+# Refinamiento Candidate/Manager: única alerta "productiva" de encuestas que
+# esos roles ven — cualquier SurveyStudy que pase legítimamente a PUBLISHED,
+# sin importar qué rol autorizado lo publicó (Analyst, Admin, u otro con la
+# capability). No depende de publisher_role.
+("SURVEY_STUDY_PUBLISHED","SURVEYS","INFO",{})]
 
 def seed(db):
     for code,name in TEMPLATE_NAMES.items():

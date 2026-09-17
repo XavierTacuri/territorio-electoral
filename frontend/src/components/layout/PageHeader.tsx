@@ -23,7 +23,11 @@ export function PageHeader({
         <Typography component="h1" variant="h1">
           {title}
         </Typography>
-        {description && <Typography color="text.secondary">{description}</Typography>}
+        {description && (
+          <Typography component="p" variant="subtitle1" sx={{ mt: 0.5 }}>
+            {description}
+          </Typography>
+        )}
       </Box>
       {action}
     </Box>

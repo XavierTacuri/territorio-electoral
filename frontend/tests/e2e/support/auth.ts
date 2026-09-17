@@ -34,3 +34,10 @@ export async function browserLogin(page: Page, username = e2eUsers.admin) {
   await page.getByRole('button', { name: /Iniciar sesi/ }).click();
   await expect(page).toHaveURL(/\/app/);
 }
+
+// "Cerrar sesión" vive dentro del menú de usuario (topbar simplificada): hay
+// que abrirlo antes de poder pulsar la acción.
+export async function logout(page: Page) {
+  await page.getByLabel('Abrir menú de usuario').click();
+  await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click();
+}

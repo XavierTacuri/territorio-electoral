@@ -41,8 +41,24 @@ export function matchesFilter(
   return true;
 }
 
-export function eventStatusLabel(event: Pick<CalendarEvent, 'status'>): 'Realizada' | 'Próxima' {
-  return event.status === 'COMPLETED' ? 'Realizada' : 'Próxima';
+// El calendario solo expone actividades APROBADAS y no suspendidas/canceladas
+// (ver CalendarService en backend), así que en la práctica status solo puede
+// ser PLANNED, IN_PROGRESS o COMPLETED — se etiquetan y colorean por
+// separado en vez de agrupar todo lo no-completado en un único "Próxima".
+export function eventStatusLabel(
+  event: Pick<CalendarEvent, 'status'>,
+): 'Realizada' | 'En curso' | 'Programada' {
+  if (event.status === 'COMPLETED') return 'Realizada';
+  if (event.status === 'IN_PROGRESS') return 'En curso';
+  return 'Programada';
+}
+
+export function eventStatusTone(
+  event: Pick<CalendarEvent, 'status'>,
+): 'success' | 'warning' | 'info' {
+  if (event.status === 'COMPLETED') return 'success';
+  if (event.status === 'IN_PROGRESS') return 'warning';
+  return 'info';
 }
 
 export function formatEventTime(startsAt: string): string | null {

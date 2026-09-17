@@ -9,7 +9,6 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Typography,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -46,16 +45,14 @@ export function DataTable<T extends { id: string }>({
         <TableHead>
           <TableRow>
             {columns.map((column) => (
-              <TableCell key={column.key}>
-                <Typography fontWeight={700}>{column.label}</Typography>
-              </TableCell>
+              <TableCell key={column.key}>{column.label}</TableCell>
             ))}
             {(onView || onEdit || actions) && <TableCell align="right">Acciones</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} hover>
+            <TableRow key={row.id} hover sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
               {columns.map((column) => (
                 <TableCell key={column.key}>{column.render(row)}</TableCell>
               ))}

@@ -6,6 +6,12 @@ export type NavigationGroup = { label: string; items: NavigationItem[] };
 
 const hasAnyRole = (user: SessionUser | null, roles: string[]) =>
   !!user && (user.is_superuser || user.roles.some((role) => roles.includes(role.code)));
+// Unlike hasAnyRole, this never treats a superuser as implicitly holding the
+// role: it is used to detect a genuinely coordinator-only profile, and a
+// superuser (or a user who also literally holds a broader role) must keep
+// the fuller navigation their other role/privilege grants.
+const hasLiteralRole = (user: SessionUser | null, role: string) =>
+  !!user && user.roles.some((r) => r.code === role);
 
 export const canSeeCampaignAdministration = (user: SessionUser | null) =>
   hasAnyRole(user, ['ADMIN']);
@@ -14,11 +20,18 @@ export function buildNavigation(
   user: SessionUser | null,
   organizationRole: OrganizationRole,
   campaignId?: string,
+  myJornadaVisible?: boolean,
 ): NavigationGroup[] {
   const campaignPath = (path: string) =>
     campaignId ? `/app/campaigns/${campaignId}/${path}` : '/app/campaigns';
   const platformAdmin = hasAnyRole(user, ['ADMIN']);
   const analyst = hasAnyRole(user, ['ANALYST']);
+  const isFieldCoordinator =
+    !platformAdmin &&
+    !analyst &&
+    !hasLiteralRole(user, 'CANDIDATE') &&
+    !hasLiteralRole(user, 'CAMPAIGN_MANAGER') &&
+    hasLiteralRole(user, 'TERRITORIAL_COORDINATOR');
   const operational = hasAnyRole(user, [
     'CANDIDATE',
     'CAMPAIGN_MANAGER',
@@ -27,18 +40,47 @@ export function buildNavigation(
   ]);
   const detailedAnalysis = platformAdmin || analyst;
 
-  const isFieldCoordinator = hasAnyRole(user, ['TERRITORIAL_COORDINATOR']);
+  // TERRITORIAL_COORDINATOR gets a dedicated, reduced product surface: it is
+  // an operational territorial role, not an executive/analyst/admin one, so
+  // it does not share the general "Análisis" menu built below.
+  if (isFieldCoordinator) {
+    return [
+      {
+        label: 'Inicio',
+        items: [{ label: 'Dashboard', to: campaignPath('dashboard') }],
+      },
+      {
+        label: 'Análisis',
+        items: [
+          { label: 'Panorama electoral', to: campaignPath('panorama') },
+          { label: 'Inteligencia territorial', to: campaignPath('territories') },
+          { label: 'Calendario de campaña', to: campaignPath('calendar') },
+        ],
+      },
+      {
+        label: 'Operación',
+        items: [
+          { label: 'Operación territorial', to: campaignPath('operations') },
+          { label: 'Actividades', to: campaignPath('activities') },
+          { label: 'Necesidades', to: campaignPath('needs') },
+        ],
+      },
+      {
+        label: 'Jornada',
+        items: [
+          { label: 'Jornada Electoral', to: campaignPath('election-day') },
+          ...(myJornadaVisible
+            ? [{ label: 'Mi Jornada', to: campaignPath('election-day/my') }]
+            : []),
+        ],
+      },
+    ];
+  }
 
   const groups: NavigationGroup[] = [
     {
       label: 'Inicio',
-      items: [
-        { label: 'Dashboard', to: campaignPath('dashboard') },
-        ...(isFieldCoordinator ? [{ label: 'Operación de campo', to: campaignPath('field') }] : []),
-        ...(isFieldCoordinator
-          ? [{ label: 'Mi Jornada', to: campaignPath('election-day/my') }]
-          : []),
-      ],
+      items: [{ label: 'Dashboard', to: campaignPath('dashboard') }],
     },
     {
       label: 'Análisis',
@@ -57,31 +99,13 @@ export function buildNavigation(
               { label: 'Mapas', to: campaignPath('maps') },
             ]
           : []),
-        ...(hasAnyRole(user, [
-          'ADMIN',
-          'TERRITORIAL_COORDINATOR',
-          'ANALYST',
-          'CANDIDATE',
-          'CAMPAIGN_MANAGER',
-        ])
+        ...(hasAnyRole(user, ['ADMIN', 'ANALYST', 'CANDIDATE', 'CAMPAIGN_MANAGER'])
           ? [{ label: 'Centro de Informes', to: campaignPath('reports') }]
           : []),
-        ...(hasAnyRole(user, [
-          'ADMIN',
-          'TERRITORIAL_COORDINATOR',
-          'ANALYST',
-          'CANDIDATE',
-          'CAMPAIGN_MANAGER',
-        ])
+        ...(hasAnyRole(user, ['ADMIN', 'ANALYST', 'CANDIDATE', 'CAMPAIGN_MANAGER'])
           ? [{ label: 'Centro de alertas', to: campaignPath('alerts') }]
           : []),
-        ...(hasAnyRole(user, [
-          'ADMIN',
-          'TERRITORIAL_COORDINATOR',
-          'ANALYST',
-          'CANDIDATE',
-          'CAMPAIGN_MANAGER',
-        ])
+        ...(hasAnyRole(user, ['ADMIN', 'ANALYST', 'CANDIDATE', 'CAMPAIGN_MANAGER'])
           ? [{ label: 'Preparación para debate', to: campaignPath('debate') }]
           : []),
         ...(hasAnyRole(user, [

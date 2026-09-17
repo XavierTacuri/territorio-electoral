@@ -260,6 +260,11 @@ class ReportDataService:
                 "report_kind_label": f"Informe temático · {label}", "fallback_bullets": bullets, "_report_center": True}
 
     def _debate_official_facts(self, campaign_id, user, request):
+        # CNE/INEC context is the lowest-priority source for a debate brief
+        # (§9-11: needs-first) and is only ever background context, never the
+        # subject of the tema — so any failure computing it must never break
+        # the whole briefing (unlike needs/activities/evidence, which are the
+        # actual point of the request).
         from app.schemas.territory_ai import TerritoryAIIntent
         from app.services.territory_ai_facts import build_panorama_facts, format_integer, format_percent
         from app.services.territory_ai_planner import TerritoryAIQueryPlanner
@@ -267,12 +272,15 @@ class ReportDataService:
         from app.services.territory_ai_retrieval import TerritoryAIEvidenceRetriever
         from app.services.territory_ai_territory import TerritoryAIResolver, TerritoryAmbiguousError
         try:
-            territory = TerritoryAIResolver(self.db).resolve(campaign_id, "", request.parish_id)
-        except TerritoryAmbiguousError:
-            territory = None
-        plan = TerritoryAIQueryPlanner().plan(TerritoryAIIntent.ELECTORAL_PANORAMA, territory)
-        evidence = TerritoryAIEvidenceRetriever(self.db).retrieve(campaign_id, user, plan, "")
-        panorama = build_panorama_facts(provider_documents(evidence))
+            try:
+                territory = TerritoryAIResolver(self.db).resolve(campaign_id, "", request.parish_id)
+            except TerritoryAmbiguousError:
+                territory = None
+            plan = TerritoryAIQueryPlanner().plan(TerritoryAIIntent.ELECTORAL_PANORAMA, territory)
+            evidence = TerritoryAIEvidenceRetriever(self.db).retrieve(campaign_id, user, plan, "")
+            panorama = build_panorama_facts(provider_documents(evidence))
+        except Exception:
+            return []
         rows = []
         current_roll = panorama.get("current_roll")
         if current_roll:
@@ -284,39 +292,6 @@ class ReportDataService:
         if turnout and turnout.get("turnout_rate_central") is not None:
             rows.append(["Participación proyectada (central)", format_percent(turnout["turnout_rate_central"]), turnout["citation"]["title"]])
         return rows
-
-    def _debate_qa_pairs(self, label, needs, activities, evidence, studies, official_rows):
-        no_evidence = "No existe información suficiente en el sistema para responder esta afirmación."
-        pairs = []
-
-        def add(question, facts, answer, sources):
-            pairs.append({"question": question, "facts": facts, "answer": answer, "sources": sources})
-
-        if activities or evidence:
-            add(f"¿Qué evidencia existe sobre el estado de {label.lower()}?",
-                "; ".join([a.title for a in activities[:5]] + [e.title for e in evidence[:5]]),
-                f"Existen {len(activities)} actividades y {len(evidence)} evidencias registradas relacionadas con {label.lower()}.",
-                "; ".join(a.title for a in activities[:3]))
-        else:
-            add(f"¿Qué evidencia existe sobre el estado de {label.lower()}?", "", no_evidence, "")
-        if needs:
-            add(f"¿Qué necesidades se han registrado en relación a {label.lower()}?", "; ".join(n.title for n in needs[:5]),
-                f"Se registraron {len(needs)} necesidades territoriales relacionadas con {label.lower()}.", "; ".join(n.title for n in needs[:3]))
-        else:
-            add(f"¿Qué necesidades se han registrado en relación a {label.lower()}?", "", no_evidence, "")
-        if official_rows:
-            facts = "; ".join(f"{row[0]}: {row[1]}" for row in official_rows)
-            add("¿Qué información oficial respalda estas cifras?", facts, f"Las cifras oficiales disponibles son: {facts}.",
-                "; ".join(row[2] for row in official_rows))
-        else:
-            add("¿Qué información oficial respalda estas cifras?", "", no_evidence, "")
-        if studies:
-            add("¿Qué muestran los estudios o encuestas disponibles?", "; ".join(s.name for s in studies[:3]),
-                f"Existen {len(studies)} estudios publicados con contenido relacionado con {label.lower()}. Los resultados son descriptivos y no constituyen predicción electoral.",
-                "; ".join(s.name for s in studies[:3]))
-        else:
-            add("¿Qué muestran los estudios o encuestas disponibles?", "", no_evidence, "")
-        return pairs
 
     def _debate_verification_points(self, citations):
         points = []
@@ -333,20 +308,20 @@ class ReportDataService:
         ev = self._theme_evidence(campaign_id, user, request, theme)
         needs, activities, evidence, studies, public_items = ev["needs"], ev["activities"], ev["evidence"], ev["studies"], ev["public_items"]
         official_rows = self._debate_official_facts(campaign_id, user, request)
-        qa_pairs = self._debate_qa_pairs(label, needs, activities, evidence, studies, official_rows)
-        verification_points = self._debate_verification_points(ev["citations"])
+        extra_limitations = [f"{title}: {reason}" for title, reason in self._debate_verification_points(ev["citations"])]
         bullets = [f"{len(needs)} necesidades relacionadas con {label.lower()}.",
                    f"{len(activities)} actividades relacionadas con {label.lower()}.",
                    f"{len(studies)} estudios con contenido relacionado." if request.include_surveys else "Encuestas excluidas por filtro.",
                    "Preparación para debate: contenido estrictamente factual, sin argumentos, promesas ni predicciones."]
-        return {"theme": theme, "theme_label": label, "official_rows": official_rows, "qa_pairs": qa_pairs, "verification_points": verification_points,
+        return {"theme": theme, "theme_label": label, "official_rows": official_rows,
                 "needs": [{"title": n.title, "status": n.status, "priority": n.priority} for n in needs],
                 "activities": [{"title": a.title, "date": a.activity_date, "status": a.status} for a in activities],
                 "evidence": [{"title": e.title, "evidence_type": e.evidence_type} for e in evidence],
                 "studies": [{"name": s.name, "fieldwork_end_date": s.fieldwork_end_date} for s in studies],
                 "public_items": [{"title": p.title, "publisher": p.publisher} for p in public_items],
                 "citations": ev["citations"], "narrative_documents": ev["narrative_documents"], "is_demo": ev["is_demo"],
-                "report_kind_label": f"Preparación para debate · {label}", "fallback_bullets": bullets, "_report_center": True, "_debate_brief": True}
+                "report_kind_label": f"Preparación para debate · {label}", "fallback_bullets": bullets, "extra_limitations": extra_limitations,
+                "_report_center": True, "_debate_brief": True}
 
     def _election_day_report(self, campaign_id, user, request):
         from app.services.election_day_service import ElectionDayService

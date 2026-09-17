@@ -19,7 +19,9 @@ def call(fn):
 @router.post('/electoral-processes',response_model=ElectoralProcessRead,status_code=201)
 def create(data:ElectoralProcessCreate,_:User=Depends(require_admin),db:Session=Depends(get_db)):return call(lambda:ElectoralService(db).create_process(data))
 @router.get('/electoral-processes',response_model=list[ElectoralProcessRead])
-def processes(year:int|None=None,process_type:str|None=None,status:str|None=None,is_final:bool|None=None,_:User=Depends(get_current_active_user),db:Session=Depends(get_db)):return ElectoralService(db).list_processes(year=year,process_type=process_type,status=status,is_final=is_final)
+def processes(year:int|None=None,process_type:str|None=None,status:str|None=None,is_final:bool|None=None,campaign_id:UUID|None=None,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
+ try:return ElectoralService(db).list_processes(user=user,campaign_id=campaign_id,year=year,process_type=process_type,status=status,is_final=is_final)
+ except Exception as e:raise fail(e)
 @router.get('/electoral-processes/{pid}',response_model=ElectoralProcessRead)
 def process(pid:UUID,_:User=Depends(get_current_active_user),db:Session=Depends(get_db)):return call(lambda:ElectoralService(db).process(pid))
 @router.patch('/electoral-processes/{pid}',response_model=ElectoralProcessRead)

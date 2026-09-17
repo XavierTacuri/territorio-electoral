@@ -5,7 +5,11 @@ import { apiRequest } from '../../api/client';
 import { type ActiveOrganization, useActiveOrganization } from '../../app/OrganizationProvider';
 import { useCampaign } from '../../app/CampaignProvider';
 
-export function OrganizationSelector() {
+// En la topbar solo tiene sentido mostrar este control cuando realmente hay
+// algo que elegir (varias organizaciones). Con una sola organización, el
+// nombre pasa al menú de usuario como información discreta en vez de ocupar
+// espacio fijo en la barra superior.
+export function OrganizationSelector({ hideWhenSingle = false }: { hideWhenSingle?: boolean }) {
   const { activeOrganization, setActiveOrganization } = useActiveOrganization();
   const { setActive } = useCampaign();
   const { data = [] } = useQuery({
@@ -22,7 +26,8 @@ export function OrganizationSelector() {
   }, [activeOrganization, data, setActive, setActiveOrganization]);
   if (data.length <= 1) {
     const organization = data[0];
-    return organization ? (
+    if (hideWhenSingle || !organization) return null;
+    return (
       <Stack sx={{ minWidth: 150 }}>
         <Typography variant="caption" color="inherit">
           Organización
@@ -31,7 +36,7 @@ export function OrganizationSelector() {
           {organization.name}
         </Typography>
       </Stack>
-    ) : null;
+    );
   }
   return (
     <FormControl

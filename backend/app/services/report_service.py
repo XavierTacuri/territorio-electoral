@@ -64,6 +64,16 @@ class ReportService:
         return []
     def _report_center_sections(self,data,include_citations=True):
         narrative=self._narrative(data)
+        if data.get("_debate_brief") or data.get("_executive_report"):
+            # 6-section contract for debate (§7-22) and 8-section contract
+            # for "Informe de gestión del periodo" (§31-45): a single
+            # "Resumen" replaces the generic two-part narrative block used by
+            # every other report type, so exact data drives the report
+            # instead of AI-narrated prose.
+            sections=[{"title":"Resumen","text":narrative.resumen_ejecutivo,"headers":[],"rows":[]}]+self._report_center_content_sections(data)
+            if include_citations and data.get("citations"):sections.append(citations_section(data["citations"],"Fuentes"))
+            sections.append(limitations_section(narrative.limitations,data.get("is_demo",False),data.get("extra_limitations"),"Limitaciones"))
+            return sections,narrative
         sections=narrative_sections(narrative.model_dump())+self._report_center_content_sections(data)
         if include_citations and data.get("citations"):sections.append(citations_section(data["citations"]))
         sections.append(limitations_section(narrative.limitations,data.get("is_demo",False)))

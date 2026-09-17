@@ -30,7 +30,7 @@ def phase9_context(db,admin):
 
 
 def test_seed_reports_and_alerts_is_idempotent(db):
-    assert seed(db)==(18,48);db.commit();assert seed(db)==(18,48);db.commit()
+    assert seed(db)==(18,49);db.commit();assert seed(db)==(18,49);db.commit()
     assert len(list(db.scalars(select(ReportTemplate))))==len(TEMPLATE_NAMES)
     assert len(list(db.scalars(select(AlertRule))))==len(RULES)
 

@@ -136,8 +136,12 @@ def ensure_current_election_fixture(db, admin):
         parish=db.scalar(select(Parish).where(Parish.dpa_code==dpa))
         if not parish:
             parish=Parish(canton_id=canton.id,code=f"{index:02d}",dpa_code=dpa,name=name,parish_type="URBAN" if index==1 else "RURAL");db.add(parish);db.flush()
+        if parish.geometry_source=="OFFICIAL_IMPORT":
+            parishes.append(parish);continue
+        # Synthetic fixture polygon (small square, not a real boundary): tag it so
+        # the map API/frontend never present it as official territory.
         polygon=f"MULTIPOLYGON((({x} {y},{x+0.8} {y},{x+0.8} {y+0.8},{x} {y+0.8},{x} {y})))"
-        db.execute(update(Parish).where(Parish.id==parish.id).values(geometry=func.ST_GeomFromText(polygon,4326)))
+        db.execute(update(Parish).where(Parish.id==parish.id).values(geometry=func.ST_GeomFromText(polygon,4326),geometry_source="SYNTHETIC_PLACEHOLDER",geometry_quality="PLACEHOLDER"))
         parishes.append(parish)
     campaign=db.scalar(select(Campaign).where(Campaign.slug=="territorio-sintetico-e2e"))
     if not campaign:

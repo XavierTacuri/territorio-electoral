@@ -44,17 +44,35 @@ export default function DebateAssistantPage() {
     return value === null ? fallback : value !== 'false' && value !== '0';
   };
 
-  const [theme, setTheme] = useState(searchParams.get('theme') || 'VIALIDAD');
-  const [parishId, setParishId] = useState(searchParams.get('parish_id') || '');
-  const [dateFrom, setDateFrom] = useState(searchParams.get('date_from') || '');
-  const [dateTo, setDateTo] = useState(searchParams.get('date_to') || '');
-  const [includeSurveys, setIncludeSurveys] = useState(boolParam('include_surveys', true));
-  const [includePublicIntelligence, setIncludePublicIntelligence] = useState(
-    boolParam('include_public_intelligence', true),
-  );
-  const [includeEvidence, setIncludeEvidence] = useState(boolParam('include_evidence', true));
-  const [includeDemo, setIncludeDemo] = useState(boolParam('include_demo', true));
+  const [theme, setThemeState] = useState(searchParams.get('theme') || 'VIALIDAD');
+  const [parishId, setParishIdState] = useState(searchParams.get('parish_id') || '');
+  const [dateFrom, setDateFromState] = useState(searchParams.get('date_from') || '');
+  const [dateTo, setDateToState] = useState(searchParams.get('date_to') || '');
+  const [includeDemo, setIncludeDemoState] = useState(boolParam('include_demo', true));
   const [preview, setPreview] = useState<ReportPreview | null>(null);
+  // Un briefing exportado debe reflejar exactamente lo que se generó y
+  // revisó en pantalla: cualquier cambio en los filtros invalida la
+  // previsualización y bloquea de nuevo la exportación hasta regenerarla.
+  const setTheme = (value: string) => {
+    setThemeState(value);
+    setPreview(null);
+  };
+  const setParishId = (value: string) => {
+    setParishIdState(value);
+    setPreview(null);
+  };
+  const setDateFrom = (value: string) => {
+    setDateFromState(value);
+    setPreview(null);
+  };
+  const setDateTo = (value: string) => {
+    setDateToState(value);
+    setPreview(null);
+  };
+  const setIncludeDemo = (value: boolean) => {
+    setIncludeDemoState(value);
+    setPreview(null);
+  };
   const [claimText, setClaimText] = useState('');
   const [claimParishId, setClaimParishId] = useState('');
   const [claimResult, setClaimResult] = useState<ClaimCheckResponse | null>(null);
@@ -77,23 +95,17 @@ export default function DebateAssistantPage() {
       date_to: dateTo || null,
       parish_id: parishId ? Number(parishId) : null,
       theme,
-      include_surveys: includeSurveys,
-      include_public_intelligence: includePublicIntelligence,
-      include_evidence: includeEvidence,
+      // El briefing es needs-first e incluye siempre todas las fuentes
+      // reales disponibles (necesidades, actividades, evidencia, encuestas
+      // publicadas, información pública); el único filtro que queda a
+      // criterio del usuario es excluir o no los datos DEMO.
+      include_surveys: true,
+      include_public_intelligence: true,
+      include_evidence: true,
       include_demo: includeDemo,
       include_citations: true,
     }),
-    [
-      theme,
-      themeLabel,
-      dateFrom,
-      dateTo,
-      parishId,
-      includeSurveys,
-      includePublicIntelligence,
-      includeEvidence,
-      includeDemo,
-    ],
+    [theme, themeLabel, dateFrom, dateTo, parishId, includeDemo],
   );
 
   const previewMutation = useMutation({
@@ -173,67 +185,38 @@ export default function DebateAssistantPage() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Stack direction="row" spacing={2}>
-                  <TextField
-                    type="date"
-                    label="Desde (opcional)"
-                    InputLabelProps={{ shrink: true }}
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    type="date"
-                    label="Hasta (opcional)"
-                    InputLabelProps={{ shrink: true }}
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    fullWidth
-                  />
-                </Stack>
                 <Box>
                   <Typography variant="overline" color="text.secondary">
-                    Fuentes a incluir
+                    Periodo (opcional)
                   </Typography>
-                  <Stack>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={includeSurveys}
-                          onChange={(e) => setIncludeSurveys(e.target.checked)}
-                        />
-                      }
-                      label="Encuestas publicadas"
+                  <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                    <TextField
+                      type="date"
+                      label="Desde"
+                      InputLabelProps={{ shrink: true }}
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      fullWidth
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={includePublicIntelligence}
-                          onChange={(e) => setIncludePublicIntelligence(e.target.checked)}
-                        />
-                      }
-                      label="Información pública"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={includeEvidence}
-                          onChange={(e) => setIncludeEvidence(e.target.checked)}
-                        />
-                      }
-                      label="Evidencias"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={includeDemo}
-                          onChange={(e) => setIncludeDemo(e.target.checked)}
-                        />
-                      }
-                      label="Datos DEMO"
+                    <TextField
+                      type="date"
+                      label="Hasta"
+                      InputLabelProps={{ shrink: true }}
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      fullWidth
                     />
                   </Stack>
                 </Box>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={includeDemo}
+                      onChange={(e) => setIncludeDemo(e.target.checked)}
+                    />
+                  }
+                  label="Incluir datos DEMO"
+                />
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Button
                     variant="contained"
@@ -244,7 +227,7 @@ export default function DebateAssistantPage() {
                     Generar briefing
                   </Button>
                   <Button
-                    disabled={generateMutation.isPending}
+                    disabled={!preview || generateMutation.isPending}
                     onClick={() => generateMutation.mutate()}
                   >
                     Exportar briefing PDF
@@ -257,6 +240,11 @@ export default function DebateAssistantPage() {
                     Abrir en Territorio IA
                   </Button>
                 </Stack>
+                {!preview && !previewMutation.isPending && (
+                  <Typography variant="caption" color="text.secondary">
+                    Genera el briefing antes de exportarlo en PDF.
+                  </Typography>
+                )}
                 {previewMutation.isError && (
                   <Alert severity="error">No se pudo generar el briefing.</Alert>
                 )}

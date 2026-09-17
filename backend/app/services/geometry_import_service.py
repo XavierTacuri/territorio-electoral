@@ -53,7 +53,11 @@ class GeometryImportService:
    for obj,geometry,warning in valid:
     geom=func.ST_SetSRID(func.ST_GeomFromGeoJSON(json.dumps(geometry)),4326)
     if warning:geom=func.ST_MakeValid(geom)
-    if level in {'CANTON','PARISH'}:geom=func.ST_Multi(geom);obj.geometry=geom
+    if level in {'CANTON','PARISH'}:
+     geom=func.ST_Multi(geom);obj.geometry=geom
+     # Only a geometry that passed ST_IsValid/SRID/type validation above may be
+     # labeled OFFICIAL_IMPORT; never assign this to seed/placeholder data.
+     obj.geometry_source='OFFICIAL_IMPORT';obj.geometry_quality='VALID'
     else:obj.location=geom
     updated+=1
    self.db.flush();job.rows_updated=updated;job.status='COMPLETED';job.finished_at=datetime.now(timezone.utc);self.db.commit();return job

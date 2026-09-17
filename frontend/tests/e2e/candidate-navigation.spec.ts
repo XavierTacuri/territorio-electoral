@@ -62,8 +62,14 @@ test('CANDIDATE usa navegación ejecutiva y conserva flujos permitidos', async (
   await navigation.locator('a[href*="/panorama"]').click();
   await expect(page.getByRole('heading', { name: 'Panorama electoral' })).toBeVisible();
   await expect(page.getByText(/No constituye una predicción electoral/i)).toBeVisible();
+  // Regression: CANDIDATE keeps every executive tool on Panorama — the
+  // coordinator-only simplification must never apply to this role.
+  await expect(page.getByRole('link', { name: 'CONSULTAR EN TERRITORIO IA' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'GENERAR INFORME' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Preguntas rápidas' })).toBeVisible();
   await navigation.locator('a[href*="/territories"]').click();
   await expect(page).not.toHaveURL(/\/403$/);
+  await expect(page.getByRole('heading', { name: 'COMPARAR TERRITORIOS' })).toBeVisible();
   await navigation.locator('a[href*="/activities"]').click();
   await expect(page.getByRole('button', { name: /Crear actividad/ })).toBeVisible();
 

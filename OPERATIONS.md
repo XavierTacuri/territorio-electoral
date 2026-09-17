@@ -1,6 +1,7 @@
 # Operaciones
 
 - Salud: docker compose ps, GET /health, GET /api/v1/health.
+- Frontend: el contenedor `frontend` sirve una build estática de Nginx (no tiene bind mount del código, a diferencia de `api` que sí lo tiene con `--reload`). Tras cambiar código o assets del frontend (por ejemplo `public/map-style.json`) ejecute `docker compose build frontend && docker compose up -d frontend`; un `docker compose restart frontend` por sí solo NO recoge cambios de código, solo reinicia la imagen ya construida.
 - Migraciones: docker compose exec api alembic current y alembic check.
 - Sesiones: python -m app.scripts.cleanup_auth_sessions --dry-run; quite la opción tras revisar.
 - Seeds: solo scripts explícitos; E2E exige APP_ENV=e2e y base separada.

@@ -26,10 +26,18 @@ class ElectoralService:
   o=self.process(id)
   for k,v in data.model_dump(exclude_unset=True).items():setattr(o,k,v)
   self.db.commit();self.db.refresh(o);return o
- def list_processes(self,**f):
+ def list_processes(self,user=None,campaign_id=None,**f):
   q=select(ElectoralProcess).where(ElectoralProcess.is_active.is_(True))
   for k,col in {'year':ElectoralProcess.year,'process_type':ElectoralProcess.process_type,'status':ElectoralProcess.status,'is_final':ElectoralProcess.is_final}.items():
    if f.get(k) is not None:q=q.where(col==f[k])
+  if campaign_id is not None:
+   # Only processes that legitimately match this campaign's canton and
+   # office (i.e. that already have a matching ElectoralContest) are
+   # returned — the same condition ElectionDayService.create_operation
+   # enforces, kept in one place so the picker never offers a combination
+   # the backend will reject.
+   campaign=self.access.require_access(campaign_id,user)
+   q=q.where(ElectoralProcess.id.in_(select(ElectoralContest.electoral_process_id).where(ElectoralContest.canton_id==campaign.canton_id,ElectoralContest.office_type==campaign.office_type,ElectoralContest.is_active.is_(True))))
   return list(self.db.scalars(q.order_by(ElectoralProcess.election_date.desc())))
  def create_contest(self,pid,data):
   self.process(pid);o=ElectoralContest(**data.model_dump(),electoral_process_id=pid,is_active=True);self.db.add(o)

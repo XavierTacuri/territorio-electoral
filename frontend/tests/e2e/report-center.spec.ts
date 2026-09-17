@@ -85,7 +85,7 @@ test.describe('Centro de Informes', () => {
     await expect(page.getByText('Resumen ejecutivo')).toBeVisible();
   });
 
-  test('TERRITORIAL_COORDINATOR solo puede generar informes de su parroquia asignada', async ({
+  test('TERRITORIAL_COORDINATOR no tiene el Centro de Informes como módulo, pero conserva el expediente de su parroquia', async ({
     page,
     request,
   }) => {
@@ -102,26 +102,26 @@ test.describe('Centro de Informes', () => {
       throw new Error('El fixture E2E requiere las parroquias Gualaceo y Jadán');
 
     await browserLogin(page, e2eUsers.coordinator);
+
+    // El Centro de Informes se retiró como módulo productivo del coordinador:
+    // la URL directa ya no muestra el hub.
     await page.goto(`/app/campaigns/${campaign.id}/reports`);
-    await page.getByLabel('Tipo de informe').click();
-    await page.getByRole('option', { name: 'Informe territorial por parroquia' }).click();
-    await page.locator('main').getByRole('combobox').nth(1).click();
+    await expect(page).toHaveURL(/\/403$/);
 
-    // El listado de parroquias ya está restringido territorialmente en origen
-    // (endpoint /parishes filtra por allowed_parish): el coordinador nunca ve
-    // Jadán como opción seleccionable.
-    await expect(page.getByRole('option', { name: assigned.name })).toBeVisible();
-    await expect(page.getByRole('option', { name: notAssigned.name })).toHaveCount(0);
-    await page.getByRole('option', { name: assigned.name }).click();
+    // El Expediente Territorial de su parroquia asignada sigue disponible,
+    // pero ya no ofrece ninguna acción de generación de informes (decisión de
+    // producto posterior: Coordinator consulta el expediente, no genera
+    // Report Center desde él).
+    await page.goto(`/app/campaigns/${campaign.id}/territories/${assigned.id}`);
+    await expect(page).not.toHaveURL(/\/403$/);
+    await expect(page.getByRole('heading', { name: 'DESCARGAR EXPEDIENTE' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'GENERAR PDF' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'GENERAR XLSX' })).toHaveCount(0);
 
-    const okPreview = page.waitForResponse((r) => r.url().endsWith('/reports/preview'));
-    await page.getByRole('button', { name: 'Generar' }).click();
-    expect((await okPreview).status()).toBe(200);
-    await expect(page.getByText('No se pudo generar la previsualización.')).toHaveCount(0);
-
-    // Defensa en profundidad: si se fuerza el parish_id fuera de alcance
-    // directamente contra la API (evitando el selector de la UI), el backend
-    // igual lo rechaza con 403.
+    // Defensa en profundidad: el backend conserva la capacidad de generación
+    // territorial-scoped (no se tocó en este ajuste, solo se retiró el botón
+    // de la UI), y sigue rechazando con 403 un parish_id fuera de alcance si
+    // se fuerza directamente contra la API.
     const coordinatorToken = await apiToken(request, e2eUsers.coordinator);
     const forbidden = await request.post(`/api/v1/campaigns/${campaign.id}/reports/preview`, {
       headers: { Authorization: 'Bearer ' + coordinatorToken },

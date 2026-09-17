@@ -108,13 +108,13 @@ describe('Calendario de campaña', () => {
     ).toBeVisible();
   });
 
-  it('lista actividades en Agenda con estado Próxima y Realizada', async () => {
+  it('lista actividades en Agenda con estado Programada y Realizada', async () => {
     events = [upcoming, done];
     handlers();
     renderPage();
     expect(await screen.findByText('Asamblea territorial')).toBeVisible();
     expect(screen.getByText('Recorrido barrial')).toBeVisible();
-    expect(screen.getByText('Próxima')).toBeVisible();
+    expect(screen.getByText('Programada')).toBeVisible();
     expect(screen.getByText('Realizada')).toBeVisible();
     expect(screen.getByText('PRÓXIMAMENTE')).toBeVisible();
     expect(screen.getByText('REALIZADAS RECIENTEMENTE')).toBeVisible();

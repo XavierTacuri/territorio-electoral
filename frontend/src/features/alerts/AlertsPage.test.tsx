@@ -27,6 +27,7 @@ let items: any[] = [];
 let total = 0;
 let lastAction: { url: string; body: any } | null = null;
 let lastPageRequested: string | null = null;
+let lastAlertsRequests: string[] = [];
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
@@ -41,6 +42,7 @@ afterEach(() => {
   total = 0;
   lastAction = null;
   lastPageRequested = null;
+  lastAlertsRequests = [];
   auth.user = { ...auth.user, roles: [{ code: 'CANDIDATE', name: 'Candidato' }] };
   server.resetHandlers();
 });
@@ -53,6 +55,7 @@ function handlers() {
   server.use(
     http.get('*/api/v1/campaigns/campaign-1/alerts', ({ request }) => {
       lastPageRequested = new URL(request.url).searchParams.get('page');
+      lastAlertsRequests.push(request.url);
       return HttpResponse.json({
         items,
         page: Number(lastPageRequested) || 1,
@@ -170,6 +173,67 @@ describe('Centro de alertas', () => {
     renderPage();
     await screen.findByText('Actividad pendiente de aprobación');
     expect(screen.queryByLabelText('Paginación de alertas')).not.toBeInTheDocument();
+  });
+
+  it('un rol Candidate/Manager ve un filtro de categoría en vez de módulo', async () => {
+    items = [alert];
+    handlers();
+    renderPage();
+    await screen.findByText('Actividad pendiente de aprobación');
+    expect(screen.getByLabelText('Categoría')).toBeVisible();
+    expect(screen.queryByLabelText('Módulo')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText('Categoría'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Encuestas y estudios' }));
+    await waitFor(() => {
+      const [request] = lastAlertsRequests.slice(-1);
+      expect(request).toContain('rule_code=SURVEY_STUDY_PUBLISHED');
+    });
+  });
+
+  it('un rol Admin ve el filtro completo de módulo, no de categoría', async () => {
+    auth.user = {
+      ...auth.user,
+      roles: [{ code: 'ADMIN', name: 'Administrador' }],
+    };
+    items = [alert];
+    handlers();
+    renderPage();
+    await screen.findByText('Actividad pendiente de aprobación');
+    expect(screen.getByLabelText('Módulo')).toBeVisible();
+    expect(screen.queryByLabelText('Categoría')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText('Módulo'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Encuestas' }));
+    await waitFor(() => {
+      const [request] = lastAlertsRequests.slice(-1);
+      expect(request).toContain('module=SURVEYS');
+    });
+  });
+
+  it('abre por defecto en Activas y muestra cuántas requieren atención', async () => {
+    items = [alert];
+    total = 3;
+    handlers();
+    renderPage();
+    await screen.findByText('Actividad pendiente de aprobación');
+    expect(screen.getByLabelText('Estado')).toHaveTextContent('Activas');
+    await waitFor(() => {
+      const [request] = lastAlertsRequests.slice(-1);
+      expect(request).toContain('state=ACTIVE');
+    });
+    expect(screen.getByText('3 requieren atención')).toBeVisible();
+  });
+
+  it('cambiar el filtro de Estado a Resueltas solicita el histórico, no lo mezcla con lo activo', async () => {
+    items = [{ ...alert, status: 'RESOLVED' }];
+    handlers();
+    renderPage();
+    await screen.findByText('Actividad pendiente de aprobación');
+    await userEvent.click(screen.getByLabelText('Estado'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Resueltas' }));
+    await waitFor(() => {
+      const [request] = lastAlertsRequests.slice(-1);
+      expect(request).toContain('state=RESOLVED');
+    });
   });
 
   it('un usuario sin rol de gestión ve la alerta en solo lectura', async () => {

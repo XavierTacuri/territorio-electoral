@@ -29,7 +29,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
 import { evidenceTypeLabel, priorityLabel } from '../../lib/labels';
 import { operationStatusLabel } from './statusLabels';
-import { ActivityForm, type ActivityFormValue } from './ActivityForm';
+import { ActivityForm, type ActivitySubmitValue } from './ActivityForm';
 import { activityDetailActions } from './activityDetailActions';
 import { formatActivityActor } from './activityActors';
 import type { Activity, Catalog, Need, Page, Parish } from './types';
@@ -325,8 +325,11 @@ export default function ActivityDetailPage() {
               <Stack spacing={1}>
                 <StatusBadge value={operationStatusLabel(item.status)} />
                 <Typography>{item.description || 'Sin descripción'}</Typography>
-                <Typography>Parroquia: {item.parish_name ?? 'No disponible'}</Typography>
-                <Typography>Ubicación: {item.location_name || 'No registrada'}</Typography>
+                <Typography>Fecha: {formatDateOnly(item.activity_date)}</Typography>
+                <Typography>
+                  Hora: {item.start_time ? item.start_time.slice(0, 5) : 'No registrada'}
+                </Typography>
+                <Typography>Lugar: {item.parish_name ?? 'No disponible'}</Typography>
                 {item.approval_status === 'APPROVED' && (
                   <Typography>
                     <strong>Aprobado por:</strong> {formatActivityActor(item.approved_by)}
@@ -412,7 +415,7 @@ export default function ActivityDetailPage() {
         parishes={parishes.data ?? []}
         submitLabel="Guardar y reenviar"
         onClose={() => setEditing(false)}
-        onSubmit={async (value: ActivityFormValue) => {
+        onSubmit={async (value: ActivitySubmitValue) => {
           await apiRequest(`/campaigns/${campaignId}/activities/${activityId}`, {
             method: 'PATCH',
             body: JSON.stringify(value),

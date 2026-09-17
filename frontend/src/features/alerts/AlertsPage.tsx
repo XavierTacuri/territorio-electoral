@@ -26,6 +26,7 @@ import {
   canDismissAlert,
   canEvaluateAlerts,
   canResolveAlert,
+  isCandidateOrManagerOnly,
 } from '../../auth/permissions';
 type Item = {
   id: string;
@@ -59,6 +60,15 @@ export const ALERT_STATUS_LABELS: Record<string, string> = {
   RESOLVED: 'Resuelta',
   DISMISSED: 'Descartada',
 };
+// Activas/Resueltas/Todas (§2.3): agrupa los 4 estados literales en el
+// filtro de alto nivel que pide el Centro de Alertas, en vez de exponer los
+// 4 estados sueltos — Activas es el valor por defecto para que la pantalla
+// nunca abra mezclando histórico con lo que realmente requiere atención.
+const STATE_LABELS: Record<string, string> = {
+  ACTIVE: 'Activas',
+  RESOLVED: 'Resueltas',
+  ALL: 'Todas',
+};
 const MODULE_LABELS: Record<string, string> = {
   OPERATIONS: 'Operación',
   SURVEYS: 'Encuestas',
@@ -71,22 +81,48 @@ const MODULE_LABELS: Record<string, string> = {
   EVIDENCE: 'Evidencia',
   REPORTS: 'Informes',
 };
+// Candidate/Manager only ever see two alert families (backend-enforced via
+// AlertAccessService.AUTHORIZED_CONDITION_TYPES): approvals and newly
+// published surveys/studies. The category filter mirrors that contract
+// instead of exposing the full technical module list.
+const CATEGORY_OPTIONS: { code: string; label: string; emptyDetail: string }[] = [
+  {
+    code: 'ACTIVITY_PENDING_APPROVAL',
+    label: 'Aprobaciones',
+    emptyDetail: 'No hay actividades pendientes de aprobación.',
+  },
+  {
+    code: 'SURVEY_STUDY_PUBLISHED',
+    label: 'Encuestas y estudios',
+    emptyDetail: 'No se han publicado encuestas o estudios recientemente.',
+  },
+];
 export default function AlertsPage() {
   const { user } = useAuth();
   const { campaignId = '' } = useParams();
   const qc = useQueryClient();
-  const [status, setStatus] = useState('');
+  const restricted = isCandidateOrManagerOnly(user);
+  const [state, setState] = useState<'ACTIVE' | 'RESOLVED' | 'ALL'>('ACTIVE');
   const [module, setModule] = useState('');
+  const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Item | null>(null);
   const [note, setNote] = useState('');
   const [action, setAction] = useState('acknowledge');
   const pageSize = 50;
   const query = useQuery({
-    queryKey: ['alerts', campaignId, status, module, page],
+    queryKey: ['alerts', campaignId, state, module, category, restricted, page],
     queryFn: () =>
       apiRequest<{ items: Item[]; total: number }>(
-        `/campaigns/${campaignId}/alerts?page=${page}&page_size=${pageSize}${status ? '&status=' + status : ''}${module ? '&module=' + module : ''}`,
+        `/campaigns/${campaignId}/alerts?page=${page}&page_size=${pageSize}&state=${state}${
+          restricted
+            ? category
+              ? '&rule_code=' + category
+              : ''
+            : module
+              ? '&module=' + module
+              : ''
+        }`,
       ),
   });
   const totalPages = Math.max(1, Math.ceil((query.data?.total ?? 0) / pageSize));
@@ -197,46 +233,79 @@ export default function AlertsPage() {
         <TextField
           select
           label="Estado"
-          value={status}
+          value={state}
           onChange={(e) => {
-            setStatus(e.target.value);
+            setState(e.target.value as 'ACTIVE' | 'RESOLVED' | 'ALL');
             setPage(1);
           }}
           sx={{ minWidth: 220 }}
         >
-          <MenuItem value="">Todos</MenuItem>
-          {Object.entries(ALERT_STATUS_LABELS).map(([code, label]) => (
+          {Object.entries(STATE_LABELS).map(([code, label]) => (
             <MenuItem key={code} value={code}>
               {label}
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          select
-          label="Módulo"
-          value={module}
-          onChange={(e) => {
-            setModule(e.target.value);
-            setPage(1);
-          }}
-          sx={{ minWidth: 220 }}
-        >
-          <MenuItem value="">Todos</MenuItem>
-          {Object.entries(MODULE_LABELS).map(([code, label]) => (
-            <MenuItem key={code} value={code}>
-              {label}
-            </MenuItem>
-          ))}
-        </TextField>
+        {restricted ? (
+          <TextField
+            select
+            label="Categoría"
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">Todas</MenuItem>
+            {CATEGORY_OPTIONS.map((opt) => (
+              <MenuItem key={opt.code} value={opt.code}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        ) : (
+          <TextField
+            select
+            label="Módulo"
+            value={module}
+            onChange={(e) => {
+              setModule(e.target.value);
+              setPage(1);
+            }}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            {Object.entries(MODULE_LABELS).map(([code, label]) => (
+              <MenuItem key={code} value={code}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
       </Stack>
       {mutate.isError && <Alert severity="error">No se pudo cambiar el estado.</Alert>}
       {!query.isLoading && !query.data?.items.length ? (
         <EmptyState
-          title="No hay alertas que requieran atención."
-          detail="Cuando exista una condición operativa relevante, aparecerá aquí."
+          title={
+            state === 'RESOLVED'
+              ? 'No hay alertas resueltas en el histórico.'
+              : 'No hay alertas que requieran atención.'
+          }
+          detail={
+            (restricted && CATEGORY_OPTIONS.find((opt) => opt.code === category)?.emptyDetail) ||
+            'Cuando exista una condición operativa relevante, aparecerá aquí.'
+          }
         />
       ) : (
         <>
+          {!query.isLoading && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {state === 'ACTIVE'
+                ? `${query.data?.total} requiere${query.data?.total === 1 ? '' : 'n'} atención`
+                : `${query.data?.total} resultado${query.data?.total === 1 ? '' : 's'}`}
+            </Typography>
+          )}
           <DataTable
             columns={columns}
             rows={query.data?.items || []}

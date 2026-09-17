@@ -26,9 +26,15 @@ def evaluate(campaign_id:UUID,data:AlertEvaluationRequest,db:Session=Depends(get
 @router.get("/summary",response_model=AlertSummaryRead)
 def summary(campaign_id:UUID,date_from:date|None=None,date_to:date|None=None,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
     result=invoke(AlertService(db).summary,campaign_id,user,date_from,date_to);result["top_alerts"]=[alert_read(db,x) for x in result["top_alerts"]];return result
+# Groups the 4 literal statuses into the 2 semantic buckets the Centro de
+# Alertas' Estado filter offers (§2.3): ACTIVE = still requires attention,
+# RESOLVED = historical. Anything else (including "ALL"/omitted) means no
+# grouping — every status.
+STATE_STATUSES={"ACTIVE":("OPEN","ACKNOWLEDGED"),"RESOLVED":("RESOLVED","DISMISSED")}
 @router.get("",response_model=AlertListResponse)
-def alerts(campaign_id:UUID,status:str|None=None,severity:str|None=None,module:str|None=None,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
-    items,total=invoke(AlertService(db).list,campaign_id,user,page,page_size,status=status,severity=severity,module=module);return {"items":[alert_read(db,x) for x in items],"page":page,"page_size":page_size,"total":total}
+def alerts(campaign_id:UUID,status:str|None=None,state:str|None=None,severity:str|None=None,module:str|None=None,rule_code:str|None=None,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
+    statuses=STATE_STATUSES.get((state or "").upper())
+    items,total=invoke(AlertService(db).list,campaign_id,user,page,page_size,status=status,severity=severity,module=module,condition_type=rule_code,statuses=statuses);return {"items":[alert_read(db,x) for x in items],"page":page,"page_size":page_size,"total":total}
 @router.get("/{alert_id}",response_model=OperationalAlertRead)
 def detail(campaign_id:UUID,alert_id:UUID,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):return alert_read(db,invoke(AlertService(db).get,campaign_id,alert_id,user))
 def do_action(campaign_id,alert_id,action,data,db,user):

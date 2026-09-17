@@ -2,7 +2,14 @@ import { Suspense } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { RoleGuard } from '../auth/RoleGuard';
-import { canManageUsers, canViewDataHub } from '../auth/permissions';
+import {
+  canAccessAlertsCenter,
+  canAccessDebateAssistant,
+  canAccessReportsCenter,
+  canAccessSurveysModule,
+  canManageUsers,
+  canViewDataHub,
+} from '../auth/permissions';
 import { LoadingSkeleton } from '../components/feedback/States';
 import { AppShell } from '../layouts/AppShell';
 import { ErrorPage } from '../pages/ErrorPages';
@@ -157,55 +164,102 @@ export const router = createBrowserRouter([
             path: campaign.slice(5) + '/public-intelligence/:itemId',
             element: lazyElement(<PublicItemDetail />),
           },
-          { path: campaign.slice(5) + '/surveys', element: lazyElement(<Surveys />) },
+          {
+            path: campaign.slice(5) + '/surveys',
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<Surveys />)}</RoleGuard>
+            ),
+          },
           {
             path: campaign.slice(5) + '/questionnaires',
-            element: lazyElement(<Questionnaires />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>
+                {lazyElement(<Questionnaires />)}
+              </RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/survey-studies/compare',
-            element: lazyElement(<StudyCompare />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<StudyCompare />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/survey-studies/import',
-            element: lazyElement(<StudyImport />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<StudyImport />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/survey-studies/:studyId',
-            element: lazyElement(<StudyDetail />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<StudyDetail />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/surveys/:surveyId',
-            element: lazyElement(<SurveyBuilder />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<SurveyBuilder />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/surveys/:surveyId/build',
-            element: lazyElement(<SurveyBuilder />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<SurveyBuilder />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/surveys/:surveyId/collect',
-            element: lazyElement(<SurveyCapture />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<SurveyCapture />)}</RoleGuard>
+            ),
           },
           {
             path: campaign.slice(5) + '/surveys/:surveyId/results',
-            element: lazyElement(<SurveyResults />),
+            element: (
+              <RoleGuard check={canAccessSurveysModule}>{lazyElement(<SurveyResults />)}</RoleGuard>
+            ),
           },
           { path: campaign.slice(5) + '/electoral', element: lazyElement(<Electoral />) },
           { path: campaign.slice(5) + '/demographics', element: lazyElement(<Demographics />) },
           { path: campaign.slice(5) + '/maps', element: lazyElement(<Map />) },
-          { path: campaign.slice(5) + '/reports', element: lazyElement(<Reports />) },
+          {
+            path: campaign.slice(5) + '/reports',
+            element: (
+              <RoleGuard check={canAccessReportsCenter}>{lazyElement(<Reports />)}</RoleGuard>
+            ),
+          },
           {
             path: campaign.slice(5) + '/reports/:runId',
-            element: lazyElement(<ReportRunDetail />),
+            element: (
+              <RoleGuard check={canAccessReportsCenter}>
+                {lazyElement(<ReportRunDetail />)}
+              </RoleGuard>
+            ),
           },
-          { path: campaign.slice(5) + '/debate', element: lazyElement(<DebateAssistant />) },
+          {
+            path: campaign.slice(5) + '/debate',
+            element: (
+              <RoleGuard check={canAccessDebateAssistant}>
+                {lazyElement(<DebateAssistant />)}
+              </RoleGuard>
+            ),
+          },
           { path: campaign.slice(5) + '/election-day', element: lazyElement(<ElectionDay />) },
           {
             path: campaign.slice(5) + '/election-day/polling-places/:polling_place_id',
             element: lazyElement(<ElectionDayPollingPlace />),
           },
           { path: campaign.slice(5) + '/election-day/my', element: lazyElement(<MyElectionDay />) },
-          { path: campaign.slice(5) + '/alerts', element: lazyElement(<Alerts />) },
+          {
+            path: campaign.slice(5) + '/alerts',
+            element: <RoleGuard check={canAccessAlertsCenter}>{lazyElement(<Alerts />)}</RoleGuard>,
+          },
+          // Territorio IA has no coordinator entry in the sidebar (see
+          // navigation.ts), but the route itself stays unguarded: the Field
+          // PWA (FieldHomePage, FieldActivityDetailPage) links coordinators
+          // straight into it as an internal assistant, and that integration
+          // must keep working.
           { path: campaign.slice(5) + '/territory-ai', element: lazyElement(<TerritoryAi />) },
           {
             path: campaign.slice(5) + '/field',
@@ -219,12 +273,18 @@ export const router = createBrowserRouter([
               { path: 'activities/:activityId', element: lazyElement(<FieldActivityDetail />) },
             ],
           },
-          moduleRoute(
-            campaign.slice(5) + '/alerts/:alertId',
-            'Detalle de alerta',
-            'Evidencia e historial de acciones.',
-            (id) => '/campaigns/' + id + '/alerts?page=1&page_size=20',
-          ),
+          (() => {
+            const route = moduleRoute(
+              campaign.slice(5) + '/alerts/:alertId',
+              'Detalle de alerta',
+              'Evidencia e historial de acciones.',
+              (id) => '/campaigns/' + id + '/alerts?page=1&page_size=20',
+            );
+            return {
+              ...route,
+              element: <RoleGuard check={canAccessAlertsCenter}>{route.element}</RoleGuard>,
+            };
+          })(),
           {
             path: 'organization',
             element: lazyElement(<OrganizationDetail />),

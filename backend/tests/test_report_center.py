@@ -15,6 +15,7 @@ from app.schemas.reports import ReportGenerationRequest
 from app.services.activity_catalog_service import seed as seed_catalogs
 from app.services.exceptions import BusinessRuleError
 from app.services.operational_service import OperationalService
+from app.services.report_data_service import ReportDataService
 from app.services.report_service import ReportService
 from app.services.role_service import RoleService
 from app.scripts.seed_reports_and_alerts import seed as seed_report_templates
@@ -243,10 +244,15 @@ def test_debate_brief_preview_has_structured_sections_and_no_prediction_language
     ops.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="Bache vial para debate", description="Vía en mal estado", priority="HIGH", urgency="HIGH", source_type="CAMPAIGN_ACTIVITY", reported_date=date(2026, 8, 11), scope="PARISH"), admin)
     request = _request(template_code="DEBATE_BRIEF_REPORT", theme="vialidad")
     preview = ReportService(db).preview(campaign.id, request, admin)
-    titles = {s.title for s in preview.sections}
-    assert {"Datos oficiales", "Evidencia territorial", "Actividades relacionadas", "Necesidades registradas", "Preguntas que podrían surgir", "Puntos que necesitan verificación"} <= titles
-    questions_section = next(s for s in preview.sections if s.title == "Preguntas que podrían surgir")
-    assert questions_section.rows and all(len(row) == 4 for row in questions_section.rows)
+    # Needs-first (§7-22): la previsualización solo trae las 3 secciones de
+    # contenido propias del briefing — Resumen/Fuentes/Limitaciones ya las
+    # muestra el marco genérico del Centro de Informes (narrative/citations).
+    titles = [s.title for s in preview.sections]
+    assert titles == ["Necesidades registradas", "Datos para explicar", "Evidencia disponible"]
+    needs_section = next(s for s in preview.sections if s.title == "Necesidades registradas")
+    assert any(row[0] == "Bache vial para debate" for row in needs_section.rows)
+    explain_section = next(s for s in preview.sections if s.title == "Datos para explicar")
+    assert any(row[1] == "Recorrido vial de debate" for row in explain_section.rows)
     full_text = " ".join((s.text or "") + " ".join(str(v) for row in s.rows for v in row) for s in preview.sections)
     for banned in ("ganador", "persuadir", "microtargeting", "favorabilidad"):
         assert banned not in full_text.casefold()
@@ -256,8 +262,23 @@ def test_debate_brief_official_facts_include_electoral_roll_citation(db, admin, 
     campaign, *_ = rc
     request = _request(template_code="DEBATE_BRIEF_REPORT", theme="vialidad")
     preview = ReportService(db).preview(campaign.id, request, admin)
-    official_section = next(s for s in preview.sections if s.title == "Datos oficiales")
-    assert any(row[0] == "Padrón electoral actual" for row in official_section.rows)
+    # El dato oficial CNE/INEC ahora vive dentro de "Datos para explicar",
+    # como contexto de menor prioridad frente a necesidades/actividades.
+    explain_section = next(s for s in preview.sections if s.title == "Datos para explicar")
+    assert any(row[0] == "Dato oficial (CNE/INEC)" and row[1] == "Padrón electoral actual" for row in explain_section.rows)
+
+
+def test_debate_brief_generated_pdf_has_exactly_six_sections(db, admin, rc, tmp_path):
+    from app.services.report_storage_service import LocalReportStorage
+    campaign, canton, parish_a, _ = rc
+    ops = OperationalService(db)
+    activity = ops.create_activity(campaign.id, TerritorialActivityCreate(activity_type_code="ASSEMBLY", title="Recorrido vial de debate 6s", description="Revisión de vías", activity_date=date(2026, 8, 11), status="PLANNED", parish_id=parish_a.id), admin)
+    ops.create_need(campaign.id, activity.id, CitizenNeedCreate(need_category_code="ROADS", title="Bache vial para debate 6s", description="Vía en mal estado", priority="HIGH", urgency="HIGH", source_type="CAMPAIGN_ACTIVITY", reported_date=date(2026, 8, 11), scope="PARISH"), admin)
+    service = ReportService(db, LocalReportStorage(str(tmp_path), 10))
+    request = _request(template_code="DEBATE_BRIEF_REPORT", theme="vialidad")
+    data = ReportDataService(db).collect(campaign.id, admin, "DEBATE_BRIEF", request, "DEBATE_BRIEF_REPORT")
+    sections = service._sections(data)
+    assert [s["title"] for s in sections] == ["Resumen", "Necesidades registradas", "Datos para explicar", "Evidencia disponible", "Fuentes", "Limitaciones"]
 
 
 def test_report_run_read_exposes_filters_for_client_side_regeneration(client, admin_headers, db, admin, rc, tmp_path):

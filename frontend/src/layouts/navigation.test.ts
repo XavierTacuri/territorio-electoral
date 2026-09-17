@@ -15,9 +15,10 @@ const user = (...roles: string[]): SessionUser => ({
 const labels = (
   roles: string[],
   organizationRole: 'OWNER' | 'ADMIN' | 'MEMBER' | null = 'MEMBER',
+  myJornadaVisible?: boolean,
 ) =>
-  buildNavigation(user(...roles), organizationRole, 'campaign-1').flatMap((group) =>
-    group.items.map((item) => item.label),
+  buildNavigation(user(...roles), organizationRole, 'campaign-1', myJornadaVisible).flatMap(
+    (group) => group.items.map((item) => item.label),
   );
 
 describe('navegación por capacidades', () => {
@@ -81,7 +82,7 @@ describe('navegación por capacidades', () => {
     );
   });
 
-  it('prioriza análisis para ANALYST y operación territorial para coordinación', () => {
+  it('prioriza análisis para ANALYST', () => {
     expect(labels(['ANALYST'])).toEqual(
       expect.arrayContaining([
         'Panorama electoral',
@@ -90,8 +91,61 @@ describe('navegación por capacidades', () => {
         'Centro de Informes',
       ]),
     );
-    expect(labels(['TERRITORIAL_COORDINATOR'])).toEqual(
-      expect.arrayContaining(['Dashboard', 'Operación territorial', 'Actividades', 'Necesidades']),
+  });
+
+  it('muestra el menú reducido para TERRITORIAL_COORDINATOR', () => {
+    const result = labels(['TERRITORIAL_COORDINATOR']);
+    expect(result).toEqual([
+      'Dashboard',
+      'Panorama electoral',
+      'Inteligencia territorial',
+      'Calendario de campaña',
+      'Operación territorial',
+      'Actividades',
+      'Necesidades',
+      'Jornada Electoral',
+    ]);
+    expect(result).not.toEqual(
+      expect.arrayContaining([
+        'Encuestas y estudios',
+        'Territorio IA · PRO',
+        'Centro de Informes',
+        'Centro de alertas',
+        'Preparación para debate',
+        'Seguimientos',
+        'Operación de campo',
+      ]),
     );
+  });
+
+  it('muestra Mi Jornada para TERRITORIAL_COORDINATOR solo cuando hay jornada activa y asignación', () => {
+    const withoutAssignment = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', false);
+    expect(withoutAssignment).not.toContain('Mi Jornada');
+    const withAssignment = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', true);
+    expect(withAssignment).toContain('Mi Jornada');
+  });
+
+  it('un superusuario con rol TERRITORIAL_COORDINATOR conserva la navegación de administrador, no la reducida de coordinador', () => {
+    const superuser: SessionUser = {
+      id: 'user-2',
+      username: 'admin_e2e',
+      email: 'admin@example.test',
+      first_name: 'Admin',
+      last_name: 'E2E',
+      is_active: true,
+      is_superuser: true,
+      roles: [{ code: 'TERRITORIAL_COORDINATOR', name: 'TERRITORIAL_COORDINATOR' }],
+    };
+    const result = buildNavigation(superuser, null, 'campaign-1').flatMap((group) =>
+      group.items.map((item) => item.label),
+    );
+    expect(result).toContain('Centro de Informes');
+    expect(result).toContain('Datos electorales');
+  });
+
+  it('un usuario con roles CANDIDATE y TERRITORIAL_COORDINATOR a la vez conserva el menú ejecutivo', () => {
+    const result = labels(['CANDIDATE', 'TERRITORIAL_COORDINATOR']);
+    expect(result).toContain('Centro de Informes');
+    expect(result).toContain('Encuestas y estudios');
   });
 });

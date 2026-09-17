@@ -14,10 +14,19 @@ import {
 } from '@mui/material';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
-import { eventStatusLabel } from '../features/calendar/types';
+import { useAuth } from '../auth/AuthProvider';
+import { isCoordinatorOnly } from '../auth/permissions';
+import { eventStatusLabel, eventStatusTone } from '../features/calendar/types';
 import { CommandCenterMap, type TerritoryOperation } from '../features/dashboard/CommandCenterMap';
 import type { ElectionMapParish } from '../features/historical/CurrentElectionMap';
 import type { Activity, Commitment } from '../features/operations/types';
@@ -84,6 +93,7 @@ const SEVERITY_LABELS_SHORT: Record<string, string> = {
 
 const route = (id: string, suffix: string) => `/app/campaigns/${id}/${suffix}`;
 const integer = (value?: number) => formatIntegerEsEc(value ?? 0);
+const noCaps = { textTransform: 'none' } as const;
 function Card({ children, sx }: { children: React.ReactNode; sx?: object }) {
   return (
     <Paper
@@ -108,12 +118,37 @@ function Heading({ children, eyebrow }: { children: React.ReactNode; eyebrow?: s
     </Box>
   );
 }
-function Kpi({ value, label, source }: { value: string; label: string; source: string }) {
+function Kpi({
+  value,
+  label,
+  source,
+  icon,
+}: {
+  value: string;
+  label: string;
+  source: string;
+  icon: React.ReactNode;
+}) {
   return (
-    <Card sx={{ height: '100%', p: { xs: 1.75, md: 2 } }}>
+    <Card sx={{ height: '100%', p: { xs: 1.5, md: 1.75 } }}>
+      <Box
+        sx={{
+          width: 30,
+          height: 30,
+          borderRadius: 2.5,
+          display: 'grid',
+          placeItems: 'center',
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
+          mb: 0.75,
+          '& svg': { fontSize: 16 },
+        }}
+      >
+        {icon}
+      </Box>
       <Typography
         sx={{
-          fontSize: { xs: '1.65rem', md: '2rem' },
+          fontSize: { xs: '1.5rem', md: '1.75rem' },
           fontWeight: 750,
           lineHeight: 1.1,
           fontVariantNumeric: 'tabular-nums',
@@ -136,13 +171,13 @@ function DashboardSkeleton() {
     <Box role="status" aria-label="Cargando Centro de Comando Territorial">
       <Skeleton height={100} />
       <Grid container spacing={1.5}>
-        {Array.from({ length: 6 }, (_, i) => (
-          <Grid key={i} size={{ xs: 6, md: 2 }}>
-            <Skeleton variant="rounded" height={118} />
+        {Array.from({ length: 4 }, (_, i) => (
+          <Grid key={i} size={{ xs: 6, md: 3 }}>
+            <Skeleton variant="rounded" height={104} />
           </Grid>
         ))}
       </Grid>
-      <Skeleton variant="rounded" height={460} sx={{ mt: 2 }} />
+      <Skeleton variant="rounded" height={480} sx={{ mt: 2 }} />
     </Box>
   );
 }
@@ -151,6 +186,8 @@ export default function DashboardPage() {
   const { campaignId = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const isCoordinator = isCoordinatorOnly(user);
   const [question, setQuestion] = useState('');
   const analysis = useQuery({
     queryKey: ['current-election-analysis', campaignId],
@@ -203,7 +240,10 @@ export default function DashboardPage() {
         `/campaigns/${campaignId}/alerts?status=OPEN&page=1&page_size=5`,
         { signal },
       ),
-    enabled: !!campaignId,
+    // TERRITORIAL_COORDINATOR has no global Alerts Center in its experience
+    // (see navigation.ts / router.tsx RoleGuard) and doesn't render the
+    // AlertsBlock below, so this request would just be 403 noise.
+    enabled: !!campaignId && !isCoordinator,
     retry: 1,
   });
   const upcomingEvents = useQuery({
@@ -279,89 +319,95 @@ export default function DashboardPage() {
         sx={{ mb: 3 }}
       >
         <Box>
-          <Typography variant="overline" color="primary.main">
-            CENTRO DE COMANDO
-          </Typography>
           <Typography component="h1" variant="h1">
             Centro de Comando Territorial
           </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.75 }}>
-            {data?.context.campaign_name ?? campaign.data?.name ?? 'Campaña'}
-            <br />
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            {data?.context.campaign_name ?? campaign.data?.name ?? 'Campaña'} ·{' '}
             {data?.context.canton_name ?? campaign.data?.canton_name ?? 'Cantón'}
-            {campaign.data?.province_name ? ` · ${campaign.data.province_name}` : ''}
+            {campaign.data?.province_name ? `, ${campaign.data.province_name}` : ''}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Última actualización: {updated}
+            Actualizado {updated}
           </Typography>
         </Box>
-        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-          <Button
-            variant="contained"
-            startIcon={<AutoAwesomeOutlinedIcon />}
-            component={RouterLink}
-            to={route(campaignId, 'territory-ai')}
-          >
-            CONSULTAR TERRITORIO IA
-          </Button>
-          <Button component={RouterLink} to={route(campaignId, 'panorama')}>
-            VER PANORAMA COMPLETO
-          </Button>
-          <Button
-            component={RouterLink}
-            to={`${route(campaignId, 'reports')}?type=CAMPAIGN_EXECUTIVE_REPORT`}
-          >
-            GENERAR INFORME EJECUTIVO
-          </Button>
-        </Stack>
+        {!isCoordinator && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+            <Button
+              variant="contained"
+              startIcon={<AutoAwesomeOutlinedIcon />}
+              component={RouterLink}
+              to={route(campaignId, 'territory-ai')}
+              sx={noCaps}
+            >
+              Consultar Territorio IA
+            </Button>
+            <Button component={RouterLink} to={route(campaignId, 'panorama')} sx={noCaps}>
+              Ver panorama completo
+            </Button>
+            <Button
+              component={RouterLink}
+              to={`${route(campaignId, 'reports')}?type=CAMPAIGN_EXECUTIVE_REPORT`}
+              sx={noCaps}
+            >
+              Generar informe ejecutivo
+            </Button>
+          </Stack>
+        )}
       </Stack>
       {(location.state as { message?: string } | null)?.message && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {(location.state as { message: string }).message}
         </Alert>
       )}
-      <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={data ? integer(data.snapshot.registered_voters) : '—'}
-            label="Padrón electoral"
-            source="CNE · Oficial"
-          />
+      <Grid container spacing={2} sx={{ mb: 2.5 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ pl: 0.5 }}>
+            Electoral
+          </Typography>
+          <Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+            <Grid size={6}>
+              <Kpi
+                value={data ? integer(data.snapshot.registered_voters) : '—'}
+                label="Padrón electoral"
+                source="CNE · Oficial"
+                icon={<GroupsOutlinedIcon />}
+              />
+            </Grid>
+            <Grid size={6}>
+              <Kpi
+                value={centralRate == null ? '—' : formatPercentEsEc(centralRate)}
+                label="Participación central"
+                source="Modelo de participación V1"
+                icon={<TrendingUpOutlinedIcon />}
+              />
+            </Grid>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={centralRate == null ? '—' : formatPercentEsEc(centralRate)}
-            label="Participación central"
-            source="Modelo de participación V1"
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={data ? integer(data.projection.expected_voters_central) : '—'}
-            label="Votantes esperados"
-            source="Modelo de participación V1"
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={ops ? integer(ops.activities.total) : '—'}
-            label="Actividades"
-            source="Registro de campaña"
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={ops ? integer(ops.needs.total) : '—'}
-            label="Necesidades"
-            source="Registro de campaña"
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Kpi
-            value={ops ? `${ops.coverage.with_activities} / ${ops.coverage.total_parishes}` : '—'}
-            label="Cobertura territorial"
-            source="Registro de campaña"
-          />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ pl: 0.5 }}>
+            Operación
+          </Typography>
+          <Grid container spacing={1.5} sx={{ mt: 0.25 }}>
+            <Grid size={6}>
+              <Kpi
+                value={ops ? integer(ops.activities.total) : '—'}
+                label="Actividades"
+                source="Registro de campaña"
+                icon={<EventAvailableOutlinedIcon />}
+              />
+            </Grid>
+            <Grid size={6}>
+              <Kpi
+                value={
+                  ops ? `${ops.coverage.with_activities} / ${ops.coverage.total_parishes}` : '—'
+                }
+                label="Cobertura territorial"
+                source="Registro de campaña"
+                icon={<MapOutlinedIcon />}
+              />
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
       {ops?.can_approve && ops.activities.pending_approval > 0 && (
@@ -370,12 +416,12 @@ export default function DashboardPage() {
           severity="info"
           sx={{ mb: 2 }}
           action={
-            <Button component={RouterLink} to={route(campaignId, 'approvals')}>
-              REVISAR
+            <Button component={RouterLink} to={route(campaignId, 'approvals')} sx={noCaps}>
+              Revisar
             </Button>
           }
         >
-          <b>REQUIERE TU ATENCIÓN</b>
+          <b>Requiere tu atención</b>
           <br />
           {ops.activities.pending_approval} actividades pendientes de aprobación
         </Alert>
@@ -386,6 +432,7 @@ export default function DashboardPage() {
             campaignId={campaignId}
             parishes={data?.parishes ?? []}
             operations={territories.data?.parishes ?? []}
+            cantonName={data?.context.canton_name ?? campaign.data?.canton_name ?? undefined}
           />
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
@@ -398,24 +445,28 @@ export default function DashboardPage() {
             ) : (
               <Stack spacing={0.5}>
                 <OperationalRow
-                  label="Actividades programadas hoy"
+                  icon={<EventAvailableOutlinedIcon fontSize="small" />}
+                  label="Programadas"
                   value={
                     (agenda.data?.activities ?? []).filter((x) => x.activity_date === today).length
                   }
                   to={route(campaignId, 'operations/agenda')}
                 />
                 <OperationalRow
-                  label="Actividades pendientes de aprobación"
+                  icon={<PendingActionsOutlinedIcon fontSize="small" />}
+                  label="Pendientes"
                   value={agenda.data?.pending_approval.length ?? 0}
                   to={route(campaignId, 'approvals')}
                 />
                 <OperationalRow
-                  label="Necesidades registradas"
+                  icon={<AssignmentOutlinedIcon fontSize="small" />}
+                  label="Necesidades"
                   value={ops?.needs.total ?? 0}
                   to={route(campaignId, 'needs')}
                 />
                 <OperationalRow
-                  label="Actividades realizadas"
+                  icon={<CheckCircleOutlinedIcon fontSize="small" />}
+                  label="Realizadas"
                   value={ops?.activities.completed ?? 0}
                   to={route(campaignId, 'activities')}
                 />
@@ -433,7 +484,9 @@ export default function DashboardPage() {
                 <Typography color="text.secondary">
                   La campaña no cuenta con datos electorales actuales disponibles.
                 </Typography>
-                <Button onClick={() => void analysis.refetch()}>REINTENTAR</Button>
+                <Button onClick={() => void analysis.refetch()} sx={noCaps}>
+                  Reintentar
+                </Button>
               </>
             ) : (
               <Stack spacing={1}>
@@ -455,9 +508,9 @@ export default function DashboardPage() {
                 <Button
                   component={RouterLink}
                   to={route(campaignId, 'panorama')}
-                  sx={{ alignSelf: 'flex-start' }}
+                  sx={{ alignSelf: 'flex-start', ...noCaps }}
                 >
-                  VER PANORAMA ELECTORAL
+                  Ver panorama electoral
                 </Button>
               </Stack>
             )}
@@ -487,9 +540,9 @@ export default function DashboardPage() {
                 <Button
                   component={RouterLink}
                   to={route(campaignId, 'needs')}
-                  sx={{ alignSelf: 'flex-start' }}
+                  sx={{ alignSelf: 'flex-start', ...noCaps }}
                 >
-                  VER NECESIDADES
+                  Ver necesidades
                 </Button>
               </Stack>
             )}
@@ -511,9 +564,9 @@ export default function DashboardPage() {
                 <Button
                   component={RouterLink}
                   to={route(campaignId, 'activities')}
-                  sx={{ alignSelf: 'flex-start' }}
+                  sx={{ alignSelf: 'flex-start', ...noCaps }}
                 >
-                  VER ACTIVIDADES
+                  Ver actividades
                 </Button>
               </Stack>
             )}
@@ -524,73 +577,77 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
       <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
-        <Grid size={{ xs: 12, lg: 7 }}>
+        <Grid size={{ xs: 12, lg: isCoordinator ? 12 : 7 }}>
           <RecentActivity items={recent} error={territories.isError} campaignId={campaignId} />
         </Grid>
-        <Grid size={{ xs: 12, lg: 5 }}>
-          <Card
-            sx={{
-              height: '100%',
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              border: 0,
-            }}
-          >
-            <Stack direction="row" gap={1}>
-              <AutoAwesomeOutlinedIcon />
-              <Typography variant="overline">ASISTENTE CON EVIDENCIA</Typography>
-            </Stack>
-            <Typography component="h2" variant="h2" sx={{ my: 1 }}>
-              Territorio IA
-            </Typography>
-            <Typography sx={{ opacity: 0.9 }}>
-              Consulta la información electoral, territorial y operativa de tu campaña con
-              respuestas respaldadas por evidencia.
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && ask()}
-              placeholder="Pregunta sobre tu campaña..."
-              sx={{ mt: 2, bgcolor: 'background.paper', borderRadius: 1 }}
-            />
-            <Button
-              variant="contained"
-              color="inherit"
-              onClick={() => ask()}
-              sx={{ mt: 1, color: 'primary.main' }}
+        {!isCoordinator && (
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <Card
+              sx={{
+                height: '100%',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                border: 0,
+              }}
             >
-              CONSULTAR
-            </Button>
-            <Stack sx={{ mt: 2 }}>
-              {[
-                '¿Cuál es el panorama electoral actual?',
-                '¿Qué actividades requieren atención?',
-                '¿Qué necesidades se han registrado?',
-                '¿Qué muestran las encuestas publicadas?',
-                '¿Cómo ha cambiado la participación electoral?',
-              ].map((p) => (
-                <Button
-                  key={p}
-                  onClick={() => ask(p)}
-                  sx={{ color: 'inherit', justifyContent: 'flex-start', textAlign: 'left' }}
-                >
-                  {p}
-                </Button>
-              ))}
-            </Stack>
-          </Card>
-        </Grid>
+              <Stack direction="row" gap={1}>
+                <AutoAwesomeOutlinedIcon />
+                <Typography variant="overline">ASISTENTE CON EVIDENCIA</Typography>
+              </Stack>
+              <Typography component="h2" variant="h2" sx={{ my: 1 }}>
+                Territorio IA
+              </Typography>
+              <Typography sx={{ opacity: 0.9 }}>
+                Consulta la información electoral, territorial y operativa de tu campaña con
+                respuestas respaldadas por evidencia.
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && ask()}
+                placeholder="Pregunta sobre tu campaña..."
+                sx={{ mt: 2, bgcolor: 'background.paper', borderRadius: 1 }}
+              />
+              <Button
+                variant="contained"
+                color="inherit"
+                onClick={() => ask()}
+                sx={{ mt: 1, color: 'primary.main', ...noCaps }}
+              >
+                Consultar
+              </Button>
+              <Stack sx={{ mt: 2 }}>
+                {[
+                  '¿Cuál es el panorama electoral actual?',
+                  '¿Qué actividades requieren atención?',
+                  '¿Qué necesidades se han registrado?',
+                  '¿Qué muestran las encuestas publicadas?',
+                  '¿Cómo ha cambiado la participación electoral?',
+                ].map((p) => (
+                  <Button
+                    key={p}
+                    onClick={() => ask(p)}
+                    sx={{ color: 'inherit', justifyContent: 'flex-start', textAlign: 'left' }}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </Stack>
+            </Card>
+          </Grid>
+        )}
       </Grid>
       <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: isCoordinator ? 12 : 6 }}>
           <UpcomingEventsBlock query={upcomingEvents} campaignId={campaignId} />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AlertsBlock query={openAlerts} campaignId={campaignId} />
-        </Grid>
+        {!isCoordinator && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <AlertsBlock query={openAlerts} campaignId={campaignId} />
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
@@ -630,9 +687,9 @@ function StudiesBlock({
           <Button
             component={RouterLink}
             to={route(campaignId, 'surveys')}
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{ alignSelf: 'flex-start', ...noCaps }}
           >
-            VER ENCUESTAS
+            Ver encuestas
           </Button>
         </Stack>
       ) : (
@@ -734,21 +791,38 @@ function DataLine({ label, value }: { label: string; value: string }) {
     </Stack>
   );
 }
-function OperationalRow({ label, value, to }: { label: string; value: number; to: string }) {
+function OperationalRow({
+  icon,
+  label,
+  value,
+  to,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  to: string;
+}) {
   return (
     <Button
       component={RouterLink}
       to={to}
       sx={{
+        ...noCaps,
         justifyContent: 'space-between',
         color: 'text.primary',
-        py: 1.25,
+        fontWeight: 500,
+        py: 1.1,
         borderBottom: 1,
         borderColor: 'divider',
         borderRadius: 0,
       }}
     >
-      <span>{label}</span>
+      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ color: 'text.secondary' }}>
+        {icon}
+        <Box component="span" sx={{ color: 'text.primary' }}>
+          {label}
+        </Box>
+      </Stack>
       <Chip size="small" label={value} />
     </Button>
   );
@@ -788,8 +862,8 @@ function AlertsBlock({
           ))}
         </Stack>
       )}
-      <Button component={RouterLink} to={route(campaignId, 'alerts')} sx={{ mt: 1.5 }}>
-        VER TODAS
+      <Button component={RouterLink} to={route(campaignId, 'alerts')} sx={{ mt: 1.5, ...noCaps }}>
+        Ver todas
       </Button>
     </Card>
   );
@@ -835,15 +909,15 @@ function UpcomingEventsBlock({
               </Typography>
               <Chip
                 size="small"
-                color={e.status === 'COMPLETED' ? 'success' : 'info'}
+                color={eventStatusTone({ status: e.status ?? null })}
                 label={eventStatusLabel({ status: e.status ?? null })}
               />
             </Box>
           ))}
         </Stack>
       )}
-      <Button component={RouterLink} to={route(campaignId, 'calendar')} sx={{ mt: 1.5 }}>
-        VER CALENDARIO
+      <Button component={RouterLink} to={route(campaignId, 'calendar')} sx={{ mt: 1.5, ...noCaps }}>
+        Ver calendario
       </Button>
     </Card>
   );

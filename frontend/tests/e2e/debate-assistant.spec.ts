@@ -23,6 +23,7 @@ test.describe('Preparación para debate', () => {
     await browserLogin(page, e2eUsers.candidate);
     await page.goto(`/app/campaigns/${campaign.id}/debate`);
     await expect(page.getByRole('heading', { name: 'Preparación para debate' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Exportar briefing PDF' })).toBeDisabled();
 
     await page.getByLabel('Tema').click();
     await page.getByRole('option', { name: 'Vialidad' }).click();
@@ -32,10 +33,15 @@ test.describe('Preparación para debate', () => {
     await page.getByRole('button', { name: 'Generar briefing' }).click();
     expect((await previewResponse).status()).toBe(200);
 
+    // Needs-first (§7-22): el briefing simplificado trae exactamente estas
+    // 3 secciones de contenido (Resumen/Fuentes/Limitaciones ya los muestra
+    // el marco genérico del Centro de Informes).
     await expect(page.getByText('Resumen ejecutivo')).toBeVisible();
-    await expect(page.getByText('Datos oficiales')).toBeVisible();
-    await expect(page.getByText('Preguntas que podrían surgir')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Necesidades registradas' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Datos para explicar' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Evidencia disponible' })).toBeVisible();
     await expect(page.getByText('No constituye predicción electoral')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Exportar briefing PDF' })).toBeEnabled();
   });
 
   test('verificar afirmación devuelve un nivel de respaldo, nunca verdadero/falso', async ({

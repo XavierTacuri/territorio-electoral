@@ -2,6 +2,8 @@ import { Alert, Box, Button, Card, CardContent, Grid, Stack, Typography } from '
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
+import { useAuth } from '../../auth/AuthProvider';
+import { isCoordinatorOnly } from '../../auth/permissions';
 import { ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
@@ -32,6 +34,8 @@ const Metric = ({ label, value }: { label: string; value: number | string }) => 
 );
 export default function OperationsPage() {
   const { campaignId = '' } = useParams();
+  const { user } = useAuth();
+  const isFieldCoordinator = isCoordinatorOnly(user);
   const summary = useQuery({
     queryKey: ['operations-summary', campaignId],
     queryFn: () => apiRequest<Overview>(`/campaigns/${campaignId}/operations/summary`),
@@ -118,6 +122,16 @@ export default function OperationsPage() {
         <Button component={RouterLink} to={`${base}/needs`}>
           Ver necesidades
         </Button>
+        {isFieldCoordinator && (
+          <Button
+            component={RouterLink}
+            to={`${base}/field`}
+            variant="outlined"
+            sx={{ display: { md: 'none' } }}
+          >
+            Abrir modo de campo
+          </Button>
+        )}
       </Stack>
       <Typography component="h2" variant="h2">
         Próximas actividades aprobadas

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { browserLogin } from './support/auth';
+import { browserLogin, logout } from './support/auth';
 async function selectCampaign(page: Page) {
   await page.getByLabel('Campaña').click();
   await page.getByRole('option', { name: 'Gualaceo E2E 2027' }).click();
@@ -48,7 +48,7 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     await expect(page.getByRole('dialog').getByLabel('Estado')).toHaveText('Planificada');
     await expect(page.getByText('PLANNED', { exact: true })).toHaveCount(0);
     await page.getByLabel('Título').fill(title);
-    await page.getByLabel('Nombre de ubicación (opcional)').fill('Casa comunal');
+    await page.getByLabel('Hora').fill('10:00');
     const createRequest = page.waitForRequest(
       (request) => request.method() === 'POST' && /\/activities$/.test(request.url()),
     );
@@ -68,6 +68,12 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     await expect(page.getByLabel('Latitud')).toHaveCount(0);
     await expect(page.getByLabel('Longitud')).toHaveCount(0);
     await page.getByLabel('Título').fill(title);
+    // La actividad editada puede ser un registro histórico sin hora (creado
+    // antes de que el campo existiera): Hora es obligatoria para guardar, así
+    // que se completa si el formulario la trae vacía, sin inventar una hora
+    // para el dato existente si ya la tenía.
+    const hora = page.getByLabel('Hora');
+    if ((await hora.inputValue()) === '') await hora.fill('11:00');
     const editRequest = page.waitForRequest(
       (request) => request.method() === 'PATCH' && /\/activities\/[^/]+$/.test(request.url()),
     );
@@ -194,19 +200,19 @@ test('27 flujos funcionales de Fase 10 contra el stack real', async ({ page }) =
     await expect(page.getByRole('heading', { name: 'Alertas' })).toBeVisible();
   });
   await test.step('25 Permisos candidato', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await browserLogin(page, 'candidate_e2e');
     await expect(page.getByText('Administración')).toHaveCount(0);
   });
   await test.step('26 Restricción coordinador', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await browserLogin(page, 'coordinator_e2e');
     await page.goto(`/app/campaigns/${id}/dashboard`);
     await nav(page, 'Actividades');
     await expect(page.getByRole('heading', { name: 'Actividades' })).toBeVisible();
   });
   await test.step('27 Logout', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await expect(page).toHaveURL(/\/login/);
   });
 });

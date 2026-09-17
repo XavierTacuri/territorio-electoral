@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { apiToken, browserLogin, e2eUsers } from './support/auth';
+import { apiToken, browserLogin, e2eUsers, logout } from './support/auth';
 import { e2eRunId, uniqueE2eValue } from './support/run-data';
 
 function rollCsv(processCode: string, snapshotDate: string, registeredVoters: number) {
@@ -129,7 +129,7 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
   });
 
   await test.step('ANALYST tiene visibilidad de solo lectura', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await browserLogin(page, e2eUsers.analyst);
     await page.goto('/app/admin/data-hub/CNE_ELECTORAL_ROLL_SNAPSHOT');
     await expect(
@@ -140,7 +140,7 @@ test('Centro de datos: catálogo, versión, activación y RBAC', async ({ page, 
   });
 
   await test.step('rol sin acceso global (ej. administrador de organización) es rechazado', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await browserLogin(page, e2eUsers.alphaManager);
     await page.goto('/app/admin/data-hub');
     await expect(page).toHaveURL(/\/403/);

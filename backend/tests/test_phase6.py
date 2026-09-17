@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 from app.importers.csv_utils import parse_csv
 from app.models.historical import *
 from app.schemas.historical import DataSourceCreate,ElectoralContestCreate,ElectoralProcessCreate,DemographicIndicatorCreate
+from app.schemas.campaign import CampaignCreate
 from app.scripts.seed_gualaceo import seed as seed_gualaceo
+from app.services.campaign_service import CampaignService
 from app.services.data_import_service import DataImportService
 from app.services.data_source_service import DataSourceService
 from app.services.electoral_service import ElectoralService,pct
@@ -103,3 +105,18 @@ def test_wizard_read_endpoints_reconstruct_import_state(client,admin_headers,db,
  assert organizations.status_code==200 and organizations.json()[0]['external_code']=='ORG1'
  assert candidate_rows.status_code==200 and candidate_rows.json()[0]['external_code']=='C1'
  assert geography_rows.status_code==200 and geography_rows.json()[0]['external_code']=='010350'
+
+def test_list_processes_scoped_to_campaign_excludes_unrelated_processes(db,admin,historical_context):
+ # Election Day's process picker (and any other campaign-scoped consumer)
+ # must only ever see processes with a matching ElectoralContest for that
+ # campaign's canton and office — never every process in the system, which
+ # previously let the UI offer combinations the backend would then reject.
+ source,_,canton,_=historical_context
+ service,matching_process,_=create_electoral(db,source,canton)
+ unrelated_process=service.create_process(ElectoralProcessCreate(code='UNRELATED_2023',name='Proceso no relacionado',process_type='SECTIONAL',election_date=date(2023,2,5),year=2023,status='VALIDATED',source_id=source.id))
+ campaign=CampaignService(db).create(CampaignCreate(name='Campaña Fase6',slug=f'campaign-fase6-{canton.id}',canton_id=canton.id,office_type='MAYOR',election_name='Elección sintética',election_date=date(2023,2,5),status='ACTIVE'),admin)
+ scoped=service.list_processes(user=admin,campaign_id=campaign.id)
+ assert {p.id for p in scoped}=={matching_process.id}
+ assert unrelated_process.id not in {p.id for p in scoped}
+ unscoped=service.list_processes(user=admin)
+ assert {matching_process.id,unrelated_process.id}.issubset({p.id for p in unscoped})

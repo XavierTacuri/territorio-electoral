@@ -30,3 +30,12 @@ body {
     padding-right: 8px !important;
   }
 }
+.command-center-tooltip .maplibregl-popup-content {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #16333e;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}

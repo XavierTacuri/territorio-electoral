@@ -19,15 +19,25 @@ def seed(db:Session)->tuple[Province,Canton,list[Parish]]:
         if not parish:parish=Parish(canton_id=canton.id,code=dpa[-2:],dpa_code=dpa,name=name,parish_type=kind);db.add(parish)
         else:parish.canton_id=canton.id;parish.code=dpa[-2:];parish.name=name;parish.parish_type=kind;parish.is_active=True
         records.append(parish)
+    db.flush()
     # The E2E fixture needs deterministic, non-authoritative geometries so
     # territorial map flows can render from a clean database. They are only
-    # synthetic polygons; electoral values remain separate from geometry.
-    if db.bind is not None and db.bind.dialect.name == "postgresql":
-        for index, parish in enumerate(records):
+    # synthetic polygons (small squares near [0,0], NOT real Gualaceo boundaries)
+    # tagged geometry_source=SYNTHETIC_PLACEHOLDER so the map API and frontend
+    # never present them as official territory. Electoral values remain
+    # separate from geometry. A parish already carrying an official import
+    # (geometry_source=OFFICIAL_IMPORT) is left untouched: re-running this
+    # seed must never clobber real imported geometry with a placeholder. This
+    # guard is dialect-independent on purpose (it is a business rule, not a
+    # spatial operation) so it also runs, and is testable, without PostGIS.
+    for index, parish in enumerate(records):
+        if parish.geometry_source == "OFFICIAL_IMPORT":
+            continue
+        if db.bind is not None and db.bind.dialect.name == "postgresql":
             x = index % 3
             y = index // 3
             polygon = f"MULTIPOLYGON((({x} {y},{x + 0.8} {y},{x + 0.8} {y + 0.8},{x} {y + 0.8},{x} {y})))"
-            db.execute(update(Parish).where(Parish.id == parish.id).values(geometry=func.ST_GeomFromText(polygon, 4326)))
+            db.execute(update(Parish).where(Parish.id == parish.id).values(geometry=func.ST_GeomFromText(polygon, 4326), geometry_source="SYNTHETIC_PLACEHOLDER", geometry_quality="PLACEHOLDER"))
     db.flush();return province,canton,records
 
 def seed_gualaceo()->None:

@@ -163,3 +163,17 @@ def test_execution_transitions_and_operations_summary(db,v24):
     service.complete_activity(campaign.id,activity.id,ActivityCloseRequest(summary="Actividad completada mediante el cierre estructurado."),manager)
     summary=service.operations_overview(campaign.id,manager)
     assert summary["activities"]["completed"]==1 and summary["coverage"]["with_activities"]==1
+
+def test_coordinator_coverage_total_parishes_is_scoped_to_assignment(db,v24):
+    campaign,parishes,manager,delegate=v24;service=OperationalService(db)
+    manager_summary=service.operations_overview(campaign.id,manager)
+    delegate_summary=service.operations_overview(campaign.id,delegate)
+    assert manager_summary["coverage"]["total_parishes"]==len(parishes)
+    assert delegate_summary["coverage"]["total_parishes"]==1
+
+def test_coordinator_territory_summaries_excludes_unassigned_parishes(db,v24):
+    campaign,parishes,manager,delegate=v24;service=OperationalService(db)
+    manager_payload=service.territory_summaries(campaign.id,manager)
+    delegate_payload=service.territory_summaries(campaign.id,delegate)
+    assert len(manager_payload["parishes"])==len(parishes)
+    assert [item["parish_id"] for item in delegate_payload["parishes"]]==[parishes[0].id]

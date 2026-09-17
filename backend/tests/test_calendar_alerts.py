@@ -168,7 +168,10 @@ def test_activity_suspended_alert(db,admin,ctx):
  activity=ops.create_activity(campaign.id,TerritorialActivityCreate(activity_type_code="ASSEMBLY",title="Actividad a suspender",description="Objetivo",activity_date=date(2027,1,10),parish_id=parishes[0].id,status="PLANNED"),manager)
  ops.suspend_activity(campaign.id,activity.id,ActivitySuspendRequest(reason="Condiciones climáticas"),manager)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["ACTIVITY_SUSPENDED"],as_of_date=date(2027,1,1));result=svc.evaluate(campaign.id,manager,req);assert result["created"]==1
- items,_=svc.list(campaign.id,manager,status="OPEN");assert items[0].evidence["reason"]=="Condiciones climáticas"
+ # ACTIVITY_SUSPENDED is a technical/operational alert outside the
+ # Candidate/Manager two-family restriction (§23) — list as admin to verify
+ # the rule's own evaluation logic, not that role's post-restriction access.
+ items,_=svc.list(campaign.id,admin,status="OPEN");assert items[0].evidence["reason"]=="Condiciones climáticas"
 
 def test_activity_completed_without_evidence_alert(db,admin,ctx):
  campaign,province,canton,parishes,manager,coordinator,analyst=ctx;ops=OperationalService(db)
@@ -176,7 +179,7 @@ def test_activity_completed_without_evidence_alert(db,admin,ctx):
  ops.complete_activity(campaign.id,activity.id,ActivityCloseRequest(summary="Actividad realizada sin evidencia adjunta."),manager)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["ACTIVITY_COMPLETED_WITHOUT_EVIDENCE"],as_of_date=date(2027,1,10));result=svc.evaluate(campaign.id,manager,req)
  assert result["created"]==1
- items,_=svc.list(campaign.id,manager,status="OPEN");assert items[0].resource_id==activity.id
+ items,_=svc.list(campaign.id,admin,status="OPEN");assert items[0].resource_id==activity.id
 
 def test_needs_topic_recurrence_alert_is_descriptive_not_political(db,admin,ctx):
  campaign,province,canton,parishes,manager,coordinator,analyst=ctx;ops=OperationalService(db)
@@ -185,7 +188,7 @@ def test_needs_topic_recurrence_alert_is_descriptive_not_political(db,admin,ctx)
   ops.create_need(campaign.id,activity.id,CitizenNeedCreate(need_category_code="ROADS",title=f"Bache vial {i}",description="Vía en mal estado",priority="HIGH",urgency="HIGH",source_type="CAMPAIGN_ACTIVITY",reported_date=date(2027,1,5)+timedelta(days=i),scope="PARISH"),manager)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["NEEDS_TOPIC_RECURRENCE"],as_of_date=date(2027,1,8));result=svc.evaluate(campaign.id,manager,req)
  assert result["created"]==1
- items,_=svc.list(campaign.id,manager,status="OPEN");alert=items[0]
+ items,_=svc.list(campaign.id,admin,status="OPEN");alert=items[0]
  assert alert.evidence["theme"]=="VIALIDAD" and alert.evidence["count"]==3
  assert "prioridad" not in alert.message.lower() and "oportunidad" not in alert.message.lower()
 
@@ -201,7 +204,7 @@ def test_report_data_updated_since_generation_alert_offers_new_version_signal(db
  db.add(study);db.commit()
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["REPORT_DATA_UPDATED_SINCE_GENERATION"],as_of_date=date.today());result=svc.evaluate(campaign.id,manager,req)
  assert result["created"]==1
- items,_=svc.list(campaign.id,manager,status="OPEN");assert items[0].resource_id==run.id
+ items,_=svc.list(campaign.id,admin,status="OPEN");assert items[0].resource_id==run.id
  assert any("encuesta" in reason for reason in items[0].evidence["reasons"])
 
 def test_survey_comparison_change_alert_between_comparable_studies_is_descriptive(db,admin,ctx):
@@ -210,7 +213,7 @@ def test_survey_comparison_change_alert_between_comparable_studies_is_descriptiv
  newer=_published_study(db,admin,campaign,"CA_SC_V2",date(2027,1,15),0.311)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["SURVEY_COMPARISON_CHANGE"],as_of_date=date(2027,1,20));result=svc.evaluate(campaign.id,manager,req)
  assert result["created"]==1
- items,_=svc.list(campaign.id,manager,status="OPEN");alert=next(a for a in items if a.evidence["new_study_id"]==str(newer.id))
+ items,_=svc.list(campaign.id,admin,status="OPEN");alert=next(a for a in items if a.evidence["new_study_id"]==str(newer.id))
  assert alert.evidence["previous_percentage"]==0.284 and alert.evidence["new_percentage"]==0.311 and alert.evidence["difference_points"]==2.7
  banned=("ganando","oportunidad","favorabilidad","caída preocupante","tendencia favorable","apoyo subió","mejoró la campaña")
  assert not any(word in alert.message.lower() for word in banned)
@@ -230,7 +233,7 @@ def test_survey_comparison_uses_immediately_previous_compatible_study_not_v1(db,
  v3=_published_study(db,admin,campaign,"CA_SC_S3",date(2027,1,20),0.30)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["SURVEY_COMPARISON_CHANGE"],as_of_date=date(2027,1,25));result=svc.evaluate(campaign.id,manager,req)
  assert result["created"]==2
- items,_=svc.list(campaign.id,manager,status="OPEN")
+ items,_=svc.list(campaign.id,admin,status="OPEN")
  alert_v3=next(a for a in items if a.evidence["new_study_id"]==str(v3.id));alert_v2=next(a for a in items if a.evidence["new_study_id"]==str(v2.id))
  assert alert_v3.evidence["previous_study_id"]==str(v2.id)
  assert alert_v2.evidence["previous_study_id"]==str(v1.id)
@@ -261,7 +264,7 @@ def test_upcoming_official_milestone_alert(db,admin,ctx):
  campaign,province,canton,parishes,manager,coordinator,analyst=ctx;source=electoral_source(db,admin);process=matching_process(db,admin,canton,source)
  ElectoralMilestoneService(db).create(ElectoralMilestoneCreate(electoral_process_id=process.id,title="Debate próximo",milestone_type="DEBATE",starts_at=datetime(2027,1,6,tzinfo=timezone.utc),source_id=source.id),admin)
  svc=AlertService(db);req=AlertEvaluationRequest(rule_codes=["UPCOMING_OFFICIAL_MILESTONE"],as_of_date=date(2027,1,1));result=svc.evaluate(campaign.id,manager,req)
- assert result["created"]==1;items,_=svc.list(campaign.id,manager,status="OPEN");assert items[0].evidence["days_until"]==5
+ assert result["created"]==1;items,_=svc.list(campaign.id,admin,status="OPEN");assert items[0].evidence["days_until"]==5
 
 def test_dataset_update_and_campaign_without_active_roll_alerts(db,admin,ctx):
  campaign,province,canton,parishes,manager,coordinator,analyst=ctx
@@ -270,7 +273,7 @@ def test_dataset_update_and_campaign_without_active_roll_alerts(db,admin,ctx):
  source=electoral_source(db,admin,"CA_ROLL_SOURCE");content=b'snapshot_date,process_code,geography_level,province_dpa,canton_dpa,parish_dpa,registered_voters,male_voters,female_voters,electoral_zones,juntas\n2027-01-01,,PARISH,01,0103,'+parishes[0].dpa_code.encode()+b',100,50,50,,\n'
  job=DataImportService(db).run(source.id,'CNE_ELECTORAL_ROLL_SNAPSHOT','r.csv',content,admin,False,'CANONICAL_ELECTORAL_ROLL_SNAPSHOT');version=DatasetVersionService(db).create_from_job(job,source);DatasetVersionService(db).activate(version.id,admin)
  req2=AlertEvaluationRequest(rule_codes=["CAMPAIGN_WITHOUT_ACTIVE_ROLL","DATASET_UPDATE"],as_of_date=date.today());result2=svc.evaluate(campaign.id,manager,req2)
- open_items,_=svc.list(campaign.id,manager,status="OPEN");codes={rule_code_of(db,i) for i in open_items}
+ open_items,_=svc.list(campaign.id,admin,status="OPEN");codes={rule_code_of(db,i) for i in open_items}
  assert "CAMPAIGN_WITHOUT_ACTIVE_ROLL" not in codes,"al activarse una versión, la alerta de padrón faltante debe autorresolverse"
  assert "DATASET_UPDATE" in codes
 

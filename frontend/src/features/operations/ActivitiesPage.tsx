@@ -24,8 +24,9 @@ import { ErrorState } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { DataTable } from '../../components/tables/DataTable';
 import { formatDateOnly } from '../../lib/dates';
-import { ActivityForm, type ActivityFormValue } from './ActivityForm';
+import { ActivityForm, type ActivitySubmitValue } from './ActivityForm';
 import { ActivityClosureDialog } from './ActivityClosureDialog';
+import { ApprovalActions } from './ApprovalActions';
 import {
   APPROVAL_STATUS_LABELS,
   EXECUTION_STATUS_LABELS,
@@ -90,7 +91,7 @@ export default function ActivitiesPage() {
     enabled: Boolean(active?.canton_id),
   });
   const save = useMutation({
-    mutationFn: (value: ActivityFormValue) =>
+    mutationFn: (value: ActivitySubmitValue) =>
       apiRequest<Activity>(
         '/campaigns/' + campaignId + '/activities' + (editing ? '/' + editing.id : ''),
         {
@@ -204,27 +205,16 @@ export default function ActivitiesPage() {
           }
           actions={(x) =>
             canApproveActivity(user) && x.approval_status === 'PENDING_APPROVAL' ? (
-              <>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setSelected(x);
-                    setActionMode('approve');
-                  }}
-                >
-                  Aprobar
-                </Button>
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={() => {
-                    setSelected(x);
-                    setActionMode('reject');
-                  }}
-                >
-                  Rechazar
-                </Button>
-              </>
+              <ApprovalActions
+                onApprove={() => {
+                  setSelected(x);
+                  setActionMode('approve');
+                }}
+                onReject={() => {
+                  setSelected(x);
+                  setActionMode('reject');
+                }}
+              />
             ) : null
           }
         />

@@ -67,4 +67,22 @@ describe('matriz de permisos', () => {
     expect(p.canViewSecurityAudit(user('ANALYST'))).toBe(false);
   });
   it('usuario nulo no recibe permisos', () => expect(p.canGenerateReport(null)).toBe(false));
+  it('isCandidateOrManagerOnly identifica solo a Candidate/Manager puros', () => {
+    expect(p.isCandidateOrManagerOnly(user('CANDIDATE'))).toBe(true);
+    expect(p.isCandidateOrManagerOnly(user('CAMPAIGN_MANAGER'))).toBe(true);
+    expect(p.isCandidateOrManagerOnly(user('ANALYST'))).toBe(false);
+    expect(p.isCandidateOrManagerOnly(user('ADMIN'))).toBe(false);
+    expect(p.isCandidateOrManagerOnly(user('TERRITORIAL_COORDINATOR'))).toBe(false);
+    expect(p.isCandidateOrManagerOnly(user('CANDIDATE', true))).toBe(false);
+    expect(
+      p.isCandidateOrManagerOnly({
+        ...user('CANDIDATE'),
+        roles: [
+          { code: 'CANDIDATE', name: 'Candidato' },
+          { code: 'ANALYST', name: 'Analista' },
+        ],
+      }),
+    ).toBe(false);
+    expect(p.isCandidateOrManagerOnly(null)).toBe(false);
+  });
 });

@@ -41,8 +41,16 @@ class AlertService:
         rule_ids={item.alert_rule_id for item in items}
         blocked={r.id for r in self.db.scalars(select(AlertRule).where(AlertRule.id.in_(rule_ids),AlertRule.condition_type=="ACTIVITY_PENDING_APPROVAL"))}
         return [item for item in items if item.alert_rule_id not in blocked]
-    def list(self,campaign_id,user,page=1,page_size=20,**filters):
-        self.access.require_read(campaign_id,user);items,total=self.alerts.list(campaign_id,page,page_size,**filters);assignments=self.access.access.territorial_ids(campaign_id,user)
+    def list(self,campaign_id,user,page=1,page_size=20,restrict_family=True,**filters):
+        # `restrict_family` gates the Candidate/Manager two-family restriction
+        # (§23/§30): it applies to the Centro de Alertas page and the
+        # Dashboard's alert card (both hit this through the HTTP route), but
+        # NOT to Territorio IA's internal use of this same method as an
+        # evidence source (§9-11 of Territorio IA never asked to narrow what
+        # evidence the assistant can cite).
+        self.access.require_read(campaign_id,user)
+        if restrict_family and self.access.restrict_to_candidate_manager_families(user):filters["condition_types"]=self.access.AUTHORIZED_CONDITION_TYPES
+        items,total=self.alerts.list(campaign_id,page,page_size,**filters);assignments=self.access.access.territorial_ids(campaign_id,user)
         if assignments is not None:
             allowed={a.parish_id for a in assignments if a.parish_id is not None};items=[item for item in items if item.parish_id in allowed];total=len(items)
         filtered=self._hide_unresolvable_approvals(items,user)
@@ -54,6 +62,9 @@ class AlertService:
         assignments=self.access.access.territorial_ids(campaign_id,user)
         if assignments is not None and alert.parish_id not in {a.parish_id for a in assignments if a.parish_id is not None}:raise PermissionError("Alerta fuera del alcance territorial")
         if not self._hide_unresolvable_approvals([alert],user):raise PermissionError("Alerta fuera del alcance territorial")
+        if self.access.restrict_to_candidate_manager_families(user):
+            rule=self.db.get(AlertRule,alert.alert_rule_id)
+            if not rule or rule.condition_type not in self.access.AUTHORIZED_CONDITION_TYPES:raise PermissionError("Alerta fuera del alcance autorizado")
         return alert
     def action(self,campaign_id,alert_id,action,request,user):
         alert=self.get(campaign_id,alert_id,user)
@@ -64,9 +75,32 @@ class AlertService:
         if alert.status not in allowed:raise BusinessRuleError("Transición de alerta inválida")
         alert.status=target;alert.resolved_date=request.action_date if target=="RESOLVED" else None
         ack=AlertAcknowledgement(alert_id=alert.id,action=action,action_date=request.action_date,note=request.note,performed_by_user_id=user.id);self.db.add(ack);self.db.commit();return alert
+    ACTIVE_STATUSES=("OPEN","ACKNOWLEDGED")
     def summary(self,campaign_id,user,date_from=None,date_to=None):
-        self.access.require_read(campaign_id,user);rows=list(self.db.execute(select(OperationalAlert.status,func.count()).where(OperationalAlert.campaign_id==campaign_id).group_by(OperationalAlert.status)))
-        statuses={k.lower():v for k,v in rows};items,_=self.alerts.list(campaign_id,1,5)
-        severity=[{"severity":k,"count":v} for k,v in self.db.execute(select(OperationalAlert.severity,func.count()).where(OperationalAlert.campaign_id==campaign_id).group_by(OperationalAlert.severity))]
-        module=[{"module":k,"count":v} for k,v in self.db.execute(select(AlertRule.module,func.count()).join(OperationalAlert).where(OperationalAlert.campaign_id==campaign_id).group_by(AlertRule.module))]
+        # The bell badge (and any other counter fed by this method) must
+        # respect exactly the same access boundary as the Centro de Alertas
+        # list — otherwise a Candidate/Manager sees "3 resultados" on the
+        # page but a badge counting every family/campaign-wide alert
+        # regardless of their restriction (this was the literal cause of a
+        # badge reading 31 while the page correctly showed 3: `list()` was
+        # scoped, `summary()` never was). Family (§23/§30) and territorial
+        # scoping mirror `list()` exactly.
+        self.access.require_read(campaign_id,user)
+        restrict_family=self.access.restrict_to_candidate_manager_families(user)
+        assignments=self.access.access.territorial_ids(campaign_id,user);allowed_parishes=None if assignments is None else {a.parish_id for a in assignments if a.parish_id is not None}
+        def scope(q):
+            if restrict_family:q=q.where(OperationalAlert.alert_rule_id.in_(select(AlertRule.id).where(AlertRule.condition_type.in_(self.access.AUTHORIZED_CONDITION_TYPES))))
+            if allowed_parishes is not None:q=q.where(OperationalAlert.parish_id.in_(allowed_parishes))
+            return q
+        rows=list(self.db.execute(scope(select(OperationalAlert.status,func.count()).where(OperationalAlert.campaign_id==campaign_id)).group_by(OperationalAlert.status)))
+        statuses={k.lower():v for k,v in rows}
+        # by_severity/by_module/top_alerts drive user-facing counters (the
+        # notification bell badge, "requiere tu atención"-style blocks): they
+        # must only ever reflect currently-active conditions, never resolved
+        # or dismissed history, or a badge would keep growing forever instead
+        # of tracking what actually needs attention right now.
+        items,_=self.alerts.list(campaign_id,1,5,statuses=self.ACTIVE_STATUSES,condition_types=self.access.AUTHORIZED_CONDITION_TYPES if restrict_family else None)
+        if allowed_parishes is not None:items=[i for i in items if i.parish_id in allowed_parishes]
+        severity=[{"severity":k,"count":v} for k,v in self.db.execute(scope(select(OperationalAlert.severity,func.count()).where(OperationalAlert.campaign_id==campaign_id,OperationalAlert.status.in_(self.ACTIVE_STATUSES))).group_by(OperationalAlert.severity))]
+        module=[{"module":k,"count":v} for k,v in self.db.execute(scope(select(AlertRule.module,func.count()).join(OperationalAlert).where(OperationalAlert.campaign_id==campaign_id,OperationalAlert.status.in_(self.ACTIVE_STATUSES))).group_by(AlertRule.module))]
         return {"statuses":{"OPEN":statuses.get("open",0),"ACKNOWLEDGED":statuses.get("acknowledged",0),"RESOLVED":statuses.get("resolved",0),"DISMISSED":statuses.get("dismissed",0)},"by_severity":severity,"by_module":module,"by_territory":[],"new_in_period":0,"overdue":0,"top_alerts":items}

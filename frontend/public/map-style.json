@@ -1,12 +1,28 @@
 {
   "version": 8,
-  "name": "Territorio Electoral local",
-  "sources": {},
+  "name": "Territorio Electoral local (OpenStreetMap)",
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "minzoom": 0,
+      "maxzoom": 19,
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
   "layers": [
     {
       "id": "background",
       "type": "background",
       "paint": { "background-color": "#eef2f3" }
+    },
+    {
+      "id": "osm-tiles",
+      "type": "raster",
+      "source": "osm",
+      "minzoom": 0,
+      "maxzoom": 19
     }
   ]
 }

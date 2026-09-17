@@ -1,4 +1,5 @@
 import { Alert, Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 export function LoadingSkeleton() {
   return (
     <Box role="status" aria-live="polite" sx={{ p: 4, textAlign: 'center' }}>
@@ -15,7 +16,16 @@ export function EmptyState({
   detail?: string;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 4,
+        textAlign: 'center',
+        borderStyle: 'dashed',
+        bgcolor: 'background.default',
+      }}
+    >
+      <InboxOutlinedIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 1 }} />
       <Typography variant="h2">{title}</Typography>
       <Typography color="text.secondary">{detail}</Typography>
     </Paper>

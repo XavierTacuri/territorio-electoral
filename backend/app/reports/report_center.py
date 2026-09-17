@@ -14,18 +14,19 @@ def narrative_sections(narrative):
     ]
 
 
-def citations_section(citations):
+def citations_section(citations, title="Evidencia y fuentes"):
     rows = [[c["title"], c["source_name"], EVIDENCE_CLASS_LABELS.get(c["evidence_class"], c["evidence_class"]), c.get("record_date"), c.get("source_url") or c.get("deep_link") or "No disponible"] for c in citations]
-    return {"title": "Evidencia y fuentes", "headers": ["Elemento", "Fuente", "Clasificación", "Fecha", "Enlace"], "formats": [None, None, None, "date", None], "rows": rows}
+    return {"title": title, "headers": ["Elemento", "Fuente", "Clasificación", "Fecha", "Enlace"], "formats": [None, None, None, "date", None], "rows": rows}
 
 
-def limitations_section(limitations, is_demo):
+def limitations_section(limitations, is_demo, extra_items=None, title="Limitaciones y calidad"):
     text = DISCLAIMER
     if is_demo:
         text += "\n\nATENCIÓN: este informe incluye datos simulados para demostración, marcados explícitamente en la evidencia."
-    if limitations:
-        text += "\n\n" + "\n".join(f"- {item}" for item in limitations)
-    return {"title": "Limitaciones y calidad", "text": text, "headers": [], "rows": []}
+    all_items = list(limitations or []) + list(extra_items or [])
+    if all_items:
+        text += "\n\n" + "\n".join(f"- {item}" for item in all_items)
+    return {"title": title, "text": text, "headers": [], "rows": []}
 
 
 def _metric_value(overview, code):
@@ -113,27 +114,32 @@ def election_day_sections(data):
 
 
 def debate_brief_sections(data):
-    sections = []
-    if data.get("official_rows"):
-        sections.append({"title": "Datos oficiales", "headers": ["Indicador", "Valor", "Fuente"], "rows": data["official_rows"]})
-    else:
-        sections.append({"title": "Datos oficiales", "text": "No hay datos oficiales disponibles para este contexto.", "headers": [], "rows": []})
-    sections.append({"title": "Evidencia territorial", "headers": ["Título", "Tipo"], "rows": [[e["title"], e["evidence_type"]] for e in data["evidence"]]} if data.get("evidence") else
-                     {"title": "Evidencia territorial", "text": "No hay evidencia territorial disponible para este tema.", "headers": [], "rows": []})
-    sections.append({"title": "Actividades relacionadas", "headers": ["Actividad", "Fecha", "Estado"], "formats": [None, "date", None], "rows": [[a["title"], a["date"], a["status"]] for a in data["activities"]]} if data.get("activities") else
-                     {"title": "Actividades relacionadas", "text": "No hay actividades registradas para este tema.", "headers": [], "rows": []})
-    sections.append({"title": "Necesidades registradas", "headers": ["Necesidad", "Estado", "Prioridad"], "rows": [[n["title"], n["status"], n["priority"]] for n in data["needs"]]} if data.get("needs") else
-                     {"title": "Necesidades registradas", "text": "No hay necesidades registradas para este tema.", "headers": [], "rows": []})
-    if data.get("studies"):
-        sections.append({"title": "Estudios y encuestas", "headers": ["Estudio", "Cierre de campo"], "rows": [[s["name"], s["fieldwork_end_date"]] for s in data["studies"]]})
-    if data.get("public_items"):
-        sections.append({"title": "Información pública", "headers": ["Título", "Publicador"], "rows": [[p["title"], p["publisher"]] for p in data["public_items"]]})
-    qa = data.get("qa_pairs") or []
-    sections.append({"title": "Preguntas que podrían surgir", "headers": ["Pregunta", "Hechos disponibles", "Respuesta factual sugerida", "Fuentes"], "rows": [[q["question"], q["facts"], q["answer"], q["sources"]] for q in qa]})
-    verification = data.get("verification_points") or []
-    sections.append({"title": "Puntos que necesitan verificación", "headers": ["Elemento", "Motivo"], "rows": verification} if verification else
-                     {"title": "Puntos que necesitan verificación", "text": "No se identificaron puntos adicionales que requieran verificación manual.", "headers": [], "rows": []})
-    return sections
+    # Needs-first (§7-22): necesidades ciudadanas primero, luego los datos que
+    # explican el tema (actividades → evidencia territorial → estudios
+    # publicados → información pública → CNE/INEC al final, como contexto de
+    # menor prioridad), y por último la evidencia documental disponible.
+    needs = data.get("needs") or []
+    needs_section = ({"title": "Necesidades registradas", "headers": ["Necesidad", "Estado", "Prioridad"],
+                       "rows": [[n["title"], n["status"], n["priority"]] for n in needs]} if needs else
+                      {"title": "Necesidades registradas", "text": "No hay necesidades registradas para este tema.", "headers": [], "rows": []})
+
+    explain_rows = []
+    for a in data.get("activities") or []:
+        explain_rows.append(["Actividad", a["title"], f"{a['status']} · {a['date']}"])
+    for s in data.get("studies") or []:
+        explain_rows.append(["Estudio publicado", s["name"], f"Cierre de campo: {s['fieldwork_end_date']}"])
+    for p in data.get("public_items") or []:
+        explain_rows.append(["Información pública", p["title"], p["publisher"]])
+    for row in data.get("official_rows") or []:
+        explain_rows.append(["Dato oficial (CNE/INEC)", row[0], f"{row[1]} — {row[2]}"])
+    explain_section = ({"title": "Datos para explicar", "headers": ["Tipo", "Elemento", "Detalle"], "rows": explain_rows} if explain_rows else
+                        {"title": "Datos para explicar", "text": "No hay datos adicionales para explicar este tema.", "headers": [], "rows": []})
+
+    evidence = data.get("evidence") or []
+    evidence_section = ({"title": "Evidencia disponible", "headers": ["Título", "Tipo"], "rows": [[e["title"], e["evidence_type"]] for e in evidence]} if evidence else
+                         {"title": "Evidencia disponible", "text": "No hay evidencia disponible para este tema.", "headers": [], "rows": []})
+
+    return [needs_section, explain_section, evidence_section]
 
 
 def thematic_sections(data):

@@ -1,5 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { apiToken, browserLogin, e2eUsers } from './support/auth';
+import { apiToken, browserLogin, e2eUsers, logout } from './support/auth';
 import { e2eRunId, uniqueE2eValue } from './support/run-data';
 
 function jwtUserId(token: string): string {
@@ -150,7 +150,7 @@ test('Calendario de campaña y Centro de alertas: actividades, hitos oficiales r
   });
 
   await test.step('CANDIDATE ve la actividad en el Calendario de campaña; el hito oficial y el seguimiento nunca aparecen ahí', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page);
     await browserLogin(page, e2eUsers.candidate);
     await page.goto(`/app/campaigns/${campaign.id}/calendar`);
     await expect(page.getByRole('heading', { name: 'Calendario de campaña' })).toBeVisible();
@@ -173,17 +173,18 @@ test('Calendario de campaña y Centro de alertas: actividades, hitos oficiales r
     );
     await page.getByRole('button', { name: 'Evaluar reglas' }).click();
     await evaluated;
-    // Filtrar por Módulo=Operación y Estado=Pendiente ANTES de la primera
-    // aserción visible: ACTIVITY_PENDING_APPROVAL es severidad INFO, la de
-    // menor prioridad de orden — en la base E2E compartida, tras muchas
-    // corridas, puede haber más de 50 alertas de severidad WARNING/CRITICAL
+    // Filtrar por Categoría=Aprobaciones ANTES de la primera aserción
+    // visible: ACTIVITY_PENDING_APPROVAL es severidad INFO, la de menor
+    // prioridad de orden — en la base E2E compartida, tras muchas corridas,
+    // puede haber más de 50 alertas de severidad WARNING/CRITICAL
     // acumuladas que empujen esta alerta fuera de la primera página si se
-    // consulta sin filtrar. Con ambos filtros el conjunto queda acotado al
-    // módulo Operación en estado abierto, donde sí cabe en una página.
-    await page.getByRole('combobox', { name: /Módulo/ }).click();
-    await page.getByRole('option', { name: 'Operación' }).click();
-    await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Pendiente' }).click();
+    // consulta sin filtrar. El Centro de alertas ya abre en Estado=Activas
+    // por defecto (§2.3), así que con la categoría el conjunto queda acotado
+    // a las aprobaciones activas, donde sí cabe en una página.
+    // CANDIDATE/CAMPAIGN_MANAGER ya no ven el filtro técnico de Módulo
+    // (§29): solo las dos familias autorizadas.
+    await page.getByRole('combobox', { name: /Categoría/ }).click();
+    await page.getByRole('option', { name: 'Aprobaciones' }).click();
     const openRow = page
       .getByRole('row')
       .filter({ hasText: 'Actividad pendiente de aprobación' })
@@ -195,20 +196,23 @@ test('Calendario de campaña y Centro de alertas: actividades, hitos oficiales r
     );
     await page.getByRole('button', { name: 'Confirmar' }).click();
     expect((await acknowledged).status()).toBe(200);
-    await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Revisada' }).click();
+    // Revisada (ACKNOWLEDGED) sigue agrupada bajo Activas: la alerta debe
+    // seguir visible sin necesidad de cambiar el filtro de Estado.
     await expect(page.getByText('Actividad pendiente de aprobación').first()).toBeVisible();
   });
 
-  await test.step('COORDINATOR no ve una alerta de aprobación que no puede resolver', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+  await test.step('COORDINATOR ya no tiene acceso al Centro de alertas global (retiro de producto)', async () => {
+    await logout(page);
     await browserLogin(page, e2eUsers.coordinator);
     await page.goto(`/app/campaigns/${campaign.id}/alerts`);
-    await expect(page.getByText(`Pendiente aprobación ${runId}`)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/403$/);
+    // The 403 page renders outside AppShell (no navbar/logout button), so
+    // clear the session directly instead of clicking a "Cerrar sesión" that
+    // no longer exists on this page.
+    await page.context().clearCookies();
   });
 
   await test.step('Territorio IA responde sobre próximos hitos y qué requiere atención, con citas', async () => {
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
     await browserLogin(page, e2eUsers.candidate);
     await page.goto(`/app/campaigns/${campaign.id}/territory-ai`);
     const response1 = page.waitForResponse((r) => r.url().endsWith('/territory-ai/query'));

@@ -12,6 +12,7 @@ import {
   Stack,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -24,6 +25,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
 import {
   eventStatusLabel,
+  eventStatusTone,
   formatEventTime,
   FILTERS,
   isDone,
@@ -38,9 +40,7 @@ function ymd(d: Date) {
 function monthLabel(d: Date) {
   return d.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
 }
-function statusColor(event: CalendarEvent): 'success' | 'info' {
-  return isDone(event) ? 'success' : 'info';
-}
+const statusColor = eventStatusTone;
 const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const AGENDA_GROUPS = ['HOY', 'MAÑANA', 'PRÓXIMAMENTE', 'REALIZADAS RECIENTEMENTE'] as const;
 
@@ -256,17 +256,35 @@ export default function CalendarPage() {
                 </Typography>
                 <Stack spacing={0.25} sx={{ mt: 0.25 }}>
                   {dayEvents.slice(0, 2).map((e) => (
-                    <Chip
+                    <Tooltip
                       key={e.id}
-                      size="small"
-                      label={e.title}
-                      color={statusColor(e)}
-                      onClick={() => setSelected(e)}
-                      sx={{
-                        maxWidth: '100%',
-                        '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
-                      }}
-                    />
+                      arrow
+                      title={
+                        <Stack spacing={0.25} sx={{ py: 0.25 }}>
+                          <Typography variant="body2" fontWeight={700}>
+                            {e.title}
+                          </Typography>
+                          {e.parish_name && <Typography variant="caption">{e.parish_name}</Typography>}
+                          <Typography variant="caption">
+                            {formatDateOnly(e.starts_at.slice(0, 10))}
+                            {e.start_time ? ` · ${e.start_time}` : ''}
+                          </Typography>
+                          <Typography variant="caption">{eventStatusLabel(e)}</Typography>
+                        </Stack>
+                      }
+                    >
+                      <Chip
+                        size="small"
+                        label={e.title}
+                        color={statusColor(e)}
+                        onClick={() => setSelected(e)}
+                        sx={{
+                          maxWidth: '100%',
+                          borderRadius: 1.5,
+                          '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+                        }}
+                      />
+                    </Tooltip>
                   ))}
                   {dayEvents.length > 2 && (
                     <Typography variant="caption">+{dayEvents.length - 2} más</Typography>

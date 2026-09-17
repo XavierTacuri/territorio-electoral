@@ -222,9 +222,11 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await page.getByRole('button', { name: 'Evaluar reglas' }).click();
     expect((await response).status()).toBe(200);
     expect((await refreshedAlerts).status()).toBe(200);
-    const openAlerts = page.waitForResponse((r) => r.url().includes('status=OPEN'));
+    // El Centro de alertas ya abre en Estado=Activas por defecto (§2.3); se
+    // selecciona explícitamente para no depender del valor inicial.
+    const openAlerts = page.waitForResponse((r) => r.url().includes('state=ACTIVE'));
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Pendiente' }).click();
+    await page.getByRole('option', { name: 'Activas' }).click();
     expect((await openAlerts).status()).toBe(200);
     const count = await page.getByRole('row').count();
     const openRow = page
@@ -240,8 +242,8 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     response = page.waitForResponse((r) => r.url().endsWith('/acknowledge'));
     await dialog.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
-    await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Revisada' }).click();
+    // Revisada (ACKNOWLEDGED) sigue agrupada bajo Activas: no hace falta
+    // cambiar el filtro para que la fila conserve su insignia de estado.
     await expect(page.getByText('Revisada').first()).toBeVisible();
     await page
       .getByRole('row')
@@ -256,13 +258,13 @@ test('encuesta anónima real, importaciones, descargas y alertas', async ({ page
     await dialog.getByRole('button', { name: 'Confirmar' }).click();
     expect((await response).status()).toBe(200);
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Resuelta' }).click();
+    await page.getByRole('option', { name: 'Resueltas' }).click();
     await expect(page.getByText('Resuelta').first()).toBeVisible();
     await page.getByRole('combobox', { name: /Estado/ }).click();
-    await page.getByRole('option', { name: 'Pendiente' }).click();
+    await page.getByRole('option', { name: 'Activas' }).click();
     const reevaluation = page.waitForResponse((r) => r.url().endsWith('/evaluate'));
     const deduplicatedList = page.waitForResponse(
-      (r) => r.url().includes('status=OPEN') && r.request().method() === 'GET',
+      (r) => r.url().includes('state=ACTIVE') && r.request().method() === 'GET',
     );
     await page.getByRole('button', { name: 'Evaluar reglas' }).click();
     expect((await reevaluation).status()).toBe(200);

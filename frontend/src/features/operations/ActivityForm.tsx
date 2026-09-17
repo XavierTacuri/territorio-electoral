@@ -18,16 +18,28 @@ import { todayDateOnly } from '../../lib/dates';
 import { EXECUTION_STATUS_LABELS } from './statusLabels';
 import type { Activity, Catalog, Parish } from './types';
 import { parishOptionLabel } from '../../lib/territoryLabels';
+// La hora es obligatoria para actividades NUEVAS (validado además aquí, no
+// solo con el atributo required del input). Editar una actividad histórica
+// creada antes de que el campo existiera no debe bloquearse por eso — p. ej.
+// cambiar su estado a Completada/Suspendida no tiene por qué exigir rellenar
+// un dato que nunca se pidió al crearla; ese caso se valida aparte, a mano,
+// solo cuando corresponde (ver handleSubmit más abajo).
 const schema = z.object({
   activity_type_code: z.string().min(1),
   title: z.string().trim().min(3).max(220),
   description: z.string().optional(),
   activity_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Hora inválida').or(z.literal('')),
   status: z.enum(['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'SUSPENDED', 'CANCELLED']),
   parish_id: z.coerce.number().int().positive(),
-  location_name: z.string().optional(),
 });
 export type ActivityFormValue = z.infer<typeof schema>;
+// Lo que de verdad viaja a la API: una hora en blanco (actividad histórica
+// sin editar ese campo) se envía como null, nunca como cadena vacía — la API
+// espera time|None, no un string vacío.
+export type ActivitySubmitValue = Omit<ActivityFormValue, 'start_time'> & {
+  start_time: string | null;
+};
 export function activityStatusOptions(activity?: Activity | null) {
   if (!activity) return ['PLANNED'] as const;
   if (activity.status === 'PLANNED' && activity.approval_status === 'APPROVED')
@@ -50,7 +62,7 @@ export function ActivityForm({
   types: Catalog[];
   parishes: Parish[];
   onClose: () => void;
-  onSubmit: (value: ActivityFormValue) => Promise<void>;
+  onSubmit: (value: ActivitySubmitValue) => Promise<void>;
   submitLabel?: string;
 }) {
   const statusOptions = activityStatusOptions(activity);
@@ -60,6 +72,7 @@ export function ActivityForm({
     register,
     reset,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<ActivityFormValue>({
     resolver: zodResolver(schema),
@@ -68,9 +81,9 @@ export function ActivityForm({
       title: '',
       description: '',
       activity_date: todayDateOnly(),
+      start_time: '',
       status: 'PLANNED',
       parish_id: 0,
-      location_name: '',
     },
   });
   useEffect(() => {
@@ -82,18 +95,18 @@ export function ActivityForm({
               title: activity.title,
               description: activity.description ?? '',
               activity_date: activity.activity_date,
+              start_time: activity.start_time?.slice(0, 5) ?? '',
               status: activity.status as ActivityFormValue['status'],
               parish_id: activity.parish_id,
-              location_name: activity.location_name ?? '',
             }
           : {
               activity_type_code: types[0]?.code ?? '',
               title: '',
               description: '',
               activity_date: todayDateOnly(),
+              start_time: '',
               status: 'PLANNED',
               parish_id: parishes[0]?.id ?? 0,
-              location_name: '',
             },
       );
     setServerError('');
@@ -173,11 +186,22 @@ export function ActivityForm({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              {...register('start_time')}
+              fullWidth
+              type="time"
+              label="Hora"
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.start_time}
+              helperText={errors.start_time?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             <Controller
               name="parish_id"
               control={control}
               render={({ field }) => (
-                <TextField {...field} select fullWidth label="Parroquia">
+                <TextField {...field} select fullWidth label="Lugar / Parroquia">
                   {parishes.map((x) => (
                     <MenuItem key={x.id} value={x.id}>
                       {x.name}
@@ -185,13 +209,6 @@ export function ActivityForm({
                   ))}
                 </TextField>
               )}
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              {...register('location_name')}
-              fullWidth
-              label="Nombre de ubicación (opcional)"
             />
           </Grid>
         </Grid>
@@ -202,8 +219,12 @@ export function ActivityForm({
           variant="contained"
           disabled={isSubmitting}
           onClick={handleSubmit(async (value) => {
+            if (!activity && !value.start_time) {
+              setError('start_time', { type: 'manual', message: 'Hora requerida' });
+              return;
+            }
             try {
-              await onSubmit(value);
+              await onSubmit({ ...value, start_time: value.start_time || null });
               onClose();
             } catch (error) {
               setServerError(

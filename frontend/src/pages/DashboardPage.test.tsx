@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import DashboardPage from './DashboardPage';
 
 vi.mock('../features/dashboard/CommandCenterMap', () => ({
@@ -13,6 +13,20 @@ vi.mock('../features/dashboard/CommandCenterMap', () => ({
     </div>
   ),
 }));
+
+const auth = vi.hoisted(() => ({
+  user: {
+    id: 'u1',
+    username: 'candidate',
+    email: 'candidate@example.test',
+    first_name: 'Candidata',
+    last_name: 'Test',
+    is_active: true,
+    is_superuser: false,
+    roles: [{ code: 'CANDIDATE', name: 'Candidato' }],
+  } as { roles: { code: string; name: string }[]; is_superuser: boolean; [key: string]: unknown },
+}));
+vi.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user: auth.user }) }));
 
 const parishes = Array.from({ length: 9 }, (_, index) => ({
   parish_id: index + 1,
@@ -106,6 +120,7 @@ const upcomingEvents = {
     },
   ],
 };
+let alertsRequestCount = 0;
 const handlers = [
   http.get('*/api/v1/campaigns/campaign-1/current-election/analysis', () =>
     HttpResponse.json(analysis),
@@ -122,15 +137,25 @@ const handlers = [
       province_name: 'Azuay',
     }),
   ),
-  http.get('*/api/v1/campaigns/campaign-1/alerts', () => HttpResponse.json(openAlerts)),
+  http.get('*/api/v1/campaigns/campaign-1/alerts', () => {
+    alertsRequestCount += 1;
+    return HttpResponse.json(openAlerts);
+  }),
   http.get('*/api/v1/campaigns/campaign-1/calendar', () => HttpResponse.json(upcomingEvents)),
 ];
 const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeEach(() => {
+  auth.user.roles = [{ code: 'CANDIDATE', name: 'Candidato' }];
+  alertsRequestCount = 0;
+});
 afterEach(() => server.resetHandlers(...handlers));
 afterAll(() => server.close());
 
-function renderDashboard(studyData: typeof published | 'error' = published) {
+function renderDashboard(
+  studyData: typeof published | 'error' = published,
+  options: { skipAlertsCache?: boolean } = {},
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, retryOnMount: false, staleTime: Infinity } },
   });
@@ -144,7 +169,9 @@ function renderDashboard(studyData: typeof published | 'error' = published) {
     canton_name: 'Gualaceo',
     province_name: 'Azuay',
   });
-  client.setQueryData(['campaign', 'campaign-1', 'alerts-open'], openAlerts);
+  if (!options.skipAlertsCache) {
+    client.setQueryData(['campaign', 'campaign-1', 'alerts-open'], openAlerts);
+  }
   client.setQueryData(['campaign', 'campaign-1', 'calendar-upcoming'], upcomingEvents);
   if (studyData === 'error') {
     const query = client.getQueryCache().build(client, {
@@ -185,12 +212,12 @@ describe('Centro de Comando Territorial', () => {
     expect(screen.getByText('Datos simulados para demostración.')).toBeVisible();
     expect(screen.getByText('2 actividades pendientes de aprobación')).toBeVisible();
     expect(screen.getByText('Actividad pendiente de aprobación')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'VER TODAS' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Ver todas' })).toHaveAttribute(
       'href',
       '/app/campaigns/campaign-1/alerts',
     );
     expect(screen.getByText(/Asamblea territorial/)).toBeVisible();
-    expect(screen.getByRole('link', { name: 'VER CALENDARIO' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Ver calendario' })).toHaveAttribute(
       'href',
       '/app/campaigns/campaign-1/calendar',
     );
@@ -227,5 +254,41 @@ describe('Centro de Comando Territorial', () => {
     });
     fireEvent.click(suggestion);
     await waitFor(() => expect(screen.getByText('IA abierta')).toBeVisible());
+  });
+
+  describe('TERRITORIAL_COORDINATOR', () => {
+    beforeEach(() => {
+      auth.user.roles = [{ code: 'TERRITORIAL_COORDINATOR', name: 'Coordinador territorial' }];
+    });
+
+    it('no muestra CTAs ejecutivos ni las cards de Territorio IA y Alertas', async () => {
+      renderDashboard(published, { skipAlertsCache: true });
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Centro de Comando Territorial' }),
+      ).toBeVisible();
+
+      expect(
+        screen.queryByRole('link', { name: 'Consultar Territorio IA' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Ver panorama completo' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Generar informe ejecutivo' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText('ASISTENTE CON EVIDENCIA')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'Territorio IA' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Alertas' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Ver todas' })).not.toBeInTheDocument();
+
+      expect(screen.getByRole('region', { name: 'Mapa operativo territorial' })).toBeVisible();
+      expect(screen.getByText('Padrón electoral')).toBeVisible();
+      expect(screen.getByText('Hoy en territorio')).toBeVisible();
+
+      // No debe golpearse el endpoint de alertas: el bloque que lo consume
+      // no se renderiza para este rol.
+      await waitFor(() => expect(screen.getAllByText('Cobertura territorial').length).toBe(2));
+      expect(alertsRequestCount).toBe(0);
+    });
   });
 });

@@ -117,6 +117,42 @@ def test_only_executive_or_admin_can_activate_operation(db, admin, ed):
         svc.create_operation(campaign.id, ElectionDayOperationCreate(electoral_process_id=process.id, election_date=date(2027, 2, 14)), coordinator)
 
 
+def test_candidate_configures_election_day_for_the_matching_process(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    candidate = _member(db, admin, campaign, code="CANDIDATE")
+    svc = ElectionDayService(db)
+    op = svc.create_operation(campaign.id, ElectionDayOperationCreate(electoral_process_id=process.id, election_date=date(2027, 2, 14)), candidate)
+    assert op.status == "PREPARATION" and op.electoral_process_id == process.id
+
+
+def test_manager_configures_election_day_for_the_matching_process(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    manager = _member(db, admin, campaign, code="CAMPAIGN_MANAGER")
+    svc = ElectionDayService(db)
+    op = svc.create_operation(campaign.id, ElectionDayOperationCreate(electoral_process_id=process.id, election_date=date(2027, 2, 14)), manager)
+    assert op.status == "PREPARATION" and op.electoral_process_id == process.id
+
+
+def test_candidate_cannot_create_operation_for_a_manually_supplied_wrong_process(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    candidate = _member(db, admin, campaign, code="CANDIDATE")
+    other_process = ElectoralProcess(code=f"UNRELATED-{uuid4().hex[:4]}", name="Proceso no relacionado", process_type="SECTIONAL", election_date=date(2027, 2, 14), year=2027, status="VALIDATED", is_final=True, source_id=db.get(DataSource, process.source_id).id, is_active=True)
+    db.add(other_process)
+    db.commit()
+    svc = ElectionDayService(db)
+    with pytest.raises(BusinessRuleError):
+        svc.create_operation(campaign.id, ElectionDayOperationCreate(electoral_process_id=other_process.id, election_date=date(2027, 2, 14)), candidate)
+
+
+def test_candidate_cannot_create_operation_for_another_campaigns_process(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    other_campaign, _, _, _, other_process = _election_day_dataset(db, admin, 2)
+    candidate = _member(db, admin, campaign, code="CANDIDATE")
+    svc = ElectionDayService(db)
+    with pytest.raises(BusinessRuleError):
+        svc.create_operation(campaign.id, ElectionDayOperationCreate(electoral_process_id=other_process.id, election_date=date(2027, 2, 14)), candidate)
+
+
 def test_close_operation_does_not_block_on_open_incidents(db, admin, ed):
     campaign, canton, parish_a, parish_b, process = ed
     svc = ElectionDayService(db)

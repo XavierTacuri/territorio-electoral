@@ -11383,8 +11383,10 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
+                state?: string | null;
                 severity?: string | null;
                 module?: string | null;
+                rule_code?: string | null;
                 page?: number;
                 page_size?: number;
             };
@@ -18282,6 +18284,7 @@ export interface operations {
                 process_type?: string | null;
                 status?: string | null;
                 is_final?: boolean | null;
+                campaign_id?: string | null;
             };
             header?: never;
             path?: never;

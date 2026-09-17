@@ -154,13 +154,45 @@ const place = {
 };
 
 describe('Jornada Electoral — Command Center', () => {
-  it('muestra la tarjeta de configuración cuando no existe jornada y el usuario puede gestionar', async () => {
-    processes = [{ id: 'proc-1', name: 'Elecciones Seccionales', year: 2027 }];
+  it('con un único proceso válido para la campaña, lo muestra bloqueado en vez de un selector libre', async () => {
+    processes = [
+      { id: 'proc-1', name: 'Elecciones Seccionales 2027', election_date: '2027-02-14' },
+    ];
     handlers();
     renderPage();
     expect(await screen.findByText('Configurar Jornada Electoral')).toBeVisible();
-    await userEvent.click(screen.getByLabelText('Proceso electoral'));
-    expect(await screen.findByRole('option', { name: /Elecciones Seccionales/ })).toBeVisible();
+    const field = (await screen.findByLabelText('Proceso electoral')) as HTMLInputElement;
+    expect(field).toBeDisabled();
+    expect(field).toHaveValue('Elecciones Seccionales 2027');
+    expect(screen.getByText('Fecha de elección: 14/02/2027')).toBeVisible();
+    // No selector to open: the field is a locked TextField, not a dropdown.
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+  });
+
+  it('con varios procesos válidos, ofrece un selector restringido a esos procesos', async () => {
+    processes = [
+      { id: 'proc-1', name: 'Elecciones Seccionales 2023', election_date: '2023-02-05' },
+      { id: 'proc-2', name: 'Elecciones Seccionales 2027', election_date: '2027-02-14' },
+    ];
+    handlers();
+    renderPage();
+    await screen.findByText('Configurar Jornada Electoral');
+    const field = await screen.findByLabelText('Proceso electoral');
+    expect(field).not.toBeDisabled();
+    await userEvent.click(field);
+    expect(await screen.findByRole('option', { name: /Elecciones Seccionales 2023/ })).toBeVisible();
+    expect(screen.getByRole('option', { name: /Elecciones Seccionales 2027/ })).toBeVisible();
+  });
+
+  it('sin ningún proceso válido para el cantón/cargo de la campaña, explica por qué no puede configurarse', async () => {
+    processes = [];
+    handlers();
+    renderPage();
+    await screen.findByText('Configurar Jornada Electoral');
+    expect(
+      await screen.findByText(/No existe un proceso electoral configurado/),
+    ).toBeVisible();
+    expect(screen.queryByLabelText('Proceso electoral')).not.toBeInTheDocument();
   });
 
   it('un usuario sin rol de gestión ve un estado vacío en vez del formulario de creación', async () => {
@@ -173,8 +205,10 @@ describe('Jornada Electoral — Command Center', () => {
     expect(screen.queryByText('Configurar Jornada Electoral')).not.toBeInTheDocument();
   });
 
-  it('crea la jornada al enviar el formulario', async () => {
-    processes = [{ id: 'proc-1', name: 'Elecciones Seccionales', year: 2027 }];
+  it('crea la jornada al enviar el formulario con el único proceso válido ya seleccionado', async () => {
+    processes = [
+      { id: 'proc-1', name: 'Elecciones Seccionales 2027', election_date: '2027-02-14' },
+    ];
     operation = {
       id: 'op1',
       organization_id: 'org1',
@@ -191,8 +225,7 @@ describe('Jornada Electoral — Command Center', () => {
     handlers();
     renderPage();
     await screen.findByText('Configurar Jornada Electoral');
-    await userEvent.click(screen.getByLabelText('Proceso electoral'));
-    await userEvent.click(await screen.findByRole('option', { name: /Elecciones Seccionales/ }));
+    await screen.findByLabelText('Proceso electoral');
     const dateInput = screen.getByLabelText('Fecha de la elección');
     await userEvent.type(dateInput, '2027-03-14');
     await userEvent.click(screen.getByRole('button', { name: 'Crear jornada' }));
