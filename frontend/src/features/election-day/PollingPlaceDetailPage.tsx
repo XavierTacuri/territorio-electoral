@@ -55,20 +55,7 @@ export default function PollingPlaceDetailPage() {
   const qc = useQueryClient();
   const roles = user?.roles.map((r) => r.code) ?? [];
   const manager = canManage(roles) || Boolean(user?.is_superuser);
-  const canOperate = manager || roles.includes('TERRITORIAL_COORDINATOR');
 
-  const [boardDialog, setBoardDialog] = useState(false);
-  const [boardCode, setBoardCode] = useState('');
-  const [boardNumber, setBoardNumber] = useState('1');
-  const [boardError, setBoardError] = useState('');
-  const [incidentDialog, setIncidentDialog] = useState(false);
-  const [incidentCategory, setIncidentCategory] = useState('OTHER');
-  const [incidentDescription, setIncidentDescription] = useState('');
-  const [incidentError, setIncidentError] = useState('');
-  const [documentDialog, setDocumentDialog] = useState(false);
-  const [documentType, setDocumentType] = useState('ACTA_COPY');
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentError, setDocumentError] = useState('');
   const [replaceTarget, setReplaceTarget] = useState<ElectionDayAssignment | null>(null);
   const [replaceUserId, setReplaceUserId] = useState('');
   const [replaceReason, setReplaceReason] = useState('');
@@ -122,43 +109,6 @@ export default function PollingPlaceDetailPage() {
       : 'Persona asignada';
   };
 
-  const createBoard = useMutation({
-    mutationFn: () =>
-      apiRequest<ElectoralBoard>(
-        `/campaigns/${campaignId}/election-day/polling-places/${placeId}/boards`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ official_code: boardCode, board_number: Number(boardNumber) }),
-        },
-      ),
-    onError: () => setBoardError('No fue posible crear la junta.'),
-    onSuccess: () => {
-      setBoardDialog(false);
-      setBoardCode('');
-      setBoardError('');
-      qc.invalidateQueries({ queryKey: ['election-day-boards', campaignId, placeId] });
-      setToast({ severity: 'success', message: 'Junta creada.' });
-    },
-  });
-  const createIncident = useMutation({
-    mutationFn: () =>
-      apiRequest<ElectionDayIncident>(`/campaigns/${campaignId}/election-day/incidents`, {
-        method: 'POST',
-        body: JSON.stringify({
-          polling_place_id: placeId,
-          category: incidentCategory,
-          description: incidentDescription,
-        }),
-      }),
-    onError: () => setIncidentError('No fue posible reportar la incidencia.'),
-    onSuccess: () => {
-      setIncidentDialog(false);
-      setIncidentDescription('');
-      setIncidentError('');
-      qc.invalidateQueries({ queryKey: ['election-day-incidents', campaignId, placeId] });
-      setToast({ severity: 'success', message: 'Incidencia registrada.' });
-    },
-  });
   const resolveIncident = useMutation({
     mutationFn: (incidentId: string) =>
       apiRequest<ElectionDayIncident>(
@@ -170,26 +120,6 @@ export default function PollingPlaceDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['election-day-incidents', campaignId, placeId] });
       setToast({ severity: 'success', message: 'Incidencia resuelta.' });
-    },
-  });
-  const uploadDocument = useMutation({
-    mutationFn: () => {
-      const form = new FormData();
-      form.append('file', documentFile as File);
-      form.append('polling_place_id', placeId);
-      form.append('document_type', documentType);
-      return apiRequest<ElectionDayDocument>(
-        `/campaigns/${campaignId}/election-day/documents/upload`,
-        { method: 'POST', body: form },
-      );
-    },
-    onError: () => setDocumentError('No fue posible cargar el documento.'),
-    onSuccess: () => {
-      setDocumentDialog(false);
-      setDocumentFile(null);
-      setDocumentError('');
-      qc.invalidateQueries({ queryKey: ['election-day-documents', campaignId, placeId] });
-      setToast({ severity: 'success', message: 'Documento recibido.' });
     },
   });
   const replaceAssignment = useMutation({
@@ -225,17 +155,12 @@ export default function PollingPlaceDetailPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined" sx={{ mb: 3 }}>
             <CardContent>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 1 }}
-              >
-                <Typography component="h2" variant="h2">
-                  Juntas
-                </Typography>
-                {manager && <Button onClick={() => setBoardDialog(true)}>AGREGAR JUNTA</Button>}
-              </Stack>
+              <Typography component="h2" variant="h2" sx={{ mb: 0.5 }}>
+                Juntas
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Datos electorales cargados por administración.
+              </Typography>
               {!boards.data?.length ? (
                 <Typography color="text.secondary">No hay juntas registradas.</Typography>
               ) : (
@@ -312,19 +237,9 @@ export default function PollingPlaceDetailPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined" sx={{ mb: 3 }}>
             <CardContent>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 1 }}
-              >
-                <Typography component="h2" variant="h2">
-                  Incidencias
-                </Typography>
-                {canOperate && (
-                  <Button onClick={() => setIncidentDialog(true)}>REPORTAR INCIDENCIA</Button>
-                )}
-              </Stack>
+              <Typography component="h2" variant="h2" sx={{ mb: 1 }}>
+                Incidencias
+              </Typography>
               {!incidents.data?.items.length ? (
                 <Typography color="text.secondary">No hay incidencias abiertas.</Typography>
               ) : (
@@ -335,7 +250,7 @@ export default function PollingPlaceDetailPage() {
                       severity={i.status === 'RESOLVED' ? 'success' : 'warning'}
                       variant="outlined"
                       action={
-                        canOperate && i.status !== 'RESOLVED' ? (
+                        manager && i.status !== 'RESOLVED' ? (
                           <Button
                             size="small"
                             color="inherit"
@@ -358,19 +273,9 @@ export default function PollingPlaceDetailPage() {
 
           <Card variant="outlined">
             <CardContent>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 1 }}
-              >
-                <Typography component="h2" variant="h2">
-                  Documentación
-                </Typography>
-                {canOperate && (
-                  <Button onClick={() => setDocumentDialog(true)}>ADJUNTAR DOCUMENTO</Button>
-                )}
-              </Stack>
+              <Typography component="h2" variant="h2" sx={{ mb: 1 }}>
+                Documentación
+              </Typography>
               {!documents.data?.items.length ? (
                 <Typography color="text.secondary">Aún no se han recibido documentos.</Typography>
               ) : (
@@ -405,135 +310,6 @@ export default function PollingPlaceDetailPage() {
         </Grid>
       </Grid>
 
-      <Dialog open={boardDialog} onClose={() => setBoardDialog(false)} fullWidth>
-        <DialogTitle>Agregar junta</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField
-              label="Código de junta"
-              value={boardCode}
-              onChange={(e) => setBoardCode(e.target.value)}
-            />
-            <TextField
-              label="Número"
-              type="number"
-              value={boardNumber}
-              onChange={(e) => setBoardNumber(e.target.value)}
-            />
-            {boardError && <Alert severity="error">{boardError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setBoardDialog(false);
-              setBoardError('');
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            disabled={!boardCode || createBoard.isPending}
-            onClick={() => createBoard.mutate()}
-          >
-            Guardar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={incidentDialog} onClose={() => setIncidentDialog(false)} fullWidth>
-        <DialogTitle>Reportar incidencia</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField
-              select
-              label="Categoría"
-              value={incidentCategory}
-              onChange={(e) => setIncidentCategory(e.target.value)}
-            >
-              {Object.entries(INCIDENT_CATEGORY_LABELS).map(([code, label]) => (
-                <MenuItem key={code} value={code}>
-                  {label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              multiline
-              minRows={3}
-              label="Descripción"
-              value={incidentDescription}
-              onChange={(e) => setIncidentDescription(e.target.value)}
-            />
-            {incidentError && <Alert severity="error">{incidentError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setIncidentDialog(false);
-              setIncidentError('');
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            disabled={!incidentDescription.trim() || createIncident.isPending}
-            onClick={() => createIncident.mutate()}
-          >
-            Reportar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={documentDialog} onClose={() => setDocumentDialog(false)} fullWidth>
-        <DialogTitle>Adjuntar documento</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField
-              select
-              label="Tipo de documento"
-              value={documentType}
-              onChange={(e) => setDocumentType(e.target.value)}
-            >
-              {Object.entries(DOCUMENT_TYPE_LABELS).map(([code, label]) => (
-                <MenuItem key={code} value={code}>
-                  {label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button component="label">
-              {documentFile ? documentFile.name : 'Seleccionar archivo (PDF o foto)'}
-              <input
-                type="file"
-                hidden
-                accept="application/pdf,image/jpeg,image/png"
-                onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-              />
-            </Button>
-            {documentError && <Alert severity="error">{documentError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setDocumentDialog(false);
-              setDocumentError('');
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            disabled={!documentFile || uploadDocument.isPending}
-            onClick={() => uploadDocument.mutate()}
-          >
-            Subir
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       <Dialog open={Boolean(replaceTarget)} onClose={() => setReplaceTarget(null)} fullWidth>
         <DialogTitle>Reemplazar personal asignado</DialogTitle>
         <DialogContent>
@@ -546,13 +322,6 @@ export default function PollingPlaceDetailPage() {
               Rol: {replaceTarget && ASSIGNMENT_ROLE_LABELS[replaceTarget.assignment_role]}
             </Typography>
             <Typography>Recinto: {place.data.name}</Typography>
-            {replaceTarget?.board_id && (
-              <Typography>
-                Junta:{' '}
-                {boards.data?.find((b) => b.id === replaceTarget.board_id)?.official_code ??
-                  replaceTarget.board_id}
-              </Typography>
-            )}
             <TextField
               select
               label="Nuevo usuario"

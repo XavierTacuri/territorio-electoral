@@ -4,11 +4,13 @@ export type ElectionDayOperation = {
   campaign_id: string;
   electoral_process_id: string;
   election_date: string;
-  status: 'PREPARATION' | 'ACTIVE' | 'CLOSED';
+  status: 'PREPARATION' | 'ACTIVE' | 'SCRUTINY' | 'CLOSED';
   opened_at: string | null;
   closed_at: string | null;
   opened_by_user_id: string | null;
   closed_by_user_id: string | null;
+  scrutiny_started_at: string | null;
+  scrutiny_started_by_user_id: string | null;
   notes: string | null;
 };
 
@@ -48,10 +50,7 @@ export type ElectoralBoard = {
   is_active: boolean;
 };
 
-export type ElectionDayAssignmentRole =
-  | 'POLLING_PLACE_COORDINATOR'
-  | 'BOARD_DELEGATE'
-  | 'MOBILE_SUPPORT';
+export type ElectionDayAssignmentRole = 'POLLING_PLACE_DELEGATE' | 'ACT_VALIDATOR';
 export type ElectionDayAssignmentStatus =
   | 'ASSIGNED'
   | 'CONFIRMED'
@@ -64,8 +63,7 @@ export type ElectionDayAssignment = {
   id: string;
   operation_id: string;
   user_id: string;
-  polling_place_id: string;
-  board_id: string | null;
+  polling_place_id: string | null;
   assignment_role: ElectionDayAssignmentRole;
   status: ElectionDayAssignmentStatus;
   checked_in_at: string | null;
@@ -114,9 +112,8 @@ export type ElectionDayDocument = {
 };
 
 export const ASSIGNMENT_ROLE_LABELS: Record<ElectionDayAssignmentRole, string> = {
-  POLLING_PLACE_COORDINATOR: 'Coordinador de recinto',
-  BOARD_DELEGATE: 'Delegado de junta',
-  MOBILE_SUPPORT: 'Apoyo móvil',
+  POLLING_PLACE_DELEGATE: 'Delegado de recinto',
+  ACT_VALIDATOR: 'Validador de actas',
 };
 
 export const ASSIGNMENT_STATUS_LABELS: Record<ElectionDayAssignmentStatus, string> = {
@@ -158,5 +155,42 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
 export const OPERATION_STATUS_LABELS: Record<ElectionDayOperation['status'], string> = {
   PREPARATION: 'Preparación',
   ACTIVE: 'Jornada activa',
+  SCRUTINY: 'Escrutinio',
   CLOSED: 'Jornada cerrada',
+};
+
+export type ElectionDayPreflightSummary = {
+  polling_places: number;
+  boards: number;
+  delegates: number;
+  validators: number;
+  uncovered_polling_places: number;
+};
+
+export type ElectionDayPreflightResponse = {
+  ready: boolean;
+  blockers: string[];
+  warnings: string[];
+  summary: ElectionDayPreflightSummary;
+};
+
+export type ElectionDayControlCenterResponse = {
+  operation: ElectionDayOperation;
+  coverage: CoverageSummary;
+};
+
+export type ElectionDayValidationStatus = {
+  operation_status: ElectionDayOperation['status'];
+  pending_reviews: number;
+};
+
+export type ElectionDayAdminSupportSession = {
+  id: string;
+  admin_user_id: string;
+  organization_id: string;
+  campaign_id: string;
+  operation_id: string;
+  reason: string | null;
+  started_at: string;
+  ended_at: string | null;
 };

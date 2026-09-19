@@ -188,13 +188,15 @@ class AlertEvaluationService:
             boards=list(self.db.scalars(select(ElectoralBoard).where(ElectoralBoard.polling_place_id.in_(place_ids),ElectoralBoard.is_active.is_(True)))) if place_ids else []
             assignments=list(self.db.scalars(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.status!="REPLACED")))
             if c=="ELECTION_PLACE_UNCOVERED":
-                covered={a.polling_place_id for a in assignments}
+                covered={a.polling_place_id for a in assignments if a.assignment_role=="POLLING_PLACE_DELEGATE"}
                 for p in places:
                     if p.id not in covered:items.append(self._item(rule,"POLLING_PLACE",p.id,p.parish_id,{"polling_place_name":p.name}))
             elif c=="BOARD_UNCOVERED":
-                covered={a.board_id for a in assignments if a.board_id}
+                # Un delegado cubre TODO su recinto (§12): una junta está
+                # cubierta si su recinto tiene al menos un delegado activo.
+                covered_places={a.polling_place_id for a in assignments if a.assignment_role=="POLLING_PLACE_DELEGATE"}
                 for b in boards:
-                    if b.id not in covered:items.append(self._item(rule,"ELECTORAL_BOARD",b.id,place_by_id[b.polling_place_id].parish_id,{"board_code":b.official_code,"polling_place_name":place_by_id[b.polling_place_id].name}))
+                    if b.polling_place_id not in covered_places:items.append(self._item(rule,"ELECTORAL_BOARD",b.id,place_by_id[b.polling_place_id].parish_id,{"board_code":b.official_code,"polling_place_name":place_by_id[b.polling_place_id].name}))
             elif c=="ASSIGNED_PERSON_NOT_CHECKED_IN":
                 if op.opened_at:
                     grace=int(rule.configuration.get("grace_minutes",60));threshold=op.opened_at+timedelta(minutes=grace)

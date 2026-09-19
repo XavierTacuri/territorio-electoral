@@ -23,22 +23,14 @@ class ElectionDayOperationRead(BaseModel):
     closed_at: datetime | None
     opened_by_user_id: UUID | None
     closed_by_user_id: UUID | None
+    scrutiny_started_at: datetime | None
+    scrutiny_started_by_user_id: UUID | None
     notes: str | None
 
 
 class ElectionDayCloseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     notes: str | None = None
-
-
-class PollingPlaceCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    official_code: str = Field(min_length=1, max_length=40)
-    name: str = Field(min_length=1, max_length=220)
-    parish_id: int
-    address: str | None = None
-    latitude: float | None = Field(None, ge=-90, le=90)
-    longitude: float | None = Field(None, ge=-180, le=180)
 
 
 class PollingPlaceRead(BaseModel):
@@ -56,14 +48,6 @@ class PollingPlaceRead(BaseModel):
     is_active: bool
 
 
-class ElectoralBoardCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    official_code: str = Field(min_length=1, max_length=40)
-    board_number: int = Field(ge=1)
-    sex_category: str | None = None
-    registered_voters: int | None = Field(None, ge=0)
-
-
 class ElectoralBoardRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
@@ -78,9 +62,8 @@ class ElectoralBoardRead(BaseModel):
 class ElectionDayAssignmentCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_id: UUID
-    polling_place_id: UUID
-    board_id: UUID | None = None
     assignment_role: str
+    polling_place_id: UUID | None = None
 
 
 class ElectionDayAssignmentRead(BaseModel):
@@ -88,8 +71,7 @@ class ElectionDayAssignmentRead(BaseModel):
     id: UUID
     operation_id: UUID
     user_id: UUID
-    polling_place_id: UUID
-    board_id: UUID | None
+    polling_place_id: UUID | None
     assignment_role: str
     status: str
     checked_in_at: datetime | None
@@ -200,3 +182,45 @@ class ElectionDayIncidentListResponse(BaseModel):
 class ElectionDayDocumentListResponse(BaseModel):
     items: list[ElectionDayDocumentRead]
     total: int
+
+
+class ElectionDayPreflightSummary(BaseModel):
+    polling_places: int
+    boards: int
+    delegates: int
+    validators: int
+    uncovered_polling_places: int
+
+
+class ElectionDayPreflightResponse(BaseModel):
+    ready: bool
+    blockers: list[str]
+    warnings: list[str]
+    summary: ElectionDayPreflightSummary
+
+
+class ElectionDayControlCenterResponse(BaseModel):
+    operation: ElectionDayOperationRead
+    coverage: CoverageSummary
+
+
+class ElectionDayValidationStatus(BaseModel):
+    operation_status: str
+    pending_reviews: int
+
+
+class ElectionDayAdminSupportStartRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    reason: str | None = Field(None, max_length=500)
+
+
+class ElectionDayAdminSupportSessionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    admin_user_id: UUID
+    organization_id: UUID
+    campaign_id: UUID
+    operation_id: UUID
+    reason: str | None
+    started_at: datetime
+    ended_at: datetime | None

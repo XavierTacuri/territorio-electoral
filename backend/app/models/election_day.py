@@ -10,13 +10,14 @@ from app.db.base import Base
 class ElectionDayOperation(Base):
     """El centro operativo del día de la elección — nunca un sistema paralelo
     de resultados. Un solo row por (campaign, electoral_process): transiciona
-    PREPARATION → ACTIVE → CLOSED en el mismo registro en lugar de crear filas
-    nuevas, lo que hace que "no dos jornadas ACTIVE del mismo proceso" (§6) sea
-    una consecuencia directa de la unicidad, no una regla aparte que mantener.
+    PREPARATION → ACTIVE → SCRUTINY → CLOSED en el mismo registro en lugar de
+    crear filas nuevas, lo que hace que "no dos jornadas ACTIVE del mismo
+    proceso" (§6) sea una consecuencia directa de la unicidad, no una regla
+    aparte que mantener.
     """
     __tablename__ = "election_day_operations"
     __table_args__ = (
-        CheckConstraint("status IN ('PREPARATION','ACTIVE','CLOSED')", name="status"),
+        CheckConstraint("status IN ('PREPARATION','ACTIVE','SCRUTINY','CLOSED')", name="status"),
         UniqueConstraint("campaign_id", "electoral_process_id", name="uq_election_day_operations_campaign_process"),
         Index("ix_election_day_operations_campaign_id", "campaign_id"),
         Index("ix_election_day_operations_electoral_process_id", "electoral_process_id"),
@@ -32,6 +33,8 @@ class ElectionDayOperation(Base):
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     opened_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     closed_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    scrutiny_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    scrutiny_started_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -91,25 +94,50 @@ class ElectoralBoard(Base):
 
 class ElectionDayAssignment(Base):
     """Vincula personal de campaña (no padrón, no UserRole global — §12/§15) a
-    un recinto/junta para la jornada. El check-in vive en la misma fila (no en
-    una tabla aparte): un reemplazo (§52) marca esta fila REPLACED y crea una
-    fila ASSIGNED nueva, preservando el check-in original intacto en su fila.
+    la jornada como personal operativo. POLLING_PLACE_DELEGATE trabaja sobre
+    todo un recinto (nunca sobre una junta puntual); ACT_VALIDATOR no
+    pertenece a ningún recinto (polling_place_id NULL) y opera sobre la cola
+    general de actas en una fase posterior. El check-in vive en la misma fila
+    (no en una tabla aparte): un reemplazo (§52) marca esta fila REPLACED y
+    crea una fila ASSIGNED nueva, preservando el check-in original intacto en
+    su fila.
     """
     __tablename__ = "election_day_assignments"
     __table_args__ = (
-        CheckConstraint("assignment_role IN ('POLLING_PLACE_COORDINATOR','BOARD_DELEGATE','MOBILE_SUPPORT')", name="assignment_role"),
+        CheckConstraint("assignment_role IN ('POLLING_PLACE_DELEGATE','ACT_VALIDATOR')", name="assignment_role"),
         CheckConstraint("status IN ('ASSIGNED','CONFIRMED','CHECKED_IN','ABSENT','REPLACED','COMPLETED')", name="status"),
+        CheckConstraint(
+            "(assignment_role = 'POLLING_PLACE_DELEGATE' AND polling_place_id IS NOT NULL) "
+            "OR (assignment_role = 'ACT_VALIDATOR' AND polling_place_id IS NULL)",
+            name="polling_place_matches_role",
+        ),
         Index("ix_election_day_assignments_operation_id", "operation_id"),
         Index("ix_election_day_assignments_user_id", "user_id"),
         Index("ix_election_day_assignments_polling_place_id", "polling_place_id"),
-        Index("ix_election_day_assignments_board_id", "board_id"),
         Index("ix_election_day_assignments_status", "status"),
+        # Un mismo delegado puede cubrir varios recintos, pero no dos veces el
+        # mismo recinto activo (§13). "Activa" excluye REPLACED: la fila
+        # reemplazada queda como historial, nunca como duplicado vigente.
+        Index(
+            "uq_election_day_assignments_active_delegate_place",
+            "operation_id", "user_id", "polling_place_id",
+            unique=True,
+            postgresql_where=text("assignment_role = 'POLLING_PLACE_DELEGATE' AND status != 'REPLACED'"),
+            sqlite_where=text("assignment_role = 'POLLING_PLACE_DELEGATE' AND status != 'REPLACED'"),
+        ),
+        # A lo sumo una asignación ACT_VALIDATOR activa por usuario/jornada (§13).
+        Index(
+            "uq_election_day_assignments_active_validator",
+            "operation_id", "user_id",
+            unique=True,
+            postgresql_where=text("assignment_role = 'ACT_VALIDATOR' AND status != 'REPLACED'"),
+            sqlite_where=text("assignment_role = 'ACT_VALIDATOR' AND status != 'REPLACED'"),
+        ),
     )
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     operation_id: Mapped[UUID] = mapped_column(ForeignKey("election_day_operations.id", ondelete="RESTRICT"), nullable=False)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
-    polling_place_id: Mapped[UUID] = mapped_column(ForeignKey("polling_places.id", ondelete="RESTRICT"), nullable=False)
-    board_id: Mapped[UUID | None] = mapped_column(ForeignKey("electoral_boards.id", ondelete="RESTRICT"))
+    polling_place_id: Mapped[UUID | None] = mapped_column(ForeignKey("polling_places.id", ondelete="RESTRICT"))
     assignment_role: Mapped[str] = mapped_column(String(30), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="ASSIGNED", server_default="ASSIGNED")
     checked_in_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -149,6 +177,36 @@ class ElectionDayIncident(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ElectionDayAdminSupportSession(Base):
+    """Modo soporte administrativo explícito (§6): el privilegio global de
+    ADMIN nunca equivale por sí solo a acceso operativo de Jornada Electoral.
+    Un ADMIN solo entra al Centro de Control mientras tiene una fila activa
+    (ended_at IS NULL) aquí, para una campaña a la vez — nunca propietario
+    operativo, solo soporte auditado y de solo lectura."""
+    __tablename__ = "election_day_admin_support_sessions"
+    __table_args__ = (
+        Index("ix_election_day_admin_support_sessions_admin_user_id", "admin_user_id"),
+        Index("ix_election_day_admin_support_sessions_campaign_id", "campaign_id"),
+        Index("ix_election_day_admin_support_sessions_operation_id", "operation_id"),
+        Index(
+            "uq_election_day_admin_support_sessions_one_active_per_admin",
+            "admin_user_id",
+            unique=True,
+            postgresql_where=text("ended_at IS NULL"),
+            sqlite_where=text("ended_at IS NULL"),
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    admin_user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False)
+    campaign_id: Mapped[UUID] = mapped_column(ForeignKey("campaigns.id", ondelete="RESTRICT"), nullable=False)
+    operation_id: Mapped[UUID] = mapped_column(ForeignKey("election_day_operations.id", ondelete="RESTRICT"), nullable=False)
+    reason: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class ElectionDayDocument(Base):

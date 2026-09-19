@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { apiToken, browserLogin, e2eUsers } from './support/auth';
+import { apiToken, browserLogin, e2eUsers, logout } from './support/auth';
 
 async function gualaceoCampaign(request: APIRequestContext, headers: Record<string, string>) {
   const campaigns = (
@@ -41,8 +41,8 @@ async function assignments(
     items: {
       id: string;
       user_id: string;
-      polling_place_id: string;
-      board_id: string | null;
+      polling_place_id: string | null;
+      assignment_role: string;
       status: string;
       checked_in_at: string | null;
       replaced_by_assignment_id: string | null;
@@ -54,6 +54,14 @@ async function assignments(
 async function gotoElectionDay(page: Page, campaignId: string) {
   await page.goto(`/app/campaigns/${campaignId}/election-day`);
   await expect(page.getByRole('heading', { name: 'Jornada Electoral' })).toBeVisible();
+}
+
+// Lecturas de fixture (recintos/asignaciones) se hacen con un token del
+// equipo ejecutivo, nunca con el de ADMIN: ADMIN ya no tiene acceso de
+// lectura implícito a la Jornada Electoral de una campaña (§5/§6/§7).
+async function managerHeaders(request: APIRequestContext) {
+  const token = await apiToken(request, e2eUsers.manager);
+  return { Authorization: 'Bearer ' + token };
 }
 
 test.describe('Modo Jornada Electoral', () => {
@@ -80,25 +88,23 @@ test.describe('Modo Jornada Electoral', () => {
     ).toBeVisible();
   });
 
-  test('ANALYST ve la jornada en modo solo lectura, sin controles de gestión', async ({
-    page,
-    request,
-  }) => {
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+  test('ANALYST no tiene ningún acceso a la Jornada Electoral', async ({ page, request }) => {
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
 
     await browserLogin(page, e2eUsers.analyst);
-    await gotoElectionDay(page, campaign.id);
-    await expect(page.getByRole('button', { name: 'Activar jornada' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Cerrar jornada' })).toHaveCount(0);
-
-    const places = await pollingPlaces(request, headers, campaign.id);
-    const place = places.find((p) => p.official_code === 'E2E-REC-01')!;
-    await page.goto(`/app/campaigns/${campaign.id}/election-day/polling-places/${place.id}`);
-    await expect(page.getByRole('button', { name: 'AGREGAR JUNTA' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'REPORTAR INCIDENCIA' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'ADJUNTAR DOCUMENTO' })).toHaveCount(0);
+    // La navegación de ANALYST ya no ofrece el enlace (§12).
+    await page.goto(`/app/campaigns/${campaign.id}/dashboard`);
+    await expect(
+      page.getByRole('navigation', { name: 'Navegación principal' }).getByText('Jornada Electoral'),
+    ).toHaveCount(0);
+    // Cada `page.goto` es una navegación completa, que vuelve a disparar el
+    // refresh-token silencioso al cargar; sin una pequeña pausa, navegaciones
+    // consecutivas pueden competir con esa rotación y cerrar la sesión.
+    await page.waitForTimeout(500);
+    // Y una URL directa se rechaza con 403 (§21).
+    await page.goto(`/app/campaigns/${campaign.id}/election-day`);
+    await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
   });
 
   test('responsive: el Centro de Jornada no desborda horizontalmente en 375/768/1440', async ({
@@ -125,8 +131,7 @@ test.describe('Modo Jornada Electoral', () => {
     page,
     request,
   }) => {
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
     const places = await pollingPlaces(request, headers, campaign.id);
     const place = places.find((p) => p.official_code === 'E2E-REC-01')!;
@@ -145,15 +150,17 @@ test.describe('Modo Jornada Electoral', () => {
     page,
     request,
   }) => {
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
     const places = await pollingPlaces(request, headers, campaign.id);
     const place1 = places.find((p) => p.official_code === 'E2E-REC-01')!;
     const place2 = places.find((p) => p.official_code === 'E2E-REC-02')!;
     const list = await assignments(request, headers, campaign.id);
     const delegateAAssignment = list.find(
-      (a) => a.polling_place_id === place1.id && a.status === 'CHECKED_IN' && a.board_id,
+      (a) =>
+        a.polling_place_id === place1.id &&
+        a.assignment_role === 'POLLING_PLACE_DELEGATE' &&
+        a.status === 'CHECKED_IN',
     )!;
     expect(delegateAAssignment.checked_in_at).not.toBeNull();
     // delegate_e2e_b ya existe como personal de esta jornada (asignado en el
@@ -162,7 +169,8 @@ test.describe('Modo Jornada Electoral', () => {
 
     await browserLogin(page, e2eUsers.manager);
     await page.goto(`/app/campaigns/${campaign.id}/election-day/polling-places/${place1.id}`);
-    await expect(page.getByText(/Delegado de junta/)).toBeVisible();
+    // Este recinto tiene dos delegados (§13, coordinator_e2e y delegate_e2e_a).
+    await expect(page.getByText(/Delegado de recinto/).first()).toBeVisible();
     await page.getByRole('button', { name: 'REEMPLAZAR' }).first().click();
     await expect(page.getByRole('heading', { name: 'Reemplazar personal asignado' })).toBeVisible();
     await page.getByLabel('Nuevo usuario').click();
@@ -187,14 +195,17 @@ test.describe('Modo Jornada Electoral', () => {
     context,
   }) => {
     test.setTimeout(120000);
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
 
     await browserLogin(page, e2eUsers.delegateB);
     await page.goto(`/app/campaigns/${campaign.id}/election-day/my`);
     await expect(page.getByRole('heading', { name: 'Mi Jornada' })).toBeVisible();
-    await expect(page.getByText(/Escuela Sintética Central|Colegio Sintético Norte/)).toBeVisible({
+    // delegate_e2e_b puede cubrir más de un recinto (§13); basta con que
+    // aparezca al menos uno de los suyos.
+    await expect(
+      page.getByText(/Escuela Sintética Central|Colegio Sintético Norte/).first(),
+    ).toBeVisible({
       timeout: 15000,
     });
 
@@ -203,23 +214,26 @@ test.describe('Modo Jornada Electoral', () => {
       page.getByText('Sin conexión: los registros se guardan en el dispositivo'),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'CONFIRMAR PRESENCIA' }).click();
+    await page.getByRole('button', { name: 'CONFIRMAR PRESENCIA' }).first().click();
     await expect(
       page.getByText('Guardado en el dispositivo. Se sincronizará con el servidor.'),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'REPORTAR INCIDENCIA' }).click();
+    await page.getByRole('button', { name: 'REPORTAR INCIDENCIA' }).first().click();
     await page.getByLabel('Descripción').fill('Sin conexión eléctrica en la junta (offline E2E).');
     await page.getByRole('button', { name: 'Guardar incidencia' }).click();
     await expect(
       page.getByText('Incidencia guardada en el dispositivo. Se sincronizará con el servidor.'),
     ).toBeVisible();
 
-    await page.setInputFiles('input[type="file"][accept*="image"]', {
-      name: 'acta-offline.jpg',
-      mimeType: 'image/jpeg',
-      buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]),
-    });
+    await page
+      .locator('input[type="file"][accept*="image"]')
+      .first()
+      .setInputFiles({
+        name: 'acta-offline.jpg',
+        mimeType: 'image/jpeg',
+        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]),
+      });
     await expect(
       page.getByText('Documento guardado en el dispositivo. Se sincronizará con el servidor.'),
     ).toBeVisible();
@@ -235,12 +249,13 @@ test.describe('Modo Jornada Electoral', () => {
 
     const delegateBToken = await apiToken(request, e2eUsers.delegateB);
     const delegateBHeaders = { Authorization: 'Bearer ' + delegateBToken };
-    const my = await (
-      await request.get(`/api/v1/campaigns/${campaign.id}/election-day/my-assignment`, {
+    const mine = (await (
+      await request.get(`/api/v1/campaigns/${campaign.id}/election-day/my-assignments`, {
         headers: delegateBHeaders,
       })
-    ).json();
-    expect(my.status).toBe('CHECKED_IN');
+    ).json()) as { status: string; polling_place_id: string }[];
+    const my = mine.find((a) => a.status === 'CHECKED_IN')!;
+    expect(my).toBeTruthy();
 
     const incidents = (
       await (
@@ -272,15 +287,14 @@ test.describe('Modo Jornada Electoral', () => {
     expect(bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))).toBe(true);
   });
 
-  test('RBAC: el alcance territorial del Coordinator limita incidencias y juntas fuera de su parroquia asignada', async ({
+  test('RBAC: el rol de Coordinator no da acceso; solo su propia asignación de delegado de recinto lo hace', async ({
     request,
   }) => {
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
     const places = await pollingPlaces(request, headers, campaign.id);
-    const place1 = places.find((p) => p.official_code === 'E2E-REC-01')!; // parroquia asignada a coordinator_e2e
-    const place2 = places.find((p) => p.official_code === 'E2E-REC-02')!; // fuera de su alcance
+    const place1 = places.find((p) => p.official_code === 'E2E-REC-01')!; // coordinator_e2e es delegado de este recinto
+    const place2 = places.find((p) => p.official_code === 'E2E-REC-02')!; // fuera de su alcance (sin asignación ahí)
 
     const coordinatorToken = await apiToken(request, e2eUsers.coordinator);
     const coordinatorHeaders = { Authorization: 'Bearer ' + coordinatorToken };
@@ -326,9 +340,12 @@ test.describe('Modo Jornada Electoral', () => {
     });
     expect(forbidden.status()).toBe(403);
 
+    // manager_e2e sí tiene acceso legítimo (ejecutivo) a esta otra campaña:
+    // confirma que el 404 es real (no existe jornada), no solo un 403 de acceso.
+    const otherExecutiveHeaders = await managerHeaders(request);
     const otherOperation = await request.get(
       `/api/v1/campaigns/${other.id}/election-day/operation`,
-      { headers },
+      { headers: otherExecutiveHeaders },
     );
     expect(otherOperation.status()).toBe(404);
   });
@@ -436,27 +453,31 @@ test.describe('Modo Jornada Electoral', () => {
     await page.getByRole('button', { name: 'EJECUTAR' }).click();
     await expect(page.getByText('Juntas importadas correctamente.')).toBeVisible();
 
+    // La visibilidad en Modo Jornada se verifica como equipo ejecutivo: ADMIN
+    // ya no ve la Jornada de una campaña por privilegio implícito (§5/§6).
+    await logout(page);
+    await browserLogin(page, e2eUsers.manager);
     await page.goto(`/app/campaigns/${campaign.id}/election-day`);
     await expect(page.getByText('Recinto Data Hub E2E')).toBeVisible();
 
-    const places = await pollingPlaces(request, headers, campaign.id);
+    const executiveHeaders = await managerHeaders(request);
+    const places = await pollingPlaces(request, executiveHeaders, campaign.id);
     const imported = places.find((p) => p.official_code === placeCode);
     expect(imported).toBeTruthy();
     const boards = await (
       await request.get(
         `/api/v1/campaigns/${campaign.id}/election-day/polling-places/${imported!.id}/boards`,
-        { headers },
+        { headers: executiveHeaders },
       )
     ).json();
     expect(boards.some((b: { official_code: string }) => b.official_code === boardCode)).toBe(true);
   });
 
-  test('un código de junta duplicado muestra un error visible en español sin perder los datos escritos', async ({
+  test('el detalle de recinto nunca ofrece agregar junta: los datos electorales son de solo lectura', async ({
     page,
     request,
   }) => {
-    const adminToken = await apiToken(request);
-    const headers = { Authorization: 'Bearer ' + adminToken };
+    const headers = await managerHeaders(request);
     const campaign = await gualaceoCampaign(request, headers);
     const places = await pollingPlaces(request, headers, campaign.id);
     const place1 = places.find((p) => p.official_code === 'E2E-REC-01')!;
@@ -464,18 +485,8 @@ test.describe('Modo Jornada Electoral', () => {
     await browserLogin(page, e2eUsers.manager);
     await page.goto(`/app/campaigns/${campaign.id}/election-day/polling-places/${place1.id}`);
     await expect(page.getByText('E2E-REC-01-J01')).toBeVisible();
-    await page.getByRole('button', { name: 'AGREGAR JUNTA' }).click();
-    // Reutiliza deliberadamente un código de junta que ya existe en este recinto (§34/§92 del seed).
-    await page.getByLabel('Código de junta').fill('E2E-REC-01-J01');
-    await page.getByRole('button', { name: 'Guardar' }).click();
-    await expect(page.getByText('No fue posible crear la junta.')).toBeVisible();
-    // El diálogo permanece abierto y el texto escrito no se pierde.
-    await expect(page.getByRole('heading', { name: 'Agregar junta' })).toBeVisible();
-    await expect(page.getByLabel('Código de junta')).toHaveValue('E2E-REC-01-J01');
-    // La página sigue operativa: no queda en una pantalla de error global.
-    await page.getByRole('button', { name: 'Cancelar' }).click();
-    await expect(page.getByRole('heading', { name: 'Agregar junta' })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Escuela Sintética Central' })).toBeVisible();
+    await expect(page.getByText('Datos electorales cargados por administración.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'AGREGAR JUNTA' })).toHaveCount(0);
   });
 
   test('MANAGER cierra la jornada y genera el Informe de Jornada Electoral', async ({
@@ -489,6 +500,12 @@ test.describe('Modo Jornada Electoral', () => {
 
     await browserLogin(page, e2eUsers.manager);
     await gotoElectionDay(page, campaign.id);
+    const scrutinyResponse = page.waitForResponse((r) =>
+      r.url().endsWith('/operation/start-scrutiny'),
+    );
+    await page.getByRole('button', { name: 'Iniciar escrutinio' }).click();
+    expect((await scrutinyResponse).status()).toBe(200);
+    await expect(page.getByText('Escrutinio')).toBeVisible();
     await page.getByRole('button', { name: 'Cerrar jornada' }).click();
     await expect(page.getByRole('heading', { name: 'Cerrar jornada' })).toBeVisible();
     const closeResponse = page.waitForResponse((r) => r.url().endsWith('/operation/close'));

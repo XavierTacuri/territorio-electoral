@@ -42,6 +42,13 @@ export const canDismissAlert = (u: SessionUser | null) =>
   has(u, 'ADMIN', ...CAMPAIGN_EXECUTIVE_ROLES);
 export const canViewSecurityAudit = canManageUsers;
 
+// Centro de Control de Jornada Electoral (§7/§12): solo el equipo ejecutivo
+// de campaña, o ADMIN — cuya entrada real depende de tener una sesión de
+// soporte activa para esa campaña, verificada por el backend en cada
+// llamada, nunca solo aquí. Coordinator y Analyst nunca pasan este guard.
+export const canAccessElectionDayControlCenter = (u: SessionUser | null) =>
+  has(u, 'ADMIN', ...CAMPAIGN_EXECUTIVE_ROLES);
+
 // TERRITORIAL_COORDINATOR is an operational territorial role: it does not get
 // the executive/analyst/admin-facing global modules below, per product
 // decision. Other campaign roles keep exactly the access they had before.

@@ -124,14 +124,13 @@ export function AppShell() {
   const { campaignId } = useParams();
   const selectedId = campaignId ?? active?.id;
   const isFieldCoordinator = isCoordinatorOnly(user);
-  const myJornadaVisible = useMyElectionDayNavVisibility(
-    isFieldCoordinator ? selectedId : undefined,
-  );
+  const { delegateVisible, validationVisible } = useMyElectionDayNavVisibility(selectedId);
   const groups = buildNavigation(
     user,
     activeOrganization?.current_role ?? null,
     selectedId,
-    myJornadaVisible,
+    delegateVisible,
+    validationVisible,
   );
   const organizationId = useResolvedOrganizationId(selectedId, active?.organization_id);
   const pendingSyncCount = usePendingSyncCount(

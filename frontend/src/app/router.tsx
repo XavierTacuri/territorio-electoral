@@ -5,6 +5,7 @@ import { RoleGuard } from '../auth/RoleGuard';
 import {
   canAccessAlertsCenter,
   canAccessDebateAssistant,
+  canAccessElectionDayControlCenter,
   canAccessReportsCenter,
   canAccessSurveysModule,
   canManageUsers,
@@ -62,6 +63,8 @@ const ElectionDayPollingPlace = lazy(
   () => import('../features/election-day/PollingPlaceDetailPage'),
 );
 const MyElectionDay = lazy(() => import('../features/election-day/MyElectionDayPage'));
+const ElectionDayValidation = lazy(() => import('../features/election-day/ValidationPage'));
+const AdminElectionDaySupport = lazy(() => import('../features/admin/ElectionDaySupportPage'));
 const Alerts = lazy(() => import('../features/alerts/AlertsPage'));
 const Electoral = lazy(() => import('../features/historical/ElectoralPage'));
 const Demographics = lazy(() => import('../features/historical/DemographicsPage'));
@@ -245,12 +248,31 @@ export const router = createBrowserRouter([
               </RoleGuard>
             ),
           },
-          { path: campaign.slice(5) + '/election-day', element: lazyElement(<ElectionDay />) },
+          {
+            path: campaign.slice(5) + '/election-day',
+            element: (
+              <RoleGuard check={canAccessElectionDayControlCenter}>
+                {lazyElement(<ElectionDay />)}
+              </RoleGuard>
+            ),
+          },
+          {
+            path: campaign.slice(5) + '/election-day/control-center',
+            element: (
+              <RoleGuard check={canAccessElectionDayControlCenter}>
+                {lazyElement(<ElectionDay />)}
+              </RoleGuard>
+            ),
+          },
           {
             path: campaign.slice(5) + '/election-day/polling-places/:polling_place_id',
             element: lazyElement(<ElectionDayPollingPlace />),
           },
           { path: campaign.slice(5) + '/election-day/my', element: lazyElement(<MyElectionDay />) },
+          {
+            path: campaign.slice(5) + '/election-day/validation',
+            element: lazyElement(<ElectionDayValidation />),
+          },
           {
             path: campaign.slice(5) + '/alerts',
             element: <RoleGuard check={canAccessAlertsCenter}>{lazyElement(<Alerts />)}</RoleGuard>,
@@ -350,6 +372,14 @@ export const router = createBrowserRouter([
           {
             path: 'admin/data-imports',
             element: <RoleGuard check={canManageUsers}>{lazyElement(<Imports />)}</RoleGuard>,
+          },
+          {
+            path: 'admin/election-day-support',
+            element: (
+              <RoleGuard check={canManageUsers}>
+                {lazyElement(<AdminElectionDaySupport />)}
+              </RoleGuard>
+            ),
           },
           {
             path: 'admin/official-data/cne',

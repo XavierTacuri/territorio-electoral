@@ -25,7 +25,7 @@ from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignUserAssign, TerritorialAssignmentCreate
 from app.schemas.historical import DataSourceCreate, DemographicIndicatorCreate, ElectoralContestCreate, ElectoralProcessCreate
 from app.schemas.operational import ActivityCloseRequest, CitizenNeedCreate, ParticipantSummaryUpsert, TerritorialActivityCreate
-from app.schemas.election_day import CheckInRequest, ElectionDayAssignmentCreate, ElectionDayIncidentCreate, ElectionDayOperationCreate, ElectoralBoardCreate, PollingPlaceCreate
+from app.schemas.election_day import CheckInRequest, ElectionDayAssignmentCreate, ElectionDayIncidentCreate, ElectionDayOperationCreate
 from app.schemas.reports import ReportGenerationRequest
 from app.schemas.survey import SurveyAnswerInput, SurveyCreate, SurveyOptionCreate, SurveyQuestionCreate, SurveySectionCreate, SurveySubmissionCreate
 from app.scripts.seed_gualaceo import seed as seed_gualaceo
@@ -285,7 +285,7 @@ def ensure_election_day_fixture(db,users,admin,campaign,canton,parishes):
     states (checked-in, assigned-not-yet-present, uncovered) so Playwright
     specs can exercise the Command Center, recinto detail, and Mi Jornada
     without depending on manual setup through the UI first."""
-    manager=users["manager_e2e"];coordinator=users["coordinator_e2e"];delegate_a=users["delegate_e2e_a"];delegate_b=users["delegate_e2e_b"]
+    manager=users["manager_e2e"];coordinator=users["coordinator_e2e"];delegate_a=users["delegate_e2e_a"];delegate_b=users["delegate_e2e_b"];validator=users["analyst_e2e"]
     source=db.scalar(select(DataSource).where(DataSource.code=="E2E_ELECTION_DAY"))
     if not source:
         source=DataSourceService(db).create(DataSourceCreate(code="E2E_ELECTION_DAY",institution="Institución sintética",dataset_name="Proceso electoral sintético — jornada E2E",dataset_type="CNE_ELECTORAL_ROLL_SNAPSHOT",official_url="https://example.test/jornada-e2e.csv",publication_date=date(2026,1,1),reference_year=2027),admin)
@@ -298,36 +298,44 @@ def ensure_election_day_fixture(db,users,admin,campaign,canton,parishes):
     op=db.scalar(select(ElectionDayOperation).where(ElectionDayOperation.campaign_id==campaign.id,ElectionDayOperation.electoral_process_id==process.id))
     if not op:
         op=service.create_operation(campaign.id,ElectionDayOperationCreate(electoral_process_id=process.id,election_date=date(2027,2,14)),manager)
-    if op.status=="PREPARATION":
-        op=service.open_operation(campaign.id,manager)
+    # Los recintos/juntas oficiales ya no se crean vía API operativa de
+    # campaña (§1/§21): se insertan directamente, simulando datos que
+    # administración ya publicó desde el Data Hub.
     place_specs=[("E2E-REC-01","Escuela Sintética Central",parishes[0],-2.8877,-78.7770,3),("E2E-REC-02","Colegio Sintético Norte",parishes[1],-2.8690,-78.7790,3),("E2E-REC-03","Casa Comunal Sintética",parishes[2],-2.9010,-78.7650,2)]
     places=[]
     for code,name,parish,lat,lng,board_count in place_specs:
         place=db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code==code))
         if not place:
-            place=service.create_polling_place(campaign.id,PollingPlaceCreate(official_code=code,name=name,parish_id=parish.id,address=f"{name}, {parish.name}",latitude=lat,longitude=lng),manager)
+            place=PollingPlace(electoral_process_id=process.id,province_id=canton.province_id,canton_id=canton.id,parish_id=parish.id,official_code=code,name=name,address=f"{name}, {parish.name}",latitude=lat,longitude=lng,is_active=True,data_source_id=source.id);db.add(place);db.flush()
         places.append(place)
         for board_index in range(1,board_count+1):
             board_code=f"{code}-J{board_index:02d}"
             if not db.scalar(select(ElectoralBoard).where(ElectoralBoard.polling_place_id==place.id,ElectoralBoard.official_code==board_code)):
-                service.create_board(campaign.id,place.id,ElectoralBoardCreate(official_code=board_code,board_number=board_index,registered_voters=280+board_index*10),manager)
+                db.add(ElectoralBoard(polling_place_id=place.id,official_code=board_code,board_number=board_index,registered_voters=280+board_index*10,is_active=True,data_source_id=source.id))
+    db.flush()
     boards_place_1=service.list_boards(campaign.id,manager,places[0].id)
-    boards_place_2=service.list_boards(campaign.id,manager,places[1].id)
-    # Recinto 1: totalmente cubierto y con presencia confirmada.
+    # Recinto 1: dos delegados de recinto (§13, múltiples delegados por recinto).
     coord_assignment=db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==coordinator.id,ElectionDayAssignment.polling_place_id==places[0].id))
     if not coord_assignment:
-        coord_assignment=service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=coordinator.id,polling_place_id=places[0].id,assignment_role="POLLING_PLACE_COORDINATOR"),manager)
-    if coord_assignment.status=="ASSIGNED":
-        service.check_in(campaign.id,coord_assignment.id,CheckInRequest(latitude=-2.8877,longitude=-78.7770),coordinator)
+        coord_assignment=service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=coordinator.id,assignment_role="POLLING_PLACE_DELEGATE",polling_place_id=places[0].id),manager)
     delegate_a_assignment=db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==delegate_a.id,ElectionDayAssignment.polling_place_id==places[0].id))
     if not delegate_a_assignment:
-        delegate_a_assignment=service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=delegate_a.id,polling_place_id=places[0].id,board_id=boards_place_1[0].id,assignment_role="BOARD_DELEGATE"),manager)
-    if delegate_a_assignment.status=="ASSIGNED":
-        service.check_in(campaign.id,delegate_a_assignment.id,CheckInRequest(latitude=-2.8878,longitude=-78.7771),delegate_a)
+        delegate_a_assignment=service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=delegate_a.id,assignment_role="POLLING_PLACE_DELEGATE",polling_place_id=places[0].id),manager)
     # Recinto 2: personal asignado pero aún sin confirmar presencia (cobertura parcial).
     if not db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==delegate_b.id,ElectionDayAssignment.polling_place_id==places[1].id)):
-        service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=delegate_b.id,polling_place_id=places[1].id,board_id=boards_place_2[0].id,assignment_role="BOARD_DELEGATE"),manager)
+        service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=delegate_b.id,assignment_role="POLLING_PLACE_DELEGATE",polling_place_id=places[1].id),manager)
     # Recinto 3: deliberadamente sin asignaciones — cobertura pendiente, visible en el mapa/KPIs.
+    # Validador de actas (sin recinto) — necesario para que el preflight no bloquee la activación.
+    if not db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==validator.id,ElectionDayAssignment.assignment_role=="ACT_VALIDATOR")):
+        service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=validator.id,assignment_role="ACT_VALIDATOR"),manager)
+    if op.status=="PREPARATION":
+        op=service.open_operation(campaign.id,manager)
+    db.refresh(coord_assignment)
+    if coord_assignment.status=="ASSIGNED":
+        service.check_in(campaign.id,coord_assignment.id,CheckInRequest(latitude=-2.8877,longitude=-78.7770),coordinator)
+    db.refresh(delegate_a_assignment)
+    if delegate_a_assignment.status=="ASSIGNED":
+        service.check_in(campaign.id,delegate_a_assignment.id,CheckInRequest(latitude=-2.8878,longitude=-78.7771),delegate_a)
     if not db.scalar(select(ElectionDayIncident).where(ElectionDayIncident.operation_id==op.id,ElectionDayIncident.polling_place_id==places[0].id,ElectionDayIncident.category=="LOGISTICS")):
         service.create_incident(campaign.id,ElectionDayIncidentCreate(polling_place_id=places[0].id,category="LOGISTICS",description="Falta material electoral sintético para la jornada E2E."),coordinator)
     if not db.scalar(select(ElectionDayDocument).where(ElectionDayDocument.operation_id==op.id,ElectionDayDocument.polling_place_id==places[0].id)):

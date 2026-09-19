@@ -50,6 +50,18 @@ let incidents: any[] = [];
 let processes: any[] = [];
 let createdBody: any = null;
 let lastAction: string | null = null;
+let preflight: any = {
+  ready: true,
+  blockers: [],
+  warnings: [],
+  summary: {
+    polling_places: 1,
+    boards: 1,
+    delegates: 1,
+    validators: 1,
+    uncovered_polling_places: 0,
+  },
+};
 
 beforeAll(() => {
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
@@ -69,6 +81,18 @@ afterEach(() => {
   processes = [];
   createdBody = null;
   lastAction = null;
+  preflight = {
+    ready: true,
+    blockers: [],
+    warnings: [],
+    summary: {
+      polling_places: 1,
+      boards: 1,
+      delegates: 1,
+      validators: 1,
+      uncovered_polling_places: 0,
+    },
+  };
   auth.user = { ...auth.user, roles: [{ code: 'CANDIDATE', name: 'Candidato' }] };
   server.resetHandlers();
 });
@@ -89,9 +113,16 @@ function handlers() {
       createdBody = await request.json();
       return HttpResponse.json({ ...operation, id: 'op1' });
     }),
+    http.get('*/api/v1/campaigns/campaign-1/election-day/operation/preflight', () =>
+      HttpResponse.json(preflight),
+    ),
     http.post('*/api/v1/campaigns/campaign-1/election-day/operation/open', () => {
       lastAction = 'open';
       return HttpResponse.json({ ...operation, status: 'ACTIVE' });
+    }),
+    http.post('*/api/v1/campaigns/campaign-1/election-day/operation/start-scrutiny', () => {
+      lastAction = 'start-scrutiny';
+      return HttpResponse.json({ ...operation, status: 'SCRUTINY' });
     }),
     http.post('*/api/v1/campaigns/campaign-1/election-day/operation/close', () => {
       lastAction = 'close';
@@ -262,7 +293,7 @@ describe('Jornada Electoral — Command Center', () => {
     await waitFor(() => expect(lastAction).toBe('open'));
   });
 
-  it('muestra el diálogo de cierre con el resumen de cobertura y confirma el cierre', async () => {
+  it('permite iniciar el escrutinio desde una jornada activa', async () => {
     operationStatus = 200;
     operation = {
       id: 'op1',
@@ -275,6 +306,69 @@ describe('Jornada Electoral — Command Center', () => {
       closed_at: null,
       opened_by_user_id: 'u1',
       closed_by_user_id: null,
+      notes: null,
+    };
+    coverage = cov;
+    places = [place];
+    handlers();
+    renderPage();
+    await screen.findByText('Escuela Central');
+    expect(screen.queryByRole('button', { name: 'Cerrar jornada' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar escrutinio' }));
+    await waitFor(() => expect(lastAction).toBe('start-scrutiny'));
+  });
+
+  it('no permite activar la jornada si el preflight tiene bloqueos', async () => {
+    operationStatus = 200;
+    operation = {
+      id: 'op1',
+      organization_id: 'org1',
+      campaign_id: 'campaign-1',
+      electoral_process_id: 'proc-1',
+      election_date: '2027-03-14',
+      status: 'PREPARATION',
+      opened_at: null,
+      closed_at: null,
+      opened_by_user_id: null,
+      closed_by_user_id: null,
+      notes: null,
+    };
+    coverage = cov;
+    places = [place];
+    preflight = {
+      ready: false,
+      blockers: ['No existe ningún validador de actas asignado.'],
+      warnings: [],
+      summary: {
+        polling_places: 1,
+        boards: 1,
+        delegates: 1,
+        validators: 0,
+        uncovered_polling_places: 0,
+      },
+    };
+    handlers();
+    renderPage();
+    await screen.findByText('Escuela Central');
+    expect(await screen.findByText('No existe ningún validador de actas asignado.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Activar jornada' })).toBeDisabled();
+  });
+
+  it('muestra el diálogo de cierre con el resumen de cobertura y confirma el cierre', async () => {
+    operationStatus = 200;
+    operation = {
+      id: 'op1',
+      organization_id: 'org1',
+      campaign_id: 'campaign-1',
+      electoral_process_id: 'proc-1',
+      election_date: '2027-03-14',
+      status: 'SCRUTINY',
+      opened_at: '2027-03-14T10:00:00Z',
+      closed_at: null,
+      opened_by_user_id: 'u1',
+      closed_by_user_id: null,
+      scrutiny_started_at: '2027-03-14T20:00:00Z',
+      scrutiny_started_by_user_id: 'u1',
       notes: null,
     };
     coverage = cov;

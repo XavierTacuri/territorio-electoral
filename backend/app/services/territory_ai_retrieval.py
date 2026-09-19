@@ -206,8 +206,8 @@ class TerritoryAIEvidenceRetriever:
         boards=list(self.db.scalars(select(ElectoralBoard).where(ElectoralBoard.polling_place_id.in_(place_ids),ElectoralBoard.is_active.is_(True)))) if place_ids else []
         board_ids={b.id for b in boards}
         assignments=list(self.db.scalars(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.status!="REPLACED")))
-        covered_places={a.polling_place_id for a in assignments}&set(place_ids)
-        covered_boards={a.board_id for a in assignments if a.board_id}&board_ids
+        covered_places={a.polling_place_id for a in assignments if a.assignment_role=="POLLING_PLACE_DELEGATE"}&set(place_ids)
+        covered_boards={b.id for b in boards if b.polling_place_id in covered_places}
         confirmed=sum(1 for a in assignments if a.status in {"CONFIRMED","CHECKED_IN"})
         checked_in=sum(1 for a in assignments if a.status=="CHECKED_IN")
         documented_boards={d.board_id for d in self.db.scalars(select(ElectionDayDocument).where(ElectionDayDocument.operation_id==op.id,ElectionDayDocument.is_active.is_(True),ElectionDayDocument.document_type=="ACTA_COPY")) if d.board_id}&board_ids

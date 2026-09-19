@@ -6630,6 +6630,94 @@
         "title": "DemographicProfileRead",
         "type": "object"
       },
+      "ElectionDayAdminSupportSessionRead": {
+        "properties": {
+          "admin_user_id": {
+            "format": "uuid",
+            "title": "Admin User Id",
+            "type": "string"
+          },
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "organization_id": {
+            "format": "uuid",
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "admin_user_id",
+          "organization_id",
+          "campaign_id",
+          "operation_id",
+          "reason",
+          "started_at",
+          "ended_at"
+        ],
+        "title": "ElectionDayAdminSupportSessionRead",
+        "type": "object"
+      },
+      "ElectionDayAdminSupportStartRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "ElectionDayAdminSupportStartRequest",
+        "type": "object"
+      },
       "ElectionDayAssignmentCreate": {
         "additionalProperties": false,
         "properties": {
@@ -6637,7 +6725,7 @@
             "title": "Assignment Role",
             "type": "string"
           },
-          "board_id": {
+          "polling_place_id": {
             "anyOf": [
               {
                 "format": "uuid",
@@ -6647,12 +6735,7 @@
                 "type": "null"
               }
             ],
-            "title": "Board Id"
-          },
-          "polling_place_id": {
-            "format": "uuid",
-            "title": "Polling Place Id",
-            "type": "string"
+            "title": "Polling Place Id"
           },
           "user_id": {
             "format": "uuid",
@@ -6662,7 +6745,6 @@
         },
         "required": [
           "user_id",
-          "polling_place_id",
           "assignment_role"
         ],
         "title": "ElectionDayAssignmentCreate",
@@ -6694,18 +6776,6 @@
           "assignment_role": {
             "title": "Assignment Role",
             "type": "string"
-          },
-          "board_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Board Id"
           },
           "checked_in_at": {
             "anyOf": [
@@ -6752,9 +6822,16 @@
             "type": "string"
           },
           "polling_place_id": {
-            "format": "uuid",
-            "title": "Polling Place Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Polling Place Id"
           },
           "replaced_by_assignment_id": {
             "anyOf": [
@@ -6783,7 +6860,6 @@
           "operation_id",
           "user_id",
           "polling_place_id",
-          "board_id",
           "assignment_role",
           "status",
           "checked_in_at",
@@ -6836,6 +6912,22 @@
           }
         },
         "title": "ElectionDayCloseRequest",
+        "type": "object"
+      },
+      "ElectionDayControlCenterResponse": {
+        "properties": {
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageSummary"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ElectionDayOperationRead"
+          }
+        },
+        "required": [
+          "operation",
+          "coverage"
+        ],
+        "title": "ElectionDayControlCenterResponse",
         "type": "object"
       },
       "ElectionDayDocumentListResponse": {
@@ -7311,6 +7403,30 @@
             "title": "Organization Id",
             "type": "string"
           },
+          "scrutiny_started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scrutiny Started At"
+          },
+          "scrutiny_started_by_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scrutiny Started By User Id"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -7327,54 +7443,95 @@
           "closed_at",
           "opened_by_user_id",
           "closed_by_user_id",
+          "scrutiny_started_at",
+          "scrutiny_started_by_user_id",
           "notes"
         ],
         "title": "ElectionDayOperationRead",
         "type": "object"
       },
-      "ElectoralBoardCreate": {
-        "additionalProperties": false,
+      "ElectionDayPreflightResponse": {
         "properties": {
-          "board_number": {
-            "minimum": 1.0,
-            "title": "Board Number",
-            "type": "integer"
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
           },
-          "official_code": {
-            "maxLength": 40,
-            "minLength": 1,
-            "title": "Official Code",
-            "type": "string"
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
           },
-          "registered_voters": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Registered Voters"
+          "summary": {
+            "$ref": "#/components/schemas/ElectionDayPreflightSummary"
           },
-          "sex_category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sex Category"
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
-          "official_code",
-          "board_number"
+          "ready",
+          "blockers",
+          "warnings",
+          "summary"
         ],
-        "title": "ElectoralBoardCreate",
+        "title": "ElectionDayPreflightResponse",
+        "type": "object"
+      },
+      "ElectionDayPreflightSummary": {
+        "properties": {
+          "boards": {
+            "title": "Boards",
+            "type": "integer"
+          },
+          "delegates": {
+            "title": "Delegates",
+            "type": "integer"
+          },
+          "polling_places": {
+            "title": "Polling Places",
+            "type": "integer"
+          },
+          "uncovered_polling_places": {
+            "title": "Uncovered Polling Places",
+            "type": "integer"
+          },
+          "validators": {
+            "title": "Validators",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "polling_places",
+          "boards",
+          "delegates",
+          "validators",
+          "uncovered_polling_places"
+        ],
+        "title": "ElectionDayPreflightSummary",
+        "type": "object"
+      },
+      "ElectionDayValidationStatus": {
+        "properties": {
+          "operation_status": {
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "pending_reviews": {
+            "title": "Pending Reviews",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "operation_status",
+          "pending_reviews"
+        ],
+        "title": "ElectionDayValidationStatus",
         "type": "object"
       },
       "ElectoralBoardRead": {
@@ -11604,71 +11761,6 @@
           "is_active"
         ],
         "title": "PoliticalOrganizationRead",
-        "type": "object"
-      },
-      "PollingPlaceCreate": {
-        "additionalProperties": false,
-        "properties": {
-          "address": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Address"
-          },
-          "latitude": {
-            "anyOf": [
-              {
-                "maximum": 90.0,
-                "minimum": -90.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Latitude"
-          },
-          "longitude": {
-            "anyOf": [
-              {
-                "maximum": 180.0,
-                "minimum": -180.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Longitude"
-          },
-          "name": {
-            "maxLength": 220,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "official_code": {
-            "maxLength": 40,
-            "minLength": 1,
-            "title": "Official Code",
-            "type": "string"
-          },
-          "parish_id": {
-            "title": "Parish Id",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "official_code",
-          "name",
-          "parish_id"
-        ],
-        "title": "PollingPlaceCreate",
         "type": "object"
       },
       "PollingPlaceListResponse": {
@@ -24662,6 +24754,168 @@
         ]
       }
     },
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/current": {
+      "get": {
+        "operationId": "current_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_current_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ElectionDayAdminSupportSessionRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Current Admin Support Api V1 Campaigns  Campaign Id  Election Day Admin Support Current Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Current Admin Support",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/end": {
+      "post": {
+        "operationId": "end_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_end_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayAdminSupportSessionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "End Admin Support",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/start": {
+      "post": {
+        "operationId": "start_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionDayAdminSupportStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayAdminSupportSessionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Start Admin Support",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
     "/api/v1/campaigns/{campaign_id}/election-day/assignments": {
       "get": {
         "operationId": "list_assignments_api_v1_campaigns__campaign_id__election_day_assignments_get",
@@ -24914,6 +25168,54 @@
           }
         ],
         "summary": "Replace Assignment",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/control-center": {
+      "get": {
+        "operationId": "control_center_api_v1_campaigns__campaign_id__election_day_control_center_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayControlCenterResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Control Center",
         "tags": [
           "Election Day"
         ]
@@ -25456,6 +25758,8 @@
     },
     "/api/v1/campaigns/{campaign_id}/election-day/my-assignment": {
       "get": {
+        "deprecated": true,
+        "description": "Legacy (§8): devuelve una sola asignación. El frontend nuevo usa\n/my-assignments (plural), ya que un delegado puede cubrir más de un\nrecinto.",
         "operationId": "my_assignment_api_v1_campaigns__campaign_id__election_day_my_assignment_get",
         "parameters": [
           {
@@ -25505,6 +25809,58 @@
           }
         ],
         "summary": "My Assignment",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/my-assignments": {
+      "get": {
+        "operationId": "my_assignments_api_v1_campaigns__campaign_id__election_day_my_assignments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ElectionDayAssignmentRead"
+                  },
+                  "title": "Response My Assignments Api V1 Campaigns  Campaign Id  Election Day My Assignments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "My Assignments",
         "tags": [
           "Election Day"
         ]
@@ -25768,6 +26124,102 @@
         ]
       }
     },
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/preflight": {
+      "get": {
+        "operationId": "preflight_api_v1_campaigns__campaign_id__election_day_operation_preflight_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayPreflightResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Preflight",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/start-scrutiny": {
+      "post": {
+        "operationId": "start_scrutiny_api_v1_campaigns__campaign_id__election_day_operation_start_scrutiny_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayOperationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Start Scrutiny",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
     "/api/v1/campaigns/{campaign_id}/election-day/polling-places": {
       "get": {
         "operationId": "list_polling_places_api_v1_campaigns__campaign_id__election_day_polling_places_get",
@@ -25811,62 +26263,6 @@
           }
         ],
         "summary": "List Polling Places",
-        "tags": [
-          "Election Day"
-        ]
-      },
-      "post": {
-        "operationId": "create_polling_place_api_v1_campaigns__campaign_id__election_day_polling_places_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "campaign_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Campaign Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PollingPlaceCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PollingPlaceRead"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "summary": "Create Polling Place",
         "tags": [
           "Election Day"
         ]
@@ -25990,9 +26386,11 @@
         "tags": [
           "Election Day"
         ]
-      },
-      "post": {
-        "operationId": "create_board_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_post",
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/validation": {
+      "get": {
+        "operationId": "validation_status_api_v1_campaigns__campaign_id__election_day_validation_get",
         "parameters": [
           {
             "in": "path",
@@ -26003,34 +26401,14 @@
               "title": "Campaign Id",
               "type": "string"
             }
-          },
-          {
-            "in": "path",
-            "name": "polling_place_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Polling Place Id",
-              "type": "string"
-            }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ElectoralBoardCreate"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ElectoralBoardRead"
+                  "$ref": "#/components/schemas/ElectionDayValidationStatus"
                 }
               }
             },
@@ -26052,7 +26430,7 @@
             "OAuth2PasswordBearer": []
           }
         ],
-        "summary": "Create Board",
+        "summary": "Validation Status",
         "tags": [
           "Election Day"
         ]

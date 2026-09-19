@@ -16,10 +16,15 @@ const labels = (
   roles: string[],
   organizationRole: 'OWNER' | 'ADMIN' | 'MEMBER' | null = 'MEMBER',
   myJornadaVisible?: boolean,
+  validationVisible?: boolean,
 ) =>
-  buildNavigation(user(...roles), organizationRole, 'campaign-1', myJornadaVisible).flatMap(
-    (group) => group.items.map((item) => item.label),
-  );
+  buildNavigation(
+    user(...roles),
+    organizationRole,
+    'campaign-1',
+    myJornadaVisible,
+    validationVisible,
+  ).flatMap((group) => group.items.map((item) => item.label));
 
 describe('navegación por capacidades', () => {
   it('muestra el menú reducido para CANDIDATE', () => {
@@ -93,7 +98,7 @@ describe('navegación por capacidades', () => {
     );
   });
 
-  it('muestra el menú reducido para TERRITORIAL_COORDINATOR', () => {
+  it('muestra el menú reducido para TERRITORIAL_COORDINATOR sin Jornada Electoral', () => {
     const result = labels(['TERRITORIAL_COORDINATOR']);
     expect(result).toEqual([
       'Dashboard',
@@ -103,10 +108,10 @@ describe('navegación por capacidades', () => {
       'Operación territorial',
       'Actividades',
       'Necesidades',
-      'Jornada Electoral',
     ]);
     expect(result).not.toEqual(
       expect.arrayContaining([
+        'Jornada Electoral',
         'Encuestas y estudios',
         'Territorio IA · PRO',
         'Centro de Informes',
@@ -118,11 +123,19 @@ describe('navegación por capacidades', () => {
     );
   });
 
-  it('muestra Mi Jornada para TERRITORIAL_COORDINATOR solo cuando hay jornada activa y asignación', () => {
-    const withoutAssignment = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', false);
+  it('ANALYST tampoco ve Jornada Electoral', () => {
+    expect(labels(['ANALYST'])).not.toContain('Jornada Electoral');
+  });
+
+  it('muestra Mi Jornada / Validación de actas solo por asignación propia, para cualquier rol', () => {
+    const withoutAssignment = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', false, false);
     expect(withoutAssignment).not.toContain('Mi Jornada');
-    const withAssignment = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', true);
-    expect(withAssignment).toContain('Mi Jornada');
+    expect(withoutAssignment).not.toContain('Validación de actas');
+    const withDelegate = labels(['TERRITORIAL_COORDINATOR'], 'MEMBER', true, false);
+    expect(withDelegate).toContain('Mi Jornada');
+    expect(withDelegate).not.toContain('Validación de actas');
+    const withValidator = labels(['CANDIDATE'], 'MEMBER', false, true);
+    expect(withValidator).toContain('Validación de actas');
   });
 
   it('un superusuario con rol TERRITORIAL_COORDINATOR conserva la navegación de administrador, no la reducida de coordinador', () => {

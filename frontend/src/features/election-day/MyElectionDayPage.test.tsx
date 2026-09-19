@@ -14,7 +14,7 @@ const mockedApiRequest = vi.mocked(apiRequest);
 const mockedUseOnlineStatus = vi.mocked(useOnlineStatus);
 
 const auth = vi.hoisted(() => ({
-  user: { id: 'u1', username: 'coord', roles: [{ code: 'TERRITORIAL_COORDINATOR' }] } as any,
+  user: { id: 'u1', username: 'delegate', roles: [{ code: 'TERRITORIAL_COORDINATOR' }] } as any,
 }));
 vi.mock('../../auth/AuthProvider', () => ({ useAuth: () => ({ user: auth.user }) }));
 
@@ -40,13 +40,18 @@ const myAssignment = {
   operation_id: 'op1',
   user_id: 'u1',
   polling_place_id: 'place-1',
-  board_id: 'board-1',
-  assignment_role: 'BOARD_DELEGATE',
+  assignment_role: 'POLLING_PLACE_DELEGATE',
   status: 'ASSIGNED',
   checked_in_at: null,
   checkin_latitude: null,
   checkin_longitude: null,
   replaced_by_assignment_id: null,
+};
+const validatorAssignment = {
+  ...myAssignment,
+  id: 'a-validator',
+  polling_place_id: null,
+  assignment_role: 'ACT_VALIDATOR',
 };
 const place = { id: 'place-1', name: 'Escuela Central' };
 
@@ -64,42 +69,47 @@ afterEach(async () => {
   await db.clear('cachedElectionDayAssignment');
 });
 
+function mockOnlineFlow(assignments: unknown[] = [myAssignment]) {
+  mockedApiRequest.mockImplementation((path: string) => {
+    if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
+    if (path === '/campaigns/campaign-1/election-day/my-assignments')
+      return Promise.resolve(assignments);
+    if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
+      return Promise.resolve(place);
+    return Promise.reject(new Error(`unexpected path ${path}`));
+  });
+}
+
 describe('Mi Jornada', () => {
-  it('carga la asignación en línea y la muestra', async () => {
-    mockedApiRequest.mockImplementation((path: string) => {
-      if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
-      if (path === '/campaigns/campaign-1/election-day/my-assignment')
-        return Promise.resolve(myAssignment);
-      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
-        return Promise.resolve(place);
-      return Promise.reject(new Error(`unexpected path ${path}`));
-    });
+  it('carga las asignaciones de delegado en línea y las muestra', async () => {
+    mockOnlineFlow();
     renderPage();
     expect(await screen.findByText('Escuela Central')).toBeVisible();
     expect(screen.getByText(/Asignado/)).toBeVisible();
   });
 
-  it('muestra un mensaje cuando el usuario no tiene asignación', async () => {
+  it('ignora asignaciones de validador: solo muestra recintos de delegado', async () => {
+    mockOnlineFlow([myAssignment, validatorAssignment]);
+    renderPage();
+    expect(await screen.findByText('Escuela Central')).toBeVisible();
+    // Una única tarjeta de recinto, la de validador no aporta ninguna.
+    expect(screen.getAllByText('Escuela Central')).toHaveLength(1);
+  });
+
+  it('muestra un mensaje cuando el usuario no tiene asignación de delegado', async () => {
     mockedApiRequest.mockImplementation((path: string) => {
       if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
-      if (path === '/campaigns/campaign-1/election-day/my-assignment') return Promise.resolve(null);
+      if (path === '/campaigns/campaign-1/election-day/my-assignments') return Promise.resolve([]);
       return Promise.reject(new Error(`unexpected path ${path}`));
     });
     renderPage();
     expect(
-      await screen.findByText('No tienes una asignación de jornada en esta campaña.'),
+      await screen.findByText('No tienes una asignación de delegado de recinto en esta campaña.'),
     ).toBeVisible();
   });
 
   it('confirmar presencia guarda un draft y lo encola sin llamar directamente a la API', async () => {
-    mockedApiRequest.mockImplementation((path: string) => {
-      if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
-      if (path === '/campaigns/campaign-1/election-day/my-assignment')
-        return Promise.resolve(myAssignment);
-      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
-        return Promise.resolve(place);
-      return Promise.reject(new Error(`unexpected path ${path}`));
-    });
+    mockOnlineFlow();
     renderPage();
     await screen.findByText('Escuela Central');
     await userEvent.click(screen.getByRole('button', { name: 'CONFIRMAR PRESENCIA' }));
@@ -124,14 +134,7 @@ describe('Mi Jornada', () => {
   });
 
   it('reportar incidencia guarda un draft con categoría y descripción', async () => {
-    mockedApiRequest.mockImplementation((path: string) => {
-      if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
-      if (path === '/campaigns/campaign-1/election-day/my-assignment')
-        return Promise.resolve(myAssignment);
-      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
-        return Promise.resolve(place);
-      return Promise.reject(new Error(`unexpected path ${path}`));
-    });
+    mockOnlineFlow();
     renderPage();
     await screen.findByText('Escuela Central');
     await userEvent.click(screen.getByRole('button', { name: 'REPORTAR INCIDENCIA' }));
@@ -151,15 +154,8 @@ describe('Mi Jornada', () => {
     });
   });
 
-  it('sin conexión, usa la asignación cacheada previamente', async () => {
-    mockedApiRequest.mockImplementation((path: string) => {
-      if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
-      if (path === '/campaigns/campaign-1/election-day/my-assignment')
-        return Promise.resolve(myAssignment);
-      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
-        return Promise.resolve(place);
-      return Promise.reject(new Error(`unexpected path ${path}`));
-    });
+  it('sin conexión, usa las asignaciones cacheadas previamente', async () => {
+    mockOnlineFlow();
     const { unmount } = renderPage();
     await screen.findByText('Escuela Central');
     unmount();

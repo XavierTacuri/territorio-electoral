@@ -1,17 +1,17 @@
 import { getFieldDb } from './db';
-import { ownerKey, type CachedElectionDayAssignment, type OwnerScope } from './types';
+import { ownerKey, type CachedElectionDayAssignments, type OwnerScope } from './types';
 
 // Mirrors campaignInfoRepository: bridges the online→offline gap for the
-// identifiers (assignment/recinto/junta) a coordinator needs to check in or
-// report an incident without connectivity, cached the first time "Mi
-// Jornada" loads online.
-export async function cacheMyElectionDayAssignment(
+// identifiers (asignación/recinto) un delegado necesita para hacer check-in o
+// reportar una incidencia sin conectividad. Un delegado puede cubrir más de
+// un recinto (§13): se cachea la lista completa, no una sola asignación.
+export async function cacheMyElectionDayAssignments(
   scope: OwnerScope,
-  data: Omit<CachedElectionDayAssignment, 'owner_key' | 'fetched_at'>,
-): Promise<CachedElectionDayAssignment> {
+  assignments: CachedElectionDayAssignments['assignments'],
+): Promise<CachedElectionDayAssignments> {
   const db = await getFieldDb();
-  const entry: CachedElectionDayAssignment = {
-    ...data,
+  const entry: CachedElectionDayAssignments = {
+    assignments,
     owner_key: ownerKey(scope),
     fetched_at: new Date().toISOString(),
   };
@@ -19,9 +19,9 @@ export async function cacheMyElectionDayAssignment(
   return entry;
 }
 
-export async function getCachedMyElectionDayAssignment(
+export async function getCachedMyElectionDayAssignments(
   scope: OwnerScope,
-): Promise<CachedElectionDayAssignment | undefined> {
+): Promise<CachedElectionDayAssignments | undefined> {
   const db = await getFieldDb();
   return db.get('cachedElectionDayAssignment', ownerKey(scope));
 }

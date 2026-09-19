@@ -126,14 +126,18 @@ export type CachedCampaignInfo = {
   fetched_at: string;
 };
 
-export type CachedElectionDayAssignment = {
-  owner_key: string;
+// Un delegado puede cubrir más de un recinto (§13): se cachea la lista
+// completa de asignaciones activas del usuario, no una sola.
+export type CachedElectionDayAssignmentEntry = {
   assignment_id: string;
   assignment_status: string;
   polling_place_id: string;
   polling_place_name: string;
-  board_id: string | null;
-  board_code: string | null;
+};
+
+export type CachedElectionDayAssignments = {
+  owner_key: string;
+  assignments: CachedElectionDayAssignmentEntry[];
   fetched_at: string;
 };
 

@@ -638,6 +638,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current Admin Support */
+        get: operations["current_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Admin Support */
+        post: operations["end_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/admin-support/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Admin Support */
+        post: operations["start_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{campaign_id}/election-day/assignments": {
         parameters: {
             query?: never;
@@ -684,6 +735,23 @@ export interface paths {
         put?: never;
         /** Replace Assignment */
         post: operations["replace_assignment_api_v1_campaigns__campaign_id__election_day_assignments__assignment_id__replace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/control-center": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Control Center */
+        get: operations["control_center_api_v1_campaigns__campaign_id__election_day_control_center_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -834,8 +902,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My Assignment */
+        /**
+         * My Assignment
+         * @deprecated
+         * @description Legacy (§8): devuelve una sola asignación. El frontend nuevo usa
+         *     /my-assignments (plural), ya que un delegado puede cubrir más de un
+         *     recinto.
+         */
         get: operations["my_assignment_api_v1_campaigns__campaign_id__election_day_my_assignment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/my-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Assignments */
+        get: operations["my_assignments_api_v1_campaigns__campaign_id__election_day_my_assignments_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -913,6 +1004,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/preflight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preflight */
+        get: operations["preflight_api_v1_campaigns__campaign_id__election_day_operation_preflight_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/operation/start-scrutiny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Scrutiny */
+        post: operations["start_scrutiny_api_v1_campaigns__campaign_id__election_day_operation_start_scrutiny_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{campaign_id}/election-day/polling-places": {
         parameters: {
             query?: never;
@@ -923,8 +1048,7 @@ export interface paths {
         /** List Polling Places */
         get: operations["list_polling_places_api_v1_campaigns__campaign_id__election_day_polling_places_get"];
         put?: never;
-        /** Create Polling Place */
-        post: operations["create_polling_place_api_v1_campaigns__campaign_id__election_day_polling_places_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -958,8 +1082,24 @@ export interface paths {
         /** List Boards */
         get: operations["list_boards_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_get"];
         put?: never;
-        /** Create Board */
-        post: operations["create_board_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_post"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/validation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Validation Status */
+        get: operations["validation_status_api_v1_campaigns__campaign_id__election_day_validation_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6181,17 +6321,54 @@ export interface components {
             /** Reference Year */
             reference_year: number | null;
         };
+        /** ElectionDayAdminSupportSessionRead */
+        ElectionDayAdminSupportSessionRead: {
+            /**
+             * Admin User Id
+             * Format: uuid
+             */
+            admin_user_id: string;
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Ended At */
+            ended_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
+        /** ElectionDayAdminSupportStartRequest */
+        ElectionDayAdminSupportStartRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
         /** ElectionDayAssignmentCreate */
         ElectionDayAssignmentCreate: {
             /** Assignment Role */
             assignment_role: string;
-            /** Board Id */
-            board_id?: string | null;
-            /**
-             * Polling Place Id
-             * Format: uuid
-             */
-            polling_place_id: string;
+            /** Polling Place Id */
+            polling_place_id?: string | null;
             /**
              * User Id
              * Format: uuid
@@ -6209,8 +6386,6 @@ export interface components {
         ElectionDayAssignmentRead: {
             /** Assignment Role */
             assignment_role: string;
-            /** Board Id */
-            board_id: string | null;
             /** Checked In At */
             checked_in_at: string | null;
             /** Checkin Latitude */
@@ -6227,11 +6402,8 @@ export interface components {
              * Format: uuid
              */
             operation_id: string;
-            /**
-             * Polling Place Id
-             * Format: uuid
-             */
-            polling_place_id: string;
+            /** Polling Place Id */
+            polling_place_id: string | null;
             /** Replaced By Assignment Id */
             replaced_by_assignment_id: string | null;
             /** Status */
@@ -6256,6 +6428,11 @@ export interface components {
         ElectionDayCloseRequest: {
             /** Notes */
             notes?: string | null;
+        };
+        /** ElectionDayControlCenterResponse */
+        ElectionDayControlCenterResponse: {
+            coverage: components["schemas"]["CoverageSummary"];
+            operation: components["schemas"]["ElectionDayOperationRead"];
         };
         /** ElectionDayDocumentListResponse */
         ElectionDayDocumentListResponse: {
@@ -6442,19 +6619,42 @@ export interface components {
              * Format: uuid
              */
             organization_id: string;
+            /** Scrutiny Started At */
+            scrutiny_started_at: string | null;
+            /** Scrutiny Started By User Id */
+            scrutiny_started_by_user_id: string | null;
             /** Status */
             status: string;
         };
-        /** ElectoralBoardCreate */
-        ElectoralBoardCreate: {
-            /** Board Number */
-            board_number: number;
-            /** Official Code */
-            official_code: string;
-            /** Registered Voters */
-            registered_voters?: number | null;
-            /** Sex Category */
-            sex_category?: string | null;
+        /** ElectionDayPreflightResponse */
+        ElectionDayPreflightResponse: {
+            /** Blockers */
+            blockers: string[];
+            /** Ready */
+            ready: boolean;
+            summary: components["schemas"]["ElectionDayPreflightSummary"];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** ElectionDayPreflightSummary */
+        ElectionDayPreflightSummary: {
+            /** Boards */
+            boards: number;
+            /** Delegates */
+            delegates: number;
+            /** Polling Places */
+            polling_places: number;
+            /** Uncovered Polling Places */
+            uncovered_polling_places: number;
+            /** Validators */
+            validators: number;
+        };
+        /** ElectionDayValidationStatus */
+        ElectionDayValidationStatus: {
+            /** Operation Status */
+            operation_status: string;
+            /** Pending Reviews */
+            pending_reviews: number;
         };
         /** ElectoralBoardRead */
         ElectoralBoardRead: {
@@ -8103,21 +8303,6 @@ export interface components {
              * Format: uuid
              */
             source_id: string;
-        };
-        /** PollingPlaceCreate */
-        PollingPlaceCreate: {
-            /** Address */
-            address?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /** Name */
-            name: string;
-            /** Official Code */
-            official_code: string;
-            /** Parish Id */
-            parish_id: number;
         };
         /** PollingPlaceListResponse */
         PollingPlaceListResponse: {
@@ -12267,6 +12452,103 @@ export interface operations {
             };
         };
     };
+    current_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAdminSupportSessionRead"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAdminSupportSessionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_admin_support_api_v1_campaigns__campaign_id__election_day_admin_support_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayAdminSupportStartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAdminSupportSessionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_assignments_api_v1_campaigns__campaign_id__election_day_assignments_get: {
         parameters: {
             query?: {
@@ -12394,6 +12676,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ElectionDayAssignmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    control_center_api_v1_campaigns__campaign_id__election_day_control_center_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayControlCenterResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12740,6 +13053,37 @@ export interface operations {
             };
         };
     };
+    my_assignments_api_v1_campaigns__campaign_id__election_day_my_assignments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAssignmentRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_operation_api_v1_campaigns__campaign_id__election_day_operation_get: {
         parameters: {
             query?: never;
@@ -12903,6 +13247,68 @@ export interface operations {
             };
         };
     };
+    preflight_api_v1_campaigns__campaign_id__election_day_operation_preflight_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayPreflightResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_scrutiny_api_v1_campaigns__campaign_id__election_day_operation_start_scrutiny_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayOperationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_polling_places_api_v1_campaigns__campaign_id__election_day_polling_places_get: {
         parameters: {
             query?: never;
@@ -12921,41 +13327,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PollingPlaceListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_polling_place_api_v1_campaigns__campaign_id__election_day_polling_places_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                campaign_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PollingPlaceCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PollingPlaceRead"];
                 };
             };
             /** @description Validation Error */
@@ -13033,29 +13404,24 @@ export interface operations {
             };
         };
     };
-    create_board_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_post: {
+    validation_status_api_v1_campaigns__campaign_id__election_day_validation_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 campaign_id: string;
-                polling_place_id: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ElectoralBoardCreate"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ElectoralBoardRead"];
+                    "application/json": components["schemas"]["ElectionDayValidationStatus"];
                 };
             };
             /** @description Validation Error */

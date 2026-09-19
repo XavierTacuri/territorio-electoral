@@ -16,11 +16,19 @@ const hasLiteralRole = (user: SessionUser | null, role: string) =>
 export const canSeeCampaignAdministration = (user: SessionUser | null) =>
   hasAnyRole(user, ['ADMIN']);
 
+// Jornada Electoral (Centro de Control) es exclusivo del equipo ejecutivo de
+// campaña (§5/§12): ni Coordinator ni Analyst la ven, y ADMIN no la ve como
+// operación normal de campaña — solo entra vía "Soporte Jornada Electoral"
+// en Administración.
+const canSeeElectionDayControlCenterLink = (user: SessionUser | null) =>
+  hasLiteralRole(user, 'CANDIDATE') || hasLiteralRole(user, 'CAMPAIGN_MANAGER');
+
 export function buildNavigation(
   user: SessionUser | null,
   organizationRole: OrganizationRole,
   campaignId?: string,
   myJornadaVisible?: boolean,
+  validationVisible?: boolean,
 ): NavigationGroup[] {
   const campaignPath = (path: string) =>
     campaignId ? `/app/campaigns/${campaignId}/${path}` : '/app/campaigns';
@@ -39,10 +47,18 @@ export function buildNavigation(
     'ANALYST',
   ]);
   const detailedAnalysis = platformAdmin || analyst;
+  const jornadaItems: NavigationItem[] = [
+    ...(myJornadaVisible ? [{ label: 'Mi Jornada', to: campaignPath('election-day/my') }] : []),
+    ...(validationVisible
+      ? [{ label: 'Validación de actas', to: campaignPath('election-day/validation') }]
+      : []),
+  ];
 
   // TERRITORIAL_COORDINATOR gets a dedicated, reduced product surface: it is
   // an operational territorial role, not an executive/analyst/admin one, so
-  // it does not share the general "Análisis" menu built below.
+  // it does not share the general "Análisis" menu built below. It has no
+  // access to Jornada Electoral itself (§12) — only to a personal
+  // assignment it may separately hold as operational staff.
   if (isFieldCoordinator) {
     return [
       {
@@ -65,16 +81,8 @@ export function buildNavigation(
           { label: 'Necesidades', to: campaignPath('needs') },
         ],
       },
-      {
-        label: 'Jornada',
-        items: [
-          { label: 'Jornada Electoral', to: campaignPath('election-day') },
-          ...(myJornadaVisible
-            ? [{ label: 'Mi Jornada', to: campaignPath('election-day/my') }]
-            : []),
-        ],
-      },
-    ];
+      { label: 'Jornada', items: jornadaItems },
+    ].filter((group) => group.items.length > 0);
   }
 
   const groups: NavigationGroup[] = [
@@ -108,13 +116,7 @@ export function buildNavigation(
         ...(hasAnyRole(user, ['ADMIN', 'ANALYST', 'CANDIDATE', 'CAMPAIGN_MANAGER'])
           ? [{ label: 'Preparación para debate', to: campaignPath('debate') }]
           : []),
-        ...(hasAnyRole(user, [
-          'ADMIN',
-          'TERRITORIAL_COORDINATOR',
-          'ANALYST',
-          'CANDIDATE',
-          'CAMPAIGN_MANAGER',
-        ])
+        ...(canSeeElectionDayControlCenterLink(user)
           ? [{ label: 'Jornada Electoral', to: campaignPath('election-day') }]
           : []),
       ],
@@ -131,6 +133,7 @@ export function buildNavigation(
           },
         ]
       : []),
+    { label: 'Jornada', items: jornadaItems },
   ];
 
   const administration: NavigationItem[] = [
@@ -155,6 +158,7 @@ export function buildNavigation(
           { label: 'Importar INEC', to: '/app/admin/official-data/inec' },
           { label: 'Límites territoriales', to: '/app/admin/official-data/geography' },
           { label: 'Importaciones', to: '/app/admin/data-imports' },
+          { label: 'Soporte Jornada Electoral', to: '/app/admin/election-day-support' },
           { label: 'Plantillas de informes', to: '/app/admin/report-templates' },
           { label: 'Auditoría', to: '/app/admin/security-audit' },
           { label: 'Configuración de IA', to: '/app/admin/ai-configuration' },

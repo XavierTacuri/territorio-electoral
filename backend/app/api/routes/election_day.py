@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -8,6 +8,7 @@ from app.api.dependencies import get_current_active_user
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.election_day import *
+from app.services.election_day_admin_support_service import ElectionDayAdminSupportService
 from app.services.election_day_service import ElectionDayService
 from app.services.exceptions import BusinessRuleError, ConflictError, NotFoundError
 
@@ -37,9 +38,19 @@ def create_operation(campaign_id: UUID, data: ElectionDayOperationCreate, db: Se
     return invoke(ElectionDayService(db).create_operation, campaign_id, data, user)
 
 
+@router.get("/operation/preflight", response_model=ElectionDayPreflightResponse)
+def preflight(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayService(db).preflight, campaign_id, user)
+
+
 @router.post("/operation/open", response_model=ElectionDayOperationRead)
 def open_operation(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     return invoke(ElectionDayService(db).open_operation, campaign_id, user)
+
+
+@router.post("/operation/start-scrutiny", response_model=ElectionDayOperationRead)
+def start_scrutiny(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayService(db).start_scrutiny, campaign_id, user)
 
 
 @router.get("/operation/closure-preview", response_model=CoverageSummary)
@@ -53,6 +64,17 @@ def close_operation(campaign_id: UUID, data: ElectionDayCloseRequest, db: Sessio
     return invoke(ElectionDayService(db).close_operation, campaign_id, data, user)
 
 
+@router.get("/control-center", response_model=ElectionDayControlCenterResponse)
+def control_center(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    op, summary = invoke(ElectionDayService(db).control_center, campaign_id, user)
+    return {"operation": op, "coverage": summary}
+
+
+@router.get("/validation", response_model=ElectionDayValidationStatus)
+def validation_status(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayService(db).validation_status, campaign_id, user)
+
+
 @router.get("/coverage", response_model=CoverageSummary)
 def coverage(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     return invoke(ElectionDayService(db).coverage, campaign_id, user)
@@ -62,11 +84,6 @@ def coverage(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depe
 def list_polling_places(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     items = invoke(ElectionDayService(db).list_polling_places, campaign_id, user)
     return {"items": items, "total": len(items)}
-
-
-@router.post("/polling-places", response_model=PollingPlaceRead, status_code=201)
-def create_polling_place(campaign_id: UUID, data: PollingPlaceCreate, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
-    return invoke(ElectionDayService(db).create_polling_place, campaign_id, data, user)
 
 
 @router.get("/polling-places/{polling_place_id}", response_model=PollingPlaceRead)
@@ -79,19 +96,22 @@ def list_boards(campaign_id: UUID, polling_place_id: UUID, db: Session = Depends
     return invoke(ElectionDayService(db).list_boards, campaign_id, user, polling_place_id)
 
 
-@router.post("/polling-places/{polling_place_id}/boards", response_model=ElectoralBoardRead, status_code=201)
-def create_board(campaign_id: UUID, polling_place_id: UUID, data: ElectoralBoardCreate, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
-    return invoke(ElectionDayService(db).create_board, campaign_id, polling_place_id, data, user)
-
-
 @router.get("/assignments", response_model=ElectionDayAssignmentListResponse)
 def list_assignments(campaign_id: UUID, polling_place_id: UUID | None = Query(None), db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     items = invoke(ElectionDayService(db).list_assignments, campaign_id, user, polling_place_id)
     return {"items": items, "total": len(items)}
 
 
-@router.get("/my-assignment", response_model=ElectionDayAssignmentRead | None)
+@router.get("/my-assignments", response_model=list[ElectionDayAssignmentRead])
+def my_assignments(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayService(db).my_assignments, campaign_id, user)
+
+
+@router.get("/my-assignment", response_model=ElectionDayAssignmentRead | None, deprecated=True)
 def my_assignment(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    """Legacy (§8): devuelve una sola asignación. El frontend nuevo usa
+    /my-assignments (plural), ya que un delegado puede cubrir más de un
+    recinto."""
     return invoke(ElectionDayService(db).my_assignment, campaign_id, user)
 
 
@@ -152,3 +172,19 @@ def update_document_status(campaign_id: UUID, document_id: UUID, data: ElectionD
 def download_document(campaign_id: UUID, document_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     path, doc = invoke(ElectionDayService(db).document_file, campaign_id, document_id, user)
     return FileResponse(path, media_type=doc.mime_type or "application/octet-stream", filename=doc.original_filename or "documento", headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+
+# ---------- Admin support mode (§6) ----------
+@router.post("/admin-support/start", response_model=ElectionDayAdminSupportSessionRead, status_code=201)
+def start_admin_support(campaign_id: UUID, data: ElectionDayAdminSupportStartRequest, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayAdminSupportService(db).start, campaign_id, data, user)
+
+
+@router.get("/admin-support/current", response_model=ElectionDayAdminSupportSessionRead | None)
+def current_admin_support(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayAdminSupportService(db).current, campaign_id, user)
+
+
+@router.post("/admin-support/end", response_model=ElectionDayAdminSupportSessionRead)
+def end_admin_support(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayAdminSupportService(db).end, campaign_id, user)

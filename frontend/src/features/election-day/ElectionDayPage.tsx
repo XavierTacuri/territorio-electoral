@@ -30,9 +30,11 @@ import {
   INCIDENT_STATUS_LABELS,
   OPERATION_STATUS_LABELS,
   type CoverageSummary,
+  type ElectionDayAdminSupportSession,
   type ElectionDayAssignment,
   type ElectionDayIncident,
   type ElectionDayOperation,
+  type ElectionDayPreflightResponse,
   type PollingPlace,
 } from './types';
 
@@ -144,7 +146,8 @@ export default function ElectionDayPage() {
   const qc = useQueryClient();
   const [closeOpen, setCloseOpen] = useState(false);
   const roles = user?.roles.map((r) => r.code) ?? [];
-  const manager = canManage(roles) || Boolean(user?.is_superuser);
+  const manager = canManage(roles);
+  const platformAdmin = roles.includes('ADMIN') || Boolean(user?.is_superuser);
 
   const operation = useQuery({
     queryKey: ['election-day-operation', campaignId],
@@ -154,7 +157,47 @@ export default function ElectionDayPage() {
   });
   const notConfigured =
     operation.isError && operation.error instanceof ApiError && operation.error.status === 404;
+  const supportRequired =
+    platformAdmin &&
+    !manager &&
+    operation.isError &&
+    operation.error instanceof ApiError &&
+    operation.error.status === 403;
   const active = Boolean(operation.data);
+
+  const campaignRef = useQuery({
+    queryKey: ['election-day-campaign-ref', campaignId],
+    queryFn: () => apiRequest<{ id: string; name: string }>(`/campaigns/${campaignId}`),
+    enabled: platformAdmin && !manager,
+  });
+  const adminSupport = useQuery({
+    queryKey: ['election-day-admin-support-current', campaignId],
+    queryFn: () =>
+      apiRequest<ElectionDayAdminSupportSession | null>(
+        `/campaigns/${campaignId}/election-day/admin-support/current`,
+      ),
+    enabled: platformAdmin && !manager && active,
+    retry: false,
+  });
+  const endSupportMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<ElectionDayAdminSupportSession>(
+        `/campaigns/${campaignId}/election-day/admin-support/end`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['election-day-admin-support-current', campaignId] });
+      qc.invalidateQueries({ queryKey: ['election-day-operation', campaignId] });
+    },
+  });
+  const preflight = useQuery({
+    queryKey: ['election-day-preflight', campaignId],
+    queryFn: () =>
+      apiRequest<ElectionDayPreflightResponse>(
+        `/campaigns/${campaignId}/election-day/operation/preflight`,
+      ),
+    enabled: active && manager && operation.data?.status === 'PREPARATION',
+  });
 
   const coverage = useQuery({
     queryKey: ['election-day-coverage', campaignId],
@@ -194,6 +237,14 @@ export default function ElectionDayPage() {
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['election-day-operation', campaignId] }),
   });
+  const startScrutinyMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<ElectionDayOperation>(
+        `/campaigns/${campaignId}/election-day/operation/start-scrutiny`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['election-day-operation', campaignId] }),
+  });
   const closeMutation = useMutation({
     mutationFn: () =>
       apiRequest<ElectionDayOperation>(`/campaigns/${campaignId}/election-day/operation/close`, {
@@ -207,6 +258,32 @@ export default function ElectionDayPage() {
   });
 
   if (operation.isLoading) return <LoadingSkeleton />;
+  if (supportRequired) {
+    return (
+      <>
+        <PageHeader
+          title="Jornada Electoral"
+          description="Centro operativo del día de la elección."
+        />
+        <Alert
+          severity="info"
+          action={
+            <Button
+              component={RouterLink}
+              to="/app/admin/election-day-support"
+              color="inherit"
+              size="small"
+            >
+              IR A SOPORTE JORNADA ELECTORAL
+            </Button>
+          }
+        >
+          Necesitas iniciar el modo soporte administrativo para esta campaña antes de consultar el
+          Centro de Control.
+        </Alert>
+      </>
+    );
+  }
   if (notConfigured) {
     return (
       <>
@@ -235,17 +312,37 @@ export default function ElectionDayPage() {
   );
   const coveredIds = new Set(
     (assignments.data?.items ?? [])
-      .filter((a) => a.status !== 'REPLACED')
-      .map((a) => a.polling_place_id),
+      .filter((a) => a.status !== 'REPLACED' && a.polling_place_id)
+      .map((a) => a.polling_place_id as string),
   );
   const checkedInIds = new Set(
     (assignments.data?.items ?? [])
-      .filter((a) => a.status === 'CHECKED_IN')
-      .map((a) => a.polling_place_id),
+      .filter((a) => a.status === 'CHECKED_IN' && a.polling_place_id)
+      .map((a) => a.polling_place_id as string),
   );
+
+  const isAdminSupport = platformAdmin && !manager;
 
   return (
     <>
+      {isAdminSupport && adminSupport.data && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              disabled={endSupportMutation.isPending}
+              onClick={() => endSupportMutation.mutate()}
+            >
+              SALIR DEL MODO SOPORTE
+            </Button>
+          }
+        >
+          Modo soporte administrativo · Campaña: {campaignRef.data?.name ?? campaignId}
+        </Alert>
+      )}
       <PageHeader
         title="Jornada Electoral"
         description="Centro operativo del día de la elección — cobertura, presencia, incidencias y documentación. No es un sistema de resultados."
@@ -253,20 +350,35 @@ export default function ElectionDayPage() {
           <Stack direction="row" spacing={1} alignItems="center">
             <Chip
               color={
-                op.status === 'ACTIVE' ? 'success' : op.status === 'CLOSED' ? 'default' : 'warning'
+                op.status === 'ACTIVE'
+                  ? 'success'
+                  : op.status === 'CLOSED'
+                    ? 'default'
+                    : op.status === 'SCRUTINY'
+                      ? 'info'
+                      : 'warning'
               }
               label={OPERATION_STATUS_LABELS[op.status]}
             />
             {manager && op.status === 'PREPARATION' && (
               <Button
                 variant="contained"
-                disabled={openMutation.isPending}
+                disabled={openMutation.isPending || preflight.data?.ready === false}
                 onClick={() => openMutation.mutate()}
               >
                 Activar jornada
               </Button>
             )}
             {manager && op.status === 'ACTIVE' && (
+              <Button
+                variant="contained"
+                disabled={startScrutinyMutation.isPending}
+                onClick={() => startScrutinyMutation.mutate()}
+              >
+                Iniciar escrutinio
+              </Button>
+            )}
+            {manager && op.status === 'SCRUTINY' && (
               <Button variant="outlined" color="warning" onClick={() => setCloseOpen(true)}>
                 Cerrar jornada
               </Button>
@@ -274,6 +386,25 @@ export default function ElectionDayPage() {
           </Stack>
         }
       />
+      {manager && op.status === 'PREPARATION' && preflight.data && (
+        <Stack spacing={1} sx={{ mb: 2 }}>
+          {preflight.data.blockers.map((b) => (
+            <Alert key={b} severity="error">
+              {b}
+            </Alert>
+          ))}
+          {preflight.data.warnings.map((w) => (
+            <Alert key={w} severity="warning">
+              {w}
+            </Alert>
+          ))}
+        </Stack>
+      )}
+      {openMutation.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          No se pudo activar la jornada. Verifica los bloqueos indicados arriba.
+        </Alert>
+      )}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Fecha: {formatDateOnly(op.election_date)} · Actualización operativa{' '}
         {op.status === 'ACTIVE' ? 'cada 45 s' : 'manual'}

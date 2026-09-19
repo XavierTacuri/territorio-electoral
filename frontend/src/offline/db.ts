@@ -4,7 +4,7 @@ import type {
   CachedAssignment,
   CachedCampaignInfo,
   CachedCatalog,
-  CachedElectionDayAssignment,
+  CachedElectionDayAssignments,
   OfflineDraft,
   PendingAttachment,
   SessionSnapshot,
@@ -35,7 +35,7 @@ interface FieldDB extends DBSchema {
     indexes: { draft: string; owner: string };
   };
   sessionSnapshot: { key: string; value: SessionSnapshot };
-  cachedElectionDayAssignment: { key: string; value: CachedElectionDayAssignment };
+  cachedElectionDayAssignment: { key: string; value: CachedElectionDayAssignments };
 }
 
 let dbPromise: Promise<IDBPDatabase<FieldDB>> | null = null;
