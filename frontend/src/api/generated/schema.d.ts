@@ -638,6 +638,244 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Acts */
+        get: operations["list_acts_api_v1_campaigns__campaign_id__election_day_acts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/contests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Contests */
+        get: operations["list_contests_api_v1_campaigns__campaign_id__election_day_acts_contests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coverage */
+        get: operations["coverage_api_v1_campaigns__campaign_id__election_day_acts_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Draft */
+        post: operations["create_draft_api_v1_campaigns__campaign_id__election_day_acts_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/validation/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Validation Queue */
+        get: operations["validation_queue_api_v1_campaigns__campaign_id__election_day_acts_validation_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Act Detail */
+        get: operations["act_detail_api_v1_campaigns__campaign_id__election_day_acts__act_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim Act */
+        post: operations["claim_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Correction */
+        post: operations["create_correction_api_v1_campaigns__campaign_id__election_day_acts__act_id__corrections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/evidence/{evidence_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Evidence */
+        get: operations["download_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__evidence__evidence_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/observe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Observe Act */
+        post: operations["observe_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__observe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Release Act */
+        post: operations["release_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Evidence */
+        post: operations["upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Revision */
+        post: operations["submit_revision_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate Act */
+        post: operations["validate_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{campaign_id}/election-day/admin-support/current": {
         parameters: {
             query?: never;
@@ -4827,6 +5065,13 @@ export interface components {
              */
             polling_place_id: string;
         };
+        /** Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post */
+        Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post: {
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** File */
+            file: string;
+        };
         /** Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post */
         Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post: {
             /** Client Generated Id */
@@ -6461,6 +6706,333 @@ export interface components {
             parish_id: number | null;
             /** Reference Year */
             reference_year: number | null;
+        };
+        /** ElectionActCandidateOption */
+        ElectionActCandidateOption: {
+            /** Ballot Order */
+            ballot_order: number | null;
+            /** Display Name */
+            display_name: string | null;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** List Number */
+            list_number: string | null;
+        };
+        /** ElectionActContestOption */
+        ElectionActContestOption: {
+            /** Candidates */
+            candidates: components["schemas"]["ElectionActCandidateOption"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Office Type */
+            office_type: string;
+            /** Vote Method */
+            vote_method: string;
+        };
+        /** ElectionActCorrectionCreate */
+        ElectionActCorrectionCreate: {
+            /** Ballots Counted */
+            ballots_counted?: number | null;
+            /** Blank Ballots */
+            blank_ballots: number;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Correction Reason */
+            correction_reason: string;
+            /** Null Ballots */
+            null_ballots: number;
+            /** Offline Created At */
+            offline_created_at?: string | null;
+            /** Results */
+            results?: components["schemas"]["ElectionActResultInput"][];
+            /** Valid Ballots */
+            valid_ballots?: number | null;
+        };
+        /** ElectionActCoverageSummary */
+        ElectionActCoverageSummary: {
+            /** Expected Boards */
+            expected_boards: number;
+            /** In Review */
+            in_review: number;
+            /** Observed */
+            observed: number;
+            /** Pending */
+            pending: number;
+            /** Received */
+            received: number;
+            /** Validated */
+            validated: number;
+        };
+        /** ElectionActDetail */
+        ElectionActDetail: {
+            act: components["schemas"]["ElectionActRead"];
+            /** Electoral Board Code */
+            electoral_board_code: string;
+            /** Electoral Contest Name */
+            electoral_contest_name: string;
+            /** Polling Place Name */
+            polling_place_name: string;
+            /** Reviews */
+            reviews: components["schemas"]["ElectionActReviewRead"][];
+            /** Revisions */
+            revisions: components["schemas"]["ElectionActRevisionRead"][];
+        };
+        /** ElectionActDraftCreate */
+        ElectionActDraftCreate: {
+            /** Ballots Counted */
+            ballots_counted?: number | null;
+            /** Blank Ballots */
+            blank_ballots: number;
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /**
+             * Electoral Board Id
+             * Format: uuid
+             */
+            electoral_board_id: string;
+            /**
+             * Electoral Contest Id
+             * Format: uuid
+             */
+            electoral_contest_id: string;
+            /** Null Ballots */
+            null_ballots: number;
+            /** Offline Created At */
+            offline_created_at?: string | null;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Results */
+            results?: components["schemas"]["ElectionActResultInput"][];
+            /** Valid Ballots */
+            valid_ballots?: number | null;
+        };
+        /** ElectionActDraftResponse */
+        ElectionActDraftResponse: {
+            act: components["schemas"]["ElectionActRead"];
+            revision: components["schemas"]["ElectionActRevisionRead"];
+        };
+        /** ElectionActEvidenceRead */
+        ElectionActEvidenceRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Original Filename */
+            original_filename: string | null;
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /**
+             * Uploaded By User Id
+             * Format: uuid
+             */
+            uploaded_by_user_id: string;
+        };
+        /** ElectionActListResponse */
+        ElectionActListResponse: {
+            /** Items */
+            items: components["schemas"]["ElectionActRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ElectionActObserveRequest */
+        ElectionActObserveRequest: {
+            /** Reason */
+            reason: string;
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
+        };
+        /** ElectionActRead */
+        ElectionActRead: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Electoral Board Id
+             * Format: uuid
+             */
+            electoral_board_id: string;
+            /**
+             * Electoral Contest Id
+             * Format: uuid
+             */
+            electoral_contest_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Latest Revision Number */
+            latest_revision_number: number;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Review Claim Expires At */
+            review_claim_expires_at: string | null;
+            /** Review Claimed At */
+            review_claimed_at: string | null;
+            /** Review Claimed By User Id */
+            review_claimed_by_user_id: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Validated Revision Id */
+            validated_revision_id: string | null;
+        };
+        /** ElectionActResultInput */
+        ElectionActResultInput: {
+            /**
+             * Electoral Candidate Id
+             * Format: uuid
+             */
+            electoral_candidate_id: string;
+            /** Votes */
+            votes: number;
+        };
+        /** ElectionActResultRead */
+        ElectionActResultRead: {
+            /**
+             * Electoral Candidate Id
+             * Format: uuid
+             */
+            electoral_candidate_id: string;
+            /** Votes */
+            votes: number;
+        };
+        /** ElectionActReviewRead */
+        ElectionActReviewRead: {
+            /**
+             * Act Id
+             * Format: uuid
+             */
+            act_id: string;
+            /** Action */
+            action: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string | null;
+            /** Review Source */
+            review_source: string;
+            /**
+             * Reviewer User Id
+             * Format: uuid
+             */
+            reviewer_user_id: string;
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
+        };
+        /** ElectionActRevisionRead */
+        ElectionActRevisionRead: {
+            /**
+             * Act Id
+             * Format: uuid
+             */
+            act_id: string;
+            /** Ballots Counted */
+            ballots_counted: number | null;
+            /** Blank Ballots */
+            blank_ballots: number;
+            /** Correction Reason */
+            correction_reason: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence */
+            evidence: components["schemas"]["ElectionActEvidenceRead"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes: string | null;
+            /** Null Ballots */
+            null_ballots: number;
+            /** Results */
+            results: components["schemas"]["ElectionActResultRead"][];
+            /** Revision Number */
+            revision_number: number;
+            /** Revision Type */
+            revision_type: string;
+            /** Status */
+            status: string;
+            /** Submitted At */
+            submitted_at: string | null;
+            /**
+             * Submitted By User Id
+             * Format: uuid
+             */
+            submitted_by_user_id: string;
+            /** Valid Ballots */
+            valid_ballots: number | null;
+        };
+        /** ElectionActValidateRequest */
+        ElectionActValidateRequest: {
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
         };
         /** ElectionDayAdminSupportSessionRead */
         ElectionDayAdminSupportSessionRead: {
@@ -12794,6 +13366,480 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClaimCheckResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_acts_api_v1_campaigns__campaign_id__election_day_acts_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                polling_place_id?: string | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_contests_api_v1_campaigns__campaign_id__election_day_acts_contests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActContestOption"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coverage_api_v1_campaigns__campaign_id__election_day_acts_coverage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActCoverageSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_draft_api_v1_campaigns__campaign_id__election_day_acts_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActDraftCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActDraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validation_queue_api_v1_campaigns__campaign_id__election_day_acts_validation_queue_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                polling_place_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    act_detail_api_v1_campaigns__campaign_id__election_day_acts__act_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_correction_api_v1_campaigns__campaign_id__election_day_acts__act_id__corrections_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActCorrectionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActDraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__evidence__evidence_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    observe_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__observe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActObserveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_revision_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActDraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActValidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActRead"];
                 };
             };
             /** @description Validation Error */

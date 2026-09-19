@@ -31,6 +31,7 @@ import {
   INCIDENT_STATUS_LABELS,
   OPERATION_STATUS_LABELS,
   type CoverageSummary,
+  type ElectionActCoverageSummary,
   type ElectionDayAdminSupportSession,
   type ElectionDayAssignment,
   type ElectionDayIncident,
@@ -205,6 +206,17 @@ export default function ElectionDayPage() {
     queryFn: () => apiRequest<CoverageSummary>(`/campaigns/${campaignId}/election-day/coverage`),
     enabled: active,
     refetchInterval: operation.data?.status === 'ACTIVE' ? 45000 : false,
+  });
+  // §37: métricas puramente documentales (cuántas actas llegaron y en qué
+  // estado) — nunca conteo de votos, ranking ni ganador. Solo tiene sentido
+  // una vez empezado el escrutinio.
+  const actsCoverage = useQuery({
+    queryKey: ['election-acts-coverage', campaignId],
+    queryFn: () =>
+      apiRequest<ElectionActCoverageSummary>(`/campaigns/${campaignId}/election-day/acts/coverage`),
+    enabled:
+      active && (operation.data?.status === 'SCRUTINY' || operation.data?.status === 'CLOSED'),
+    refetchInterval: operation.data?.status === 'SCRUTINY' ? 30000 : false,
   });
   const places = useQuery({
     queryKey: ['election-day-places', campaignId],
@@ -438,6 +450,36 @@ export default function ElectionDayPage() {
         ))}
       </Grid>
 
+      {(op.status === 'SCRUTINY' || op.status === 'CLOSED') && actsCoverage.data && (
+        <Card variant="outlined" sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography component="h2" variant="h2" sx={{ mb: 1 }}>
+              Actas
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              Cobertura documental del escrutinio — nunca conteo de votos ni resultado.
+            </Typography>
+            <Grid container spacing={2}>
+              {[
+                ['JRV esperadas', actsCoverage.data.expected_boards],
+                ['Recibidas', actsCoverage.data.received],
+                ['Validadas', actsCoverage.data.validated],
+                ['En revisión', actsCoverage.data.in_review],
+                ['Observadas', actsCoverage.data.observed],
+                ['Pendientes', actsCoverage.data.pending],
+              ].map(([label, value]) => (
+                <Grid key={label} size={{ xs: 6, md: 2 }}>
+                  <Typography variant="overline" color="text.secondary">
+                    {label}
+                  </Typography>
+                  <Typography variant="h3">{value}</Typography>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 8 }}>
           {places.data && (
@@ -568,6 +610,12 @@ export default function ElectionDayPage() {
               <Alert severity="warning">
                 Existen incidencias sin resolver. Podrán resolverse administrativamente después del
                 cierre.
+              </Alert>
+            )}
+            {actsCoverage.data && actsCoverage.data.received - actsCoverage.data.validated > 0 && (
+              <Alert severity="warning">
+                Existen {actsCoverage.data.received - actsCoverage.data.validated} actas recibidas
+                que todavía no han sido validadas.
               </Alert>
             )}
           </Stack>

@@ -4,6 +4,7 @@ import type {
   CachedAssignment,
   CachedCampaignInfo,
   CachedCatalog,
+  CachedElectionActContext,
   CachedElectionDayAssignments,
   OfflineDraft,
   PendingAttachment,
@@ -12,7 +13,7 @@ import type {
 } from './types';
 
 const DB_NAME = 'territorio-field';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 interface FieldDB extends DBSchema {
   drafts: {
@@ -36,6 +37,7 @@ interface FieldDB extends DBSchema {
   };
   sessionSnapshot: { key: string; value: SessionSnapshot };
   cachedElectionDayAssignment: { key: string; value: CachedElectionDayAssignments };
+  cachedElectionActContext: { key: string; value: CachedElectionActContext };
 }
 
 let dbPromise: Promise<IDBPDatabase<FieldDB>> | null = null;
@@ -65,6 +67,9 @@ export function getFieldDb(): Promise<IDBPDatabase<FieldDB>> {
         }
         if (oldVersion < 2) {
           db.createObjectStore('cachedElectionDayAssignment', { keyPath: 'owner_key' });
+        }
+        if (oldVersion < 3) {
+          db.createObjectStore('cachedElectionActContext', { keyPath: 'key' });
         }
       },
     });

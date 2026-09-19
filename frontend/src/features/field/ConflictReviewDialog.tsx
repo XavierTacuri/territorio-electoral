@@ -44,8 +44,16 @@ export function ConflictReviewDialog({
 
   function reviewDraft() {
     if (!draft) return;
-    const path = draft.entity_type === 'ACTIVITY' ? 'activities' : 'needs';
     onClose();
+    if (draft.entity_type === 'ELECTION_ACT_SUBMIT') {
+      // Un acta no se edita en una página de formulario genérica: se
+      // registra/corrige desde Mi Jornada, por junta. No hay "reanudar este
+      // borrador exacto" — llevar de vuelta ahí es la navegación correcta,
+      // nunca la ruta de actividades/necesidades (que ni siquiera aplica).
+      navigate(`/app/campaigns/${campaignId}/election-day/my`);
+      return;
+    }
+    const path = draft.entity_type === 'ACTIVITY' ? 'activities' : 'needs';
     navigate(`/app/campaigns/${campaignId}/field/${path}/new?draft=${draft.id}`);
   }
 

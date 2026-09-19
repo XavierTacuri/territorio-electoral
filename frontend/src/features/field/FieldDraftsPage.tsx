@@ -40,6 +40,7 @@ const ENTITY_LABELS: Record<OfflineDraft['entity_type'], string> = {
   ELECTION_DAY_CHECK_IN: 'Confirmación de presencia',
   ELECTION_DAY_INCIDENT: 'Incidencia de jornada',
   ELECTION_DAY_DOCUMENT: 'Documento de jornada',
+  ELECTION_ACT_SUBMIT: 'Acta electoral',
 };
 
 function attachmentSummary(attachments: PendingAttachment[]): string {
@@ -128,16 +129,21 @@ export default function FieldDraftsPage() {
                     Revisar
                   </Button>
                 )}
-                <Button
-                  size="small"
-                  onClick={() =>
-                    navigate(
-                      `/app/campaigns/${campaignId}/field/${draft.entity_type === 'ACTIVITY' ? 'activities' : 'needs'}/new?draft=${draft.id}`,
-                    )
-                  }
-                >
-                  Continuar
-                </Button>
+                {draft.entity_type !== 'ELECTION_ACT_SUBMIT' &&
+                  draft.entity_type !== 'ELECTION_DAY_CHECK_IN' &&
+                  draft.entity_type !== 'ELECTION_DAY_INCIDENT' &&
+                  draft.entity_type !== 'ELECTION_DAY_DOCUMENT' && (
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        navigate(
+                          `/app/campaigns/${campaignId}/field/${draft.entity_type === 'ACTIVITY' ? 'activities' : 'needs'}/new?draft=${draft.id}`,
+                        )
+                      }
+                    >
+                      Continuar
+                    </Button>
+                  )}
                 <Button size="small" color="error" onClick={() => setToDelete(draft)}>
                   Eliminar
                 </Button>

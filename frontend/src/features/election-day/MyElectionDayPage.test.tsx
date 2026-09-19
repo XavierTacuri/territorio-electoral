@@ -76,6 +76,8 @@ afterEach(async () => {
   await db.clear('syncQueue');
   await db.clear('cachedCampaignInfo');
   await db.clear('cachedElectionDayAssignment');
+  await db.clear('cachedElectionActContext');
+  await db.clear('pendingAttachments');
 });
 
 function mockOnlineFlow(assignments: unknown[] = [myAssignment]) {
@@ -162,6 +164,77 @@ describe('Mi Jornada', () => {
       polling_place_id: 'place-1',
       description: 'Sin energía eléctrica',
     });
+  });
+
+  it('durante escrutinio, registra un acta offline con foto y candidatos', async () => {
+    const scrutinyContext = { ...myContext, operation_status: 'SCRUTINY' };
+    const board = {
+      id: 'board-1',
+      polling_place_id: 'place-1',
+      official_code: 'J01',
+      board_number: 1,
+      sex_category: null,
+      registered_voters: 300,
+      is_active: true,
+    };
+    const contest = {
+      id: 'contest-1',
+      name: 'Alcaldía',
+      office_type: 'MAYOR',
+      vote_method: 'SINGLE_CHOICE',
+      candidates: [
+        {
+          id: 'cand-1',
+          full_name: 'Candidata A',
+          display_name: 'Candidata A',
+          list_number: '1',
+          ballot_order: 1,
+        },
+      ],
+    };
+    mockedApiRequest.mockImplementation((path: string) => {
+      if (path === '/campaigns/campaign-1/election-day/my-context')
+        return Promise.resolve(scrutinyContext);
+      if (path === '/campaigns/campaign-1/election-day/my-assignments')
+        return Promise.resolve([myAssignment]);
+      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
+        return Promise.resolve(place);
+      if (path === '/campaigns/campaign-1/election-day/acts/contests')
+        return Promise.resolve([contest]);
+      if (path === '/campaigns/campaign-1/election-day/polling-places/place-1/boards')
+        return Promise.resolve([board]);
+      if (path === '/campaigns/campaign-1/election-day/acts?polling_place_id=place-1')
+        return Promise.resolve({ items: [], total: 0 });
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    renderPage();
+    await screen.findByText('Escuela Central');
+    expect(await screen.findByText('Junta 1')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'REGISTRAR ACTA' }));
+
+    await screen.findByText('Registrar acta — Junta 1');
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'acta.jpg', { type: 'image/jpeg' });
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    const fileInput = fileInputs[fileInputs.length - 1] as HTMLInputElement;
+    await userEvent.upload(fileInput, file);
+    expect(await screen.findByText('Fotos agregadas: 1')).toBeVisible();
+    await userEvent.type(screen.getByLabelText('Candidata A'), '10');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(
+      await screen.findByText('Acta guardada en el dispositivo. Se sincronizará con el servidor.'),
+    ).toBeVisible();
+    const db = await getFieldDb();
+    const drafts = await db.getAllFromIndex('drafts', 'owner', 'u1::org-1::campaign-1');
+    const actDraft = drafts.find((d) => d.entity_type === 'ELECTION_ACT_SUBMIT');
+    expect(actDraft?.payload).toMatchObject({
+      is_correction: false,
+      electoral_board_id: 'board-1',
+      electoral_contest_id: 'contest-1',
+      results: [{ electoral_candidate_id: 'cand-1', votes: 10 }],
+    });
+    const attachments = await db.getAllFromIndex('pendingAttachments', 'draft', actDraft!.id);
+    expect(attachments).toHaveLength(1);
   });
 
   it('sin conexión, usa las asignaciones cacheadas previamente', async () => {

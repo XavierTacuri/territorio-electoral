@@ -13,7 +13,8 @@ export type DraftEntityType =
   | 'NEED'
   | 'ELECTION_DAY_CHECK_IN'
   | 'ELECTION_DAY_INCIDENT'
-  | 'ELECTION_DAY_DOCUMENT';
+  | 'ELECTION_DAY_DOCUMENT'
+  | 'ELECTION_ACT_SUBMIT';
 
 export type DraftSyncStatus =
   | 'DRAFT'
@@ -138,6 +139,41 @@ export type CachedElectionDayAssignmentEntry = {
 export type CachedElectionDayAssignments = {
   owner_key: string;
   assignments: CachedElectionDayAssignmentEntry[];
+  fetched_at: string;
+};
+
+// Estado de una junta para el flujo REGISTRAR ACTA / CORREGIR ACTA del
+// Delegado (§12/§13): null cuando aún no hay ningún acta para esa junta en
+// la contienda de esta campaña.
+export type CachedElectionActBoardStatus = {
+  board_id: string;
+  board_code: string;
+  board_number: number;
+  act_id: string | null;
+  act_status: 'RECEIVED' | 'IN_REVIEW' | 'OBSERVED' | 'VALIDATED' | null;
+  latest_revision_number: number | null;
+};
+
+export type CachedElectionActCandidate = {
+  id: string;
+  full_name: string;
+  display_name: string | null;
+  list_number: string | null;
+  ballot_order: number | null;
+};
+
+// Un delegado trabaja siempre sobre la única contienda elegible del
+// office_type de su propia campaña (§2) — se cachea esa contienda resuelta,
+// no el listado completo de contiendas del proceso.
+export type CachedElectionActContext = {
+  key: string; // `${owner_key}::${polling_place_id}`
+  owner_key: string;
+  polling_place_id: string;
+  contest_id: string;
+  contest_name: string;
+  vote_method: string;
+  candidates: CachedElectionActCandidate[];
+  boards: CachedElectionActBoardStatus[];
   fetched_at: string;
 };
 

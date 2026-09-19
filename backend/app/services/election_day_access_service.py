@@ -167,6 +167,37 @@ class ElectionDayAccessService:
             return campaign
         raise PermissionError("Recinto fuera de tu alcance")
 
+    # ---------- Actas electorales (Fase 2) ----------
+    def require_act_reviewer(self, campaign_id, user):
+        """Quién puede validar/observar actas (§14): un ACT_VALIDATOR
+        asignado a esta operación, o un ADMIN con soporte activo para esta
+        campaña — nunca Candidate/Manager (supervisan, no validan) ni un
+        ADMIN sin soporte. Devuelve (campaign, review_source) para que el
+        llamador etiquete correctamente el ElectionActReview resultante."""
+        if self.is_admin(user):
+            campaign = self._campaign(campaign_id, user)
+            if self.has_active_support(campaign_id, user):
+                return campaign, "ADMIN_SUPPORT"
+            raise PermissionError("Solo un ADMIN con soporte activo puede revisar actas")
+        campaign = self._campaign_open(campaign_id, user)
+        if self.active_validator_assignment(campaign_id, user):
+            return campaign, "CAMPAIGN_VALIDATOR"
+        raise PermissionError("No tienes una asignación de validador de actas en esta jornada")
+
+    def require_act_viewer(self, campaign_id, user, polling_place_id):
+        """Lectura de un acta/evidencia (§25/§29): además de quien ya ve el
+        recinto (ejecutivo, admin-support, delegado del propio recinto), un
+        ACT_VALIDATOR ve cualquier acta de SU operación — su trabajo es
+        revisar actas de toda la jornada, no de un solo recinto."""
+        if self.is_executive(user) or (self.is_admin(user) and self.has_active_support(campaign_id, user)):
+            return self._campaign(campaign_id, user)
+        campaign = self._campaign_open(campaign_id, user)
+        if self.active_validator_assignment(campaign_id, user):
+            return campaign
+        if polling_place_id in self.allowed_polling_place_ids(campaign_id, user):
+            return campaign
+        raise PermissionError("Sin acceso a esta acta")
+
     # ---------- Generic helpers ----------
     def require_membership(self, campaign_id, user):
         """Solo la comprobación base de campaña (existe, organización activa).

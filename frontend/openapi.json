@@ -1406,6 +1406,32 @@
         "title": "Body_upload_document_api_v1_campaigns__campaign_id__election_day_documents_upload_post",
         "type": "object"
       },
+      "Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post": {
+        "properties": {
+          "client_generated_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Generated Id"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post",
+        "type": "object"
+      },
       "Body_upload_evidence_api_v1_campaigns__cid__activities__aid__evidence_upload_post": {
         "properties": {
           "client_generated_id": {
@@ -6628,6 +6654,836 @@
           "observations"
         ],
         "title": "DemographicProfileRead",
+        "type": "object"
+      },
+      "ElectionActCandidateOption": {
+        "properties": {
+          "ballot_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballot Order"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "list_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Number"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "display_name",
+          "list_number",
+          "ballot_order"
+        ],
+        "title": "ElectionActCandidateOption",
+        "type": "object"
+      },
+      "ElectionActContestOption": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActCandidateOption"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "office_type": {
+            "title": "Office Type",
+            "type": "string"
+          },
+          "vote_method": {
+            "title": "Vote Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "office_type",
+          "vote_method",
+          "candidates"
+        ],
+        "title": "ElectionActContestOption",
+        "type": "object"
+      },
+      "ElectionActCorrectionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "ballots_counted": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballots Counted"
+          },
+          "blank_ballots": {
+            "minimum": 0.0,
+            "title": "Blank Ballots",
+            "type": "integer"
+          },
+          "client_generated_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Generated Id"
+          },
+          "correction_reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Correction Reason",
+            "type": "string"
+          },
+          "null_ballots": {
+            "minimum": 0.0,
+            "title": "Null Ballots",
+            "type": "integer"
+          },
+          "offline_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Created At"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActResultInput"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "valid_ballots": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Ballots"
+          }
+        },
+        "required": [
+          "blank_ballots",
+          "null_ballots",
+          "correction_reason"
+        ],
+        "title": "ElectionActCorrectionCreate",
+        "type": "object"
+      },
+      "ElectionActCoverageSummary": {
+        "properties": {
+          "expected_boards": {
+            "title": "Expected Boards",
+            "type": "integer"
+          },
+          "in_review": {
+            "title": "In Review",
+            "type": "integer"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "integer"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          },
+          "received": {
+            "title": "Received",
+            "type": "integer"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_boards",
+          "received",
+          "validated",
+          "in_review",
+          "observed",
+          "pending"
+        ],
+        "title": "ElectionActCoverageSummary",
+        "type": "object"
+      },
+      "ElectionActDetail": {
+        "properties": {
+          "act": {
+            "$ref": "#/components/schemas/ElectionActRead"
+          },
+          "electoral_board_code": {
+            "title": "Electoral Board Code",
+            "type": "string"
+          },
+          "electoral_contest_name": {
+            "title": "Electoral Contest Name",
+            "type": "string"
+          },
+          "polling_place_name": {
+            "title": "Polling Place Name",
+            "type": "string"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActReviewRead"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "revisions": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActRevisionRead"
+            },
+            "title": "Revisions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "act",
+          "polling_place_name",
+          "electoral_board_code",
+          "electoral_contest_name",
+          "revisions",
+          "reviews"
+        ],
+        "title": "ElectionActDetail",
+        "type": "object"
+      },
+      "ElectionActDraftCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "ballots_counted": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballots Counted"
+          },
+          "blank_ballots": {
+            "minimum": 0.0,
+            "title": "Blank Ballots",
+            "type": "integer"
+          },
+          "client_generated_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Generated Id"
+          },
+          "electoral_board_id": {
+            "format": "uuid",
+            "title": "Electoral Board Id",
+            "type": "string"
+          },
+          "electoral_contest_id": {
+            "format": "uuid",
+            "title": "Electoral Contest Id",
+            "type": "string"
+          },
+          "null_ballots": {
+            "minimum": 0.0,
+            "title": "Null Ballots",
+            "type": "integer"
+          },
+          "offline_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offline Created At"
+          },
+          "polling_place_id": {
+            "format": "uuid",
+            "title": "Polling Place Id",
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActResultInput"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "valid_ballots": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Ballots"
+          }
+        },
+        "required": [
+          "polling_place_id",
+          "electoral_board_id",
+          "electoral_contest_id",
+          "blank_ballots",
+          "null_ballots"
+        ],
+        "title": "ElectionActDraftCreate",
+        "type": "object"
+      },
+      "ElectionActDraftResponse": {
+        "properties": {
+          "act": {
+            "$ref": "#/components/schemas/ElectionActRead"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/ElectionActRevisionRead"
+          }
+        },
+        "required": [
+          "act",
+          "revision"
+        ],
+        "title": "ElectionActDraftResponse",
+        "type": "object"
+      },
+      "ElectionActEvidenceRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mime_type": {
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "original_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Filename"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "uploaded_by_user_id": {
+            "format": "uuid",
+            "title": "Uploaded By User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revision_id",
+          "mime_type",
+          "size_bytes",
+          "original_filename",
+          "uploaded_by_user_id",
+          "created_at"
+        ],
+        "title": "ElectionActEvidenceRead",
+        "type": "object"
+      },
+      "ElectionActListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ElectionActListResponse",
+        "type": "object"
+      },
+      "ElectionActObserveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id",
+          "reason"
+        ],
+        "title": "ElectionActObserveRequest",
+        "type": "object"
+      },
+      "ElectionActRead": {
+        "properties": {
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "electoral_board_id": {
+            "format": "uuid",
+            "title": "Electoral Board Id",
+            "type": "string"
+          },
+          "electoral_contest_id": {
+            "format": "uuid",
+            "title": "Electoral Contest Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latest_revision_number": {
+            "title": "Latest Revision Number",
+            "type": "integer"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "polling_place_id": {
+            "format": "uuid",
+            "title": "Polling Place Id",
+            "type": "string"
+          },
+          "review_claim_expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Claim Expires At"
+          },
+          "review_claimed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Claimed At"
+          },
+          "review_claimed_by_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Claimed By User Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "validated_revision_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validated Revision Id"
+          }
+        },
+        "required": [
+          "id",
+          "campaign_id",
+          "operation_id",
+          "polling_place_id",
+          "electoral_board_id",
+          "electoral_contest_id",
+          "status",
+          "latest_revision_number",
+          "validated_revision_id",
+          "review_claimed_by_user_id",
+          "review_claimed_at",
+          "review_claim_expires_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ElectionActRead",
+        "type": "object"
+      },
+      "ElectionActResultInput": {
+        "additionalProperties": false,
+        "properties": {
+          "electoral_candidate_id": {
+            "format": "uuid",
+            "title": "Electoral Candidate Id",
+            "type": "string"
+          },
+          "votes": {
+            "minimum": 0.0,
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "electoral_candidate_id",
+          "votes"
+        ],
+        "title": "ElectionActResultInput",
+        "type": "object"
+      },
+      "ElectionActResultRead": {
+        "properties": {
+          "electoral_candidate_id": {
+            "format": "uuid",
+            "title": "Electoral Candidate Id",
+            "type": "string"
+          },
+          "votes": {
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "electoral_candidate_id",
+          "votes"
+        ],
+        "title": "ElectionActResultRead",
+        "type": "object"
+      },
+      "ElectionActReviewRead": {
+        "properties": {
+          "act_id": {
+            "format": "uuid",
+            "title": "Act Id",
+            "type": "string"
+          },
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "review_source": {
+            "title": "Review Source",
+            "type": "string"
+          },
+          "reviewer_user_id": {
+            "format": "uuid",
+            "title": "Reviewer User Id",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "act_id",
+          "revision_id",
+          "reviewer_user_id",
+          "review_source",
+          "action",
+          "reason",
+          "created_at"
+        ],
+        "title": "ElectionActReviewRead",
+        "type": "object"
+      },
+      "ElectionActRevisionRead": {
+        "properties": {
+          "act_id": {
+            "format": "uuid",
+            "title": "Act Id",
+            "type": "string"
+          },
+          "ballots_counted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballots Counted"
+          },
+          "blank_ballots": {
+            "title": "Blank Ballots",
+            "type": "integer"
+          },
+          "correction_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction Reason"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActEvidenceRead"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "null_ballots": {
+            "title": "Null Ballots",
+            "type": "integer"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionActResultRead"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "revision_number": {
+            "title": "Revision Number",
+            "type": "integer"
+          },
+          "revision_type": {
+            "title": "Revision Type",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "submitted_by_user_id": {
+            "format": "uuid",
+            "title": "Submitted By User Id",
+            "type": "string"
+          },
+          "valid_ballots": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Ballots"
+          }
+        },
+        "required": [
+          "id",
+          "act_id",
+          "revision_number",
+          "revision_type",
+          "status",
+          "submitted_by_user_id",
+          "blank_ballots",
+          "null_ballots",
+          "valid_ballots",
+          "ballots_counted",
+          "correction_reason",
+          "notes",
+          "created_at",
+          "submitted_at",
+          "results",
+          "evidence"
+        ],
+        "title": "ElectionActRevisionRead",
+        "type": "object"
+      },
+      "ElectionActValidateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id"
+        ],
+        "title": "ElectionActValidateRequest",
         "type": "object"
       },
       "ElectionDayAdminSupportSessionRead": {
@@ -25209,6 +26065,939 @@
         "summary": "Claim Check",
         "tags": [
           "feature-entitlements"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts": {
+      "get": {
+        "operationId": "list_acts_api_v1_campaigns__campaign_id__election_day_acts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "polling_place_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Polling Place Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Acts",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/contests": {
+      "get": {
+        "operationId": "list_contests_api_v1_campaigns__campaign_id__election_day_acts_contests_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ElectionActContestOption"
+                  },
+                  "title": "Response List Contests Api V1 Campaigns  Campaign Id  Election Day Acts Contests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Contests",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/coverage": {
+      "get": {
+        "operationId": "coverage_api_v1_campaigns__campaign_id__election_day_acts_coverage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActCoverageSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Coverage",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/drafts": {
+      "post": {
+        "operationId": "create_draft_api_v1_campaigns__campaign_id__election_day_acts_drafts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActDraftCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActDraftResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Draft",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/validation/queue": {
+      "get": {
+        "operationId": "validation_queue_api_v1_campaigns__campaign_id__election_day_acts_validation_queue_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "polling_place_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Polling Place Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Validation Queue",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}": {
+      "get": {
+        "operationId": "act_detail_api_v1_campaigns__campaign_id__election_day_acts__act_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Act Detail",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/claim": {
+      "post": {
+        "operationId": "claim_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__claim_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Claim Act",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/corrections": {
+      "post": {
+        "operationId": "create_correction_api_v1_campaigns__campaign_id__election_day_acts__act_id__corrections_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActCorrectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActDraftResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Correction",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/evidence/{evidence_id}/download": {
+      "get": {
+        "operationId": "download_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__evidence__evidence_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "evidence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Evidence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Download Evidence",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/observe": {
+      "post": {
+        "operationId": "observe_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__observe_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActObserveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Observe Act",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/release": {
+      "post": {
+        "operationId": "release_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__release_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Release Act",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence": {
+      "post": {
+        "operationId": "upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_evidence_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActEvidenceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Upload Evidence",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/submit": {
+      "post": {
+        "operationId": "submit_revision_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActDraftResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Submit Revision",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/validate": {
+      "post": {
+        "operationId": "validate_act_api_v1_campaigns__campaign_id__election_day_acts__act_id__validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Validate Act",
+        "tags": [
+          "Election Day - Actas"
         ]
       }
     },

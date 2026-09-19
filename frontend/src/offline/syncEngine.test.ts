@@ -18,13 +18,23 @@ import { apiRequest } from '../api/client';
 // fake IndexedDB round-trip.
 vi.mock('./attachmentsRepository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./attachmentsRepository')>();
-  return { ...actual, listAttachmentsForOwner: vi.fn(), setAttachmentStatus: vi.fn() };
+  return {
+    ...actual,
+    listAttachmentsForOwner: vi.fn(),
+    setAttachmentStatus: vi.fn(),
+    listAttachments: vi.fn(),
+  };
 });
-import { listAttachmentsForOwner, setAttachmentStatus } from './attachmentsRepository';
+import {
+  listAttachments,
+  listAttachmentsForOwner,
+  setAttachmentStatus,
+} from './attachmentsRepository';
 
 const mockedApiRequest = vi.mocked(apiRequest);
 const mockedListAttachmentsForOwner = vi.mocked(listAttachmentsForOwner);
 const mockedSetAttachmentStatus = vi.mocked(setAttachmentStatus);
+const mockedListAttachments = vi.mocked(listAttachments);
 
 function scopeFor(campaignId: string): OwnerScope {
   return { user_id: 'sync-user', organization_id: 'org-1', campaign_id: campaignId };
@@ -54,6 +64,7 @@ beforeEach(() => {
   mockedApiRequest.mockReset();
   mockedListAttachmentsForOwner.mockReset().mockResolvedValue([]);
   mockedSetAttachmentStatus.mockReset().mockResolvedValue(undefined);
+  mockedListAttachments.mockReset().mockResolvedValue([]);
 });
 
 describe('syncEngine.syncQueue', () => {
@@ -269,5 +280,116 @@ describe('syncEngine.syncQueue', () => {
 
     expect(mockedApiRequest).not.toHaveBeenCalled();
     expect(summary.attachmentsPending).toBe(1);
+  });
+});
+
+describe('syncEngine.syncQueue — actas electorales (Fase 2)', () => {
+  it('registra un acta, sube su evidencia y la envía en una sola pasada', async () => {
+    const scope = scopeFor('sync-act');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 1,
+        null_ballots: 1,
+        valid_ballots: 10,
+        ballots_counted: 12,
+        results: [{ electoral_candidate_id: 'cand-1', votes: 10 }],
+      },
+      'sync-act-client',
+    );
+    mockedListAttachments.mockResolvedValueOnce([fakeAttachment({ draft_id: draft.id })]);
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockResolvedValueOnce({
+      act: { id: 'act-server-1' },
+      revision: { id: 'rev-server-1', status: 'DRAFT' },
+    });
+    mockedApiRequest.mockResolvedValueOnce({ id: 'evidence-server-1' });
+    mockedApiRequest.mockResolvedValueOnce(undefined);
+
+    const summary = await syncQueue(scope);
+
+    const updated = await getDraft(draft.id);
+    expect(summary.synced).toBe(1);
+    expect(updated?.sync_status).toBe('SYNCED');
+    expect(updated?.server_id).toBe('act-server-1');
+
+    expect(mockedApiRequest.mock.calls[0][0]).toBe('/campaigns/sync-act/election-day/acts/drafts');
+    const [evidenceUrl, evidenceInit] = mockedApiRequest.mock.calls[1];
+    expect(evidenceUrl).toBe(
+      '/campaigns/sync-act/election-day/acts/act-server-1/revisions/rev-server-1/evidence',
+    );
+    expect((evidenceInit as RequestInit).body).toBeInstanceOf(FormData);
+    expect(mockedApiRequest.mock.calls[2][0]).toBe(
+      '/campaigns/sync-act/election-day/acts/act-server-1/revisions/rev-server-1/submit',
+    );
+  });
+
+  it('no reenvía ni resube evidencia si la revisión ya llegó SUBMITTED (reintento idempotente)', async () => {
+    const scope = scopeFor('sync-act-idempotent');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 0,
+        null_ballots: 0,
+        valid_ballots: 5,
+        ballots_counted: 5,
+        results: [],
+      },
+      'sync-act-idempotent-client',
+    );
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockResolvedValueOnce({
+      act: { id: 'act-server-2' },
+      revision: { id: 'rev-server-2', status: 'SUBMITTED' },
+    });
+
+    const summary = await syncQueue(scope);
+
+    expect(summary.synced).toBe(1);
+    expect(mockedApiRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('mapea un 409 de carrera de junta al mensaje específico de actas', async () => {
+    const scope = scopeFor('sync-act-conflict');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 0,
+        null_ballots: 0,
+        valid_ballots: 5,
+        ballots_counted: 5,
+        results: [],
+      },
+      'sync-act-conflict-client',
+    );
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockRejectedValueOnce(new ApiError(409, 'Conflict'));
+
+    const summary = await syncQueue(scope);
+
+    expect(summary.conflicts).toBe(1);
+    const updated = await getDraft(draft.id);
+    expect(updated?.sync_status).toBe('REQUIRES_REVIEW');
+    expect(updated?.last_error).toBe(
+      'Ya existe un acta recibida para esta junta. Revisa antes de continuar.',
+    );
   });
 });

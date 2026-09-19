@@ -44,6 +44,14 @@ const nativeFetch = globalThis.fetch;
 let operationStatus: number | 200 = 404;
 let operation: any = null;
 let coverage: any = null;
+let actsCoverage: any = {
+  expected_boards: 0,
+  received: 0,
+  validated: 0,
+  in_review: 0,
+  observed: 0,
+  pending: 0,
+};
 let places: any[] = [];
 let assignments: any[] = [];
 let incidents: any[] = [];
@@ -75,6 +83,14 @@ afterEach(() => {
   operationStatus = 404;
   operation = null;
   coverage = null;
+  actsCoverage = {
+    expected_boards: 0,
+    received: 0,
+    validated: 0,
+    in_review: 0,
+    observed: 0,
+    pending: 0,
+  };
   places = [];
   assignments = [];
   incidents = [];
@@ -130,6 +146,9 @@ function handlers() {
     }),
     http.get('*/api/v1/campaigns/campaign-1/election-day/coverage', () =>
       HttpResponse.json(coverage),
+    ),
+    http.get('*/api/v1/campaigns/campaign-1/election-day/acts/coverage', () =>
+      HttpResponse.json(actsCoverage),
     ),
     http.get('*/api/v1/campaigns/campaign-1/election-day/polling-places', () =>
       HttpResponse.json({ items: places }),
@@ -392,12 +411,25 @@ describe('Jornada Electoral — Command Center', () => {
         resolution_notes: null,
       },
     ];
+    actsCoverage = {
+      expected_boards: 3,
+      received: 2,
+      validated: 1,
+      in_review: 1,
+      observed: 0,
+      pending: 1,
+    };
     handlers();
     renderPage();
     await screen.findByText('Escuela Central');
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar jornada' }));
     expect(await screen.findByRole('heading', { name: 'Cerrar jornada' })).toBeVisible();
     expect(screen.getByText(/Existen incidencias sin resolver/)).toBeVisible();
+    expect(
+      screen.getByText('Existen 1 actas recibidas que todavía no han sido validadas.'),
+    ).toBeVisible();
+    // La advertencia nunca bloquea el cierre: el botón sigue habilitado.
+    expect(screen.getByRole('button', { name: 'Confirmar cierre' })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar cierre' }));
     await waitFor(() => expect(lastAction).toBe('close'));
   });

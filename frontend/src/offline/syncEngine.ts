@@ -30,6 +30,7 @@ const ELECTION_DAY_ENTITY_TYPES: DraftEntityType[] = [
   'ELECTION_DAY_CHECK_IN',
   'ELECTION_DAY_INCIDENT',
   'ELECTION_DAY_DOCUMENT',
+  'ELECTION_ACT_SUBMIT',
 ];
 
 function friendlyError(error: unknown, entityType?: DraftEntityType): string {
@@ -43,8 +44,15 @@ function friendlyError(error: unknown, entityType?: DraftEntityType): string {
         ? 'Tu asignación cambió. Este registro requiere revisión.'
         : 'Ya no tienes acceso a este territorio. Este registro requiere revisión.';
     }
-    if (error.status === 409)
-      return 'Este registro requiere revisión: ya existe un registro similar en el servidor.';
+    if (error.status === 409) {
+      // §32: dos delegados registrando la misma junta+contienda offline es
+      // exactamente la carrera que el UNIQUE de la base de datos resuelve —
+      // mensaje específico para que el delegado sepa que debe revisar antes
+      // de reintentar, nunca un genérico "algo salió mal".
+      return entityType === 'ELECTION_ACT_SUBMIT'
+        ? 'Ya existe un acta recibida para esta junta. Revisa antes de continuar.'
+        : 'Este registro requiere revisión: ya existe un registro similar en el servidor.';
+    }
     return 'No fue posible sincronizar este registro.';
   }
   return 'No fue posible sincronizar este registro.';
@@ -129,6 +137,83 @@ async function syncElectionDayDocument(draft: OfflineDraft): Promise<{ id: strin
   return result;
 }
 
+// Registro/corrección de un acta (§12/§13): tres pasos idempotentes en una
+// sola sincronización — crear (o reutilizar, vía client_generated_id) el
+// borrador/corrección, subir cada fotografía pendiente como evidencia, y
+// enviar la revisión. Si el envío falla porque falta evidencia (por ejemplo,
+// una foto que no pudo subirse), la revisión queda en DRAFT en el servidor y
+// un reintento posterior de este mismo draft la retoma sin duplicarla.
+async function syncElectionActSubmit(draft: OfflineDraft): Promise<{ id: string }> {
+  const payload = draft.payload as {
+    is_correction: boolean;
+    act_id?: string;
+    polling_place_id?: string;
+    electoral_board_id?: string;
+    electoral_contest_id?: string;
+    blank_ballots: number;
+    null_ballots: number;
+    valid_ballots: number | null;
+    ballots_counted: number | null;
+    results: { electoral_candidate_id: string; votes: number }[];
+    correction_reason?: string;
+  };
+  type DraftResponse = { act: { id: string }; revision: { id: string; status: string } };
+  const result = payload.is_correction
+    ? await apiRequest<DraftResponse>(
+        `/campaigns/${draft.campaign_id}/election-day/acts/${payload.act_id}/corrections`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            blank_ballots: payload.blank_ballots,
+            null_ballots: payload.null_ballots,
+            valid_ballots: payload.valid_ballots,
+            ballots_counted: payload.ballots_counted,
+            results: payload.results,
+            correction_reason: payload.correction_reason,
+            client_generated_id: draft.client_generated_id,
+            offline_created_at: draft.created_offline_at,
+          }),
+        },
+      )
+    : await apiRequest<DraftResponse>(`/campaigns/${draft.campaign_id}/election-day/acts/drafts`, {
+        method: 'POST',
+        body: JSON.stringify({
+          polling_place_id: payload.polling_place_id,
+          electoral_board_id: payload.electoral_board_id,
+          electoral_contest_id: payload.electoral_contest_id,
+          blank_ballots: payload.blank_ballots,
+          null_ballots: payload.null_ballots,
+          valid_ballots: payload.valid_ballots,
+          ballots_counted: payload.ballots_counted,
+          results: payload.results,
+          client_generated_id: draft.client_generated_id,
+          offline_created_at: draft.created_offline_at,
+        }),
+      });
+  const actId = result.act.id;
+  const revisionId = result.revision.id;
+  if (result.revision.status !== 'SUBMITTED') {
+    const attachments = await listAttachments(draft.id);
+    for (const attachment of attachments) {
+      if (attachment.sync_status === 'SYNCED') continue;
+      await setAttachmentStatus(attachment.id, 'SYNCING');
+      const form = new FormData();
+      form.append('file', attachment.blob, attachment.file_name);
+      form.append('client_generated_id', attachment.client_generated_id);
+      const evidence = await apiRequest<{ id: string }>(
+        `/campaigns/${draft.campaign_id}/election-day/acts/${actId}/revisions/${revisionId}/evidence`,
+        { method: 'POST', body: form },
+      );
+      await setAttachmentStatus(attachment.id, 'SYNCED', { serverId: evidence.id });
+    }
+    await apiRequest(
+      `/campaigns/${draft.campaign_id}/election-day/acts/${actId}/revisions/${revisionId}/submit`,
+      { method: 'POST' },
+    );
+  }
+  return { id: actId };
+}
+
 async function syncAttachment(
   campaignId: string,
   activityServerId: string,
@@ -211,6 +296,7 @@ export async function syncQueue(
     ACTIVITY: 0,
     ELECTION_DAY_CHECK_IN: 0,
     ELECTION_DAY_INCIDENT: 0,
+    ELECTION_ACT_SUBMIT: 0,
     NEED: 1,
     ELECTION_DAY_DOCUMENT: 1,
   };
@@ -278,7 +364,9 @@ export async function syncQueue(
               ? await syncCheckIn(draft)
               : draft.entity_type === 'ELECTION_DAY_INCIDENT'
                 ? await syncIncident(draft)
-                : await syncElectionDayDocument(draft);
+                : draft.entity_type === 'ELECTION_ACT_SUBMIT'
+                  ? await syncElectionActSubmit(draft)
+                  : await syncElectionDayDocument(draft);
       await setDraftStatus(draft.id, 'SYNCED', {
         serverId: result.id,
         lastError: null,

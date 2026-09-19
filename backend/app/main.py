@@ -39,7 +39,7 @@ async def request_security(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception:
-        logger.error("unexpected_request_error", extra={"method": request.method, "path": request.url.path})
+        logger.error("unexpected_request_error", extra={"method": request.method, "path": request.url.path}, exc_info=True)
         response = JSONResponse(
             status_code=500,
             content={"detail": f"Ha ocurrido un error inesperado. Código de referencia: {request_id}"},

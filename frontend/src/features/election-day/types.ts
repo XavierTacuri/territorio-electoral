@@ -258,6 +258,112 @@ export type ElectionDayMyContextSummary = {
   staff_types: ElectionDayStaffType[];
 };
 
+// ---------- Actas electorales (Fase 2) ----------
+
+export type ElectionActStatus = 'RECEIVED' | 'IN_REVIEW' | 'OBSERVED' | 'VALIDATED';
+
+export const ACT_STATUS_LABELS: Record<ElectionActStatus, string> = {
+  RECEIVED: 'Recibida',
+  IN_REVIEW: 'En revisión',
+  OBSERVED: 'Observada',
+  VALIDATED: 'Validada',
+};
+
+export type ElectionActResultInput = { electoral_candidate_id: string; votes: number };
+
+export type ElectionActRead = {
+  id: string;
+  campaign_id: string;
+  operation_id: string;
+  polling_place_id: string;
+  electoral_board_id: string;
+  electoral_contest_id: string;
+  status: ElectionActStatus;
+  latest_revision_number: number;
+  validated_revision_id: string | null;
+  review_claimed_by_user_id: string | null;
+  review_claimed_at: string | null;
+  review_claim_expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ElectionActEvidenceRead = {
+  id: string;
+  revision_id: string;
+  mime_type: string;
+  size_bytes: number;
+  original_filename: string | null;
+  uploaded_by_user_id: string;
+  created_at: string;
+};
+
+export type ElectionActRevisionRead = {
+  id: string;
+  act_id: string;
+  revision_number: number;
+  revision_type: 'INITIAL' | 'CORRECTION';
+  status: 'DRAFT' | 'SUBMITTED';
+  submitted_by_user_id: string;
+  blank_ballots: number;
+  null_ballots: number;
+  valid_ballots: number | null;
+  ballots_counted: number | null;
+  correction_reason: string | null;
+  notes: string | null;
+  created_at: string;
+  submitted_at: string | null;
+  results: { electoral_candidate_id: string; votes: number }[];
+  evidence: ElectionActEvidenceRead[];
+};
+
+export type ElectionActReviewRead = {
+  id: string;
+  act_id: string;
+  revision_id: string;
+  reviewer_user_id: string;
+  review_source: 'CAMPAIGN_VALIDATOR' | 'ADMIN_SUPPORT';
+  action: 'VALIDATED' | 'OBSERVED';
+  reason: string | null;
+  created_at: string;
+};
+
+export type ElectionActDetail = {
+  act: ElectionActRead;
+  polling_place_name: string;
+  electoral_board_code: string;
+  electoral_contest_name: string;
+  revisions: ElectionActRevisionRead[];
+  reviews: ElectionActReviewRead[];
+};
+
+export type ElectionActListResponse = { items: ElectionActRead[]; total: number };
+
+export type ElectionActCandidateOption = {
+  id: string;
+  full_name: string;
+  display_name: string | null;
+  list_number: string | null;
+  ballot_order: number | null;
+};
+
+export type ElectionActContestOption = {
+  id: string;
+  name: string;
+  office_type: string;
+  vote_method: 'SINGLE_CHOICE' | 'MULTI_VOTE' | 'LIST_VOTE' | 'OTHER';
+  candidates: ElectionActCandidateOption[];
+};
+
+export type ElectionActCoverageSummary = {
+  expected_boards: number;
+  received: number;
+  validated: number;
+  in_review: number;
+  observed: number;
+  pending: number;
+};
+
 export type ElectionDayAdminSupportSession = {
   id: string;
   admin_user_id: string;

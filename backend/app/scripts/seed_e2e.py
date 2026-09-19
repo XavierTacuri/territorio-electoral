@@ -13,7 +13,7 @@ from app.models.alerts import AlertRule, OperationalAlert
 from app.models.assignments import CampaignUser, TerritorialAssignment
 from app.models.campaign import Campaign
 from app.models.election_day import ElectionDayAssignment, ElectionDayDocument, ElectionDayIncident, ElectionDayOperation, ElectoralBoard, PollingPlace
-from app.models.historical import DataImportJob, DataSource, DemographicIndicator, DemographicObservation, ElectoralContest, ElectoralGeography, ElectoralProcess, ElectoralRollSnapshot, ElectoralRollSnapshotEntry, ElectoralTurnout, ParticipationProjectionResult, ParticipationProjectionRun
+from app.models.historical import DataImportJob, DataSource, DemographicIndicator, DemographicObservation, ElectoralCandidate, ElectoralContest, ElectoralGeography, ElectoralProcess, ElectoralRollSnapshot, ElectoralRollSnapshotEntry, ElectoralTurnout, ParticipationProjectionResult, ParticipationProjectionRun
 from app.models.operational import ActivityParticipantSummary, CitizenNeed, TerritorialActivity
 from app.models.organization import Organization, OrganizationMembership, OrganizationSubscription
 from app.models.public_intelligence import PublicIntelligenceItem,PublicItemTerritory,PublicSource
@@ -342,6 +342,59 @@ def ensure_election_day_fixture(db,users,admin,campaign,canton,parishes):
         service.upload_document(campaign.id,coordinator,polling_place_id=places[0].id,board_id=boards_place_1[0].id,document_type="ACTA_COPY",file_bytes=b"%PDF-1.4\n% Documento sintetico E2E de jornada electoral\n",original_filename="acta-sintetica-e2e.pdf",client_generated_id=None)
     db.flush()
 
+def ensure_election_acts_fixture(db,users,admin,canton,parishes):
+    """Fase 2: campaña dedicada y aislada de "Gualaceo E2E 2027" — nunca
+    comparte operación con election-day.spec.ts (que la mueve a SCRUTINY y
+    luego CLOSED al final de su propio archivo). Esta jornada nace
+    directamente en SCRUTINY con una contienda real (2 candidatos) y dos
+    juntas en un mismo recinto, para que election-day-acts.spec.ts pueda
+    ejercer registro/corrección/validación sin pelear por estado compartido."""
+    manager=users["manager_e2e"];delegate=users["delegate_e2e_a"];validator=users["analyst_e2e"]
+    campaign=db.scalar(select(Campaign).where(Campaign.slug=="actas-e2e-2027"))
+    if not campaign:
+        campaign=CampaignService(db).create(CampaignCreate(name="Actas E2E 2027",slug="actas-e2e-2027",canton_id=canton.id,office_type="MAYOR",election_name="Elecciones sintéticas de actas 2027",election_date=date(2027,2,14),start_date=date(2026,1,1),status="ACTIVE"),admin)
+    assignments=TerritorialAssignmentService(db)
+    for username in ("manager_e2e","delegate_e2e_a","analyst_e2e"):
+        user=users[username]
+        if not db.scalar(select(CampaignUser).where(CampaignUser.campaign_id==campaign.id,CampaignUser.user_id==user.id)):
+            assignments.assign_user(campaign.id,CampaignUserAssign(user_id=user.id),admin)
+        ensure_initial_membership(db,campaign,user)
+    source=db.scalar(select(DataSource).where(DataSource.code=="E2E_ELECTION_ACTS"))
+    if not source:
+        source=DataSourceService(db).create(DataSourceCreate(code="E2E_ELECTION_ACTS",institution="Institución sintética",dataset_name="Proceso electoral sintético — actas E2E",dataset_type="CNE_ELECTORAL_ROLL_SNAPSHOT",official_url="https://example.test/actas-e2e.csv",publication_date=date(2026,1,1),reference_year=2027),admin)
+    process=db.scalar(select(ElectoralProcess).where(ElectoralProcess.code=="E2E_ELECTION_ACTS_2027"))
+    if not process:
+        process=ElectoralProcess(code="E2E_ELECTION_ACTS_2027",name="Jornada Electoral Sintética E2E Actas 2027",process_type="SECTIONAL",election_date=date(2027,2,14),year=2027,status="VALIDATED",is_final=True,source_id=source.id,is_active=True);db.add(process);db.flush()
+    contest=db.scalar(select(ElectoralContest).where(ElectoralContest.electoral_process_id==process.id,ElectoralContest.office_type==campaign.office_type,ElectoralContest.canton_id==canton.id))
+    if not contest:
+        contest=ElectoralContest(electoral_process_id=process.id,office_type=campaign.office_type,name="Alcaldía Actas Sintética E2E",vote_method="SINGLE_CHOICE",seats=1,canton_id=canton.id,is_active=True);db.add(contest);db.flush()
+    candidates=list(db.scalars(select(ElectoralCandidate).where(ElectoralCandidate.electoral_contest_id==contest.id)))
+    if not candidates:
+        c1=ElectoralCandidate(electoral_contest_id=contest.id,external_code="E2E-ACT-CAND-1",full_name="Candidata Sintética Uno",display_name="Candidata Uno",list_number="1",ballot_order=1,source_id=source.id,is_active=True)
+        c2=ElectoralCandidate(electoral_contest_id=contest.id,external_code="E2E-ACT-CAND-2",full_name="Candidato Sintético Dos",display_name="Candidato Dos",list_number="2",ballot_order=2,source_id=source.id,is_active=True)
+        db.add_all([c1,c2]);db.flush();candidates=[c1,c2]
+    service=ElectionDayService(db)
+    op=db.scalar(select(ElectionDayOperation).where(ElectionDayOperation.campaign_id==campaign.id,ElectionDayOperation.electoral_process_id==process.id))
+    if not op:
+        op=service.create_operation(campaign.id,ElectionDayOperationCreate(electoral_process_id=process.id,election_date=date(2027,2,14)),manager)
+    place=db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code=="E2E-ACT-REC-01"))
+    if not place:
+        place=PollingPlace(electoral_process_id=process.id,province_id=canton.province_id,canton_id=canton.id,parish_id=parishes[0].id,official_code="E2E-ACT-REC-01",name="Recinto Sintético de Actas",address=f"Recinto Sintético de Actas, {parishes[0].name}",latitude=-2.8877,longitude=-78.7770,is_active=True,data_source_id=source.id);db.add(place);db.flush()
+    for board_index in (1,2):
+        board_code=f"E2E-ACT-REC-01-J{board_index:02d}"
+        if not db.scalar(select(ElectoralBoard).where(ElectoralBoard.polling_place_id==place.id,ElectoralBoard.official_code==board_code)):
+            db.add(ElectoralBoard(polling_place_id=place.id,official_code=board_code,board_number=board_index,registered_voters=300,is_active=True,data_source_id=source.id))
+    db.flush()
+    if not db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==delegate.id,ElectionDayAssignment.polling_place_id==place.id)):
+        service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=delegate.id,assignment_role="POLLING_PLACE_DELEGATE",polling_place_id=place.id),manager)
+    if not db.scalar(select(ElectionDayAssignment).where(ElectionDayAssignment.operation_id==op.id,ElectionDayAssignment.user_id==validator.id,ElectionDayAssignment.assignment_role=="ACT_VALIDATOR")):
+        service.create_assignment(campaign.id,ElectionDayAssignmentCreate(user_id=validator.id,assignment_role="ACT_VALIDATOR"),manager)
+    if op.status=="PREPARATION":
+        op=service.open_operation(campaign.id,manager)
+    if op.status=="ACTIVE":
+        service.start_scrutiny(campaign.id,manager)
+    db.flush()
+
 def ensure_users(db, password):
     roles=RoleService(db); roles.initialize_roles(); result={}
     for email,username,code in USERS:
@@ -427,6 +480,7 @@ def main():
         if not territory: assignments.create(campaign.id,TerritorialAssignmentCreate(user_id=coordinator.id,parish_id=parishes[0].id),admin)
         elif not territory.is_active: territory.is_active=True
         ensure_election_day_fixture(db,users,admin,campaign,canton,parishes)
+        ensure_election_acts_fixture(db,users,admin,canton,parishes)
         op=OperationalService(db,today_provider=lambda:date(2026,8,3)); activity=db.scalar(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign.id,TerritorialActivity.title=="Asamblea sintética E2E"))
         if not activity:
             activity=op.create_activity(campaign.id,TerritorialActivityCreate(activity_type_code="COMMUNITY_MEETING",title="Asamblea sintética E2E",description="Actividad agregada sin participantes identificados.",activity_date=date(2026,8,3),status="PLANNED",parish_id=parishes[0].id),admin)
