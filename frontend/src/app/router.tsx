@@ -63,6 +63,12 @@ const ElectionDayPollingPlace = lazy(
   () => import('../features/election-day/PollingPlaceDetailPage'),
 );
 const MyElectionDay = lazy(() => import('../features/election-day/MyElectionDayPage'));
+const MyElectionDayLanding = lazy(
+  () => import('../features/election-day/MyElectionDayLandingPage'),
+);
+const ElectionDayInvitationAccept = lazy(
+  () => import('../features/election-day/InvitationAcceptPage'),
+);
 const ElectionDayValidation = lazy(() => import('../features/election-day/ValidationPage'));
 const AdminElectionDaySupport = lazy(() => import('../features/admin/ElectionDaySupportPage'));
 const Alerts = lazy(() => import('../features/alerts/AlertsPage'));
@@ -121,6 +127,10 @@ const moduleRoute = (
 export const router = createBrowserRouter([
   { path: '/login', element: lazyElement(<Login />) },
   {
+    path: '/invite/election-day',
+    element: lazyElement(<ElectionDayInvitationAccept />),
+  },
+  {
     element: <ProtectedRoute />,
     children: [
       {
@@ -129,6 +139,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/app/campaigns" replace /> },
           { path: 'account', element: lazyElement(<Account />) },
+          { path: 'election-day', element: lazyElement(<MyElectionDayLanding />) },
           { path: 'campaigns', element: lazyElement(<Campaigns />) },
           { path: 'campaigns/new', element: lazyElement(<CampaignForm />) },
           { path: 'campaigns/:campaignId', element: lazyElement(<CampaignDetail />) },

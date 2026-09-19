@@ -86,3 +86,10 @@ export const isCandidateOrManagerOnly = (u: SessionUser | null) =>
   !u.is_superuser &&
   !u.roles.some((r) => ['ADMIN', 'ANALYST'].includes(r.code)) &&
   u.roles.some((r) => (CAMPAIGN_EXECUTIVE_ROLES as readonly string[]).includes(r.code));
+
+// Personal de Jornada Electoral invitado (Delegado de recinto / Validador de
+// actas, Fase 1B §2): se crea sin ningún UserRole general — su acceso vive
+// exclusivamente en ElectionDayAssignment. Un usuario así no debe ver el
+// resto de la aplicación (§22): solo la superficie de Jornada Electoral.
+export const isElectionDayStaffOnly = (u: SessionUser | null) =>
+  !!u && !u.is_superuser && u.roles.length === 0;

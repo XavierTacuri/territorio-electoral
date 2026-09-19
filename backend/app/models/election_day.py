@@ -209,6 +209,68 @@ class ElectionDayAdminSupportSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class ElectionDayStaffInvitation(Base):
+    """Invitación de personal operativo de Jornada Electoral (Fase 1B, §4).
+
+    Deliberadamente NO crea CampaignUser/OrganizationMembership/
+    TerritorialAssignment/UserRole al aceptarse: un Delegado de recinto o
+    Validador de actas invitado aquí obtiene acceso exclusivamente vía
+    ElectionDayAssignment, nunca acceso general de campaña. El token en texto
+    plano nunca se persiste — solo su SHA-256 (token_hash); el original se
+    devuelve una única vez, al crear o reemitir."""
+    __tablename__ = "election_day_staff_invitations"
+    __table_args__ = (
+        CheckConstraint("staff_type IN ('POLLING_PLACE_DELEGATE','ACT_VALIDATOR')", name="staff_type"),
+        CheckConstraint("status IN ('PENDING','ACCEPTED','REVOKED','EXPIRED')", name="status"),
+        CheckConstraint("(status = 'ACCEPTED') = (accepted_user_id IS NOT NULL AND accepted_at IS NOT NULL)", name="accepted_fields_consistent"),
+        CheckConstraint("(status = 'REVOKED') = (revoked_at IS NOT NULL AND revoked_by_user_id IS NOT NULL)", name="revoked_fields_consistent"),
+        Index("ix_election_day_staff_invitations_organization_id", "organization_id"),
+        Index("ix_election_day_staff_invitations_campaign_id", "campaign_id"),
+        Index("ix_election_day_staff_invitations_operation_id", "operation_id"),
+        Index("ix_election_day_staff_invitations_email", "email"),
+        Index("ix_election_day_staff_invitations_status", "status"),
+        Index("ix_election_day_staff_invitations_token_hash", "token_hash", unique=True),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False)
+    campaign_id: Mapped[UUID] = mapped_column(ForeignKey("campaigns.id", ondelete="RESTRICT"), nullable=False)
+    # nombre explícito: el autogenerado por la convención (con sufijo de
+    # tabla referida) excede el límite de 63 caracteres de PostgreSQL.
+    operation_id: Mapped[UUID] = mapped_column(ForeignKey("election_day_operations.id", ondelete="RESTRICT", name="fk_election_day_staff_invitations_operation_id"), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    staff_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING", server_default="PENDING")
+    invited_by_user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    accepted_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ElectionDayStaffInvitationPollingPlace(Base):
+    """Recintos cubiertos por una invitación de Delegado (§5). ACT_VALIDATOR
+    nunca tiene filas aquí; POLLING_PLACE_DELEGATE requiere al menos una."""
+    __tablename__ = "election_day_staff_invitation_polling_places"
+    # Nombres de constraint/index acortados a propósito (sin sufijo de tabla
+    # referida): el nombre completo de esta tabla ya deja poco margen bajo el
+    # límite de 63 caracteres de PostgreSQL para identificadores.
+    __table_args__ = (
+        UniqueConstraint("invitation_id", "polling_place_id", name="uq_election_day_staff_invitation_polling_places_pair"),
+        Index("ix_election_day_staff_invitation_polling_places_invitation_id", "invitation_id"),
+        Index("ix_election_day_staff_invitation_polling_places_place_id", "polling_place_id"),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    invitation_id: Mapped[UUID] = mapped_column(ForeignKey("election_day_staff_invitations.id", ondelete="CASCADE", name="fk_election_day_staff_invitation_polling_places_invitation_id"), nullable=False)
+    polling_place_id: Mapped[UUID] = mapped_column(ForeignKey("polling_places.id", ondelete="RESTRICT", name="fk_election_day_staff_invitation_polling_places_place_id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class ElectionDayDocument(Base):
     """Copia/evidencia documental de jornada — nunca un resultado oficial
     (§36). El status 'VALIDATED' es una revisión documental interna, no una

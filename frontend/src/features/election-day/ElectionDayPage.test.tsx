@@ -140,6 +140,9 @@ function handlers() {
     http.get('*/api/v1/campaigns/campaign-1/election-day/incidents', () =>
       HttpResponse.json({ items: incidents }),
     ),
+    http.get('*/api/v1/campaigns/campaign-1/election-day/staff/invitations', () =>
+      HttpResponse.json({ items: [], total: 0 }),
+    ),
   );
 }
 

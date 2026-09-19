@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     report_max_rows: int = 50000
     evidence_output_dir: str = "/app/generated-evidence"
     evidence_max_file_mb: int = 15
+    election_day_staff_invitation_expires_hours: int = 72
     report_artifact_retention_days: int = 30
     report_max_active_artifacts_per_campaign: int = 100
     report_max_selected_surveys: int = 20
@@ -90,6 +91,8 @@ class Settings(BaseSettings):
             raise ValueError("La configuración de informes y alertas debe ser positiva")
         if not self.evidence_output_dir.strip() or self.evidence_max_file_mb <= 0:
             raise ValueError("La configuración de evidencia debe ser positiva")
+        if self.election_day_staff_invitation_expires_hours <= 0:
+            raise ValueError("ELECTION_DAY_STAFF_INVITATION_EXPIRES_HOURS debe ser positivo")
         if not self.secret_key.strip():
             raise ValueError("SECRET_KEY no puede estar vacía")
         if self.jwt_algorithm != "HS256":

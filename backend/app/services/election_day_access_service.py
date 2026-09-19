@@ -33,6 +33,14 @@ class ElectionDayAccessService:
         # concede acceso operativo por sí mismo.
         return self.access.require_access(campaign_id, user)
 
+    def _campaign_open(self, campaign_id, user):
+        # Fase 1B §18: variante sin CampaignUser/OrganizationMembership,
+        # usada únicamente por las comprobaciones cuyo verdadero portón de
+        # autorización es la posesión de una ElectionDayAssignment (no la
+        # membresía general de campaña) — nunca por las rutas ejecutivo/
+        # admin-support, que deben seguir exigiendo membresía vía _campaign.
+        return self.access.require_campaign_open(campaign_id, user)
+
     @staticmethod
     def _codes(user):
         return {r.code for r in user.roles}
@@ -124,7 +132,10 @@ class ElectionDayAccessService:
         return {a.polling_place_id for a in self.active_delegate_assignments(campaign_id, user)}
 
     def require_delegate_assignment(self, campaign_id, user, polling_place_id=None):
-        campaign = self._campaign(campaign_id, user)
+        # Fase 1B §18: la ElectionDayAssignment es el portón real — un
+        # Delegado invitado sin CampaignUser debe poder operar su(s)
+        # recinto(s), por eso la existencia de campaña usa la variante abierta.
+        campaign = self._campaign_open(campaign_id, user)
         assignments = self.active_delegate_assignments(campaign_id, user)
         if not assignments:
             raise PermissionError("No tienes una asignación de delegado de recinto en esta jornada")
@@ -133,7 +144,7 @@ class ElectionDayAccessService:
         return campaign
 
     def require_validator_assignment(self, campaign_id, user):
-        campaign = self._campaign(campaign_id, user)
+        campaign = self._campaign_open(campaign_id, user)
         if not self.active_validator_assignment(campaign_id, user):
             raise PermissionError("No tienes una asignación de validador de actas en esta jornada")
         return campaign
@@ -141,35 +152,53 @@ class ElectionDayAccessService:
     def require_polling_place_access(self, campaign_id, user, polling_place_id):
         """Acceso de lectura a un recinto: el Centro de Control ve cualquier
         recinto de la campaña; un delegado solo ve el/los suyo(s)."""
-        campaign = self._campaign(campaign_id, user)
-        if self.is_executive(user):
-            return campaign
-        if self.is_admin(user) and self.has_active_support(campaign_id, user):
-            return campaign
+        # Las rutas ejecutivo/admin-support siguen exigiendo membresía real
+        # (is_executive/is_admin son comprobaciones de rol GLOBALES, no
+        # ligadas a esta campaña — _campaign, no _campaign_open, es lo que
+        # las ata a esta campaña concreta).
+        if self.is_executive(user) or self.is_admin(user):
+            campaign = self._campaign(campaign_id, user)
+            if self.is_executive(user):
+                return campaign
+            if self.has_active_support(campaign_id, user):
+                return campaign
+        campaign = self._campaign_open(campaign_id, user)
         if polling_place_id in self.allowed_polling_place_ids(campaign_id, user):
             return campaign
         raise PermissionError("Recinto fuera de tu alcance")
 
     # ---------- Generic helpers ----------
     def require_membership(self, campaign_id, user):
-        """Solo la comprobación base de campaña (existe, no suspendida,
-        usuario pertenece a la organización/campaña o es ADMIN). No concede
-        por sí sola ningún permiso operativo de Jornada Electoral."""
-        return self._campaign(campaign_id, user)
+        """Solo la comprobación base de campaña (existe, organización activa).
+        Usada por operaciones intrínsecamente autolimitadas al propio usuario
+        (mis asignaciones, mi check-in) — por eso no exige CampaignUser
+        (§18): la propia fila de ElectionDayAssignment, filtrada por
+        user_id, es la que decide qué ve o puede hacer cada quien."""
+        return self._campaign_open(campaign_id, user)
 
     def require_any_access(self, campaign_id, user):
         """Cualquier motivo legítimo para saber que la jornada existe y su
         estado: Centro de Control, o una asignación propia (delegado o
-        validador). Usado por lecturas no sensibles (p. ej. GET /operation)
-        que tanto el equipo ejecutivo como el personal de campo consultan."""
+        validador) — incluyendo personal sin CampaignUser (§18). Usado por
+        lecturas no sensibles (p. ej. GET /operation) que tanto el equipo
+        ejecutivo como el personal de campo consultan."""
         try:
             return self.require_control_center_access(campaign_id, user)
         except PermissionError:
             pass
-        campaign = self._campaign(campaign_id, user)
+        campaign = self._campaign_open(campaign_id, user)
         if self.active_delegate_assignments(campaign_id, user) or self.active_validator_assignment(campaign_id, user):
             return campaign
         raise PermissionError("Sin acceso a la Jornada Electoral")
+
+    def resolve_election_day_context(self, campaign_id, user):
+        """Fase 1B §18: punto de entrada único para resolver si un usuario
+        tiene motivo legítimo de acceso a esta Jornada Electoral — ejecutivo,
+        ADMIN en soporte activo, o personal operativo con ElectionDayAssignment
+        válida — sin exigir CampaignUser para el caso de personal operativo.
+        Ese acceso resuelto solo sirve para las rutas de Jornada Electoral:
+        nunca se reutiliza para autorizar otras APIs de Campaign."""
+        return self.require_any_access(campaign_id, user)
 
     def require_incident_resolution_access(self, campaign_id, user):
         """Resolver una incidencia: equipo ejecutivo, o ADMIN en modo soporte

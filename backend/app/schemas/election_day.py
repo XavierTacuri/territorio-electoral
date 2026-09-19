@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class ElectionDayOperationCreate(BaseModel):
@@ -224,3 +224,154 @@ class ElectionDayAdminSupportSessionRead(BaseModel):
     reason: str | None
     started_at: datetime
     ended_at: datetime | None
+
+
+# ---------- Personal de Jornada: invitaciones de Delegados/Validadores (Fase 1B) ----------
+from app.core.security import validate_password  # noqa: E402
+from app.schemas.user import clean_name  # noqa: E402
+
+STAFF_TYPES = {"POLLING_PLACE_DELEGATE", "ACT_VALIDATOR"}
+
+
+class ElectionDayStaffInvitationCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    first_name: str
+    last_name: str
+    email: EmailStr
+    staff_type: str
+    polling_place_ids: list[UUID] = Field(default_factory=list)
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def names_valid(cls, value: str) -> str:
+        return clean_name(value)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_lower(cls, value: str) -> str:
+        return value.strip().lower()
+
+    @field_validator("staff_type")
+    @classmethod
+    def staff_type_valid(cls, value: str) -> str:
+        if value not in STAFF_TYPES:
+            raise ValueError("Perfil de personal de jornada inválido")
+        return value
+
+    @model_validator(mode="after")
+    def polling_places_match_role(self) -> "ElectionDayStaffInvitationCreate":
+        if self.staff_type == "POLLING_PLACE_DELEGATE" and not self.polling_place_ids:
+            raise ValueError("El delegado de recinto requiere al menos un recinto")
+        if self.staff_type == "ACT_VALIDATOR" and self.polling_place_ids:
+            raise ValueError("El validador de actas no se asigna a recintos")
+        if len(self.polling_place_ids) != len(set(self.polling_place_ids)):
+            raise ValueError("No se permiten recintos repetidos")
+        return self
+
+
+class ElectionDayStaffInvitationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    campaign_id: UUID
+    operation_id: UUID
+    email: str
+    first_name: str
+    last_name: str
+    staff_type: str
+    status: str
+    invited_by_user_id: UUID
+    accepted_user_id: UUID | None
+    expires_at: datetime
+    accepted_at: datetime | None
+    revoked_at: datetime | None
+    created_at: datetime
+    polling_place_ids: list[UUID]
+
+
+class ElectionDayStaffInvitationListResponse(BaseModel):
+    items: list[ElectionDayStaffInvitationRead]
+    total: int
+
+
+class ElectionDayStaffInvitationCreatedResponse(BaseModel):
+    invitation: ElectionDayStaffInvitationRead
+    invite_token: str
+    invite_url: str
+
+
+class ElectionDayInvitationPollingPlaceSummary(BaseModel):
+    id: UUID
+    name: str
+
+
+class ElectionDayInvitationPreview(BaseModel):
+    campaign_name: str
+    election_date: date
+    staff_type: str
+    email: str
+    first_name: str
+    last_name: str
+    polling_places: list[ElectionDayInvitationPollingPlaceSummary]
+    expires_at: datetime
+    requires_login: bool
+    status: str
+
+
+class ElectionDayInvitationTokenRequest(BaseModel):
+    """El token viaja únicamente en el body de una petición POST — nunca en
+    la URL (ni path ni query param), para que jamás quede en logs de acceso,
+    historial del navegador, Referer headers ni caches intermedios."""
+    model_config = ConfigDict(extra="forbid")
+    token: str = Field(min_length=16)
+
+
+class ElectionDayInvitationAcceptNewAccount(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    token: str = Field(min_length=16)
+    first_name: str
+    last_name: str
+    password: str
+    password_confirmation: str
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def names_valid(cls, value: str) -> str:
+        return clean_name(value)
+
+    @field_validator("password")
+    @classmethod
+    def password_valid(cls, value: str) -> str:
+        validate_password(value)
+        return value
+
+    @model_validator(mode="after")
+    def passwords_match(self) -> "ElectionDayInvitationAcceptNewAccount":
+        if self.password != self.password_confirmation:
+            raise ValueError("Las contraseñas no coinciden")
+        return self
+
+
+class ElectionDayInvitationAcceptResponse(BaseModel):
+    campaign_id: UUID
+    operation_id: UUID
+    message: str
+
+
+class ElectionDayMyContextResponse(BaseModel):
+    campaign_id: UUID
+    campaign_name: str
+    organization_id: UUID
+    operation_id: UUID
+    election_date: date
+    operation_status: str
+    staff_types: list[str]
+    polling_places: list[ElectionDayInvitationPollingPlaceSummary]
+
+
+class ElectionDayMyContextSummary(BaseModel):
+    campaign_id: UUID
+    campaign_name: str
+    operation_id: UUID
+    election_date: date
+    operation_status: str
+    staff_types: list[str]

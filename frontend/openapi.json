@@ -7285,6 +7285,266 @@
         "title": "ElectionDayIncidentResolve",
         "type": "object"
       },
+      "ElectionDayInvitationAcceptNewAccount": {
+        "additionalProperties": false,
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "password_confirmation": {
+            "title": "Password Confirmation",
+            "type": "string"
+          },
+          "token": {
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "first_name",
+          "last_name",
+          "password",
+          "password_confirmation"
+        ],
+        "title": "ElectionDayInvitationAcceptNewAccount",
+        "type": "object"
+      },
+      "ElectionDayInvitationAcceptResponse": {
+        "properties": {
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "campaign_id",
+          "operation_id",
+          "message"
+        ],
+        "title": "ElectionDayInvitationAcceptResponse",
+        "type": "object"
+      },
+      "ElectionDayInvitationPollingPlaceSummary": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ElectionDayInvitationPollingPlaceSummary",
+        "type": "object"
+      },
+      "ElectionDayInvitationPreview": {
+        "properties": {
+          "campaign_name": {
+            "title": "Campaign Name",
+            "type": "string"
+          },
+          "election_date": {
+            "format": "date",
+            "title": "Election Date",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "polling_places": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionDayInvitationPollingPlaceSummary"
+            },
+            "title": "Polling Places",
+            "type": "array"
+          },
+          "requires_login": {
+            "title": "Requires Login",
+            "type": "boolean"
+          },
+          "staff_type": {
+            "title": "Staff Type",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "campaign_name",
+          "election_date",
+          "staff_type",
+          "email",
+          "first_name",
+          "last_name",
+          "polling_places",
+          "expires_at",
+          "requires_login",
+          "status"
+        ],
+        "title": "ElectionDayInvitationPreview",
+        "type": "object"
+      },
+      "ElectionDayInvitationTokenRequest": {
+        "additionalProperties": false,
+        "description": "El token viaja únicamente en el body de una petición POST — nunca en\nla URL (ni path ni query param), para que jamás quede en logs de acceso,\nhistorial del navegador, Referer headers ni caches intermedios.",
+        "properties": {
+          "token": {
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "ElectionDayInvitationTokenRequest",
+        "type": "object"
+      },
+      "ElectionDayMyContextResponse": {
+        "properties": {
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "campaign_name": {
+            "title": "Campaign Name",
+            "type": "string"
+          },
+          "election_date": {
+            "format": "date",
+            "title": "Election Date",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "organization_id": {
+            "format": "uuid",
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "polling_places": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionDayInvitationPollingPlaceSummary"
+            },
+            "title": "Polling Places",
+            "type": "array"
+          },
+          "staff_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Staff Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "campaign_id",
+          "campaign_name",
+          "organization_id",
+          "operation_id",
+          "election_date",
+          "operation_status",
+          "staff_types",
+          "polling_places"
+        ],
+        "title": "ElectionDayMyContextResponse",
+        "type": "object"
+      },
+      "ElectionDayMyContextSummary": {
+        "properties": {
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "campaign_name": {
+            "title": "Campaign Name",
+            "type": "string"
+          },
+          "election_date": {
+            "format": "date",
+            "title": "Election Date",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "staff_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Staff Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "campaign_id",
+          "campaign_name",
+          "operation_id",
+          "election_date",
+          "operation_status",
+          "staff_types"
+        ],
+        "title": "ElectionDayMyContextSummary",
+        "type": "object"
+      },
       "ElectionDayOperationCreate": {
         "additionalProperties": false,
         "properties": {
@@ -7514,6 +7774,204 @@
           "uncovered_polling_places"
         ],
         "title": "ElectionDayPreflightSummary",
+        "type": "object"
+      },
+      "ElectionDayStaffInvitationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "polling_place_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Polling Place Ids",
+            "type": "array"
+          },
+          "staff_type": {
+            "title": "Staff Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "staff_type"
+        ],
+        "title": "ElectionDayStaffInvitationCreate",
+        "type": "object"
+      },
+      "ElectionDayStaffInvitationCreatedResponse": {
+        "properties": {
+          "invitation": {
+            "$ref": "#/components/schemas/ElectionDayStaffInvitationRead"
+          },
+          "invite_token": {
+            "title": "Invite Token",
+            "type": "string"
+          },
+          "invite_url": {
+            "title": "Invite Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invitation",
+          "invite_token",
+          "invite_url"
+        ],
+        "title": "ElectionDayStaffInvitationCreatedResponse",
+        "type": "object"
+      },
+      "ElectionDayStaffInvitationListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionDayStaffInvitationRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ElectionDayStaffInvitationListResponse",
+        "type": "object"
+      },
+      "ElectionDayStaffInvitationRead": {
+        "properties": {
+          "accepted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "accepted_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted User Id"
+          },
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invited_by_user_id": {
+            "format": "uuid",
+            "title": "Invited By User Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "polling_place_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Polling Place Ids",
+            "type": "array"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "staff_type": {
+            "title": "Staff Type",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campaign_id",
+          "operation_id",
+          "email",
+          "first_name",
+          "last_name",
+          "staff_type",
+          "status",
+          "invited_by_user_id",
+          "accepted_user_id",
+          "expires_at",
+          "accepted_at",
+          "revoked_at",
+          "created_at",
+          "polling_place_ids"
+        ],
+        "title": "ElectionDayStaffInvitationRead",
         "type": "object"
       },
       "ElectionDayValidationStatus": {
@@ -25866,6 +26324,55 @@
         ]
       }
     },
+    "/api/v1/campaigns/{campaign_id}/election-day/my-context": {
+      "get": {
+        "description": "§19: contexto mínimo de Jornada Electoral para personal operativo que\npuede NO tener CampaignUser — nunca depende de GET /campaigns/{id}.",
+        "operationId": "my_context_api_v1_campaigns__campaign_id__election_day_my_context_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayMyContextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "My Context",
+        "tags": [
+          "Election Day"
+        ]
+      }
+    },
     "/api/v1/campaigns/{campaign_id}/election-day/operation": {
       "get": {
         "operationId": "get_operation_api_v1_campaigns__campaign_id__election_day_operation_get",
@@ -26385,6 +26892,226 @@
         "summary": "List Boards",
         "tags": [
           "Election Day"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations": {
+      "get": {
+        "operationId": "list_invitations_api_v1_campaigns__campaign_id__election_day_staff_invitations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayStaffInvitationListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Invitations",
+        "tags": [
+          "Election Day Staff"
+        ]
+      },
+      "post": {
+        "operationId": "create_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionDayStaffInvitationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayStaffInvitationCreatedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Invitation",
+        "tags": [
+          "Election Day Staff"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations/{invitation_id}/reissue": {
+      "post": {
+        "operationId": "reissue_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__reissue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invitation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayStaffInvitationCreatedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Reissue Invitation",
+        "tags": [
+          "Election Day Staff"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations/{invitation_id}/revoke": {
+      "post": {
+        "operationId": "revoke_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invitation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayStaffInvitationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Revoke Invitation",
+        "tags": [
+          "Election Day Staff"
         ]
       }
     },
@@ -39038,6 +39765,164 @@
         "summary": "Observations",
         "tags": [
           "demographics"
+        ]
+      }
+    },
+    "/api/v1/election-day/invitations/accept": {
+      "post": {
+        "operationId": "accept_invitation_existing_account_api_v1_election_day_invitations_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionDayInvitationTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayInvitationAcceptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Accept Invitation Existing Account",
+        "tags": [
+          "Election Day Staff"
+        ]
+      }
+    },
+    "/api/v1/election-day/invitations/accept-new-account": {
+      "post": {
+        "operationId": "accept_invitation_new_account_api_v1_election_day_invitations_accept_new_account_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionDayInvitationAcceptNewAccount"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayInvitationAcceptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept Invitation New Account",
+        "tags": [
+          "Election Day Staff"
+        ]
+      }
+    },
+    "/api/v1/election-day/invitations/preview": {
+      "post": {
+        "operationId": "preview_invitation_api_v1_election_day_invitations_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionDayInvitationTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionDayInvitationPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Invitation",
+        "tags": [
+          "Election Day Staff"
+        ]
+      }
+    },
+    "/api/v1/election-day/my-contexts": {
+      "get": {
+        "operationId": "my_contexts_api_v1_election_day_my_contexts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ElectionDayMyContextSummary"
+                  },
+                  "title": "Response My Contexts Api V1 Election Day My Contexts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "My Contexts",
+        "tags": [
+          "Election Day Staff"
         ]
       }
     },

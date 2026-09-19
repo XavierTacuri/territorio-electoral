@@ -184,6 +184,80 @@ export type ElectionDayValidationStatus = {
   pending_reviews: number;
 };
 
+export type ElectionDayStaffType = 'POLLING_PLACE_DELEGATE' | 'ACT_VALIDATOR';
+export type ElectionDayInvitationStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+
+export const STAFF_TYPE_LABELS: Record<ElectionDayStaffType, string> = {
+  POLLING_PLACE_DELEGATE: 'Delegado de recinto',
+  ACT_VALIDATOR: 'Validador de actas',
+};
+
+export const INVITATION_STATUS_LABELS: Record<ElectionDayInvitationStatus, string> = {
+  PENDING: 'Pendiente',
+  ACCEPTED: 'Aceptada',
+  REVOKED: 'Revocada',
+  EXPIRED: 'Expirada',
+};
+
+export type ElectionDayStaffInvitation = {
+  id: string;
+  campaign_id: string;
+  operation_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  staff_type: ElectionDayStaffType;
+  status: ElectionDayInvitationStatus;
+  invited_by_user_id: string;
+  accepted_user_id: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  polling_place_ids: string[];
+};
+
+export type ElectionDayStaffInvitationCreatedResponse = {
+  invitation: ElectionDayStaffInvitation;
+  invite_token: string;
+  invite_url: string;
+};
+
+export type ElectionDayInvitationPollingPlaceSummary = { id: string; name: string };
+
+export type ElectionDayInvitationPreview = {
+  campaign_name: string;
+  election_date: string;
+  staff_type: ElectionDayStaffType;
+  email: string;
+  first_name: string;
+  last_name: string;
+  polling_places: ElectionDayInvitationPollingPlaceSummary[];
+  expires_at: string;
+  requires_login: boolean;
+  status: ElectionDayInvitationStatus;
+};
+
+export type ElectionDayMyContext = {
+  campaign_id: string;
+  campaign_name: string;
+  organization_id: string;
+  operation_id: string;
+  election_date: string;
+  operation_status: ElectionDayOperation['status'];
+  staff_types: ElectionDayStaffType[];
+  polling_places: ElectionDayInvitationPollingPlaceSummary[];
+};
+
+export type ElectionDayMyContextSummary = {
+  campaign_id: string;
+  campaign_name: string;
+  operation_id: string;
+  election_date: string;
+  operation_status: ElectionDayOperation['status'];
+  staff_types: ElectionDayStaffType[];
+};
+
 export type ElectionDayAdminSupportSession = {
   id: string;
   admin_user_id: string;

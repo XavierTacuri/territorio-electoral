@@ -13,7 +13,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import { useCampaign } from '../../app/CampaignProvider';
 import { useAuth } from '../../auth/AuthProvider';
-import { canAdministerCampaigns } from '../../auth/permissions';
+import { canAdministerCampaigns, isElectionDayStaffOnly } from '../../auth/permissions';
 import type { ActiveCampaign } from '../../app/CampaignProvider';
 import { type ActiveOrganization, useOptionalOrganization } from '../../app/OrganizationProvider';
 type Campaigns = { items: ActiveCampaign[] };
@@ -40,6 +40,9 @@ export function CampaignSelector() {
       apiRequest<Campaigns>(
         `/campaigns?page_size=100${organizationId && !routeCampaignId && !platformAdmin ? `&organization_id=${organizationId}` : ''}`,
       ),
+    // Personal de Jornada sin CampaignUser nunca aparece aquí — no tiene
+    // sentido consultarla para ese perfil.
+    enabled: !isElectionDayStaffOnly(user),
   });
   const value = routeCampaignId ?? active?.id ?? '';
   useEffect(() => {
@@ -47,6 +50,11 @@ export function CampaignSelector() {
     if (routeCampaignId) {
       const routeCampaign = data.items.find((item) => item.id === routeCampaignId);
       if (!routeCampaign) {
+        // Personal de Jornada sin CampaignUser (Fase 1B §18/§22) nunca
+        // aparece en /campaigns — su acceso a las rutas de Jornada Electoral
+        // lo decide el backend vía ElectionDayAssignment, no esta lista
+        // general. No lo redirijas a /403 solo por no estar en ella.
+        if (isElectionDayStaffOnly(user)) return;
         setActive(null);
         navigate('/403', { replace: true });
       } else {
@@ -59,7 +67,18 @@ export function CampaignSelector() {
         }
       }
     } else if (active && !data.items.some((item) => item.id === active.id)) setActive(null);
-  }, [active, data, navigate, organization, organizations.data, routeCampaignId, setActive]);
+  }, [active, data, navigate, organization, organizations.data, routeCampaignId, setActive, user]);
+  // Personal de Jornada sin CampaignUser (Fase 1B §4): nunca aparece en
+  // /campaigns, así que el selector general no tiene nada que ofrecerle. En
+  // vez de "No existen campañas" (que sugiere un problema) se muestra el
+  // contexto real en el que opera, y nunca se resuelve creándole un
+  // CampaignUser solo para que la lista deje de estar vacía.
+  if (isElectionDayStaffOnly(user))
+    return (
+      <Typography color="inherit" fontWeight={700}>
+        Jornada Electoral
+      </Typography>
+    );
   if (data && data.items.length === 0)
     return (
       <Stack direction="row" spacing={1} alignItems="center">

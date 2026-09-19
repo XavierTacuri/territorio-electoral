@@ -935,6 +935,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{campaign_id}/election-day/my-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Context
+         * @description §19: contexto mínimo de Jornada Electoral para personal operativo que
+         *     puede NO tener CampaignUser — nunca depende de GET /campaigns/{id}.
+         */
+        get: operations["my_context_api_v1_campaigns__campaign_id__election_day_my_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{campaign_id}/election-day/operation": {
         parameters: {
             query?: never;
@@ -1083,6 +1104,58 @@ export interface paths {
         get: operations["list_boards_api_v1_campaigns__campaign_id__election_day_polling_places__polling_place_id__boards_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Invitations */
+        get: operations["list_invitations_api_v1_campaigns__campaign_id__election_day_staff_invitations_get"];
+        put?: never;
+        /** Create Invitation */
+        post: operations["create_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations/{invitation_id}/reissue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reissue Invitation */
+        post: operations["reissue_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__reissue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/staff/invitations/{invitation_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Invitation */
+        post: operations["revoke_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__revoke_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3017,6 +3090,74 @@ export interface paths {
         };
         /** Observations */
         get: operations["observations_api_v1_demographic_observations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/election-day/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invitation Existing Account */
+        post: operations["accept_invitation_existing_account_api_v1_election_day_invitations_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/election-day/invitations/accept-new-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invitation New Account */
+        post: operations["accept_invitation_new_account_api_v1_election_day_invitations_accept_new_account_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/election-day/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Invitation */
+        post: operations["preview_invitation_api_v1_election_day_invitations_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/election-day/my-contexts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Contexts */
+        get: operations["my_contexts_api_v1_election_day_my_contexts_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6567,6 +6708,138 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** ElectionDayInvitationAcceptNewAccount */
+        ElectionDayInvitationAcceptNewAccount: {
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Password */
+            password: string;
+            /** Password Confirmation */
+            password_confirmation: string;
+            /** Token */
+            token: string;
+        };
+        /** ElectionDayInvitationAcceptResponse */
+        ElectionDayInvitationAcceptResponse: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Message */
+            message: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+        };
+        /** ElectionDayInvitationPollingPlaceSummary */
+        ElectionDayInvitationPollingPlaceSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** ElectionDayInvitationPreview */
+        ElectionDayInvitationPreview: {
+            /** Campaign Name */
+            campaign_name: string;
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /** Email */
+            email: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Polling Places */
+            polling_places: components["schemas"]["ElectionDayInvitationPollingPlaceSummary"][];
+            /** Requires Login */
+            requires_login: boolean;
+            /** Staff Type */
+            staff_type: string;
+            /** Status */
+            status: string;
+        };
+        /**
+         * ElectionDayInvitationTokenRequest
+         * @description El token viaja únicamente en el body de una petición POST — nunca en
+         *     la URL (ni path ni query param), para que jamás quede en logs de acceso,
+         *     historial del navegador, Referer headers ni caches intermedios.
+         */
+        ElectionDayInvitationTokenRequest: {
+            /** Token */
+            token: string;
+        };
+        /** ElectionDayMyContextResponse */
+        ElectionDayMyContextResponse: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Campaign Name */
+            campaign_name: string;
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Operation Status */
+            operation_status: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Polling Places */
+            polling_places: components["schemas"]["ElectionDayInvitationPollingPlaceSummary"][];
+            /** Staff Types */
+            staff_types: string[];
+        };
+        /** ElectionDayMyContextSummary */
+        ElectionDayMyContextSummary: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Campaign Name */
+            campaign_name: string;
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Operation Status */
+            operation_status: string;
+            /** Staff Types */
+            staff_types: string[];
+        };
         /** ElectionDayOperationCreate */
         ElectionDayOperationCreate: {
             /**
@@ -6648,6 +6921,88 @@ export interface components {
             uncovered_polling_places: number;
             /** Validators */
             validators: number;
+        };
+        /** ElectionDayStaffInvitationCreate */
+        ElectionDayStaffInvitationCreate: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Polling Place Ids */
+            polling_place_ids?: string[];
+            /** Staff Type */
+            staff_type: string;
+        };
+        /** ElectionDayStaffInvitationCreatedResponse */
+        ElectionDayStaffInvitationCreatedResponse: {
+            invitation: components["schemas"]["ElectionDayStaffInvitationRead"];
+            /** Invite Token */
+            invite_token: string;
+            /** Invite Url */
+            invite_url: string;
+        };
+        /** ElectionDayStaffInvitationListResponse */
+        ElectionDayStaffInvitationListResponse: {
+            /** Items */
+            items: components["schemas"]["ElectionDayStaffInvitationRead"][];
+            /** Total */
+            total: number;
+        };
+        /** ElectionDayStaffInvitationRead */
+        ElectionDayStaffInvitationRead: {
+            /** Accepted At */
+            accepted_at: string | null;
+            /** Accepted User Id */
+            accepted_user_id: string | null;
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** First Name */
+            first_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invited By User Id
+             * Format: uuid
+             */
+            invited_by_user_id: string;
+            /** Last Name */
+            last_name: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Polling Place Ids */
+            polling_place_ids: string[];
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Staff Type */
+            staff_type: string;
+            /** Status */
+            status: string;
         };
         /** ElectionDayValidationStatus */
         ElectionDayValidationStatus: {
@@ -13084,6 +13439,37 @@ export interface operations {
             };
         };
     };
+    my_context_api_v1_campaigns__campaign_id__election_day_my_context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayMyContextResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_operation_api_v1_campaigns__campaign_id__election_day_operation_get: {
         parameters: {
             query?: never;
@@ -13391,6 +13777,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ElectoralBoardRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invitations_api_v1_campaigns__campaign_id__election_day_staff_invitations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayStaffInvitationListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayStaffInvitationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayStaffInvitationCreatedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reissue_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__reissue_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayStaffInvitationCreatedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_invitation_api_v1_campaigns__campaign_id__election_day_staff_invitations__invitation_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayStaffInvitationRead"];
                 };
             };
             /** @description Validation Error */
@@ -18412,6 +18928,125 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_invitation_existing_account_api_v1_election_day_invitations_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayInvitationTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayInvitationAcceptResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_invitation_new_account_api_v1_election_day_invitations_accept_new_account_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayInvitationAcceptNewAccount"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayInvitationAcceptResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_invitation_api_v1_election_day_invitations_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionDayInvitationTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayInvitationPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_contexts_api_v1_election_day_my_contexts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayMyContextSummary"][];
                 };
             };
         };

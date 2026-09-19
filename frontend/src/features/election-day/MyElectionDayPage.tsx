@@ -30,10 +30,9 @@ import {
   ASSIGNMENT_STATUS_LABELS,
   INCIDENT_CATEGORY_LABELS,
   type ElectionDayAssignment,
+  type ElectionDayMyContext,
   type PollingPlace,
 } from './types';
-
-type CampaignRef = { id: string; name: string; organization_id: string };
 
 function getPosition(): Promise<{ latitude: number; longitude: number } | null> {
   return new Promise((resolve) => {
@@ -164,7 +163,11 @@ export default function MyElectionDayPage() {
       setError(null);
       if (online) {
         try {
-          const campaign = await apiRequest<CampaignRef>(`/campaigns/${campaignId}`);
+          // §19: nunca GET /campaigns/{id} — personal operativo sin
+          // CampaignUser no tiene acceso a ese endpoint general.
+          const context = await apiRequest<ElectionDayMyContext>(
+            `/campaigns/${campaignId}/election-day/my-context`,
+          );
           const mine = await apiRequest<ElectionDayAssignment[]>(
             `/campaigns/${campaignId}/election-day/my-assignments`,
           );
@@ -193,10 +196,10 @@ export default function MyElectionDayPage() {
           }));
           const scopeValue: OwnerScope = {
             user_id: user.id,
-            organization_id: campaign.organization_id,
+            organization_id: context.organization_id,
             campaign_id: campaignId,
           };
-          await cacheCampaignInfo(campaignId, campaign.organization_id, campaign.name);
+          await cacheCampaignInfo(campaignId, context.organization_id, context.campaign_name);
           await cacheMyElectionDayAssignments(scopeValue, resolved);
           if (!cancelled) {
             setScope(scopeValue);

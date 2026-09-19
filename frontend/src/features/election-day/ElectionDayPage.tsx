@@ -25,6 +25,7 @@ import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedba
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
 import { ElectionDayMap } from './ElectionDayMap';
+import { StaffInvitationsSection } from './StaffInvitationsSection';
 import {
   INCIDENT_CATEGORY_LABELS,
   INCIDENT_STATUS_LABELS,
@@ -544,6 +545,10 @@ export default function ElectionDayPage() {
             </Card>
           ))}
         </Stack>
+      )}
+
+      {manager && (
+        <StaffInvitationsSection campaignId={campaignId} places={places.data?.items ?? []} />
       )}
 
       <Dialog open={closeOpen} onClose={() => setCloseOpen(false)} fullWidth>

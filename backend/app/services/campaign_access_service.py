@@ -51,18 +51,33 @@ class CampaignAccessService:
             )
         ))
         return scoped | legacy
+    def _require_organization_open(self,campaign:Campaign,user:User)->None:
+        organization=self.db.get(Organization,campaign.organization_id)
+        if organization and organization.status=="SUSPENDED" and not self.admin(user):
+            from app.services.organization_service import OrganizationError
+            raise OrganizationError("ORGANIZATION_SUSPENDED","La organizacion esta suspendida")
+        if organization and not self.admin(user):
+            from app.services.organization_service import SubscriptionService
+            SubscriptionService(self.db).require_active(organization.id)
+
     def require_access(self,campaign_id:UUID,user:User)->Campaign:
         campaign=self.db.get(Campaign,campaign_id)
         if campaign:
-            organization=self.db.get(Organization,campaign.organization_id)
-            if organization and organization.status=="SUSPENDED" and not self.admin(user):
-                from app.services.organization_service import OrganizationError
-                raise OrganizationError("ORGANIZATION_SUSPENDED","La organizacion esta suspendida")
-            if organization and not self.admin(user):
-                from app.services.organization_service import SubscriptionService
-                SubscriptionService(self.db).require_active(organization.id)
+            self._require_organization_open(campaign,user)
         if not campaign:raise NotFoundError("Campaña no encontrada")
         if not self.admin(user) and campaign_id not in self.accessible_ids(user):raise PermissionError("Sin acceso a la campaña")
+        return campaign
+
+    def require_campaign_open(self,campaign_id:UUID,user:User)->Campaign:
+        """Igual que require_access salvo que NO exige CampaignUser/
+        OrganizationMembership (accessible_ids): para personal operativo
+        (p. ej. Delegado/Validador de Jornada Electoral, Fase 1B §18) cuyo
+        acceso legítimo proviene de otra tabla (ElectionDayAssignment), nunca
+        de membresía general de campaña. Sigue bloqueando organizaciones
+        suspendidas o con suscripción inactiva, igual que require_access."""
+        campaign=self.db.get(Campaign,campaign_id)
+        if not campaign:raise NotFoundError("Campaña no encontrada")
+        self._require_organization_open(campaign,user)
         return campaign
     def require_management(self,campaign_id:UUID,user:User)->Campaign:
         campaign=self.require_access(campaign_id,user)

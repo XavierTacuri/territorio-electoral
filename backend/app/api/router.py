@@ -22,6 +22,7 @@ from app.api.routes.entitlements import router as entitlements_router
 from app.api.routes.organizations import router as organizations_router
 from app.api.routes.ai_provider import router as ai_provider_router
 from app.api.routes.election_day import router as election_day_router
+from app.api.routes.election_day_staff import router as election_day_staff_router, public_router as election_day_staff_public_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -49,3 +50,5 @@ api_router.include_router(entitlements_router)
 api_router.include_router(organizations_router)
 api_router.include_router(ai_provider_router)
 api_router.include_router(election_day_router)
+api_router.include_router(election_day_staff_router)
+api_router.include_router(election_day_staff_public_router)

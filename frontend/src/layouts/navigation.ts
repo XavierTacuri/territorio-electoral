@@ -1,4 +1,4 @@
-import type { SessionUser } from '../auth/permissions';
+import { isElectionDayStaffOnly, type SessionUser } from '../auth/permissions';
 
 export type OrganizationRole = 'OWNER' | 'ADMIN' | 'MEMBER' | null;
 export type NavigationItem = { label: string; to: string };
@@ -53,6 +53,22 @@ export function buildNavigation(
       ? [{ label: 'Validación de actas', to: campaignPath('election-day/validation') }]
       : []),
   ];
+
+  // Personal de Jornada Electoral invitado (Delegado/Validador sin ningún
+  // UserRole general, Fase 1B §22): su única superficie navegable es
+  // Jornada Electoral — nunca Dashboard, Panorama, Actividades,
+  // Administración, etc. "Mis jornadas electorales" siempre aparece (lleva
+  // a /app/election-day, que no depende de tener una campaña seleccionada);
+  // "Mi Jornada"/"Validación de actas" solo se agregan cuando ya hay una
+  // campaña en contexto y la asignación correspondiente existe.
+  if (isElectionDayStaffOnly(user)) {
+    return [
+      {
+        label: 'Jornada Electoral',
+        items: [{ label: 'Mis jornadas electorales', to: '/app/election-day' }, ...jornadaItems],
+      },
+    ];
+  }
 
   // TERRITORIAL_COORDINATOR gets a dedicated, reduced product surface: it is
   // an operational territorial role, not an executive/analyst/admin one, so

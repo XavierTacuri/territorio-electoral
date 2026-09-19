@@ -10,6 +10,7 @@ from app.models.user import User
 from app.schemas.election_day import *
 from app.services.election_day_admin_support_service import ElectionDayAdminSupportService
 from app.services.election_day_service import ElectionDayService
+from app.services.election_day_staff_invitation_service import ElectionDayStaffInvitationService
 from app.services.exceptions import BusinessRuleError, ConflictError, NotFoundError
 
 router = APIRouter(prefix="/campaigns/{campaign_id}/election-day", tags=["Election Day"])
@@ -105,6 +106,13 @@ def list_assignments(campaign_id: UUID, polling_place_id: UUID | None = Query(No
 @router.get("/my-assignments", response_model=list[ElectionDayAssignmentRead])
 def my_assignments(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     return invoke(ElectionDayService(db).my_assignments, campaign_id, user)
+
+
+@router.get("/my-context", response_model=ElectionDayMyContextResponse)
+def my_context(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    """§19: contexto mínimo de Jornada Electoral para personal operativo que
+    puede NO tener CampaignUser — nunca depende de GET /campaigns/{id}."""
+    return invoke(ElectionDayStaffInvitationService(db).my_context, campaign_id, user)
 
 
 @router.get("/my-assignment", response_model=ElectionDayAssignmentRead | None, deprecated=True)

@@ -60,7 +60,7 @@ import { useCampaign } from '../app/CampaignProvider';
 import { sidebar } from '../app/theme';
 import { useActiveOrganization } from '../app/OrganizationProvider';
 import { useAuth } from '../auth/AuthProvider';
-import { isCoordinatorOnly } from '../auth/permissions';
+import { isCoordinatorOnly, isElectionDayStaffOnly } from '../auth/permissions';
 import { CampaignSelector } from '../components/navigation/CampaignSelector';
 import { OrganizationSelector } from '../components/navigation/OrganizationSelector';
 import { useAlertBadgeCount } from '../features/alerts/useAlertBadgeCount';
@@ -124,6 +124,11 @@ export function AppShell() {
   const { campaignId } = useParams();
   const selectedId = campaignId ?? active?.id;
   const isFieldCoordinator = isCoordinatorOnly(user);
+  // Personal de Jornada sin roles generales (§22): no tiene acceso al resto
+  // de la app, así que el badge de alertas ni siquiera debe consultarse
+  // (evita una llamada que el backend siempre rechazaría con 403).
+  const isElectionDayStaff = isElectionDayStaffOnly(user);
+  const hidesGeneralChrome = isFieldCoordinator || isElectionDayStaff;
   const { delegateVisible, validationVisible } = useMyElectionDayNavVisibility(selectedId);
   const groups = buildNavigation(
     user,
@@ -138,7 +143,7 @@ export function AppShell() {
       ? { user_id: user.id, organization_id: organizationId, campaign_id: selectedId }
       : null,
   );
-  const alertBadgeCount = useAlertBadgeCount(isFieldCoordinator ? null : selectedId);
+  const alertBadgeCount = useAlertBadgeCount(hidesGeneralChrome ? null : selectedId);
   const requestLogout = () => {
     if (pendingSyncCount > 0) setConfirmLogout(true);
     else void logout();
@@ -290,7 +295,7 @@ export function AppShell() {
             )}
           />
           <Box sx={{ flexGrow: 1 }} />
-          {selectedId && !isFieldCoordinator && (
+          {selectedId && !hidesGeneralChrome && (
             <IconButton
               color="inherit"
               aria-label="Centro de alertas"

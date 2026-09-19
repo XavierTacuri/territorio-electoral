@@ -34,7 +34,16 @@ function renderPage() {
   );
 }
 
-const campaign = { id: 'campaign-1', name: 'Campaña Uno', organization_id: 'org-1' };
+const myContext = {
+  campaign_id: 'campaign-1',
+  campaign_name: 'Campaña Uno',
+  organization_id: 'org-1',
+  operation_id: 'op1',
+  election_date: '2027-02-14',
+  operation_status: 'ACTIVE',
+  staff_types: ['POLLING_PLACE_DELEGATE'],
+  polling_places: [{ id: 'place-1', name: 'Escuela Central' }],
+};
 const myAssignment = {
   id: 'a1',
   operation_id: 'op1',
@@ -71,7 +80,7 @@ afterEach(async () => {
 
 function mockOnlineFlow(assignments: unknown[] = [myAssignment]) {
   mockedApiRequest.mockImplementation((path: string) => {
-    if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
+    if (path === '/campaigns/campaign-1/election-day/my-context') return Promise.resolve(myContext);
     if (path === '/campaigns/campaign-1/election-day/my-assignments')
       return Promise.resolve(assignments);
     if (path === '/campaigns/campaign-1/election-day/polling-places/place-1')
@@ -98,7 +107,8 @@ describe('Mi Jornada', () => {
 
   it('muestra un mensaje cuando el usuario no tiene asignación de delegado', async () => {
     mockedApiRequest.mockImplementation((path: string) => {
-      if (path === '/campaigns/campaign-1') return Promise.resolve(campaign);
+      if (path === '/campaigns/campaign-1/election-day/my-context')
+        return Promise.resolve(myContext);
       if (path === '/campaigns/campaign-1/election-day/my-assignments') return Promise.resolve([]);
       return Promise.reject(new Error(`unexpected path ${path}`));
     });

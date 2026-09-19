@@ -161,4 +161,41 @@ describe('navegación por capacidades', () => {
     expect(result).toContain('Centro de Informes');
     expect(result).toContain('Encuestas y estudios');
   });
+
+  it('personal de Jornada sin ningún rol general solo ve Jornada Electoral (§22)', () => {
+    const staffOnly = labels([], 'MEMBER', false, false);
+    expect(staffOnly).toEqual(['Mis jornadas electorales']);
+  });
+
+  it('Delegado sin roles generales ve Mis jornadas electorales + Mi Jornada cuando hay asignación', () => {
+    const result = labels([], 'MEMBER', true, false);
+    expect(result).toEqual(['Mis jornadas electorales', 'Mi Jornada']);
+  });
+
+  it('Validador sin roles generales ve Mis jornadas electorales + Validación de actas cuando hay asignación', () => {
+    const result = labels([], 'MEMBER', false, true);
+    expect(result).toEqual(['Mis jornadas electorales', 'Validación de actas']);
+  });
+
+  it('personal con ambos perfiles ve las dos entradas de Jornada', () => {
+    const result = labels([], 'MEMBER', true, true);
+    expect(result).toEqual(['Mis jornadas electorales', 'Mi Jornada', 'Validación de actas']);
+  });
+
+  it('un superusuario sin roles conserva la navegación completa, no la de personal de Jornada', () => {
+    const superuser: SessionUser = {
+      id: 'user-3',
+      username: 'super_e2e',
+      email: 'super@example.test',
+      first_name: 'Super',
+      last_name: 'User',
+      is_active: true,
+      is_superuser: true,
+      roles: [],
+    };
+    const result = buildNavigation(superuser, null, 'campaign-1').flatMap((group) =>
+      group.items.map((item) => item.label),
+    );
+    expect(result).toContain('Usuarios');
+  });
 });
