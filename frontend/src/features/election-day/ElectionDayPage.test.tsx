@@ -318,7 +318,9 @@ describe('Jornada Electoral — Command Center', () => {
     expect(await screen.findByText('Escuela Central')).toBeVisible();
     expect(screen.getByText('2 / 3')).toBeVisible();
     expect(screen.getByText('4 / 6')).toBeVisible();
-    expect(screen.getByText('Preparación')).toBeVisible();
+    // "Preparación" aparece dos veces: el Chip de estado y el paso activo
+    // del ciclo visual (Fase 3.1 §3) — ambos deben estar presentes.
+    expect(screen.getAllByText('Preparación').length).toBeGreaterThanOrEqual(2);
     const activate = screen.getByRole('button', { name: 'Activar jornada' });
     await userEvent.click(activate);
     await waitFor(() => expect(lastAction).toBe('open'));
@@ -490,5 +492,60 @@ describe('Jornada Electoral — Command Center', () => {
     expect(
       await screen.findByText('No existen recintos cargados para este proceso.'),
     ).toBeVisible();
+  });
+
+  it('CLOSED: no ofrece ningún botón de cambio de estado y explica el modo solo lectura', async () => {
+    operationStatus = 200;
+    operation = {
+      id: 'op1',
+      organization_id: 'org1',
+      campaign_id: 'campaign-1',
+      electoral_process_id: 'proc-1',
+      election_date: '2027-03-14',
+      status: 'CLOSED',
+      opened_at: '2027-03-14T10:00:00Z',
+      closed_at: '2027-03-15T02:00:00Z',
+      opened_by_user_id: 'u1',
+      closed_by_user_id: 'u1',
+      scrutiny_started_at: '2027-03-14T20:00:00Z',
+      scrutiny_started_by_user_id: 'u1',
+      notes: null,
+    };
+    coverage = cov;
+    places = [place];
+    handlers();
+    renderPage();
+    await screen.findByText('Escuela Central');
+    expect(screen.queryByRole('button', { name: 'Activar jornada' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Iniciar escrutinio' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cerrar jornada' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reabrir/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Esta jornada ya no admite cambios operativos/)).toBeVisible();
+    // El ciclo visual (Fase 3.1 §3) muestra el paso final activo.
+    expect(screen.getAllByText('Cerrada').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('la descripción ya no dice "No es un sistema de resultados"', async () => {
+    operationStatus = 200;
+    operation = {
+      id: 'op1',
+      organization_id: 'org1',
+      campaign_id: 'campaign-1',
+      electoral_process_id: 'proc-1',
+      election_date: '2027-03-14',
+      status: 'PREPARATION',
+      opened_at: null,
+      closed_at: null,
+      opened_by_user_id: null,
+      closed_by_user_id: null,
+      notes: null,
+    };
+    coverage = cov;
+    places = [place];
+    handlers();
+    renderPage();
+    await screen.findByText('Escuela Central');
+    expect(screen.queryByText(/No es un sistema de resultados/)).not.toBeInTheDocument();
+    expect(screen.getByText(/cobertura, presencia y validación de actas/i)).toBeVisible();
   });
 });

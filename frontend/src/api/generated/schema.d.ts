@@ -3336,6 +3336,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/election-day/admin-support/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Support Campaigns */
+        get: operations["admin_support_campaigns_api_v1_election_day_admin_support_campaigns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/election-day/invitations/accept": {
         parameters: {
             query?: never;
@@ -7138,6 +7155,34 @@ export interface components {
              * Format: uuid
              */
             revision_id: string;
+        };
+        /**
+         * ElectionDayAdminSupportCampaignOption
+         * @description Fase 3.1 §7: fila mínima para que un ADMIN elija en qué campaña
+         *     iniciar soporte — nunca expone más que lo necesario para decidir.
+         */
+        ElectionDayAdminSupportCampaignOption: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Campaign Name */
+            campaign_name: string;
+            /**
+             * Election Date
+             * Format: date
+             */
+            election_date: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Operation Status */
+            operation_status: string;
+            /** Organization Name */
+            organization_name: string;
         };
         /** ElectionDayAdminSupportSessionRead */
         ElectionDayAdminSupportSessionRead: {
@@ -20080,6 +20125,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_support_campaigns_api_v1_election_day_admin_support_campaigns_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionDayAdminSupportCampaignOption"][];
                 };
             };
         };

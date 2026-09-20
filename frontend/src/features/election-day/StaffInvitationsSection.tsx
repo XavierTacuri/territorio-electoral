@@ -19,7 +19,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../api/client';
 import { formatDateOnly } from '../../lib/dates';
-import type { PollingPlace } from './types';
+import type { ElectionDayOperation, PollingPlace } from './types';
 import {
   INVITATION_STATUS_LABELS,
   STAFF_TYPE_LABELS,
@@ -28,7 +28,16 @@ import {
   type ElectionDayStaffType,
 } from './types';
 
-type Props = { campaignId: string; places: PollingPlace[] };
+type Props = {
+  campaignId: string;
+  places: PollingPlace[];
+  operationStatus: ElectionDayOperation['status'];
+};
+
+const PASSWORD_INFO: Record<ElectionDayStaffType, string> = {
+  POLLING_PLACE_DELEGATE: 'El delegado creará su propia contraseña al activar la invitación.',
+  ACT_VALIDATOR: 'El validador creará su propia contraseña al activar la invitación.',
+};
 
 type FormState = {
   first_name: string;
@@ -52,12 +61,14 @@ function InvitationRow({
   onReissue,
   revoking,
   reissuing,
+  readOnly,
 }: {
   invitation: ElectionDayStaffInvitation;
   onRevoke: (id: string) => void;
   onReissue: (id: string) => void;
   revoking: boolean;
   reissuing: boolean;
+  readOnly: boolean;
 }) {
   const statusColor =
     invitation.status === 'ACCEPTED'
@@ -93,7 +104,7 @@ function InvitationRow({
             color={statusColor as 'success' | 'warning' | 'default'}
             label={INVITATION_STATUS_LABELS[invitation.status]}
           />
-          {invitation.status === 'PENDING' && (
+          {invitation.status === 'PENDING' && !readOnly && (
             <>
               <Button size="small" disabled={reissuing} onClick={() => onReissue(invitation.id)}>
                 REEMITIR
@@ -114,8 +125,9 @@ function InvitationRow({
   );
 }
 
-export function StaffInvitationsSection({ campaignId, places }: Props) {
+export function StaffInvitationsSection({ campaignId, places, operationStatus }: Props) {
   const qc = useQueryClient();
+  const closed = operationStatus === 'CLOSED';
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [linkResult, setLinkResult] = useState<ElectionDayStaffInvitationCreatedResponse | null>(
@@ -203,16 +215,24 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
         <Typography component="h2" variant="h2">
           Personal de Jornada
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setForm(emptyForm);
-            setFormOpen(true);
-          }}
-        >
-          AGREGAR PERSONAL
-        </Button>
+        {!closed && (
+          <Button
+            variant="contained"
+            onClick={() => {
+              setForm(emptyForm);
+              setFormOpen(true);
+            }}
+          >
+            AGREGAR PERSONAL
+          </Button>
+        )}
       </Stack>
+      {closed && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          La jornada está cerrada: el personal de jornada queda en modo consulta, sin agregar,
+          revocar ni reemitir invitaciones.
+        </Alert>
+      )}
 
       <Typography variant="overline" color="text.secondary">
         Delegados de recinto
@@ -231,6 +251,7 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
               onReissue={reissue.mutate}
               revoking={revoke.isPending}
               reissuing={reissue.isPending}
+              readOnly={closed}
             />
           ))
         )}
@@ -253,6 +274,7 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
               onReissue={reissue.mutate}
               revoking={revoke.isPending}
               reissuing={reissue.isPending}
+              readOnly={closed}
             />
           ))
         )}
@@ -273,6 +295,7 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
               onReissue={reissue.mutate}
               revoking={revoke.isPending}
               reissuing={reissue.isPending}
+              readOnly={closed}
             />
           ))
         )}
@@ -298,6 +321,10 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
+            <Typography variant="body2" color="text.secondary">
+              El personal recibirá un enlace de invitación y creará su propia contraseña al activar
+              el acceso.
+            </Typography>
             <TextField
               select
               label="Perfil"
@@ -309,41 +336,48 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
                   polling_place_ids: [],
                 }))
               }
+              helperText={PASSWORD_INFO[form.staff_type]}
             >
               <MenuItem value="POLLING_PLACE_DELEGATE">Delegado de recinto</MenuItem>
               <MenuItem value="ACT_VALIDATOR">Validador de actas</MenuItem>
             </TextField>
-            {form.staff_type === 'POLLING_PLACE_DELEGATE' && (
-              <TextField
-                select
-                label="Recintos"
-                value={form.polling_place_ids}
-                SelectProps={{
-                  multiple: true,
-                  renderValue: (selected) =>
-                    places
-                      .filter((p) => (selected as string[]).includes(p.id))
-                      .map((p) => p.name)
-                      .join(', '),
-                }}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    polling_place_ids:
-                      typeof e.target.value === 'string'
-                        ? e.target.value.split(',')
-                        : (e.target.value as string[]),
-                  }))
-                }
-                helperText="El delegado requiere al menos un recinto."
-              >
-                {places.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>
-                    {p.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
+            {form.staff_type === 'POLLING_PLACE_DELEGATE' &&
+              (places.length === 0 ? (
+                <Alert severity="warning">
+                  No existen recintos disponibles. Solicita al ADMIN cargar los datos oficiales del
+                  proceso antes de asignar delegados.
+                </Alert>
+              ) : (
+                <TextField
+                  select
+                  label="Recintos"
+                  value={form.polling_place_ids}
+                  SelectProps={{
+                    multiple: true,
+                    renderValue: (selected) =>
+                      places
+                        .filter((p) => (selected as string[]).includes(p.id))
+                        .map((p) => p.name)
+                        .join(', '),
+                  }}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      polling_place_ids:
+                        typeof e.target.value === 'string'
+                          ? e.target.value.split(',')
+                          : (e.target.value as string[]),
+                    }))
+                  }
+                  helperText="El delegado requiere al menos un recinto."
+                >
+                  {places.map((p) => (
+                    <MenuItem key={p.id} value={p.id}>
+                      {p.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ))}
             {create.isError && (
               <Alert severity="error">No se pudo crear la invitación. Verifica los datos.</Alert>
             )}
@@ -370,8 +404,38 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Invitación creada correctamente</DialogTitle>
+        <DialogTitle>Invitación creada</DialogTitle>
         <DialogContent>
+          {linkResult && (
+            <Stack spacing={0.5} sx={{ mb: 2 }}>
+              <Typography variant="overline" color="text.secondary">
+                Nombre
+              </Typography>
+              <Typography>
+                {linkResult.invitation.first_name} {linkResult.invitation.last_name}
+              </Typography>
+              <Typography variant="overline" color="text.secondary" sx={{ mt: 1 }}>
+                Perfil
+              </Typography>
+              <Typography>{STAFF_TYPE_LABELS[linkResult.invitation.staff_type]}</Typography>
+              {linkResult.invitation.staff_type === 'POLLING_PLACE_DELEGATE' && (
+                <>
+                  <Typography variant="overline" color="text.secondary" sx={{ mt: 1 }}>
+                    Recintos
+                  </Typography>
+                  <Typography>
+                    {places
+                      .filter((p) => linkResult.invitation.polling_place_ids.includes(p.id))
+                      .map((p) => p.name)
+                      .join(', ') || '—'}
+                  </Typography>
+                </>
+              )}
+            </Stack>
+          )}
+          <DialogContentText sx={{ mb: 1 }}>
+            Esta persona deberá crear su propia contraseña al activar el acceso.
+          </DialogContentText>
           <DialogContentText sx={{ mb: 2 }}>
             Este enlace se muestra ahora para que puedas compartirlo de forma segura. No volverá a
             mostrarse después de cerrar esta ventana.
@@ -397,7 +461,7 @@ export function StaffInvitationsSection({ campaignId, places }: Props) {
               }
             }}
           >
-            COPIAR ENLACE
+            COPIAR ENLACE DE INVITACIÓN
           </Button>
           <Button
             onClick={() => {

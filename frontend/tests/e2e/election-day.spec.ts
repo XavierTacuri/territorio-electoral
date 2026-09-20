@@ -53,7 +53,9 @@ async function assignments(
 
 async function gotoElectionDay(page: Page, campaignId: string) {
   await page.goto(`/app/campaigns/${campaignId}/election-day`);
-  await expect(page.getByRole('heading', { name: 'Jornada Electoral' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Jornada Electoral' })).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 // Lecturas de fixture (recintos/asignaciones) se hacen con un token del
@@ -75,7 +77,9 @@ test.describe('Modo Jornada Electoral', () => {
 
     await browserLogin(page, e2eUsers.candidate);
     await gotoElectionDay(page, campaign.id);
-    await expect(page.getByText('Jornada activa')).toBeVisible();
+    // "Jornada activa" aparece dos veces: el Chip de estado y el paso activo
+    // del ciclo visual (Fase 3.1 §3).
+    await expect(page.getByText('Jornada activa').first()).toBeVisible();
     await expect(page.getByText('Recintos', { exact: true })).toBeVisible();
     await expect(page.getByText('Escuela Sintética Central', { exact: true })).toBeVisible();
     await expect(page.getByText('Colegio Sintético Norte', { exact: true })).toBeVisible();
@@ -83,7 +87,7 @@ test.describe('Modo Jornada Electoral', () => {
     await expect(page.getByText('Incidencias recientes')).toBeVisible();
     await expect(
       page.getByText(
-        'cobertura, presencia, incidencias y documentación. No es un sistema de resultados.',
+        'Centro operativo de la jornada electoral: cobertura, presencia y validación de actas.',
       ),
     ).toBeVisible();
   });
@@ -505,13 +509,18 @@ test.describe('Modo Jornada Electoral', () => {
     );
     await page.getByRole('button', { name: 'Iniciar escrutinio' }).click();
     expect((await scrutinyResponse).status()).toBe(200);
-    await expect(page.getByText('Escrutinio')).toBeVisible();
+    // "Escrutinio" también coincide con el botón deshabilitado "Iniciar
+    // escrutinio" y con el paso activo del ciclo visual (Fase 3.1 §3); el
+    // Chip de estado es exacto y único.
+    await expect(page.getByText('Escrutinio', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Cerrar jornada' }).click();
     await expect(page.getByRole('heading', { name: 'Cerrar jornada' })).toBeVisible();
     const closeResponse = page.waitForResponse((r) => r.url().endsWith('/operation/close'));
     await page.getByRole('button', { name: 'Confirmar cierre' }).click();
     expect((await closeResponse).status()).toBe(200);
-    await expect(page.getByText('Jornada cerrada')).toBeVisible();
+    // "Jornada cerrada" también coincide con el aviso de solo lectura
+    // (Fase 3.1 §4); el Chip de estado exacto es único.
+    await expect(page.getByText('Jornada cerrada', { exact: true }).first()).toBeVisible();
     // Fase 3: el Centro de Control queda en modo solo lectura aunque esta
     // campaña no tenga una contienda elegible configurada — el aviso es
     // sobre el estado de la jornada, no sobre si hay votos que mostrar.

@@ -13,6 +13,9 @@ import {
   Grid,
   MenuItem,
   Stack,
+  Step,
+  StepLabel,
+  Stepper,
   TextField,
   Typography,
 } from '@mui/material';
@@ -45,6 +48,29 @@ type ElectoralProcessOption = { id: string; name: string; election_date: string 
 
 const canManage = (roles: string[]) =>
   roles.includes('CANDIDATE') || roles.includes('CAMPAIGN_MANAGER');
+
+// Fase 3.1 §3: ciclo visible para Candidato/Jefe de Campaña — nunca el
+// vocabulario técnico PREPARATION/ACTIVE/SCRUTINY/CLOSED, que no dice nada a
+// quien no conoce el modelo de datos interno.
+const CYCLE_STEPS: { status: ElectionDayOperation['status']; label: string }[] = [
+  { status: 'PREPARATION', label: 'Preparación' },
+  { status: 'ACTIVE', label: 'Jornada activa' },
+  { status: 'SCRUTINY', label: 'Escrutinio' },
+  { status: 'CLOSED', label: 'Cerrada' },
+];
+
+function ElectionDayCycleStepper({ status }: { status: ElectionDayOperation['status'] }) {
+  const activeIndex = CYCLE_STEPS.findIndex((s) => s.status === status);
+  return (
+    <Stepper activeStep={activeIndex} alternativeLabel sx={{ mb: 3 }}>
+      {CYCLE_STEPS.map((step) => (
+        <Step key={step.status}>
+          <StepLabel>{step.label}</StepLabel>
+        </Step>
+      ))}
+    </Stepper>
+  );
+}
 
 function CreateOperationCard({ campaignId }: { campaignId: string }) {
   const qc = useQueryClient();
@@ -359,7 +385,7 @@ export default function ElectionDayPage() {
       )}
       <PageHeader
         title="Jornada Electoral"
-        description="Centro operativo del día de la elección — cobertura, presencia, incidencias y documentación. No es un sistema de resultados."
+        description="Centro operativo de la jornada electoral: cobertura, presencia y validación de actas."
         action={
           <Stack direction="row" spacing={1} alignItems="center">
             <Chip
@@ -400,6 +426,13 @@ export default function ElectionDayPage() {
           </Stack>
         }
       />
+      {manager && <ElectionDayCycleStepper status={op.status} />}
+      {op.status === 'CLOSED' && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <strong>Jornada cerrada.</strong> Esta jornada ya no admite cambios operativos. El Centro
+          de Control permanece disponible en modo consulta.
+        </Alert>
+      )}
       {manager && op.status === 'PREPARATION' && preflight.data && (
         <Stack spacing={1} sx={{ mb: 2 }}>
           {preflight.data.blockers.map((b) => (
@@ -601,7 +634,11 @@ export default function ElectionDayPage() {
       )}
 
       {manager && (
-        <StaffInvitationsSection campaignId={campaignId} places={places.data?.items ?? []} />
+        <StaffInvitationsSection
+          campaignId={campaignId}
+          places={places.data?.items ?? []}
+          operationStatus={op.status}
+        />
       )}
 
       <Dialog open={closeOpen} onClose={() => setCloseOpen(false)} fullWidth>

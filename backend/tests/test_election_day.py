@@ -638,6 +638,64 @@ def test_admin_support_events_are_audited(db, admin, ed):
     assert {"ELECTION_DAY_ADMIN_SUPPORT_STARTED", "ELECTION_DAY_ADMIN_SUPPORT_ENDED"} <= events
 
 
+# ---------- Fase 3.1 §7: listado ADMIN de campañas con Jornada configurada ----------
+
+def test_admin_support_campaigns_lists_only_ones_with_operation_ordered_by_status(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    op, place, board, delegate, validator, executive = _ready_operation(db, admin, campaign, canton, process, parish_a)
+    ElectionDayService(db).open_operation(campaign.id, executive)  # ACTIVE
+
+    other_campaign, other_canton, other_parish_a, other_parish_b, other_process = _election_day_dataset(db, admin, 16)
+    other_executive = _member(db, admin, other_campaign, "CANDIDATE")
+    _create_operation(db, other_campaign, other_process, other_executive)  # se queda en PREPARATION (nunca se activa)
+
+    campaign_without_jornada = Campaign(
+        name="Campaña sin jornada", slug=f"sin-jornada-{uuid4().hex[:6]}", canton_id=canton.id, office_type="MAYOR",
+        election_name="Elección sin jornada", election_date=date(2027, 2, 14), status="ACTIVE", created_by_user_id=admin.id,
+    )
+    db.add(campaign_without_jornada)
+    db.commit()
+
+    rows = ElectionDayAdminSupportService(db).list_campaigns_with_operation(admin)
+    by_campaign = {r["campaign_id"]: r for r in rows}
+    assert campaign.id in by_campaign and other_campaign.id in by_campaign
+    assert campaign_without_jornada.id not in by_campaign
+    assert by_campaign[campaign.id]["operation_status"] == "ACTIVE"
+    assert by_campaign[other_campaign.id]["operation_status"] == "PREPARATION"
+    statuses = [r["operation_status"] for r in rows]
+    assert statuses.index("ACTIVE") < statuses.index("PREPARATION")
+    assert by_campaign[campaign.id]["campaign_name"] == campaign.name
+    assert by_campaign[campaign.id]["organization_name"]
+
+
+def test_admin_support_campaigns_denied_for_non_admin(db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    op, place, board, delegate, validator, executive = _ready_operation(db, admin, campaign, canton, process, parish_a)
+    with pytest.raises(PermissionError):
+        ElectionDayAdminSupportService(db).list_campaigns_with_operation(executive)
+
+
+def test_admin_support_campaigns_http_only_admin_and_scoped_to_operations(client, admin_headers, db, admin, ed):
+    campaign, canton, parish_a, parish_b, process = ed
+    _ready_operation(db, admin, campaign, canton, process, parish_a)
+
+    resp = client.get("/api/v1/election-day/admin-support/campaigns", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    payload = resp.json()
+    assert any(r["campaign_id"] == str(campaign.id) for r in payload)
+    for row in payload:
+        assert set(row.keys()) == {
+            "campaign_id", "campaign_name", "organization_name", "operation_id", "operation_status", "election_date",
+        }
+
+    non_admin = _member(db, admin, campaign, "CAMPAIGN_MANAGER")
+    login = client.post("/api/v1/auth/login", data={"username": non_admin.username, "password": "MemberPass123"})
+    assert login.status_code == 200, login.text
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    denied = client.get("/api/v1/election-day/admin-support/campaigns", headers=headers)
+    assert denied.status_code == 403, denied.text
+
+
 def test_executive_accesses_control_center_without_support(db, admin, ed):
     campaign, canton, parish_a, parish_b, process = ed
     op, place, board, delegate, validator, executive = _ready_operation(db, admin, campaign, canton, process, parish_a)

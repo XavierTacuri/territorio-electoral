@@ -233,6 +233,17 @@ class ElectionDayAdminSupportSessionRead(BaseModel):
     ended_at: datetime | None
 
 
+class ElectionDayAdminSupportCampaignOption(BaseModel):
+    """Fase 3.1 §7: fila mínima para que un ADMIN elija en qué campaña
+    iniciar soporte — nunca expone más que lo necesario para decidir."""
+    campaign_id: UUID
+    campaign_name: str
+    organization_name: str
+    operation_id: UUID
+    operation_status: str
+    election_date: date
+
+
 # ---------- Personal de Jornada: invitaciones de Delegados/Validadores (Fase 1B) ----------
 from app.core.security import validate_password  # noqa: E402
 from app.schemas.user import clean_name  # noqa: E402

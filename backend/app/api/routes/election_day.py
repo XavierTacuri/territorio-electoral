@@ -15,6 +15,10 @@ from app.services.election_day_staff_invitation_service import ElectionDayStaffI
 from app.services.exceptions import BusinessRuleError, ConflictError, NotFoundError
 
 router = APIRouter(prefix="/campaigns/{campaign_id}/election-day", tags=["Election Day"])
+# Fase 3.1 §7: nunca está anidado bajo /campaigns/{campaign_id} — es un
+# listado GLOBAL solo-ADMIN de qué campañas ya tienen Jornada configurada,
+# usado para DECIDIR en cuál iniciar soporte (no requiere soporte activo).
+admin_support_router = APIRouter(prefix="/election-day/admin-support", tags=["Election Day - Admin Support"])
 
 
 def invoke(fn, *args, **kwargs):
@@ -28,6 +32,11 @@ def invoke(fn, *args, **kwargs):
         raise HTTPException(409, str(exc)) from exc
     except BusinessRuleError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@admin_support_router.get("/campaigns", response_model=list[ElectionDayAdminSupportCampaignOption])
+def admin_support_campaigns(db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
+    return invoke(ElectionDayAdminSupportService(db).list_campaigns_with_operation, user)
 
 
 @router.get("/operation", response_model=ElectionDayOperationRead)

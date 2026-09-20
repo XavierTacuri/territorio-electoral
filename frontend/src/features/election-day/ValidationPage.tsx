@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { apiBlob, apiRequest } from '../../api/client';
 import { ApiError } from '../../api/errors';
+import { useAuth } from '../../auth/AuthProvider';
 import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import {
@@ -27,6 +28,7 @@ import {
   type ElectionActDetail,
   type ElectionActListResponse,
   type ElectionActRead,
+  type ElectionDayAdminSupportSession,
 } from './types';
 
 type Toast = { severity: 'success' | 'error'; message: string };
@@ -287,7 +289,11 @@ function ActReviewCard({
 
 export default function ValidationPage() {
   const { campaignId = '' } = useParams();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const [toast, setToast] = useState<Toast | null>(null);
+  const roles = user?.roles.map((r) => r.code) ?? [];
+  const platformAdmin = roles.includes('ADMIN') || Boolean(user?.is_superuser);
 
   const queue = useQuery({
     queryKey: ['election-act-queue', campaignId],
@@ -299,12 +305,60 @@ export default function ValidationPage() {
     refetchInterval: 20000,
   });
 
+  // Fase 3.1 §12: el ADMIN en soporte nunca debe perder de vista en qué
+  // campaña está operando, también en Validación de actas (no solo en el
+  // Centro de Control).
+  const campaignRef = useQuery({
+    queryKey: ['election-day-campaign-ref', campaignId],
+    queryFn: () => apiRequest<{ id: string; name: string }>(`/campaigns/${campaignId}`),
+    enabled: platformAdmin,
+  });
+  const adminSupport = useQuery({
+    queryKey: ['election-day-admin-support-current', campaignId],
+    queryFn: () =>
+      apiRequest<ElectionDayAdminSupportSession | null>(
+        `/campaigns/${campaignId}/election-day/admin-support/current`,
+      ),
+    enabled: platformAdmin,
+    retry: false,
+  });
+  const endSupport = useMutation({
+    mutationFn: () =>
+      apiRequest<ElectionDayAdminSupportSession>(
+        `/campaigns/${campaignId}/election-day/admin-support/end`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['election-day-admin-support-current', campaignId] });
+      qc.invalidateQueries({ queryKey: ['election-act-queue', campaignId] });
+    },
+  });
+  const supportBanner = platformAdmin && adminSupport.data && (
+    <Alert
+      severity="warning"
+      sx={{ mb: 2 }}
+      action={
+        <Button
+          color="inherit"
+          size="small"
+          disabled={endSupport.isPending}
+          onClick={() => endSupport.mutate()}
+        >
+          SALIR DEL MODO SOPORTE
+        </Button>
+      }
+    >
+      Modo soporte administrativo · Campaña: {campaignRef.data?.name ?? campaignId}
+    </Alert>
+  );
+
   if (queue.isLoading) return <LoadingSkeleton />;
 
   if (queue.isError) {
     const forbidden = queue.error instanceof ApiError && queue.error.status === 403;
     return (
       <>
+        {supportBanner}
         <PageHeader title="Validación de actas" />
         {forbidden ? (
           <Alert severity="warning">
@@ -319,6 +373,7 @@ export default function ValidationPage() {
 
   return (
     <>
+      {supportBanner}
       <PageHeader
         title="Validación de actas"
         description="Cola de revisión de actas de la jornada electoral."

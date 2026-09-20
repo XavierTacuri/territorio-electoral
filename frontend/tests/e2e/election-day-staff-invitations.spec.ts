@@ -27,9 +27,7 @@ async function openGualaceoElectionDay(
 // invite_url ahora lleva el token en el fragment (#token=...), nunca en el
 // path: el fragment nunca sale del navegador hacia el servidor HTTP.
 async function readInviteUrl(page: Page): Promise<string> {
-  await expect(
-    page.getByRole('heading', { name: 'Invitación creada correctamente' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Invitación creada' })).toBeVisible();
   const url = await page.locator('input[readonly]').first().inputValue();
   await page.getByRole('button', { name: 'Cerrar' }).click();
   expect(url).toContain('#token=');

@@ -437,3 +437,15 @@ export type ElectionDayAdminSupportSession = {
   started_at: string;
   ended_at: string | null;
 };
+
+// Fase 3.1 §7: fila mínima del listado ADMIN de campañas con Jornada
+// configurada — nunca expone datos de votos/actas, solo lo necesario para
+// elegir en qué campaña iniciar soporte.
+export type ElectionDayAdminSupportCampaignOption = {
+  campaign_id: string;
+  campaign_name: string;
+  organization_name: string;
+  operation_id: string;
+  operation_status: ElectionDayOperation['status'];
+  election_date: string;
+};

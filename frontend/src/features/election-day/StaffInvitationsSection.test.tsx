@@ -134,13 +134,20 @@ beforeEach(() => {
   Object.assign(navigator, { clipboard: { writeText: () => Promise.resolve() } });
 });
 
-function renderSection() {
+function renderSection(
+  operationStatus: 'PREPARATION' | 'ACTIVE' | 'SCRUTINY' | 'CLOSED' = 'ACTIVE',
+  placesOverride = places,
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
-      <StaffInvitationsSection campaignId="campaign-1" places={places} />
+      <StaffInvitationsSection
+        campaignId="campaign-1"
+        places={placesOverride}
+        operationStatus={operationStatus}
+      />
     </QueryClientProvider>,
   );
 }
@@ -156,6 +163,14 @@ describe('Personal de Jornada', () => {
   it('crea una invitación de delegado con varios recintos y muestra el enlace una sola vez', async () => {
     renderSection();
     await userEvent.click(await screen.findByRole('button', { name: 'AGREGAR PERSONAL' }));
+    expect(
+      screen.getByText(
+        'El personal recibirá un enlace de invitación y creará su propia contraseña al activar el acceso.',
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByText('El delegado creará su propia contraseña al activar la invitación.'),
+    ).toBeVisible();
     await userEvent.type(screen.getByLabelText('Nombre'), 'Juan');
     await userEvent.type(screen.getByLabelText('Apellido'), 'Lopez');
     await userEvent.type(screen.getByLabelText('Correo'), 'juan@example.com');
@@ -165,9 +180,16 @@ describe('Personal de Jornada', () => {
     await userEvent.keyboard('{Escape}');
     await userEvent.click(screen.getByRole('button', { name: 'Crear invitación' }));
 
-    expect(await screen.findByText('Invitación creada correctamente')).toBeVisible();
+    expect(await screen.findByText('Invitación creada')).toBeVisible();
+    const summaryDialog = screen.getByRole('dialog', { name: 'Invitación creada' });
+    expect(within(summaryDialog).getByText('Delegado de recinto')).toBeVisible();
     expect(
-      screen.getByText(
+      within(summaryDialog).getByText(
+        'Esta persona deberá crear su propia contraseña al activar el acceso.',
+      ),
+    ).toBeVisible();
+    expect(
+      within(summaryDialog).getByText(
         'Este enlace se muestra ahora para que puedas compartirlo de forma segura. No volverá a mostrarse después de cerrar esta ventana.',
       ),
     ).toBeVisible();
@@ -182,13 +204,43 @@ describe('Personal de Jornada', () => {
       polling_place_ids: ['place-1', 'place-2'],
     });
 
-    await userEvent.click(screen.getByRole('button', { name: 'COPIAR ENLACE' }));
+    await userEvent.click(screen.getByRole('button', { name: 'COPIAR ENLACE DE INVITACIÓN' }));
     expect(await screen.findByText('Enlace copiado.')).toBeVisible();
 
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
-    await waitFor(() =>
-      expect(screen.queryByText('Invitación creada correctamente')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByText('Invitación creada')).not.toBeInTheDocument());
+  });
+
+  it('sin recintos cargados, explica por qué el selector no está disponible para un delegado', async () => {
+    renderSection('ACTIVE', []);
+    await userEvent.click(await screen.findByRole('button', { name: 'AGREGAR PERSONAL' }));
+    expect(
+      await screen.findByText(/No existen recintos disponibles\. Solicita al ADMIN/),
+    ).toBeVisible();
+    expect(screen.queryByLabelText('Recintos')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Crear invitación' })).toBeDisabled();
+  });
+
+  it('el validador no requiere seleccionar recinto', async () => {
+    renderSection('ACTIVE', []);
+    await userEvent.click(await screen.findByRole('button', { name: 'AGREGAR PERSONAL' }));
+    await userEvent.click(screen.getByLabelText('Perfil'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Validador de actas' }));
+    expect(screen.queryByText(/No existen recintos disponibles/)).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Ana');
+    await userEvent.type(screen.getByLabelText('Apellido'), 'Ruiz');
+    await userEvent.type(screen.getByLabelText('Correo'), 'ana@example.com');
+    expect(screen.getByRole('button', { name: 'Crear invitación' })).toBeEnabled();
+  });
+
+  it('con la jornada cerrada, esconde agregar personal y las acciones mutables', async () => {
+    items = [invitation()];
+    renderSection('CLOSED');
+    expect(await screen.findByText('Juan Lopez')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'AGREGAR PERSONAL' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'REVOCAR' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'REEMITIR' })).not.toBeInTheDocument();
+    expect(screen.getByText(/La jornada está cerrada/)).toBeVisible();
   });
 
   it('revoca una invitación pendiente', async () => {
@@ -209,7 +261,7 @@ describe('Personal de Jornada', () => {
     await userEvent.click(
       within(pendingSection as HTMLElement).getByRole('button', { name: 'REEMITIR' }),
     );
-    expect(await screen.findByText('Invitación creada correctamente')).toBeVisible();
+    expect(await screen.findByText('Invitación creada')).toBeVisible();
     expect(
       screen.getByDisplayValue('https://app.test/invite/election-day#token=reissued-token'),
     ).toBeVisible();

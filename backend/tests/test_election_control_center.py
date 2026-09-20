@@ -396,6 +396,43 @@ def test_access_matrix_http(client: TestClient, db, cc_ready, admin_headers):
     assert resp.json()["control_center"]["acts_coverage"] == exec_resp.json()["control_center"]["acts_coverage"]
 
 
+# ---------- Fase 3.1 §11/§14: ADMIN con soporte SÍ valida actas, nunca administra el ciclo ----------
+
+def test_admin_support_can_validate_acts_without_becoming_an_assignment(db, cc_ready):
+    """§11: el backend ya permite ADMIN + soporte activo en require_act_reviewer
+    (Fase 1B) — esta prueba lo confirma explícitamente para Fase 3.1 y verifica
+    §11/§14: nunca se crea una ElectionDayAssignment para el ADMIN ni cuenta
+    como validador de campaña."""
+    from app.models.election_day import ElectionDayAssignment
+
+    ctx = cc_ready
+    service = ElectionActService(db)
+    act, revision = _submit(service, ctx, ctx["board1"], votes=(10, 5))
+
+    ElectionDayAdminSupportService(db).start(ctx["campaign"].id, ElectionDayAdminSupportStartRequest(reason="cobertura"), ctx["admin"])
+    service.claim(ctx["campaign"].id, act.id, ctx["admin"])
+    validated = service.validate_act(ctx["campaign"].id, act.id, ElectionActValidateRequest(revision_id=revision.id), ctx["admin"])
+    assert validated.status == "VALIDATED"
+
+    admin_assignments = list(db.scalars(select(ElectionDayAssignment).where(ElectionDayAssignment.user_id == ctx["admin"].id)))
+    assert admin_assignments == []
+
+
+def test_admin_support_still_cannot_manage_jornada_cycle(db, cc_ready):
+    """§14: Centro de Control y validación de actas sí, pero jamás activar,
+    escrutar o cerrar la jornada, ni asignar personal — la campaña sigue
+    siendo propiedad operativa exclusiva de Candidate/Manager."""
+    ctx = cc_ready
+    ElectionDayAdminSupportService(db).start(ctx["campaign"].id, ElectionDayAdminSupportStartRequest(), ctx["admin"])
+    svc = ElectionDayService(db)
+    with pytest.raises(PermissionError):
+        svc.start_scrutiny(ctx["campaign"].id, ctx["admin"])
+    with pytest.raises(PermissionError):
+        svc.close_operation(ctx["campaign"].id, ElectionDayCloseRequest(), ctx["admin"])
+    with pytest.raises(PermissionError):
+        svc.create_assignment(ctx["campaign"].id, ElectionDayAssignmentCreate(user_id=ctx["delegate"].id, assignment_role="ACT_VALIDATOR"), ctx["admin"])
+
+
 def test_no_official_language_leaks_into_response_shape(cc_ready):
     """No es un test de UI, pero confirma que el contrato de datos nunca
     incluye campos de predicción/ranking/ganador — solo lo enumerado."""

@@ -8,6 +8,20 @@ import ValidationPage from './ValidationPage';
 
 vi.mock('../../api/client', () => ({ apiRequest: vi.fn(), apiBlob: vi.fn() }));
 
+const auth = vi.hoisted(() => ({
+  user: {
+    id: 'v1',
+    username: 'analyst',
+    email: 'analyst@example.test',
+    first_name: 'Ana',
+    last_name: 'Lista',
+    is_active: true,
+    is_superuser: false,
+    roles: [{ code: 'ANALYST', name: 'Analista' }],
+  } as any,
+}));
+vi.mock('../../auth/AuthProvider', () => ({ useAuth: () => ({ user: auth.user }) }));
+
 const mockedApiRequest = vi.mocked(apiRequest);
 const mockedApiBlob = vi.mocked(apiBlob);
 
@@ -91,6 +105,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  auth.user = { ...auth.user, roles: [{ code: 'ANALYST', name: 'Analista' }], is_superuser: false };
 });
 
 describe('Validación de actas', () => {
@@ -173,5 +188,46 @@ describe('Validación de actas', () => {
     await userEvent.type(screen.getByLabelText('Motivo de la observación'), 'Totales no cuadran');
     await userEvent.click(confirmButton);
     expect(await screen.findByText('Acta observada.')).toBeVisible();
+  });
+
+  it('Fase 3.1 §12: un ADMIN en soporte ve el banner con el nombre de campaña y puede salir', async () => {
+    auth.user = {
+      ...auth.user,
+      roles: [{ code: 'ADMIN', name: 'Administrador' }],
+      is_superuser: true,
+    };
+    mockedApiRequest.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.includes('/validation/queue')) return Promise.resolve({ items: [], total: 0 });
+      if (path === '/campaigns/campaign-1')
+        return Promise.resolve({ id: 'campaign-1', name: 'Actas E2E 2027' });
+      if (path.endsWith('/admin-support/current'))
+        return Promise.resolve({
+          id: 'sess-1',
+          admin_user_id: 'v1',
+          organization_id: 'org-1',
+          campaign_id: 'campaign-1',
+          operation_id: 'op-1',
+          reason: null,
+          started_at: '2027-02-14T10:00:00Z',
+          ended_at: null,
+        });
+      if (path.endsWith('/admin-support/end') && init?.method === 'POST')
+        return Promise.resolve({
+          id: 'sess-1',
+          admin_user_id: 'v1',
+          organization_id: 'org-1',
+          campaign_id: 'campaign-1',
+          operation_id: 'op-1',
+          reason: null,
+          started_at: '2027-02-14T10:00:00Z',
+          ended_at: '2027-02-14T12:00:00Z',
+        });
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    renderPage();
+    expect(
+      await screen.findByText('Modo soporte administrativo · Campaña: Actas E2E 2027'),
+    ).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'SALIR DEL MODO SOPORTE' }));
   });
 });

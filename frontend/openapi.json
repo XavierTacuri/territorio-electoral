@@ -7759,6 +7759,48 @@
         "title": "ElectionActValidateRequest",
         "type": "object"
       },
+      "ElectionDayAdminSupportCampaignOption": {
+        "description": "Fase 3.1 §7: fila mínima para que un ADMIN elija en qué campaña\niniciar soporte — nunca expone más que lo necesario para decidir.",
+        "properties": {
+          "campaign_id": {
+            "format": "uuid",
+            "title": "Campaign Id",
+            "type": "string"
+          },
+          "campaign_name": {
+            "title": "Campaign Name",
+            "type": "string"
+          },
+          "election_date": {
+            "format": "date",
+            "title": "Election Date",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "organization_name": {
+            "title": "Organization Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "campaign_id",
+          "campaign_name",
+          "organization_name",
+          "operation_id",
+          "operation_status",
+          "election_date"
+        ],
+        "title": "ElectionDayAdminSupportCampaignOption",
+        "type": "object"
+      },
       "ElectionDayAdminSupportSessionRead": {
         "properties": {
           "admin_user_id": {
@@ -41837,6 +41879,36 @@
         "summary": "Observations",
         "tags": [
           "demographics"
+        ]
+      }
+    },
+    "/api/v1/election-day/admin-support/campaigns": {
+      "get": {
+        "operationId": "admin_support_campaigns_api_v1_election_day_admin_support_campaigns_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ElectionDayAdminSupportCampaignOption"
+                  },
+                  "title": "Response Admin Support Campaigns Api V1 Election Day Admin Support Campaigns Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Admin Support Campaigns",
+        "tags": [
+          "Election Day - Admin Support"
         ]
       }
     },

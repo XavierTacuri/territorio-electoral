@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 
 from app.models.campaign import Campaign
 from app.models.election_day import ElectionDayAdminSupportSession, ElectionDayOperation
+from app.models.organization import Organization
 from app.services.election_day_access_service import ElectionDayAccessService
 from app.services.exceptions import BusinessRuleError, NotFoundError
 from app.services.security_audit_service import SecurityAuditService
@@ -64,6 +65,60 @@ class ElectionDayAdminSupportService:
         )
         self.db.commit()
         return session
+
+    def list_campaigns_with_operation(self, user):
+        """Fase 3.1 §7: listado mínimo, solo-ADMIN, de campañas que ya tienen
+        una Jornada Electoral configurada — reemplaza el GET /campaigns?
+        page_size=200 genérico que usaba ElectionDaySupportPage, que exponía
+        campañas sin jornada y dependía de la organización activa del ADMIN
+        en el conmutador global. Nunca requiere soporte activo: es solo el
+        listado para DECIDIR en qué campaña iniciarlo."""
+        if not self.access.is_admin(user):
+            raise PermissionError("Solo un ADMIN puede consultar este listado")
+        # Una campaña puede, en teoría, tener más de una fila de operación
+        # (una por proceso electoral distinto) — nos quedamos con la más
+        # reciente por campaña, igual que _operation_or_none.
+        latest = (
+            select(
+                ElectionDayOperation.campaign_id,
+                func.max(ElectionDayOperation.created_at).label("latest_created_at"),
+            )
+            .group_by(ElectionDayOperation.campaign_id)
+            .subquery()
+        )
+        status_order = case(
+            (ElectionDayOperation.status == "ACTIVE", 0),
+            (ElectionDayOperation.status == "SCRUTINY", 1),
+            (ElectionDayOperation.status == "PREPARATION", 2),
+            (ElectionDayOperation.status == "CLOSED", 3),
+            else_=4,
+        )
+        rows = self.db.execute(
+            select(
+                Campaign.id, Campaign.name, func.coalesce(Organization.name, "Organización principal"),
+                ElectionDayOperation.id, ElectionDayOperation.status, ElectionDayOperation.election_date,
+            )
+            .select_from(ElectionDayOperation)
+            .join(
+                latest,
+                (latest.c.campaign_id == ElectionDayOperation.campaign_id)
+                & (latest.c.latest_created_at == ElectionDayOperation.created_at),
+            )
+            .join(Campaign, Campaign.id == ElectionDayOperation.campaign_id)
+            # LEFT JOIN, no INNER: Campaign.organization_id puede apuntar al id
+            # de bootstrap por defecto (§ CampaignService.create) sin que esa
+            # fila de Organization exista todavía — nunca debe hacer
+            # desaparecer la campaña de este listado administrativo.
+            .outerjoin(Organization, Organization.id == Campaign.organization_id)
+            .order_by(status_order, Campaign.name)
+        ).all()
+        return [
+            {
+                "campaign_id": r[0], "campaign_name": r[1], "organization_name": r[2],
+                "operation_id": r[3], "operation_status": r[4], "election_date": r[5],
+            }
+            for r in rows
+        ]
 
     def current(self, campaign_id, user):
         self.access.require_admin_support(campaign_id, user)
