@@ -181,8 +181,8 @@ def test_generate_pdf_end_to_end_persists_run_and_artifact(db, admin, rc, tmp_pa
     assert run.status == "COMPLETED"
     artifact = service.artifact(run)
     assert artifact is not None and artifact.is_available
-    path, _ = service.download(campaign.id, run.id, admin, date(2026, 8, 20))
-    assert path.exists()
+    download, _ = service.download(campaign.id, run.id, admin, date(2026, 8, 20))
+    assert download.path.exists()
 
 
 def test_preview_rejects_unknown_template_code(db, admin, rc):

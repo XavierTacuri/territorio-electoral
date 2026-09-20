@@ -15,6 +15,14 @@ from app.schemas.health import RootResponse
 
 configure_logging()
 logger = logging.getLogger("territorio.http")
+if settings.app_env.lower() == "production" and settings.artifact_storage_provider == "local":
+    # Not a hard failure — Render staging runs APP_ENV=production today with
+    # local storage and must keep working (§5 Fase 4A). An AWS production
+    # deployment MUST set ARTIFACT_STORAGE_PROVIDER=s3 (see
+    # docs/aws/PRODUCTION_ARCHITECTURE.md) since local storage does not
+    # survive a redeploy or a second instance; this only makes that gap
+    # observable instead of silent.
+    logging.getLogger("territorio.storage").warning("artifact_storage_local_in_production")
 app = FastAPI(
     title=settings.app_name,
     debug=settings.app_debug,

@@ -1,21 +1,24 @@
+import logging
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import func, select
 
-from app.core.config import settings
 from app.models.assignments import CampaignUser
 from app.models.campaign import Campaign
 from app.models.election_day import ElectionDayAssignment, ElectionDayDocument, ElectionDayIncident, ElectionDayOperation, ElectoralBoard, PollingPlace
 from app.models.historical import ElectoralContest, ElectoralProcess
 from app.models.user import User
+from app.services.artifact_storage import S3ArtifactStorage
+from app.services.artifact_storage_factory import build_evidence_storage
 from app.services.dataset_version_service import DatasetVersionService
 from app.services.election_day_access_service import ElectionDayAccessService
 from app.services.evidence_security_service import EVIDENCE_EXTENSION_BY_MIME, safe_evidence_filename, sniff_evidence_mime
-from app.services.evidence_storage_service import LocalEvidenceStorage
 from app.services.exceptions import BusinessRuleError, ConflictError, NotFoundError
 from app.services.security_audit_service import SecurityAuditService
+
+logger = logging.getLogger("territorio.storage")
 
 ASSIGNMENT_ROLES = {"POLLING_PLACE_DELEGATE", "ACT_VALIDATOR"}
 INCIDENT_CATEGORIES = {"PERSONNEL", "ACCESS", "LOGISTICS", "DOCUMENTATION", "CONNECTIVITY", "OTHER"}
@@ -38,7 +41,7 @@ class ElectionDayService:
         self.db = db
         self.access = ElectionDayAccessService(db)
         self.audit = SecurityAuditService(db)
-        self.storage = storage or LocalEvidenceStorage(settings.evidence_output_dir, settings.evidence_max_file_mb)
+        self.storage = storage or build_evidence_storage()
 
     def _campaign(self, campaign_id):
         campaign = self.db.get(Campaign, campaign_id)
@@ -499,4 +502,9 @@ class ElectionDayService:
         if not doc or doc.operation_id != op.id or not doc.is_active or not doc.storage_key:
             raise NotFoundError("Documento no encontrado")
         self.access.require_polling_place_access(campaign_id, user, doc.polling_place_id)
-        return self.storage.resolve(doc.storage_key), doc
+        download = self.storage.download(doc.storage_key, filename=doc.original_filename, content_type=doc.mime_type)
+        logger.info(
+            "ARTIFACT_DOWNLOAD_AUTHORIZED",
+            extra={"provider": "s3" if isinstance(self.storage, S3ArtifactStorage) else "local", "operation_id": str(op.id)},
+        )
+        return download, doc

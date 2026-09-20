@@ -170,6 +170,57 @@ def test_upload_evidence_rejects_oversized_file(db: Session, admin, evidence_con
         )
 
 
+def test_upload_evidence_cleans_up_orphaned_file_on_db_failure(db: Session, admin, evidence_context, monkeypatch, tmp_path):
+    """§11 auditoría Fase 4A: mismo patrón best-effort que
+    ElectionActService.upload_evidence — si store() ya escribió el archivo
+    pero la fila nunca llega a persistirse, el objeto huérfano se limpia."""
+    campaign, _, _, _, activity, _ = evidence_context
+    service = OperationalService(db, storage=LocalEvidenceStorage(str(tmp_path), 15))
+    deleted_keys = []
+    original_delete = service.storage.delete
+
+    def spy_delete(key):
+        deleted_keys.append(key)
+        return original_delete(key)
+
+    def failing_commit():
+        raise RuntimeError("fallo simulado de base de datos")
+
+    monkeypatch.setattr(service.storage, "delete", spy_delete)
+    monkeypatch.setattr(service.db, "commit", failing_commit)
+
+    with pytest.raises(RuntimeError):
+        service.upload_evidence(
+            campaign.id, activity.id, admin, file_bytes=JPEG_BYTES, original_filename="foto.jpg",
+            evidence_type="PHOTO", title="Evidencia que fallará al persistir", description=None,
+            evidence_date=None, client_generated_id=None,
+        )
+
+    assert len(deleted_keys) == 1
+    monkeypatch.undo()
+    assert db.scalar(select(ActivityEvidence).where(ActivityEvidence.activity_id == activity.id, ActivityEvidence.title == "Evidencia que fallará al persistir")) is None
+
+
+def test_upload_evidence_never_deletes_file_of_persisted_evidence(db: Session, admin, evidence_context):
+    """Contraparte: un fallo posterior a una evidencia ya persistida con
+    éxito nunca debe borrar su archivo — solo se limpia lo que nunca llegó a
+    persistirse (misma garantía que ElectionActService)."""
+    campaign, _, _, _, activity, _ = evidence_context
+    service = OperationalService(db)
+    evidence = service.upload_evidence(
+        campaign.id, activity.id, admin, file_bytes=JPEG_BYTES, original_filename="foto.jpg",
+        evidence_type="PHOTO", title="Evidencia persistida", description=None, evidence_date=None, client_generated_id=None,
+    )
+    download = service.storage.download(evidence.storage_key)
+    assert download.path.exists()
+    with pytest.raises(BusinessRuleError):
+        service.upload_evidence(
+            campaign.id, activity.id, admin, file_bytes=FAKE_JPEG_BYTES, original_filename="otra.jpg",
+            evidence_type="PHOTO", title="Evidencia inválida", description=None, evidence_date=None, client_generated_id=None,
+        )
+    assert download.path.exists()
+
+
 def test_upload_evidence_requires_approved_activity_then_retries_after_approval(client: TestClient, admin_headers, evidence_context, db: Session, admin):
     campaign, _, coordinator, _, _, pending_activity = evidence_context
     coordinator_login = client.post("/api/v1/auth/login", data={"username": "coord_evidence", "password": "Testing123"})

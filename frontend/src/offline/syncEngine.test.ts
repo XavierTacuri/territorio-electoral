@@ -309,6 +309,17 @@ describe('syncEngine.syncQueue — actas electorales (Fase 2)', () => {
       act: { id: 'act-server-1' },
       revision: { id: 'rev-server-1', status: 'DRAFT' },
     });
+    // provider=local in this environment: upload-intent authorizes API_PROXY.
+    mockedApiRequest.mockResolvedValueOnce({
+      mode: 'API_PROXY',
+      url: null,
+      fields: null,
+      upload_token: null,
+      expires_at: null,
+      max_file_mb: 15,
+      allowed_mime_types: ['image/jpeg', 'image/png'],
+      evidence_id: null,
+    });
     mockedApiRequest.mockResolvedValueOnce({ id: 'evidence-server-1' });
     mockedApiRequest.mockResolvedValueOnce(undefined);
 
@@ -320,14 +331,185 @@ describe('syncEngine.syncQueue — actas electorales (Fase 2)', () => {
     expect(updated?.server_id).toBe('act-server-1');
 
     expect(mockedApiRequest.mock.calls[0][0]).toBe('/campaigns/sync-act/election-day/acts/drafts');
-    const [evidenceUrl, evidenceInit] = mockedApiRequest.mock.calls[1];
+    expect(mockedApiRequest.mock.calls[1][0]).toBe(
+      '/campaigns/sync-act/election-day/acts/act-server-1/revisions/rev-server-1/evidence/upload-intent',
+    );
+    const [evidenceUrl, evidenceInit] = mockedApiRequest.mock.calls[2];
     expect(evidenceUrl).toBe(
       '/campaigns/sync-act/election-day/acts/act-server-1/revisions/rev-server-1/evidence',
     );
     expect((evidenceInit as RequestInit).body).toBeInstanceOf(FormData);
-    expect(mockedApiRequest.mock.calls[2][0]).toBe(
+    expect(mockedApiRequest.mock.calls[3][0]).toBe(
       '/campaigns/sync-act/election-day/acts/act-server-1/revisions/rev-server-1/submit',
     );
+  });
+
+  function presignedIntent(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      mode: 'PRESIGNED_S3',
+      url: 'https://test-bucket.s3.amazonaws.com/',
+      fields: { key: 'evidence/pending/abc.jpg', 'Content-Type': 'image/jpeg' },
+      upload_token: 'opaque-upload-token',
+      expires_at: '2026-01-01T00:05:00Z',
+      max_file_mb: 15,
+      allowed_mime_types: ['image/jpeg', 'image/png'],
+      evidence_id: null,
+      ...overrides,
+    };
+  }
+
+  it('provider=s3: sube la fotografía directo a la URL firmada (no vía apiRequest) y confirma con /complete', async () => {
+    const scope = scopeFor('sync-act-s3');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 0,
+        null_ballots: 0,
+        valid_ballots: 5,
+        ballots_counted: 5,
+        results: [],
+      },
+      'sync-act-s3-client',
+    );
+    mockedListAttachments.mockResolvedValueOnce([fakeAttachment({ draft_id: draft.id })]);
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockResolvedValueOnce({
+      act: { id: 'act-server-2' },
+      revision: { id: 'rev-server-2', status: 'DRAFT' },
+    });
+    mockedApiRequest.mockResolvedValueOnce(presignedIntent());
+    mockedApiRequest.mockResolvedValueOnce({ id: 'evidence-server-2' });
+    mockedApiRequest.mockResolvedValueOnce(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const summary = await syncQueue(scope);
+
+    expect(summary.synced).toBe(1);
+    // The presigned POST goes straight to S3 via fetch, never apiRequest —
+    // no Authorization header, no /api/v1 base path.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [s3Url, s3Init] = fetchMock.mock.calls[0];
+    expect(s3Url).toBe('https://test-bucket.s3.amazonaws.com/');
+    expect((s3Init as RequestInit).body).toBeInstanceOf(FormData);
+    expect((s3Init as RequestInit).headers).toBeUndefined();
+    // Then /complete carries only the opaque token, never the S3 URL/fields.
+    const [completeUrl, completeInit] = mockedApiRequest.mock.calls[2];
+    expect(completeUrl).toBe(
+      '/campaigns/sync-act-s3/election-day/acts/act-server-2/revisions/rev-server-2/evidence/complete',
+    );
+    expect(JSON.parse((completeInit as RequestInit).body as string)).toEqual({
+      upload_token: 'opaque-upload-token',
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it('provider=s3: si el presigned expira a mitad de subida, pide un intent nuevo y reintenta una vez', async () => {
+    const scope = scopeFor('sync-act-s3-retry');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 0,
+        null_ballots: 0,
+        valid_ballots: 5,
+        ballots_counted: 5,
+        results: [],
+      },
+      'sync-act-s3-retry-client',
+    );
+    mockedListAttachments.mockResolvedValueOnce([fakeAttachment({ draft_id: draft.id })]);
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockResolvedValueOnce({
+      act: { id: 'act-server-3' },
+      revision: { id: 'rev-server-3', status: 'DRAFT' },
+    });
+    mockedApiRequest.mockResolvedValueOnce(presignedIntent({ upload_token: 'expired-token' }));
+    mockedApiRequest.mockResolvedValueOnce(presignedIntent({ upload_token: 'fresh-token' }));
+    mockedApiRequest.mockResolvedValueOnce({ id: 'evidence-server-3' });
+    mockedApiRequest.mockResolvedValueOnce(undefined);
+    // First S3 POST (the expired policy) fails; the retry's succeeds.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 403 })
+      .mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const summary = await syncQueue(scope);
+
+    expect(summary.synced).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Same client_generated_id both times — the server never sees a
+    // duplicate even though two intents were issued (§16/§23/§24).
+    const firstIntentBody = JSON.parse(mockedApiRequest.mock.calls[1][1]!.body as string);
+    const secondIntentBody = JSON.parse(mockedApiRequest.mock.calls[2][1]!.body as string);
+    expect(firstIntentBody.client_generated_id).toBe(secondIntentBody.client_generated_id);
+    const [completeUrl, completeInit] = mockedApiRequest.mock.calls[3];
+    expect(completeUrl).toContain('/evidence/complete');
+    expect(JSON.parse((completeInit as RequestInit).body as string).upload_token).toBe(
+      'fresh-token',
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it('provider=s3: ALREADY_COMPLETED evita una nueva subida y usa la evidencia existente', async () => {
+    const scope = scopeFor('sync-act-s3-already');
+    const draft = await createDraft(
+      scope,
+      'ELECTION_ACT_SUBMIT',
+      0,
+      {
+        is_correction: false,
+        polling_place_id: 'place-1',
+        electoral_board_id: 'board-1',
+        electoral_contest_id: 'contest-1',
+        blank_ballots: 0,
+        null_ballots: 0,
+        valid_ballots: 5,
+        ballots_counted: 5,
+        results: [],
+      },
+      'sync-act-s3-already-client',
+    );
+    mockedListAttachments.mockResolvedValueOnce([fakeAttachment({ draft_id: draft.id })]);
+    await enqueue(scope, draft.id, 'ELECTION_ACT_SUBMIT');
+    mockedApiRequest.mockResolvedValueOnce({
+      act: { id: 'act-server-4' },
+      revision: { id: 'rev-server-4', status: 'DRAFT' },
+    });
+    mockedApiRequest.mockResolvedValueOnce({
+      mode: 'ALREADY_COMPLETED',
+      url: null,
+      fields: null,
+      upload_token: null,
+      expires_at: null,
+      max_file_mb: 15,
+      allowed_mime_types: ['image/jpeg', 'image/png'],
+      evidence_id: 'evidence-existing',
+    });
+    mockedApiRequest.mockResolvedValueOnce(undefined);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const summary = await syncQueue(scope);
+
+    expect(summary.synced).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    // No third call to a plain '.../evidence' or '.../evidence/complete' —
+    // only intent then submit.
+    expect(mockedApiRequest).toHaveBeenCalledTimes(3);
+    vi.unstubAllGlobals();
   });
 
   it('no reenvía ni resube evidencia si la revisión ya llegó SUBMITTED (reintento idempotente)', async () => {

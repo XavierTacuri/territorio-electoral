@@ -7295,6 +7295,21 @@
         "title": "ElectionActDraftResponse",
         "type": "object"
       },
+      "ElectionActEvidenceCompleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "upload_token": {
+            "minLength": 1,
+            "title": "Upload Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "upload_token"
+        ],
+        "title": "ElectionActEvidenceCompleteRequest",
+        "type": "object"
+      },
       "ElectionActEvidenceRead": {
         "properties": {
           "created_at": {
@@ -7347,6 +7362,140 @@
           "created_at"
         ],
         "title": "ElectionActEvidenceRead",
+        "type": "object"
+      },
+      "ElectionActEvidenceUploadIntentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "client_generated_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Generated Id"
+          },
+          "mime_type": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "original_filename": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Original Filename",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "exclusiveMinimum": 0.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "original_filename",
+          "mime_type",
+          "size_bytes",
+          "sha256"
+        ],
+        "title": "ElectionActEvidenceUploadIntentRequest",
+        "type": "object"
+      },
+      "ElectionActEvidenceUploadIntentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_mime_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Mime Types",
+            "type": "array"
+          },
+          "evidence_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          },
+          "max_file_mb": {
+            "title": "Max File Mb",
+            "type": "integer"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "upload_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "mode",
+          "max_file_mb",
+          "allowed_mime_types"
+        ],
+        "title": "ElectionActEvidenceUploadIntentResponse",
         "type": "object"
       },
       "ElectionActListResponse": {
@@ -27185,6 +27334,162 @@
           }
         ],
         "summary": "Upload Evidence",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence/complete": {
+      "post": {
+        "operationId": "complete_evidence_upload_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActEvidenceCompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActEvidenceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Complete Evidence Upload",
+        "tags": [
+          "Election Day - Actas"
+        ]
+      }
+    },
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence/upload-intent": {
+      "post": {
+        "operationId": "create_evidence_upload_intent_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_upload_intent_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "act_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Act Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectionActEvidenceUploadIntentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectionActEvidenceUploadIntentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Evidence Upload Intent",
         "tags": [
           "Election Day - Actas"
         ]

@@ -62,6 +62,7 @@ def acts_ready(db, admin):
     return {
         "campaign": campaign, "op": op, "place": place, "board": board, "delegate": delegate,
         "validator": validator, "executive": executive, "contest": contest, "candidates": candidates, "admin": admin,
+        "canton": canton, "process": process, "parish_a": parish_a, "parish_b": parish_b,
     }
 
 

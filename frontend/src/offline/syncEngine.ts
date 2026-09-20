@@ -15,6 +15,126 @@ import type {
   SyncQueueItem,
 } from './types';
 
+type EvidenceUploadIntent = {
+  mode: 'API_PROXY' | 'PRESIGNED_S3' | 'ALREADY_COMPLETED';
+  url: string | null;
+  fields: Record<string, string> | null;
+  upload_token: string | null;
+  expires_at: string | null;
+  max_file_mb: number;
+  allowed_mime_types: string[];
+  evidence_id: string | null;
+};
+
+async function sha256Hex(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer();
+  const digest = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// The presigned POST goes straight to S3, never through apiRequest: no
+// Authorization header, no app base path, and a non-2xx here must not be
+// parsed as our own API's JSON error shape.
+async function uploadDirectToObjectStorage(
+  url: string,
+  fields: Record<string, string>,
+  file: Blob,
+  filename: string,
+): Promise<void> {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  form.append('file', file, filename); // must be the last field in an S3 POST policy upload
+  const response = await fetch(url, { method: 'POST', body: form });
+  if (!response.ok) throw new Error('No fue posible subir la fotografía al almacenamiento.');
+}
+
+// One evidence photo, uploaded through whichever transport the backend
+// authorizes (§21/§22 Fase 4A: "el backend decide el modo", never hardcoded
+// here). The presigned URL and upload_token returned by upload-intent live
+// only in local variables for the lifetime of this call — never written to
+// attachmentsRepository/draftsRepository/syncQueueRepository (only the
+// resulting server-side evidence id is persisted), so a device that goes
+// offline mid-upload has nothing sensitive-but-expired to resume from; it
+// simply requests a fresh intent on retry, keyed by the same stable
+// client_generated_id so the server never records it twice (§16/§23).
+async function requestEvidenceUploadIntent(
+  campaignId: string,
+  actId: string,
+  revisionId: string,
+  attachment: PendingAttachment,
+): Promise<EvidenceUploadIntent> {
+  const sha256 = await sha256Hex(attachment.blob);
+  return apiRequest<EvidenceUploadIntent>(
+    `/campaigns/${campaignId}/election-day/acts/${actId}/revisions/${revisionId}/evidence/upload-intent`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        client_generated_id: attachment.client_generated_id,
+        original_filename: attachment.file_name,
+        mime_type: attachment.blob.type,
+        size_bytes: attachment.blob.size,
+        sha256,
+      }),
+    },
+  );
+}
+
+async function uploadEvidenceForIntent(
+  campaignId: string,
+  actId: string,
+  revisionId: string,
+  attachment: PendingAttachment,
+  intent: EvidenceUploadIntent,
+): Promise<{ id: string }> {
+  if (intent.mode === 'ALREADY_COMPLETED') return { id: intent.evidence_id as string };
+  if (intent.mode === 'API_PROXY') {
+    const form = new FormData();
+    form.append('file', attachment.blob, attachment.file_name);
+    form.append('client_generated_id', attachment.client_generated_id);
+    return apiRequest<{ id: string }>(
+      `/campaigns/${campaignId}/election-day/acts/${actId}/revisions/${revisionId}/evidence`,
+      { method: 'POST', body: form },
+    );
+  }
+  await uploadDirectToObjectStorage(
+    intent.url as string,
+    intent.fields as Record<string, string>,
+    attachment.blob,
+    attachment.file_name,
+  );
+  return apiRequest<{ id: string }>(
+    `/campaigns/${campaignId}/election-day/acts/${actId}/revisions/${revisionId}/evidence/complete`,
+    { method: 'POST', body: JSON.stringify({ upload_token: intent.upload_token }) },
+  );
+}
+
+async function syncActEvidence(
+  campaignId: string,
+  actId: string,
+  revisionId: string,
+  attachment: PendingAttachment,
+): Promise<{ id: string }> {
+  const intent = await requestEvidenceUploadIntent(campaignId, actId, revisionId, attachment);
+  try {
+    return await uploadEvidenceForIntent(campaignId, actId, revisionId, attachment, intent);
+  } catch (error) {
+    if (intent.mode !== 'PRESIGNED_S3') throw error;
+    // The presigned POST (or the complete call right after it) can fail
+    // because the authorization simply expired between intent and upload —
+    // request exactly one fresh intent/upload/complete cycle before letting
+    // the failure propagate to the normal per-draft retry-on-next-sync path.
+    const retryIntent = await requestEvidenceUploadIntent(
+      campaignId,
+      actId,
+      revisionId,
+      attachment,
+    );
+    return uploadEvidenceForIntent(campaignId, actId, revisionId, attachment, retryIntent);
+  }
+}
+
 export type SyncProgress = { index: number; total: number; item: SyncQueueItem };
 export type SyncSummary = {
   synced: number;
@@ -197,13 +317,7 @@ async function syncElectionActSubmit(draft: OfflineDraft): Promise<{ id: string 
     for (const attachment of attachments) {
       if (attachment.sync_status === 'SYNCED') continue;
       await setAttachmentStatus(attachment.id, 'SYNCING');
-      const form = new FormData();
-      form.append('file', attachment.blob, attachment.file_name);
-      form.append('client_generated_id', attachment.client_generated_id);
-      const evidence = await apiRequest<{ id: string }>(
-        `/campaigns/${draft.campaign_id}/election-day/acts/${actId}/revisions/${revisionId}/evidence`,
-        { method: 'POST', body: form },
-      );
+      const evidence = await syncActEvidence(draft.campaign_id, actId, revisionId, attachment);
       await setAttachmentStatus(attachment.id, 'SYNCED', { serverId: evidence.id });
     }
     await apiRequest(

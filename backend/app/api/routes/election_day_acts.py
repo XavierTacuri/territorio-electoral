@@ -1,10 +1,10 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_active_user
+from app.api.routes._artifact_response import artifact_response
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.election_act import (
@@ -14,7 +14,10 @@ from app.schemas.election_act import (
     ElectionActDetail,
     ElectionActDraftCreate,
     ElectionActDraftResponse,
+    ElectionActEvidenceCompleteRequest,
     ElectionActEvidenceRead,
+    ElectionActEvidenceUploadIntentRequest,
+    ElectionActEvidenceUploadIntentResponse,
     ElectionActListResponse,
     ElectionActObserveRequest,
     ElectionActRead,
@@ -127,11 +130,34 @@ async def upload_evidence(
 
 @router.get("/{act_id}/evidence/{evidence_id}/download")
 def download_evidence(campaign_id: UUID, act_id: UUID, evidence_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
-    path, evidence = invoke(ElectionActService(db).evidence_file, campaign_id, act_id, evidence_id, user)
-    return FileResponse(
-        path, media_type=evidence.mime_type, filename=evidence.original_filename or "evidencia",
-        headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
+    download, evidence = invoke(ElectionActService(db).evidence_file, campaign_id, act_id, evidence_id, user)
+    return artifact_response(download, media_type=evidence.mime_type, filename=evidence.original_filename or "evidencia")
+
+
+@router.post(
+    "/{act_id}/revisions/{revision_id}/evidence/upload-intent",
+    response_model=ElectionActEvidenceUploadIntentResponse,
+)
+def create_evidence_upload_intent(
+    campaign_id: UUID, act_id: UUID, revision_id: UUID, data: ElectionActEvidenceUploadIntentRequest,
+    db: Session = Depends(get_db), user: User = Depends(get_current_active_user),
+):
+    return invoke(
+        ElectionActService(db).create_upload_intent, campaign_id, act_id, revision_id, user,
+        client_generated_id=data.client_generated_id, original_filename=data.original_filename,
+        mime_type=data.mime_type, size_bytes=data.size_bytes, sha256=data.sha256,
     )
+
+
+@router.post(
+    "/{act_id}/revisions/{revision_id}/evidence/complete",
+    response_model=ElectionActEvidenceRead, status_code=201,
+)
+def complete_evidence_upload(
+    campaign_id: UUID, act_id: UUID, revision_id: UUID, data: ElectionActEvidenceCompleteRequest,
+    db: Session = Depends(get_db), user: User = Depends(get_current_active_user),
+):
+    return invoke(ElectionActService(db).complete_upload, campaign_id, act_id, revision_id, user, upload_token=data.upload_token)
 
 
 @router.post("/{act_id}/revisions/{revision_id}/submit", response_model=ElectionActDraftResponse)

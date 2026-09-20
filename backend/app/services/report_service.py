@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from datetime import datetime,timedelta
 from pathlib import Path
@@ -22,11 +23,14 @@ from app.services.report_data_service import ReportDataService
 from app.services.report_excel_service import ReportExcelService
 from app.services.report_pdf_service import ReportPDFService
 from app.services.report_security_service import safe_download_name
-from app.services.report_storage_service import LocalReportStorage
+from app.services.artifact_storage import S3ArtifactStorage
+from app.services.artifact_storage_factory import build_report_storage
+
+logger=logging.getLogger("territorio.storage")
 
 class ReportService:
     def __init__(self,db:Session,storage=None):
-        self.db=db;self.templates=ReportTemplateRepository(db);self.runs=ReportRunRepository(db);self.artifacts=ReportArtifactRepository(db);self.access=CampaignAccessService(db);self.storage=storage or LocalReportStorage(settings.report_output_dir,settings.report_max_file_mb)
+        self.db=db;self.templates=ReportTemplateRepository(db);self.runs=ReportRunRepository(db);self.artifacts=ReportArtifactRepository(db);self.access=CampaignAccessService(db);self.storage=storage or build_report_storage()
     @staticmethod
     def admin(user):return CampaignAccessService.admin(user)
     def list_templates(self,user,include_inactive=False):return self.templates.list(include_inactive and self.admin(user))
@@ -167,7 +171,7 @@ class ReportService:
             if tmp_path and tmp_path.exists():tmp_path.unlink()
             if stored_key:
                 try:self.storage.delete(stored_key)
-                except Exception:pass
+                except Exception:logger.warning("ARTIFACT_DELETE_FAILED",extra={"campaign_id":str(campaign_id),"outcome":"orphan_report_cleanup_failed"})
             self.db.rollback();run=self.runs.by_id(run.id)
             if run:run.status="FAILED";run.error_code="REPORT_GENERATION_FAILED";run.error_message="No fue posible generar el informe";run.finished_at=datetime.now().astimezone();self.db.commit()
             if isinstance(exc,(PermissionError,NotFoundError,BusinessRuleError)):raise
@@ -215,9 +219,10 @@ class ReportService:
         run=self.get_run(campaign_id,run_id,user);artifact=self.artifact(run)
         if not artifact:raise NotFoundError("Artefacto no encontrado")
         if not artifact.is_available or not artifact.is_active or artifact.expires_on<today:raise BusinessRuleError("ARTEFACT_EXPIRED")
-        path=self.storage.resolve(artifact.storage_key)
-        if not path.exists():raise BusinessRuleError("ARTEFACT_EXPIRED")
-        return path,artifact
+        if not self.storage.exists(artifact.storage_key):raise BusinessRuleError("ARTEFACT_EXPIRED")
+        download=self.storage.download(artifact.storage_key,filename=artifact.original_download_name,content_type=artifact.mime_type)
+        logger.info("ARTIFACT_DOWNLOAD_AUTHORIZED",extra={"provider":"s3" if isinstance(self.storage,S3ArtifactStorage) else "local","campaign_id":str(campaign_id),"size_bytes":artifact.size_bytes,"mime_type":artifact.mime_type})
+        return download,artifact
     def deactivate(self,campaign_id,run_id,user):
         self.access.require_access(campaign_id,user)
         if not self.admin(user) and not CAMPAIGN_EXECUTIVE_ROLES.intersection(r.code for r in user.roles):raise PermissionError("Sin permisos")

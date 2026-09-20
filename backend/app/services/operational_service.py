@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from datetime import date,datetime,timezone,timedelta
 from math import ceil
@@ -20,11 +21,13 @@ from app.services.campaign_permissions import CAMPAIGN_EXECUTIVE_ROLES
 from app.services.exceptions import BusinessRuleError,ConflictError,NotFoundError
 from app.services.security_audit_service import SecurityAuditService
 from app.services.evidence_security_service import EVIDENCE_EXTENSION_BY_MIME,safe_evidence_filename,sniff_evidence_mime
-from app.services.evidence_storage_service import LocalEvidenceStorage
-from app.core.config import settings
+from app.services.artifact_storage import S3ArtifactStorage
+from app.services.artifact_storage_factory import build_evidence_storage
+
+logger=logging.getLogger("territorio.storage")
 class OperationalService:
     WRITERS=CAMPAIGN_EXECUTIVE_ROLES|{"TERRITORIAL_COORDINATOR"};RESPONSIBLE=WRITERS|{"ANALYST"}
-    def __init__(self,db:Session,today_provider=date.today,storage=None):self.db=db;self.access=CampaignAccessService(db);self.today=today_provider;self.storage=storage or LocalEvidenceStorage(settings.evidence_output_dir,settings.evidence_max_file_mb)
+    def __init__(self,db:Session,today_provider=date.today,storage=None):self.db=db;self.access=CampaignAccessService(db);self.today=today_provider;self.storage=storage or build_evidence_storage()
     def role_codes(self,user):return {r.code for r in user.roles}
     def can_approve(self,user):return self.access.admin(user) or bool(self.role_codes(user).intersection(CAMPAIGN_EXECUTIVE_ROLES))
     def audit(self,event,obj,user,description,metadata=None):
@@ -416,14 +419,28 @@ class OperationalService:
         finally:
             tmp.unlink(missing_ok=True)
         obj=ActivityEvidence(activity_id=activity_id,evidence_type=evidence_type,title=title,description=description,evidence_date=evidence_date,uploaded_by_user_id=user.id,storage_key=key,mime_type=mime,size_bytes=size,sha256=digest,original_filename=safe_evidence_filename(original_filename or title,extension),client_generated_id=client_generated_id,is_active=True)
-        self.db.add(obj);self.db.flush()
-        SecurityAuditService(self.db).record("evidence_upload","SUCCESS","Evidencia cargada",user_id=user.id,campaign_id=campaign_id,resource_type="ActivityEvidence",resource_id=obj.id,metadata={"activity_id":str(activity_id),"client_generated_id":str(client_generated_id) if client_generated_id else None,"mime_type":mime,"size_bytes":size})
-        self.db.commit();self.db.refresh(obj);return obj
+        self.db.add(obj)
+        try:
+            self.db.flush()
+            SecurityAuditService(self.db).record("evidence_upload","SUCCESS","Evidencia cargada",user_id=user.id,campaign_id=campaign_id,resource_type="ActivityEvidence",resource_id=obj.id,metadata={"activity_id":str(activity_id),"client_generated_id":str(client_generated_id) if client_generated_id else None,"mime_type":mime,"size_bytes":size})
+            self.db.commit()
+        except Exception:
+            # §11 auditoría Fase 4A: el archivo ya se escribió en storage antes
+            # de este punto — si la fila nunca llega a persistirse, el objeto
+            # queda huérfano (referenciado por nadie) y se limpia best-effort.
+            # Mismo patrón que ElectionActService.upload_evidence.
+            self.db.rollback()
+            try:self.storage.delete(key)
+            except Exception:logger.warning("ARTIFACT_DELETE_FAILED",extra={"campaign_id":str(campaign_id),"outcome":"orphan_activity_evidence_cleanup_failed"})
+            raise
+        self.db.refresh(obj);return obj
     def evidence_file(self,campaign_id,activity_id,evidence_id,user):
         self.activity(campaign_id,activity_id,user,False)
         obj=self.db.get(ActivityEvidence,evidence_id)
         if not obj or obj.activity_id!=activity_id or not obj.is_active or not obj.storage_key:raise NotFoundError("Evidencia no encontrada")
-        return self.storage.resolve(obj.storage_key),obj
+        download=self.storage.download(obj.storage_key,filename=obj.original_filename,content_type=obj.mime_type)
+        logger.info("ARTIFACT_DOWNLOAD_AUTHORIZED",extra={"provider":"s3" if isinstance(self.storage,S3ArtifactStorage) else "local","campaign_id":str(campaign_id)})
+        return download,obj
     def summary(self,campaign_id,user,date_from=None,date_to=None):
         c=self.campaign(campaign_id,user);today=self.today();date_to=date_to or today;date_from=date_from or today-timedelta(days=today.weekday())
         acts=list(self.db.scalars(select(TerritorialActivity).where(TerritorialActivity.campaign_id==campaign_id,TerritorialActivity.is_active.is_(True),TerritorialActivity.activity_date.between(date_from,date_to))))

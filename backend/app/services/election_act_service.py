@@ -1,11 +1,14 @@
+import logging
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from uuid import UUID
 
 from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
+from app.core.security import TokenValidationError
 from app.models.campaign import Campaign
 from app.models.election_day import (
     ElectionAct,
@@ -19,11 +22,16 @@ from app.models.election_day import (
 )
 from app.models.historical import ElectoralCandidate, ElectoralContest
 from app.models.territory import Parish
+from app.schemas.election_act import ElectionActEvidenceUploadIntentResponse
+from app.services.artifact_storage import S3ArtifactStorage
+from app.services.artifact_storage_factory import build_evidence_storage
+from app.services.artifact_upload_token import create_artifact_upload_token, decode_artifact_upload_token
 from app.services.election_day_access_service import ElectionDayAccessService
 from app.services.evidence_security_service import EVIDENCE_EXTENSION_BY_MIME, safe_evidence_filename, sniff_evidence_mime
-from app.services.evidence_storage_service import LocalEvidenceStorage
 from app.services.exceptions import BusinessRuleError, ConflictError, NotFoundError
 from app.services.security_audit_service import SecurityAuditService
+
+logger = logging.getLogger("territorio.storage")
 
 ACT_STATUSES = {"RECEIVED", "IN_REVIEW", "OBSERVED", "VALIDATED"}
 SINGLE_TOTAL_VOTE_METHODS = {"SINGLE_CHOICE", "LIST_VOTE"}
@@ -64,7 +72,7 @@ class ElectionActService:
         self.db = db
         self.access = ElectionDayAccessService(db)
         self.audit = SecurityAuditService(db)
-        self.storage = storage or LocalEvidenceStorage(settings.evidence_output_dir, settings.evidence_max_file_mb)
+        self.storage = storage or build_evidence_storage()
 
     # ---------- Helpers de identidad/alcance ----------
     def _campaign(self, campaign_id):
@@ -341,7 +349,154 @@ class ElectionActService:
         revision = self.db.get(ElectionActRevision, evidence.revision_id)
         if not revision or revision.act_id != act.id:
             raise NotFoundError("Evidencia no encontrada")
-        return self.storage.resolve(evidence.storage_key), evidence
+        download = self.storage.download(evidence.storage_key, filename=evidence.original_filename, content_type=evidence.mime_type)
+        logger.info(
+            "ARTIFACT_DOWNLOAD_AUTHORIZED",
+            extra={"provider": "s3" if isinstance(self.storage, S3ArtifactStorage) else "local", "act_id": str(act.id), "revision_id": str(revision.id)},
+        )
+        return download, evidence
+
+    # ---------- Subida directa a S3 (§12-18 Fase 4A) ----------
+    def _authorize_pending_evidence(self, campaign_id, act_id, revision_id, user):
+        """Shared guard for create_upload_intent/complete_upload: same
+        preconditions as the API_PROXY upload_evidence path (§26 — the
+        transport mechanism never changes what's authorized)."""
+        self.access.require_delegate_assignment(campaign_id, user)
+        op = self._require_operation(campaign_id)
+        if op.status == "CLOSED":
+            raise BusinessRuleError("La jornada está cerrada; las actas quedan en solo lectura.")
+        act = self._act_for_operation(op, act_id)
+        self.access.require_delegate_assignment(campaign_id, user, polling_place_id=act.polling_place_id)
+        revision = self._revision(act, revision_id)
+        if revision.status == "SUBMITTED":
+            raise BusinessRuleError("Esta revisión ya fue enviada; no se puede modificar su evidencia.")
+        return op, act, revision
+
+    def _existing_evidence_by_client_id(self, revision_id, user_id, client_generated_id):
+        if not client_generated_id:
+            return None
+        return self.db.scalar(
+            select(ElectionActEvidence).where(
+                ElectionActEvidence.revision_id == revision_id,
+                ElectionActEvidence.uploaded_by_user_id == user_id,
+                ElectionActEvidence.client_generated_id == client_generated_id,
+            )
+        )
+
+    def create_upload_intent(self, campaign_id, act_id, revision_id, user, *, client_generated_id, original_filename, mime_type, size_bytes, sha256):
+        op, act, revision = self._authorize_pending_evidence(campaign_id, act_id, revision_id, user)
+        if mime_type not in EVIDENCE_ALLOWED_MIME:
+            raise BusinessRuleError("Formato de imagen no permitido. Usa JPEG o PNG.")
+        max_bytes = settings.evidence_max_file_mb * 1024 * 1024
+        if size_bytes > max_bytes:
+            raise BusinessRuleError("El archivo supera el tamaño permitido")
+        existing = self._existing_evidence_by_client_id(revision.id, user.id, client_generated_id)
+        if existing:
+            return ElectionActEvidenceUploadIntentResponse(
+                mode="ALREADY_COMPLETED", max_file_mb=settings.evidence_max_file_mb,
+                allowed_mime_types=sorted(EVIDENCE_ALLOWED_MIME), evidence_id=existing.id,
+            )
+        if not isinstance(self.storage, S3ArtifactStorage):
+            return ElectionActEvidenceUploadIntentResponse(
+                mode="API_PROXY", max_file_mb=settings.evidence_max_file_mb, allowed_mime_types=sorted(EVIDENCE_ALLOWED_MIME),
+            )
+        extension = EVIDENCE_EXTENSION_BY_MIME[mime_type]
+        pending_key = self.storage.new_pending_key(extension)
+        presigned = self.storage.presign_upload(pending_key, content_type=mime_type, max_bytes=max_bytes, sha256_hex=sha256)
+        # Sanitized once, here — the token carries the already-safe name so
+        # complete() never has to re-derive or re-trust anything from a
+        # second hop of client input (§4 audit).
+        safe_filename = safe_evidence_filename(original_filename or "acta", extension)
+        upload_token = create_artifact_upload_token(
+            campaign_id=campaign_id, operation_id=op.id, act_id=act.id, revision_id=revision.id, user_id=user.id,
+            client_generated_id=client_generated_id, pending_key=pending_key, size_bytes=size_bytes, mime_type=mime_type,
+            sha256=sha256, original_filename=safe_filename, expires_in_seconds=settings.s3_presign_expires_seconds,
+        )
+        logger.info(
+            "ARTIFACT_UPLOAD_INTENT",
+            extra={"provider": "s3", "operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(revision.id), "size_bytes": size_bytes, "mime_type": mime_type},
+        )
+        return ElectionActEvidenceUploadIntentResponse(
+            mode="PRESIGNED_S3", url=presigned.url, fields=presigned.fields, upload_token=upload_token,
+            expires_at=presigned.expires_at, max_file_mb=settings.evidence_max_file_mb, allowed_mime_types=sorted(EVIDENCE_ALLOWED_MIME),
+        )
+
+    def complete_upload(self, campaign_id, act_id, revision_id, user, *, upload_token):
+        try:
+            payload = decode_artifact_upload_token(upload_token)
+        except TokenValidationError as exc:
+            raise BusinessRuleError("El token de carga es inválido o expiró") from exc
+        if (str(campaign_id), str(act_id), str(revision_id), str(user.id)) != (
+            payload["campaign_id"], payload["act_id"], payload["revision_id"], payload["user_id"],
+        ):
+            raise PermissionError("El token de carga no corresponde a esta solicitud")
+        op, act, revision = self._authorize_pending_evidence(campaign_id, act_id, revision_id, user)
+        if str(op.id) != payload["operation_id"]:
+            raise PermissionError("El token de carga no corresponde a esta jornada")
+        raw_client_generated_id = payload.get("client_generated_id")
+        client_generated_id = UUID(raw_client_generated_id) if raw_client_generated_id else None
+        existing = self._existing_evidence_by_client_id(revision.id, user.id, client_generated_id)
+        if existing:
+            return existing
+        if not isinstance(self.storage, S3ArtifactStorage):
+            raise BusinessRuleError("La carga directa no está disponible con el almacenamiento configurado")
+        pending_key = payload["pending_key"]
+        head = self.storage.head_metadata(pending_key)
+        log_context = {"provider": "s3", "operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(revision.id)}
+        if not head:
+            logger.warning("ARTIFACT_UPLOAD_FAILED", extra={**log_context, "outcome": "missing_object"})
+            raise BusinessRuleError("No se encontró la fotografía cargada. Vuelve a intentarlo.")
+        # checksum_sha256_hex is S3's own additional-checksum result (see
+        # HeadResult docstring) — S3 already rejected the upload at POST time
+        # if the bytes it received didn't hash to what presign_upload
+        # declared, so this comparison catches a mismatched/tampered token
+        # rather than trusting anything the client asserted independently of
+        # the bytes it actually sent. We never re-download the object to
+        # re-hash it ourselves — that would defeat the point of a direct
+        # upload (§3 Fase 4A audit).
+        if head.size_bytes != payload["size_bytes"] or head.content_type != payload["mime_type"] or head.checksum_sha256_hex != payload["sha256"]:
+            logger.warning("ARTIFACT_UPLOAD_FAILED", extra={**log_context, "outcome": "checksum_or_metadata_mismatch"})
+            try:
+                self.storage.delete(pending_key)
+            except Exception:
+                logger.warning("ARTIFACT_DELETE_FAILED", extra={**log_context, "outcome": "pending_cleanup_failed"})
+            raise BusinessRuleError("La fotografía cargada no coincide con lo autorizado. Vuelve a intentarlo.")
+        final_key = self.storage.promote_pending(pending_key)
+        evidence = ElectionActEvidence(
+            revision_id=revision.id, storage_key=final_key, mime_type=payload["mime_type"], size_bytes=payload["size_bytes"],
+            sha256=payload["sha256"], original_filename=payload["original_filename"],
+            uploaded_by_user_id=user.id, client_generated_id=client_generated_id, is_active=True,
+        )
+        self.db.add(evidence)
+        try:
+            self.db.flush()
+            self.audit.record(
+                "ELECTION_ACT_EVIDENCE_UPLOADED", "SUCCESS", "Evidencia de acta cargada (S3 directo)", user_id=user.id, campaign_id=campaign_id,
+                resource_type="ELECTION_ACT_EVIDENCE", resource_id=evidence.id,
+                metadata={"operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(revision.id), "mime_type": payload["mime_type"], "size_bytes": payload["size_bytes"], "provider": "s3"},
+            )
+            self.db.commit()
+        except IntegrityError:
+            # Idempotency race (§16/§24): two concurrent completes for the
+            # same client_generated_id — the loser refetches instead of
+            # erroring, and never deletes the winner's already-promoted object.
+            self.db.rollback()
+            existing = self._existing_evidence_by_client_id(revision.id, user.id, client_generated_id)
+            if existing:
+                return existing
+            raise
+        except Exception:
+            # Unlike the losing side of the IntegrityError race above, this
+            # branch means NOTHING else persisted this evidence — the
+            # promoted object really is orphaned, so best-effort cleanup applies.
+            self.db.rollback()
+            try:
+                self.storage.delete(final_key)
+            except Exception:
+                logger.warning("ARTIFACT_DELETE_FAILED", extra={**log_context, "outcome": "orphan_cleanup_failed"})
+            raise
+        logger.info("ARTIFACT_UPLOAD_COMPLETED", extra={**log_context, "size_bytes": payload["size_bytes"], "mime_type": payload["mime_type"]})
+        return evidence
 
     # ---------- Envío (DRAFT -> SUBMITTED, §8/§32-D) ----------
     def submit_revision(self, campaign_id, act_id, revision_id, user):

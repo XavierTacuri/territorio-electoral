@@ -842,6 +842,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Evidence Upload */
+        post: operations["complete_evidence_upload_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/evidence/upload-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Evidence Upload Intent */
+        post: operations["create_evidence_upload_intent_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_upload_intent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campaigns/{campaign_id}/election-day/acts/{act_id}/revisions/{revision_id}/submit": {
         parameters: {
             query?: never;
@@ -6946,6 +6980,11 @@ export interface components {
             act: components["schemas"]["ElectionActRead"];
             revision: components["schemas"]["ElectionActRevisionRead"];
         };
+        /** ElectionActEvidenceCompleteRequest */
+        ElectionActEvidenceCompleteRequest: {
+            /** Upload Token */
+            upload_token: string;
+        };
         /** ElectionActEvidenceRead */
         ElectionActEvidenceRead: {
             /**
@@ -6974,6 +7013,40 @@ export interface components {
              * Format: uuid
              */
             uploaded_by_user_id: string;
+        };
+        /** ElectionActEvidenceUploadIntentRequest */
+        ElectionActEvidenceUploadIntentRequest: {
+            /** Client Generated Id */
+            client_generated_id?: string | null;
+            /** Mime Type */
+            mime_type: string;
+            /** Original Filename */
+            original_filename: string;
+            /** Sha256 */
+            sha256: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /** ElectionActEvidenceUploadIntentResponse */
+        ElectionActEvidenceUploadIntentResponse: {
+            /** Allowed Mime Types */
+            allowed_mime_types: string[];
+            /** Evidence Id */
+            evidence_id?: string | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Fields */
+            fields?: {
+                [key: string]: string;
+            } | null;
+            /** Max File Mb */
+            max_file_mb: number;
+            /** Mode */
+            mode: string;
+            /** Upload Token */
+            upload_token?: string | null;
+            /** Url */
+            url?: string | null;
         };
         /** ElectionActListResponse */
         ElectionActListResponse: {
@@ -13922,6 +13995,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ElectionActEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_evidence_upload_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActEvidenceCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActEvidenceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_evidence_upload_intent_api_v1_campaigns__campaign_id__election_day_acts__act_id__revisions__revision_id__evidence_upload_intent_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                act_id: string;
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElectionActEvidenceUploadIntentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElectionActEvidenceUploadIntentResponse"];
                 };
             };
             /** @description Validation Error */

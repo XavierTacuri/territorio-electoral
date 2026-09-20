@@ -1,11 +1,11 @@
 from datetime import date
 from uuid import UUID
 from fastapi import APIRouter,Depends,File,Form,HTTPException,Query,Response,UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_active_user,require_admin
+from app.api.routes._artifact_response import artifact_response
 from app.db.session import get_db
 from app.models.operational import ActivityType,NeedCategory,CitizenNeed,Commitment,ActivityEvidence
 from app.models.user import User
@@ -206,8 +206,8 @@ async def upload_evidence(cid:UUID,aid:UUID,file:UploadFile=File(),evidence_type
 @router.get("/campaigns/{cid}/activities/{aid}/evidence/{id}/download")
 def download_evidence(cid:UUID,aid:UUID,id:UUID,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):
     try:
-        path,obj=OperationalService(db).evidence_file(cid,aid,id,user)
-        return FileResponse(path,media_type=obj.mime_type or "application/octet-stream",filename=obj.original_filename or "evidencia",headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"})
+        download,obj=OperationalService(db).evidence_file(cid,aid,id,user)
+        return artifact_response(download,media_type=obj.mime_type or "application/octet-stream",filename=obj.original_filename or "evidencia")
     except Exception as e:raise fail(e)
 @router.get("/campaigns/{cid}/operational-summary",response_model=OperationalSummaryRead)
 def summary(cid:UUID,date_from:date|None=None,date_to:date|None=None,user:User=Depends(get_current_active_user),db:Session=Depends(get_db)):

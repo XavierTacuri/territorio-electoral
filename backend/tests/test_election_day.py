@@ -882,10 +882,10 @@ def test_delegate_uploads_document_for_own_recinto_and_downloads(db, admin, ed, 
     pdf_bytes = b"%PDF-1.4 fixture"
     doc = svc.upload_document(campaign.id, delegate, polling_place_id=place.id, board_id=None, document_type="ACTA_COPY", file_bytes=pdf_bytes, original_filename="acta.pdf", client_generated_id=None)
     assert doc.status == "RECEIVED" and doc.sha256
-    path, obj = svc.document_file(campaign.id, doc.id, delegate)
-    assert path.exists() and path.read_bytes() == pdf_bytes
-    path, obj = svc.document_file(campaign.id, doc.id, executive)
-    assert path.exists()
+    download, obj = svc.document_file(campaign.id, doc.id, delegate)
+    assert download.path.exists() and download.path.read_bytes() == pdf_bytes
+    download, obj = svc.document_file(campaign.id, doc.id, executive)
+    assert download.path.exists()
 
 
 def test_document_upload_rejected_outside_own_recinto(db, admin, ed, tmp_path):

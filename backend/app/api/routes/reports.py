@@ -1,9 +1,9 @@
 from datetime import date
 from uuid import UUID
 from fastapi import APIRouter,Depends,HTTPException,Query,Response
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_active_user
+from app.api.routes._artifact_response import artifact_response
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.reports import *
@@ -50,6 +50,6 @@ def report(campaign_id:UUID,run_id:UUID,db:Session=Depends(get_db),user:User=Dep
     service=ReportService(db);return run_read(service,invoke(service.get_run,campaign_id,run_id,user),user)
 @router.get("/campaigns/{campaign_id}/reports/{run_id}/download")
 def download(campaign_id:UUID,run_id:UUID,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):
-    path,artifact=invoke(ReportService(db).download,campaign_id,run_id,user,date.today());SecurityAuditService(db).record("REPORT_DOWNLOADED","SUCCESS","Informe descargado",user_id=user.id,campaign_id=campaign_id,resource_type="REPORT_RUN",resource_id=run_id);db.commit();return FileResponse(path,media_type=artifact.mime_type,filename=artifact.original_download_name,headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"})
+    download,artifact=invoke(ReportService(db).download,campaign_id,run_id,user,date.today());SecurityAuditService(db).record("REPORT_DOWNLOADED","SUCCESS","Informe descargado",user_id=user.id,campaign_id=campaign_id,resource_type="REPORT_RUN",resource_id=run_id);db.commit();return artifact_response(download,media_type=artifact.mime_type,filename=artifact.original_download_name)
 @router.delete("/campaigns/{campaign_id}/reports/{run_id}",status_code=204)
 def delete(campaign_id:UUID,run_id:UUID,db:Session=Depends(get_db),user:User=Depends(get_current_active_user)):invoke(ReportService(db).deactivate,campaign_id,run_id,user);return Response(status_code=204)

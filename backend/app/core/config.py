@@ -57,6 +57,18 @@ class Settings(BaseSettings):
     report_max_rows: int = 50000
     evidence_output_dir: str = "/app/generated-evidence"
     evidence_max_file_mb: int = 15
+    artifact_storage_provider: str = "local"
+    aws_region: str | None = None
+    s3_artifact_bucket: str | None = None
+    s3_evidence_prefix: str = "evidence"
+    s3_report_prefix: str = "reports"
+    s3_presign_expires_seconds: int = 300
+    s3_connect_timeout_seconds: float = 5.0
+    s3_read_timeout_seconds: float = 10.0
+    s3_max_attempts: int = 3
+    s3_sse_mode: str = "AES256"
+    s3_kms_key_id: str | None = None
+    s3_endpoint_url: str | None = None
     election_day_staff_invitation_expires_hours: int = 72
     election_act_review_claim_minutes: int = 10
     report_artifact_retention_days: int = 30
@@ -92,6 +104,26 @@ class Settings(BaseSettings):
             raise ValueError("La configuración de informes y alertas debe ser positiva")
         if not self.evidence_output_dir.strip() or self.evidence_max_file_mb <= 0:
             raise ValueError("La configuración de evidencia debe ser positiva")
+        self.artifact_storage_provider = self.artifact_storage_provider.strip().lower()
+        if self.artifact_storage_provider not in {"local", "s3"}:
+            raise ValueError("ARTIFACT_STORAGE_PROVIDER debe ser local o s3")
+        if self.s3_presign_expires_seconds <= 0:
+            raise ValueError("S3_PRESIGN_EXPIRES_SECONDS debe ser positivo")
+        if self.s3_connect_timeout_seconds <= 0 or self.s3_read_timeout_seconds <= 0:
+            raise ValueError("Los timeouts de S3 deben ser positivos")
+        if self.s3_max_attempts <= 0:
+            raise ValueError("S3_MAX_ATTEMPTS debe ser positivo")
+        if self.s3_sse_mode not in {"AES256", "aws:kms"}:
+            raise ValueError("S3_SSE_MODE debe ser AES256 o aws:kms")
+        if self.s3_sse_mode == "aws:kms" and not (self.s3_kms_key_id and self.s3_kms_key_id.strip()):
+            raise ValueError("S3_KMS_KEY_ID es obligatorio cuando S3_SSE_MODE es aws:kms")
+        if self.artifact_storage_provider == "s3":
+            if not (self.aws_region and self.aws_region.strip()):
+                raise ValueError("AWS_REGION es obligatorio cuando ARTIFACT_STORAGE_PROVIDER es s3")
+            if not (self.s3_artifact_bucket and self.s3_artifact_bucket.strip()):
+                raise ValueError("S3_ARTIFACT_BUCKET es obligatorio cuando ARTIFACT_STORAGE_PROVIDER es s3")
+            if not self.s3_evidence_prefix.strip() or not self.s3_report_prefix.strip():
+                raise ValueError("Los prefijos S3 de evidencia e informes no pueden estar vacíos")
         if self.election_day_staff_invitation_expires_hours <= 0:
             raise ValueError("ELECTION_DAY_STAFF_INVITATION_EXPIRES_HOURS debe ser positivo")
         if self.election_act_review_claim_minutes <= 0:

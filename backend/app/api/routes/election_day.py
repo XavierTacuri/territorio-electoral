@@ -1,10 +1,10 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_active_user
+from app.api.routes._artifact_response import artifact_response
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.election_day import *
@@ -193,8 +193,8 @@ def update_document_status(campaign_id: UUID, document_id: UUID, data: ElectionD
 
 @router.get("/documents/{document_id}/download")
 def download_document(campaign_id: UUID, document_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
-    path, doc = invoke(ElectionDayService(db).document_file, campaign_id, document_id, user)
-    return FileResponse(path, media_type=doc.mime_type or "application/octet-stream", filename=doc.original_filename or "documento", headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+    download, doc = invoke(ElectionDayService(db).document_file, campaign_id, document_id, user)
+    return artifact_response(download, media_type=doc.mime_type or "application/octet-stream", filename=doc.original_filename or "documento")
 
 
 # ---------- Admin support mode (§6) ----------

@@ -81,6 +81,32 @@ class ElectionActEvidenceRead(BaseModel):
     created_at: datetime
 
 
+class ElectionActEvidenceUploadIntentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    client_generated_id: UUID | None = None
+    original_filename: str = Field(min_length=1, max_length=255)
+    mime_type: str = Field(min_length=1, max_length=100)
+    size_bytes: int = Field(gt=0)
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ElectionActEvidenceUploadIntentResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mode: str
+    url: str | None = None
+    fields: dict[str, str] | None = None
+    upload_token: str | None = None
+    expires_at: datetime | None = None
+    max_file_mb: int
+    allowed_mime_types: list[str]
+    evidence_id: UUID | None = None
+
+
+class ElectionActEvidenceCompleteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    upload_token: str = Field(min_length=1)
+
+
 class ElectionActRevisionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
