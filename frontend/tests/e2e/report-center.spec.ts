@@ -237,7 +237,17 @@ test.describe('Centro de Informes', () => {
     expect(evaluateResponse.status()).toBe(200);
 
     await browserLogin(page, e2eUsers.admin);
+    // El Centro de Alertas pagina en 50 y ordena por fecha/severidad/creación
+    // (§11): en una base con muchos datos acumulados, el primer render de la
+    // tabla puede tardar más que el timeout de aserción por defecto si solo
+    // se espera el texto. Se espera primero la respuesta real de red del
+    // listado para no competir contra la latencia del propio fetch inicial.
+    const alertsResponse = page.waitForResponse(
+      (r) =>
+        r.url().includes(`/campaigns/${campaign.id}/alerts?`) && r.request().method() === 'GET',
+    );
     await page.goto(`/app/campaigns/${campaign.id}/alerts`);
+    expect((await alertsResponse).status()).toBe(200);
     await expect(page.getByText('Nueva medición comparable disponible').first()).toBeVisible();
     await page.getByRole('link', { name: 'Ver comparación' }).first().click();
     await expect(page.getByRole('heading', { name: 'COMPARADOR DE ESTUDIOS' })).toBeVisible();
