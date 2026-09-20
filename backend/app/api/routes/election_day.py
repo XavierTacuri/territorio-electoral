@@ -8,6 +8,7 @@ from app.api.dependencies import get_current_active_user
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.election_day import *
+from app.services.election_act_service import ElectionActService
 from app.services.election_day_admin_support_service import ElectionDayAdminSupportService
 from app.services.election_day_service import ElectionDayService
 from app.services.election_day_staff_invitation_service import ElectionDayStaffInvitationService
@@ -68,7 +69,12 @@ def close_operation(campaign_id: UUID, data: ElectionDayCloseRequest, db: Sessio
 @router.get("/control-center", response_model=ElectionDayControlCenterResponse)
 def control_center(campaign_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_active_user)):
     op, summary = invoke(ElectionDayService(db).control_center, campaign_id, user)
-    return {"operation": op, "coverage": summary}
+    # Fase 3: consolidado factual de actas VALIDATED — misma puerta de
+    # acceso (require_control_center_access), la operación ya se confirmó
+    # arriba así que esta segunda llamada nunca puede fallar por "sin
+    # jornada configurada".
+    acts_summary = invoke(ElectionActService(db).control_center_summary, campaign_id, user)
+    return {"operation": op, "coverage": summary, "control_center": acts_summary}
 
 
 @router.get("/validation", response_model=ElectionDayValidationStatus)

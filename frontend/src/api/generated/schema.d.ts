@@ -6059,6 +6059,107 @@ export interface components {
             /** Studies */
             studies: components["schemas"]["StudyDetail"][];
         };
+        /** ControlCenterCandidateResult */
+        ControlCenterCandidateResult: {
+            /** Ballot Order */
+            ballot_order: number | null;
+            /**
+             * Candidate Id
+             * Format: uuid
+             */
+            candidate_id: string;
+            /** Display Name */
+            display_name: string;
+            /** List Number */
+            list_number: string | null;
+            /** Pct Valid Votes */
+            pct_valid_votes: number;
+            /** Votes */
+            votes: number;
+        };
+        /** ControlCenterContestSummary */
+        ControlCenterContestSummary: {
+            /** Ballots Counted */
+            ballots_counted: number;
+            /** Blank Votes */
+            blank_votes: number;
+            /** Candidates */
+            candidates: components["schemas"]["ControlCenterCandidateResult"][];
+            /**
+             * Contest Id
+             * Format: uuid
+             */
+            contest_id: string;
+            /** Contest Name */
+            contest_name: string;
+            /** Expected Acts */
+            expected_acts: number;
+            /** Null Votes */
+            null_votes: number;
+            /** Office Type */
+            office_type: string;
+            /** Valid Votes */
+            valid_votes: number;
+            /** Validated Acts */
+            validated_acts: number;
+            /** Vote Method */
+            vote_method: string;
+        };
+        /** ControlCenterParishSummary */
+        ControlCenterParishSummary: {
+            /** Blank Votes */
+            blank_votes: number;
+            /** Coverage Validated Pct */
+            coverage_validated_pct: number;
+            /** Expected Boards */
+            expected_boards: number;
+            /** Null Votes */
+            null_votes: number;
+            /** Parish Id */
+            parish_id: number;
+            /** Parish Name */
+            parish_name: string;
+            /** Valid Votes */
+            valid_votes: number;
+            /** Validated */
+            validated: number;
+        };
+        /** ControlCenterPollingPlaceSummary */
+        ControlCenterPollingPlaceSummary: {
+            /** Coverage Validated Pct */
+            coverage_validated_pct: number;
+            /** Expected Boards */
+            expected_boards: number;
+            /** In Review */
+            in_review: number;
+            /** Observed */
+            observed: number;
+            /** Parish Id */
+            parish_id: number;
+            /** Pending */
+            pending: number;
+            /**
+             * Polling Place Id
+             * Format: uuid
+             */
+            polling_place_id: string;
+            /** Polling Place Name */
+            polling_place_name: string;
+            /** Received */
+            received: number;
+            /** Validated */
+            validated: number;
+        };
+        /** ControlCenterSummary */
+        ControlCenterSummary: {
+            acts_coverage: components["schemas"]["ElectionActCoverageSummary"];
+            /** Contests */
+            contests: components["schemas"]["ControlCenterContestSummary"][];
+            /** Parishes */
+            parishes: components["schemas"]["ControlCenterParishSummary"][];
+            /** Polling Places */
+            polling_places: components["schemas"]["ControlCenterPollingPlaceSummary"][];
+        };
         /** CoverageSummary */
         CoverageSummary: {
             /** Covered Boards */
@@ -6770,8 +6871,12 @@ export interface components {
             pending: number;
             /** Received */
             received: number;
+            /** Received Coverage Pct */
+            received_coverage_pct: number;
             /** Validated */
             validated: number;
+            /** Validated Coverage Pct */
+            validated_coverage_pct: number;
         };
         /** ElectionActDetail */
         ElectionActDetail: {
@@ -7144,6 +7249,7 @@ export interface components {
         };
         /** ElectionDayControlCenterResponse */
         ElectionDayControlCenterResponse: {
+            control_center?: components["schemas"]["ControlCenterSummary"] | null;
             coverage: components["schemas"]["CoverageSummary"];
             operation: components["schemas"]["ElectionDayOperationRead"];
         };

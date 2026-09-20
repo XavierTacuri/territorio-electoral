@@ -380,7 +380,11 @@ def ensure_election_acts_fixture(db,users,admin,canton,parishes):
     place=db.scalar(select(PollingPlace).where(PollingPlace.electoral_process_id==process.id,PollingPlace.official_code=="E2E-ACT-REC-01"))
     if not place:
         place=PollingPlace(electoral_process_id=process.id,province_id=canton.province_id,canton_id=canton.id,parish_id=parishes[0].id,official_code="E2E-ACT-REC-01",name="Recinto Sintético de Actas",address=f"Recinto Sintético de Actas, {parishes[0].name}",latitude=-2.8877,longitude=-78.7770,is_active=True,data_source_id=source.id);db.add(place);db.flush()
-    for board_index in (1,2):
+    for board_index in (1,2,3):
+        # J03 está reservada para election-day-control-center.spec.ts (Fase
+        # 3): J01/J02 ya terminan VALIDATED al final de
+        # election-day-acts.spec.ts, así que una tercera junta evita pelear
+        # por estado compartido entre archivos de specs.
         board_code=f"E2E-ACT-REC-01-J{board_index:02d}"
         if not db.scalar(select(ElectoralBoard).where(ElectoralBoard.polling_place_id==place.id,ElectoralBoard.official_code==board_code)):
             db.add(ElectoralBoard(polling_place_id=place.id,official_code=board_code,board_number=board_index,registered_voters=300,is_active=True,data_source_id=source.id))

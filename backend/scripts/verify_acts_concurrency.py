@@ -20,6 +20,9 @@ Escenarios:
      tiempo -> exactamente uno la reclama, el otro recibe 409/Conflict.
   C) validated_revision_id no puede apuntar a la revisión de OTRA acta
      (FK compuesta, §8 auditoría).
+  D) Fase 3 §30: mientras una validación real ocurre, lecturas concurrentes
+     del Centro de Control nunca ven un estado parcial y ven el resultado
+     validado exactamente una vez tras el commit (sin duplicar por reintentos).
 """
 import threading
 from datetime import date
@@ -38,7 +41,7 @@ from app.models.election_day import ElectionAct, ElectionActRevision, ElectionDa
 from app.models.historical import DataSource, ElectoralCandidate, ElectoralContest, ElectoralProcess
 from app.models.territory import Canton, Parish, Province
 from app.models.user import User
-from app.schemas.election_act import ElectionActDraftCreate, ElectionActResultInput
+from app.schemas.election_act import ElectionActDraftCreate, ElectionActResultInput, ElectionActValidateRequest
 from app.schemas.election_day import ElectionDayAssignmentCreate, ElectionDayOperationCreate
 from app.services.election_act_service import ElectionActService
 from app.services.election_day_service import ElectionDayService
@@ -118,6 +121,8 @@ def setup():
     db.add(board2)
     board3 = ElectoralBoard(polling_place_id=place.id, official_code=f"CC-{suffix}-J03", board_number=3, registered_voters=300, is_active=True)
     db.add(board3)
+    board4 = ElectoralBoard(polling_place_id=place.id, official_code=f"CC-{suffix}-J04", board_number=4, registered_voters=300, is_active=True)
+    db.add(board4)
     db.flush()
 
     svc = ElectionDayService(db)
@@ -128,7 +133,7 @@ def setup():
     op = svc.open_operation(campaign.id, executive)
     op = svc.start_scrutiny(campaign.id, executive)
     db.commit()
-    ids = dict(campaign_id=campaign.id, place_id=place.id, board_id=board.id, board2_id=board2.id, board3_id=board3.id, contest_id=contest.id, candidate_id=candidate.id, delegate1_id=delegate1.id, validator1_id=validator1.id, validator2_id=validator2.id)
+    ids = dict(campaign_id=campaign.id, place_id=place.id, board_id=board.id, board2_id=board2.id, board3_id=board3.id, board4_id=board4.id, contest_id=contest.id, candidate_id=candidate.id, executive_id=executive.id, delegate1_id=delegate1.id, validator1_id=validator1.id, validator2_id=validator2.id)
     db.close()
     return ids
 
@@ -286,6 +291,83 @@ def scenario_c_cross_act_validated_revision_id(ids):
         db.close()
 
 
+def scenario_d_control_center_never_sees_partial_validation(ids):
+    """Fase 3 §30: mientras una validación real ocurre (claim + validate,
+    cada uno su propia transacción con commit), muchos lectores del Centro
+    de Control corren en paralelo. Por MVCC de PostgreSQL (READ COMMITTED),
+    cada lectura debe ver o bien el estado ANTERIOR (0 votos, acta no
+    validada) o bien el estado POSTERIOR COMPLETO (15 votos, acta validada)
+    — nunca un estado intermedio, nunca duplicado."""
+    print("\n=== Escenario D: el Centro de Control nunca ve una validación a medias ===")
+    db = Session()
+    try:
+        delegate = db.get(User, ids["delegate1_id"])
+        service = ElectionActService(db)
+        data = ElectionActDraftCreate(
+            polling_place_id=ids["place_id"], electoral_board_id=ids["board4_id"], electoral_contest_id=ids["contest_id"],
+            blank_ballots=1, null_ballots=1, valid_ballots=15, ballots_counted=17,
+            results=[ElectionActResultInput(electoral_candidate_id=ids["candidate_id"], votes=15)],
+        )
+        act, revision = service.create_draft(ids["campaign_id"], data, delegate)
+        jpeg = b"\xff\xd8\xff" + b"\x00" * 32
+        service.upload_evidence(ids["campaign_id"], act.id, revision.id, delegate, file_bytes=jpeg, original_filename="d.jpg", client_generated_id=None)
+        service.submit_revision(ids["campaign_id"], act.id, revision.id, delegate)
+        act_id, revision_id = act.id, revision.id
+    finally:
+        db.close()
+
+    observed_votes = set()
+    stop = threading.Event()
+    read_count = [0]
+
+    def reader():
+        db = Session()
+        try:
+            executive = db.get(User, ids["executive_id"])
+            while not stop.is_set():
+                summary = ElectionActService(db).control_center_summary(ids["campaign_id"], executive)
+                contest = next(c for c in summary["contests"] if str(c["contest_id"]) == str(ids["contest_id"]))
+                votes = next((c["votes"] for c in contest["candidates"] if str(c["candidate_id"]) == str(ids["candidate_id"])), 0)
+                observed_votes.add(votes)
+                read_count[0] += 1
+        finally:
+            db.close()
+
+    def validator_flow():
+        db = Session()
+        try:
+            validator = db.get(User, ids["validator1_id"])
+            svc = ElectionActService(db)
+            svc.claim(ids["campaign_id"], act_id, validator)
+            svc.validate_act(ids["campaign_id"], act_id, ElectionActValidateRequest(revision_id=revision_id), validator)
+        finally:
+            db.close()
+
+    readers = [threading.Thread(target=reader) for _ in range(4)]
+    for t in readers:
+        t.start()
+    validator_thread = threading.Thread(target=validator_flow)
+    validator_thread.start()
+    validator_thread.join()
+    stop.set()
+    for t in readers:
+        t.join()
+
+    print(f"lecturas totales: {read_count[0]}, valores de votos observados: {sorted(observed_votes)}")
+    assert observed_votes <= {0, 15}, f"Se observó un estado intermedio/incorrecto: {observed_votes}"
+    assert 15 in observed_votes, "Ningún lector vio el estado ya validado — ¿el validador falló?"
+
+    db = Session()
+    try:
+        final = ElectionActService(db).control_center_summary(ids["campaign_id"], db.get(User, ids["executive_id"]))
+        contest = next(c for c in final["contests"] if str(c["contest_id"]) == str(ids["contest_id"]))
+        votes = next(c["votes"] for c in contest["candidates"] if str(c["candidate_id"]) == str(ids["candidate_id"]))
+        assert votes == 15, f"Se esperaban 15 votos finales exactos (nunca duplicados por reintento), hubo {votes}"
+    finally:
+        db.close()
+    print("OK: ninguna lectura vio un estado parcial; el voto validado aparece exactamente una vez.")
+
+
 def main():
     if settings.app_env.lower() == "production":
         raise SystemExit("Este script crea datos sintéticos y nunca debe correr con APP_ENV=production")
@@ -293,6 +375,7 @@ def main():
     scenario_a_duplicate_draft(ids)
     scenario_b_double_claim(ids)
     scenario_c_cross_act_validated_revision_id(ids)
+    scenario_d_control_center_never_sees_partial_validation(ids)
     print("\nTodos los escenarios de concurrencia real contra PostgreSQL pasaron.")
 
 

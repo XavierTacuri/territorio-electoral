@@ -51,7 +51,10 @@ let actsCoverage: any = {
   in_review: 0,
   observed: 0,
   pending: 0,
+  received_coverage_pct: 0,
+  validated_coverage_pct: 0,
 };
+let controlCenter: any = null;
 let places: any[] = [];
 let assignments: any[] = [];
 let incidents: any[] = [];
@@ -90,7 +93,10 @@ afterEach(() => {
     in_review: 0,
     observed: 0,
     pending: 0,
+    received_coverage_pct: 0,
+    validated_coverage_pct: 0,
   };
+  controlCenter = null;
   places = [];
   assignments = [];
   incidents = [];
@@ -149,6 +155,9 @@ function handlers() {
     ),
     http.get('*/api/v1/campaigns/campaign-1/election-day/acts/coverage', () =>
       HttpResponse.json(actsCoverage),
+    ),
+    http.get('*/api/v1/campaigns/campaign-1/election-day/control-center', () =>
+      HttpResponse.json({ operation, coverage, control_center: controlCenter }),
     ),
     http.get('*/api/v1/campaigns/campaign-1/election-day/polling-places', () =>
       HttpResponse.json({ items: places }),

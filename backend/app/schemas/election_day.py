@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
+from app.schemas.election_act import ControlCenterSummary
+
 
 class ElectionDayOperationCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -202,6 +204,11 @@ class ElectionDayPreflightResponse(BaseModel):
 class ElectionDayControlCenterResponse(BaseModel):
     operation: ElectionDayOperationRead
     coverage: CoverageSummary
+    # Fase 3: consolidado factual NO OFICIAL derivado exclusivamente de actas
+    # VALIDATED — ausente (None) hasta que exista una contienda elegible o
+    # una jornada configurada; el frontend debe tratar su ausencia como "sin
+    # datos todavía", nunca como error.
+    control_center: ControlCenterSummary | None = None
 
 
 class ElectionDayValidationStatus(BaseModel):

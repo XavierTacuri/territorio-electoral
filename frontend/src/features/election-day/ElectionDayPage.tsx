@@ -24,6 +24,7 @@ import { useAuth } from '../../auth/AuthProvider';
 import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/States';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { formatDateOnly } from '../../lib/dates';
+import { ControlCenterPanel } from './ControlCenterPanel';
 import { ElectionDayMap } from './ElectionDayMap';
 import { StaffInvitationsSection } from './StaffInvitationsSection';
 import {
@@ -467,6 +468,8 @@ export default function ElectionDayPage() {
                 ['En revisión', actsCoverage.data.in_review],
                 ['Observadas', actsCoverage.data.observed],
                 ['Pendientes', actsCoverage.data.pending],
+                ['Cobertura recibida', `${actsCoverage.data.received_coverage_pct}%`],
+                ['Cobertura validada', `${actsCoverage.data.validated_coverage_pct}%`],
               ].map(([label, value]) => (
                 <Grid key={label} size={{ xs: 6, md: 2 }}>
                   <Typography variant="overline" color="text.secondary">
@@ -478,6 +481,14 @@ export default function ElectionDayPage() {
             </Grid>
           </CardContent>
         </Card>
+      )}
+
+      {(op.status === 'SCRUTINY' || op.status === 'CLOSED') && (
+        <ControlCenterPanel
+          campaignId={campaignId}
+          operationStatus={op.status}
+          isAdminSupport={isAdminSupport}
+        />
       )}
 
       <Grid container spacing={3}>

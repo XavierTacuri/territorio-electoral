@@ -4681,6 +4681,269 @@
         "title": "ComparisonResponse",
         "type": "object"
       },
+      "ControlCenterCandidateResult": {
+        "properties": {
+          "ballot_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ballot Order"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "list_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Number"
+          },
+          "pct_valid_votes": {
+            "title": "Pct Valid Votes",
+            "type": "number"
+          },
+          "votes": {
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "display_name",
+          "list_number",
+          "ballot_order",
+          "votes",
+          "pct_valid_votes"
+        ],
+        "title": "ControlCenterCandidateResult",
+        "type": "object"
+      },
+      "ControlCenterContestSummary": {
+        "properties": {
+          "ballots_counted": {
+            "title": "Ballots Counted",
+            "type": "integer"
+          },
+          "blank_votes": {
+            "title": "Blank Votes",
+            "type": "integer"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ControlCenterCandidateResult"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "contest_id": {
+            "format": "uuid",
+            "title": "Contest Id",
+            "type": "string"
+          },
+          "contest_name": {
+            "title": "Contest Name",
+            "type": "string"
+          },
+          "expected_acts": {
+            "title": "Expected Acts",
+            "type": "integer"
+          },
+          "null_votes": {
+            "title": "Null Votes",
+            "type": "integer"
+          },
+          "office_type": {
+            "title": "Office Type",
+            "type": "string"
+          },
+          "valid_votes": {
+            "title": "Valid Votes",
+            "type": "integer"
+          },
+          "validated_acts": {
+            "title": "Validated Acts",
+            "type": "integer"
+          },
+          "vote_method": {
+            "title": "Vote Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contest_id",
+          "contest_name",
+          "office_type",
+          "vote_method",
+          "validated_acts",
+          "expected_acts",
+          "valid_votes",
+          "blank_votes",
+          "null_votes",
+          "ballots_counted",
+          "candidates"
+        ],
+        "title": "ControlCenterContestSummary",
+        "type": "object"
+      },
+      "ControlCenterParishSummary": {
+        "properties": {
+          "blank_votes": {
+            "title": "Blank Votes",
+            "type": "integer"
+          },
+          "coverage_validated_pct": {
+            "title": "Coverage Validated Pct",
+            "type": "number"
+          },
+          "expected_boards": {
+            "title": "Expected Boards",
+            "type": "integer"
+          },
+          "null_votes": {
+            "title": "Null Votes",
+            "type": "integer"
+          },
+          "parish_id": {
+            "title": "Parish Id",
+            "type": "integer"
+          },
+          "parish_name": {
+            "title": "Parish Name",
+            "type": "string"
+          },
+          "valid_votes": {
+            "title": "Valid Votes",
+            "type": "integer"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "parish_id",
+          "parish_name",
+          "expected_boards",
+          "validated",
+          "coverage_validated_pct",
+          "valid_votes",
+          "blank_votes",
+          "null_votes"
+        ],
+        "title": "ControlCenterParishSummary",
+        "type": "object"
+      },
+      "ControlCenterPollingPlaceSummary": {
+        "properties": {
+          "coverage_validated_pct": {
+            "title": "Coverage Validated Pct",
+            "type": "number"
+          },
+          "expected_boards": {
+            "title": "Expected Boards",
+            "type": "integer"
+          },
+          "in_review": {
+            "title": "In Review",
+            "type": "integer"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "integer"
+          },
+          "parish_id": {
+            "title": "Parish Id",
+            "type": "integer"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          },
+          "polling_place_id": {
+            "format": "uuid",
+            "title": "Polling Place Id",
+            "type": "string"
+          },
+          "polling_place_name": {
+            "title": "Polling Place Name",
+            "type": "string"
+          },
+          "received": {
+            "title": "Received",
+            "type": "integer"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "polling_place_id",
+          "polling_place_name",
+          "parish_id",
+          "expected_boards",
+          "received",
+          "validated",
+          "in_review",
+          "observed",
+          "pending",
+          "coverage_validated_pct"
+        ],
+        "title": "ControlCenterPollingPlaceSummary",
+        "type": "object"
+      },
+      "ControlCenterSummary": {
+        "properties": {
+          "acts_coverage": {
+            "$ref": "#/components/schemas/ElectionActCoverageSummary"
+          },
+          "contests": {
+            "items": {
+              "$ref": "#/components/schemas/ControlCenterContestSummary"
+            },
+            "title": "Contests",
+            "type": "array"
+          },
+          "parishes": {
+            "items": {
+              "$ref": "#/components/schemas/ControlCenterParishSummary"
+            },
+            "title": "Parishes",
+            "type": "array"
+          },
+          "polling_places": {
+            "items": {
+              "$ref": "#/components/schemas/ControlCenterPollingPlaceSummary"
+            },
+            "title": "Polling Places",
+            "type": "array"
+          }
+        },
+        "required": [
+          "acts_coverage",
+          "contests",
+          "polling_places",
+          "parishes"
+        ],
+        "title": "ControlCenterSummary",
+        "type": "object"
+      },
       "CoverageSummary": {
         "properties": {
           "covered_boards": {
@@ -6853,9 +7116,17 @@
             "title": "Received",
             "type": "integer"
           },
+          "received_coverage_pct": {
+            "title": "Received Coverage Pct",
+            "type": "number"
+          },
           "validated": {
             "title": "Validated",
             "type": "integer"
+          },
+          "validated_coverage_pct": {
+            "title": "Validated Coverage Pct",
+            "type": "number"
           }
         },
         "required": [
@@ -6864,7 +7135,9 @@
           "validated",
           "in_review",
           "observed",
-          "pending"
+          "pending",
+          "received_coverage_pct",
+          "validated_coverage_pct"
         ],
         "title": "ElectionActCoverageSummary",
         "type": "object"
@@ -7772,6 +8045,16 @@
       },
       "ElectionDayControlCenterResponse": {
         "properties": {
+          "control_center": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ControlCenterSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "coverage": {
             "$ref": "#/components/schemas/CoverageSummary"
           },

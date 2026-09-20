@@ -512,6 +512,10 @@ test.describe('Modo Jornada Electoral', () => {
     await page.getByRole('button', { name: 'Confirmar cierre' }).click();
     expect((await closeResponse).status()).toBe(200);
     await expect(page.getByText('Jornada cerrada')).toBeVisible();
+    // Fase 3: el Centro de Control queda en modo solo lectura aunque esta
+    // campaña no tenga una contienda elegible configurada — el aviso es
+    // sobre el estado de la jornada, no sobre si hay votos que mostrar.
+    await expect(page.getByText(/modo solo lectura/)).toBeVisible();
 
     await page.goto(`/app/campaigns/${campaign.id}/reports`);
     await page.getByLabel('Tipo de informe').click();

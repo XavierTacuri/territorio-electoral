@@ -174,3 +174,67 @@ class ElectionActCoverageSummary(BaseModel):
     in_review: int
     observed: int
     pending: int
+    received_coverage_pct: float
+    validated_coverage_pct: float
+
+
+# ---------- Centro de Control Electoral (Fase 3) — consolidado factual ----------
+# Todo lo de aquí abajo se deriva EXCLUSIVAMENTE de ElectionAct.status ==
+# 'VALIDATED' vía ElectionAct.validated_revision_id — nunca de RECEIVED/
+# IN_REVIEW/OBSERVED ni de una revisión que ya no es la validada. Nunca
+# incluye predicción, proyección, probabilidad ni ganador: es un conteo
+# interno NO OFICIAL de lo efectivamente validado hasta el momento.
+
+
+class ControlCenterCandidateResult(BaseModel):
+    candidate_id: UUID
+    display_name: str
+    list_number: str | None
+    ballot_order: int | None
+    votes: int
+    pct_valid_votes: float
+
+
+class ControlCenterContestSummary(BaseModel):
+    contest_id: UUID
+    contest_name: str
+    office_type: str
+    vote_method: str
+    validated_acts: int
+    expected_acts: int
+    valid_votes: int
+    blank_votes: int
+    null_votes: int
+    ballots_counted: int
+    candidates: list[ControlCenterCandidateResult]
+
+
+class ControlCenterPollingPlaceSummary(BaseModel):
+    polling_place_id: UUID
+    polling_place_name: str
+    parish_id: int
+    expected_boards: int
+    received: int
+    validated: int
+    in_review: int
+    observed: int
+    pending: int
+    coverage_validated_pct: float
+
+
+class ControlCenterParishSummary(BaseModel):
+    parish_id: int
+    parish_name: str
+    expected_boards: int
+    validated: int
+    coverage_validated_pct: float
+    valid_votes: int
+    blank_votes: int
+    null_votes: int
+
+
+class ControlCenterSummary(BaseModel):
+    acts_coverage: ElectionActCoverageSummary
+    contests: list[ControlCenterContestSummary]
+    polling_places: list[ControlCenterPollingPlaceSummary]
+    parishes: list[ControlCenterParishSummary]

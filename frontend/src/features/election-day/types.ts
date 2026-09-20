@@ -177,6 +177,7 @@ export type ElectionDayPreflightResponse = {
 export type ElectionDayControlCenterResponse = {
   operation: ElectionDayOperation;
   coverage: CoverageSummary;
+  control_center: ControlCenterSummary | null;
 };
 
 export type ElectionDayValidationStatus = {
@@ -362,6 +363,68 @@ export type ElectionActCoverageSummary = {
   in_review: number;
   observed: number;
   pending: number;
+  received_coverage_pct: number;
+  validated_coverage_pct: number;
+};
+
+// ---------- Centro de Control Electoral: consolidado factual (Fase 3) ----------
+// Deriva exclusivamente de actas con status VALIDATED y su
+// validated_revision_id — nunca de RECEIVED/IN_REVIEW/OBSERVED ni de una
+// revisión distinta a la vigente. Es un conteo interno NO OFICIAL: nunca
+// declara ganador, probabilidad ni proyección.
+
+export type ControlCenterCandidateResult = {
+  candidate_id: string;
+  display_name: string;
+  list_number: string | null;
+  ballot_order: number | null;
+  votes: number;
+  pct_valid_votes: number;
+};
+
+export type ControlCenterContestSummary = {
+  contest_id: string;
+  contest_name: string;
+  office_type: string;
+  vote_method: string;
+  validated_acts: number;
+  expected_acts: number;
+  valid_votes: number;
+  blank_votes: number;
+  null_votes: number;
+  ballots_counted: number;
+  candidates: ControlCenterCandidateResult[];
+};
+
+export type ControlCenterPollingPlaceSummary = {
+  polling_place_id: string;
+  polling_place_name: string;
+  parish_id: number;
+  expected_boards: number;
+  received: number;
+  validated: number;
+  in_review: number;
+  observed: number;
+  pending: number;
+  coverage_validated_pct: number;
+};
+
+export type ControlCenterParishSummary = {
+  parish_id: number;
+  parish_name: string;
+  expected_boards: number;
+  validated: number;
+  coverage_validated_pct: number;
+  valid_votes: number;
+  blank_votes: number;
+  null_votes: number;
+};
+
+export type ControlCenterSummary = {
+  acts_coverage: ElectionActCoverageSummary;
+  contests: ControlCenterContestSummary[];
+  polling_places: ControlCenterPollingPlaceSummary[];
+  parishes: ControlCenterParishSummary[];
 };
 
 export type ElectionDayAdminSupportSession = {

@@ -18,6 +18,7 @@ from app.models.election_day import (
     PollingPlace,
 )
 from app.models.historical import ElectoralCandidate, ElectoralContest
+from app.models.territory import Parish
 from app.services.election_day_access_service import ElectionDayAccessService
 from app.services.evidence_security_service import EVIDENCE_EXTENSION_BY_MIME, safe_evidence_filename, sniff_evidence_mime
 from app.services.evidence_storage_service import LocalEvidenceStorage
@@ -38,6 +39,16 @@ def _aware(dt):
     tumbaba /claim, /observe y /validate con un 500 real (auditoría §10)."""
     if dt is not None and dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _pct(numerator, denominator) -> float:
+    """§6/§8 auditoría/Fase 3: nunca dividir por cero — 0.0 cuando el
+    denominador es 0 (el frontend decide si mostrar "0%" o "Sin datos" según
+    el propio denominador, que siempre viaja junto a este porcentaje)."""
+    if not denominator:
+        return 0.0
+    return round((numerator / denominator) * 100, 1)
     return dt
 
 
@@ -461,6 +472,188 @@ class ElectionActService:
         return {
             "expected_boards": boards, "received": total_received, "validated": validated,
             "in_review": in_review, "observed": observed, "pending": max(boards - total_received, 0),
+            "received_coverage_pct": _pct(total_received, boards), "validated_coverage_pct": _pct(validated, boards),
+        }
+
+    # ---------- Centro de Control Electoral (Fase 3) ----------
+    def control_center_summary(self, campaign_id, user):
+        """Consolidado factual NO OFICIAL para CANDIDATE/CAMPAIGN_MANAGER/
+        ADMIN-en-soporte (§3, misma puerta que coverage/list_acts). Fuente de
+        verdad única: ElectionAct.status == 'VALIDATED' vía
+        validated_revision_id — nunca RECEIVED/IN_REVIEW/OBSERVED, nunca una
+        revisión vieja. Todo por agregación SQL (sin N+1, sin cargar
+        evidence/revisions/reviews completas — §13)."""
+        campaign = self.access.require_control_center_access(campaign_id, user)
+        op = self._require_operation(campaign_id)
+
+        # ---------- Recintos: JRV esperadas por recinto (agregación única) ----------
+        boards_by_place = dict(
+            self.db.execute(
+                select(ElectoralBoard.polling_place_id, func.count(ElectoralBoard.id))
+                .join(PollingPlace, PollingPlace.id == ElectoralBoard.polling_place_id)
+                .where(
+                    PollingPlace.electoral_process_id == op.electoral_process_id,
+                    PollingPlace.canton_id == campaign.canton_id,
+                    ElectoralBoard.is_active.is_(True),
+                )
+                .group_by(ElectoralBoard.polling_place_id)
+            ).all()
+        )
+        total_expected_boards = sum(boards_by_place.values())
+
+        places = list(
+            self.db.scalars(
+                select(PollingPlace)
+                .where(PollingPlace.electoral_process_id == op.electoral_process_id, PollingPlace.canton_id == campaign.canton_id)
+                .order_by(PollingPlace.name)
+            )
+        )
+
+        acts_by_place_status: dict = {}
+        for place_id, status, count in self.db.execute(
+            select(ElectionAct.polling_place_id, ElectionAct.status, func.count())
+            .where(ElectionAct.operation_id == op.id)
+            .group_by(ElectionAct.polling_place_id, ElectionAct.status)
+        ).all():
+            acts_by_place_status.setdefault(place_id, {})[status] = count
+
+        polling_places = []
+        for place in places:
+            expected = boards_by_place.get(place.id, 0)
+            counts = acts_by_place_status.get(place.id, {})
+            received_total = sum(counts.get(s, 0) for s in ("RECEIVED", "IN_REVIEW", "OBSERVED", "VALIDATED"))
+            validated = counts.get("VALIDATED", 0)
+            polling_places.append({
+                "polling_place_id": place.id, "polling_place_name": place.name, "parish_id": place.parish_id,
+                "expected_boards": expected, "received": received_total, "validated": validated,
+                "in_review": counts.get("IN_REVIEW", 0), "observed": counts.get("OBSERVED", 0),
+                "pending": max(expected - received_total, 0),
+                "coverage_validated_pct": _pct(validated, expected),
+            })
+
+        # ---------- Parroquias: agregadas desde polling_places (sin query extra) ----------
+        parish_agg: dict = {}
+        for pp in polling_places:
+            pid = pp["parish_id"]
+            agg = parish_agg.setdefault(pid, {"expected_boards": 0, "validated": 0})
+            agg["expected_boards"] += pp["expected_boards"]
+            agg["validated"] += pp["validated"]
+        parish_ids = list(parish_agg.keys())
+        parish_names = dict(self.db.execute(select(Parish.id, Parish.name).where(Parish.id.in_(parish_ids))).all()) if parish_ids else {}
+
+        votes_by_parish: dict = {}
+        if parish_ids:
+            for pid, valid, blank, null in self.db.execute(
+                select(
+                    PollingPlace.parish_id,
+                    func.coalesce(func.sum(ElectionActRevision.valid_ballots), 0),
+                    func.coalesce(func.sum(ElectionActRevision.blank_ballots), 0),
+                    func.coalesce(func.sum(ElectionActRevision.null_ballots), 0),
+                )
+                .select_from(ElectionAct)
+                .join(ElectionActRevision, ElectionActRevision.id == ElectionAct.validated_revision_id)
+                .join(PollingPlace, PollingPlace.id == ElectionAct.polling_place_id)
+                .where(ElectionAct.status == "VALIDATED", ElectionAct.operation_id == op.id)
+                .group_by(PollingPlace.parish_id)
+            ).all():
+                votes_by_parish[pid] = (valid, blank, null)
+
+        parishes = [
+            {
+                "parish_id": pid, "parish_name": parish_names.get(pid, "—"),
+                "expected_boards": agg["expected_boards"], "validated": agg["validated"],
+                "coverage_validated_pct": _pct(agg["validated"], agg["expected_boards"]),
+                "valid_votes": votes_by_parish.get(pid, (0, 0, 0))[0],
+                "blank_votes": votes_by_parish.get(pid, (0, 0, 0))[1],
+                "null_votes": votes_by_parish.get(pid, (0, 0, 0))[2],
+            }
+            for pid, agg in sorted(parish_agg.items(), key=lambda kv: parish_names.get(kv[0], ""))
+        ]
+
+        # ---------- Contiendas: un bloque por ElectoralContest elegible, nunca mezclados (§22) ----------
+        contest_ids = self._eligible_contest_ids(campaign, op)
+        contests_meta = list(
+            self.db.scalars(select(ElectoralContest).where(ElectoralContest.id.in_(contest_ids)).order_by(ElectoralContest.name))
+        ) if contest_ids else []
+
+        contests = []
+        for contest in contests_meta:
+            expected_for_contest = (
+                parish_agg.get(contest.parish_id, {}).get("expected_boards", 0)
+                if contest.parish_id is not None else total_expected_boards
+            )
+            validated_acts = self.db.scalar(
+                select(func.count()).select_from(ElectionAct).where(
+                    ElectionAct.operation_id == op.id, ElectionAct.electoral_contest_id == contest.id, ElectionAct.status == "VALIDATED",
+                )
+            ) or 0
+            totals_row = self.db.execute(
+                select(
+                    func.coalesce(func.sum(ElectionActRevision.valid_ballots), 0),
+                    func.coalesce(func.sum(ElectionActRevision.blank_ballots), 0),
+                    func.coalesce(func.sum(ElectionActRevision.null_ballots), 0),
+                    func.coalesce(func.sum(ElectionActRevision.ballots_counted), 0),
+                )
+                .select_from(ElectionAct)
+                .join(ElectionActRevision, ElectionActRevision.id == ElectionAct.validated_revision_id)
+                .where(ElectionAct.operation_id == op.id, ElectionAct.electoral_contest_id == contest.id, ElectionAct.status == "VALIDATED")
+            ).first()
+            valid_votes, blank_votes, null_votes, ballots_counted = totals_row if totals_row else (0, 0, 0, 0)
+
+            votes_by_candidate = dict(
+                self.db.execute(
+                    select(ElectionActResult.electoral_candidate_id, func.coalesce(func.sum(ElectionActResult.votes), 0))
+                    .select_from(ElectionActResult)
+                    .join(ElectionAct, ElectionAct.validated_revision_id == ElectionActResult.revision_id)
+                    .where(ElectionAct.operation_id == op.id, ElectionAct.electoral_contest_id == contest.id, ElectionAct.status == "VALIDATED")
+                    .group_by(ElectionActResult.electoral_candidate_id)
+                ).all()
+            )
+            candidates_meta = list(
+                self.db.scalars(
+                    select(ElectoralCandidate)
+                    .where(ElectoralCandidate.electoral_contest_id == contest.id, ElectoralCandidate.is_active.is_(True))
+                    .order_by(ElectoralCandidate.ballot_order, ElectoralCandidate.full_name)
+                )
+            )
+            candidates = [
+                {
+                    "candidate_id": c.id, "display_name": c.display_name or c.full_name,
+                    "list_number": c.list_number, "ballot_order": c.ballot_order,
+                    "votes": votes_by_candidate.get(c.id, 0),
+                    "pct_valid_votes": _pct(votes_by_candidate.get(c.id, 0), valid_votes),
+                }
+                for c in candidates_meta
+            ]
+            contests.append({
+                "contest_id": contest.id, "contest_name": contest.name, "office_type": contest.office_type, "vote_method": contest.vote_method,
+                "validated_acts": validated_acts, "expected_acts": expected_for_contest,
+                "valid_votes": valid_votes, "blank_votes": blank_votes, "null_votes": null_votes, "ballots_counted": ballots_counted,
+                "candidates": candidates,
+            })
+
+        # §33: cobertura reconstruida a partir de acts_by_place_status/
+        # boards_by_place, ya calculados arriba — nunca una segunda llamada a
+        # self.coverage(), que repetiría la verificación de acceso y las
+        # mismas consultas agregadas por recinto.
+        status_totals: dict[str, int] = {}
+        for by_status in acts_by_place_status.values():
+            for status, count in by_status.items():
+                status_totals[status] = status_totals.get(status, 0) + count
+        received = status_totals.get("RECEIVED", 0)
+        in_review_total = status_totals.get("IN_REVIEW", 0)
+        observed_total = status_totals.get("OBSERVED", 0)
+        validated_total = status_totals.get("VALIDATED", 0)
+        total_received = received + in_review_total + observed_total + validated_total
+        acts_coverage = {
+            "expected_boards": total_expected_boards, "received": total_received, "validated": validated_total,
+            "in_review": in_review_total, "observed": observed_total, "pending": max(total_expected_boards - total_received, 0),
+            "received_coverage_pct": _pct(total_received, total_expected_boards), "validated_coverage_pct": _pct(validated_total, total_expected_boards),
+        }
+
+        return {
+            "acts_coverage": acts_coverage,
+            "contests": contests, "polling_places": polling_places, "parishes": parishes,
         }
 
     # ---------- Serialización de revisión (resultados + evidencia) ----------
