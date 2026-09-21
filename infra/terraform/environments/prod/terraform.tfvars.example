@@ -1,0 +1,22 @@
+# Copiar como terraform.tfvars y ajustar. No contiene secretos: todos los
+# valores aqui son configuracion de infraestructura no sensible (nombres,
+# CIDRs, region). Ver docs/aws/TERRAFORM_FOUNDATION.md sobre por que los
+# secretos de aplicacion (SECRET_KEY, credenciales DB, etc.) no se manejan
+# en este archivo ni en ningun *.tfvars.
+
+project     = "territorio-electoral"
+environment = "prod"
+aws_region  = "us-east-1"
+
+vpc_cidr = "10.20.0.0/16"
+az_count = 2
+
+# true = un NAT Gateway compartido (menor costo fijo).
+# false = un NAT Gateway por AZ (alta disponibilidad, costo proporcional al
+# numero de AZs). Ver docs/aws/TERRAFORM_FOUNDATION.md, seccion de costos.
+single_nat_gateway = true
+
+alb_ingress_cidr_blocks = ["0.0.0.0/0"]
+
+backend_container_port = 8000
+db_port                 = 5432

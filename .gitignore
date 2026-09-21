@@ -55,3 +55,19 @@ Thumbs.db
 *.tmp
 *.tempquality-artifacts/
 /quality-artifacts/
+
+# Terraform (infra/terraform)
+# .terraform.lock.hcl NO se ignora: debe versionarse (fija versiones y
+# checksums de providers), igual que package-lock.json.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
