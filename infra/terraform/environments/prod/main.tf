@@ -228,3 +228,58 @@ module "observability" {
 
   depends_on = [module.ecs, module.database]
 }
+
+# ------------------------------------------------------------------------------
+# Fase 4C.5: S3 lifecycle. Administra UNICAMENTE configuracion adjunta al
+# bucket de artifacts (var.s3_artifact_bucket) por nombre — ese bucket sigue
+# sin ser un recurso Terraform (aws_s3_bucket) en ningun modulo de este
+# stack. Ver modules/s3_lifecycle/variables.tf, "Ownership del bucket", y
+# docs/aws/BACKUP_DR_FOUNDATION.md.
+# ------------------------------------------------------------------------------
+
+module "s3_lifecycle" {
+  source = "../../modules/s3_lifecycle"
+
+  enabled                                    = var.s3_lifecycle_management_enabled
+  bucket_configuration_managed_by_this_stack = var.s3_bucket_configuration_managed_by_this_stack
+  bucket_dedicated_to_project                = var.s3_bucket_dedicated_to_project
+  bucket_name                                = var.s3_artifact_bucket
+
+  evidence_prefix = var.s3_evidence_prefix
+  report_prefix   = var.s3_report_prefix
+
+  enable_versioning = var.s3_versioning_enabled
+
+  pending_expiration_days            = var.s3_pending_expiration_days
+  pending_noncurrent_expiration_days = var.s3_pending_noncurrent_expiration_days
+
+  reports_expiration_days = var.s3_reports_expiration_days
+
+  evidence_final_transition_enabled       = var.s3_evidence_final_transition_enabled
+  evidence_final_transition_days          = var.s3_evidence_final_transition_days
+  evidence_final_transition_storage_class = var.s3_evidence_final_transition_storage_class
+
+  evidence_final_noncurrent_transition_enabled       = var.s3_evidence_final_noncurrent_transition_enabled
+  evidence_final_noncurrent_transition_days          = var.s3_evidence_final_noncurrent_transition_days
+  evidence_final_noncurrent_transition_storage_class = var.s3_evidence_final_noncurrent_transition_storage_class
+  evidence_final_noncurrent_expiration_days          = var.s3_evidence_final_noncurrent_expiration_days
+
+  reports_transition_enabled       = var.s3_reports_transition_enabled
+  reports_transition_days          = var.s3_reports_transition_days
+  reports_transition_storage_class = var.s3_reports_transition_storage_class
+
+  reports_noncurrent_transition_enabled       = var.s3_reports_noncurrent_transition_enabled
+  reports_noncurrent_transition_days          = var.s3_reports_noncurrent_transition_days
+  reports_noncurrent_transition_storage_class = var.s3_reports_noncurrent_transition_storage_class
+  reports_noncurrent_expiration_days          = var.s3_reports_noncurrent_expiration_days
+
+  expired_object_delete_marker_cleanup_enabled = var.s3_expired_delete_marker_cleanup_enabled
+
+  abort_incomplete_multipart_upload_days = var.s3_abort_incomplete_multipart_upload_days
+
+  enable_default_encryption = var.s3_default_encryption_enabled
+  sse_mode                  = var.s3_lifecycle_sse_mode
+  kms_key_id                = var.s3_lifecycle_kms_key_id
+
+  enable_public_access_block = var.s3_public_access_block_enabled
+}

@@ -199,3 +199,79 @@ rds_database_connections_threshold = 80
 rds_evaluation_periods             = 3
 
 backend_error_log_threshold = 10
+
+# ==============================================================================
+# Fase 4C.5 — S3 Lifecycle + Backup/Disaster Recovery
+# ==============================================================================
+# El bucket de artifacts sigue sin ser un recurso Terraform (mismo bucket
+# externo de la seccion Fase 4C.2 arriba, s3_artifact_bucket). Ver
+# docs/aws/BACKUP_DR_FOUNDATION.md antes de activar s3_lifecycle_management_enabled.
+
+# false (por defecto): decision de ownership explicita, nunca asumida. Las
+# TRES variables siguientes deben ser true simultaneamente para que el
+# modulo administre nada — cambiar una sola nunca activa nada por accidente
+# (validado dentro de modules/s3_lifecycle).
+s3_lifecycle_management_enabled = false
+# Confirma que NINGUN otro stack/IaC administra hoy el versioning/lifecycle/
+# encryption/public-access-block de s3_artifact_bucket.
+s3_bucket_configuration_managed_by_this_stack = false
+# Confirma que s3_artifact_bucket esta dedicado EXCLUSIVAMENTE a Territorio
+# Electoral (no compartido con otros proyectos) — tambien justifica que las
+# reglas bucket-wide (abort multipart, delete marker cleanup) no esten
+# acotadas por prefijo.
+s3_bucket_dedicated_to_project = false
+
+s3_versioning_enabled = true
+
+# Unico prefijo con expiracion CURRENT incondicional: uploads directos de
+# actas (evidence/pending/) nunca completados. Con versioning, a los 2 dias
+# se inserta un delete marker (no borrado fisico inmediato) — el borrado
+# fisico real ocurre segun s3_pending_noncurrent_expiration_days.
+s3_pending_expiration_days         = 2
+s3_pending_noncurrent_expiration_days = 7
+
+# 0 (por defecto) = sin expiracion fisica automatica de reports/* — la
+# aplicacion (cleanup_generated_reports.py y ReportService.deactivate(),
+# ambos via artifact_storage_factory.build_report_storage()) ya expira/borra
+# reports vencidos correctamente en local y en S3 (ver
+# docs/aws/BACKUP_DR_FOUNDATION.md, "Auditoria de retencion real de reports").
+s3_reports_expiration_days = 0
+
+# Transiciones CURRENT de storage class: deshabilitadas por defecto
+# (evidencia/informes deben seguir siendo recuperables rapido para
+# auditorias/reclamos).
+s3_evidence_final_transition_enabled       = false
+s3_evidence_final_transition_days          = 90
+s3_evidence_final_transition_storage_class = "STANDARD_IA"
+
+s3_reports_transition_enabled       = false
+s3_reports_transition_days          = 90
+s3_reports_transition_storage_class = "STANDARD_IA"
+
+# Noncurrent versions: UNA politica por prefijo, no una regla global —
+# evidence/pending/ usa una retencion mucho mas corta (7 dias, arriba) que
+# evidence/final/ y reports/ (90 dias cada uno, independientes entre si).
+s3_evidence_final_noncurrent_transition_enabled       = true
+s3_evidence_final_noncurrent_transition_days          = 30
+s3_evidence_final_noncurrent_transition_storage_class = "STANDARD_IA"
+s3_evidence_final_noncurrent_expiration_days          = 90
+
+s3_reports_noncurrent_transition_enabled       = true
+s3_reports_noncurrent_transition_days          = 30
+s3_reports_noncurrent_transition_storage_class = "STANDARD_IA"
+s3_reports_noncurrent_expiration_days          = 90
+
+# Bucket-wide (sin acotar por prefijo) — justificado unicamente porque
+# s3_bucket_dedicated_to_project es un prerequisito obligatorio del modulo.
+s3_expired_delete_marker_cleanup_enabled = true
+
+# Proteccion de bajo riesgo aunque la aplicacion no usa multipart upload hoy.
+s3_abort_incomplete_multipart_upload_days = 7
+
+# Defensa en profundidad — la aplicacion ya envia su propio header de
+# encryption en cada escritura (S3ArtifactStorage), independientemente de esto.
+s3_default_encryption_enabled = true
+s3_lifecycle_sse_mode         = "AES256"
+# s3_lifecycle_kms_key_id     = "<arn-real-de-una-cmk>"  # obligatorio solo si s3_lifecycle_sse_mode = "aws:kms"
+
+s3_public_access_block_enabled = true

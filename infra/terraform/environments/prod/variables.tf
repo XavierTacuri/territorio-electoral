@@ -518,3 +518,157 @@ variable "backend_error_log_threshold" {
   type    = number
   default = 10
 }
+
+# ==============================================================================
+# Fase 4C.5 — S3 Lifecycle + Backup/Disaster Recovery
+# ==============================================================================
+# El bucket de artifacts sigue sin ser un recurso Terraform (ver
+# modules/s3_lifecycle/variables.tf, "Ownership del bucket"). RDS ya expone
+# toda su superficie de backup/DR real (backup_retention_period,
+# deletion_protection, skip_final_snapshot, multi_az — Fase 4C.3): esta
+# seccion solo agrega el interruptor y los parametros del modulo
+# s3_lifecycle. Ver docs/aws/BACKUP_DR_FOUNDATION.md.
+
+variable "s3_lifecycle_management_enabled" {
+  description = "false (por defecto): este stack NO administra ninguna configuracion del bucket externo de artifacts — decision de ownership explicita, nunca asumida silenciosamente. true: activa modules/s3_lifecycle (versioning, lifecycle rules, encryption por defecto, public access block) sobre var.s3_artifact_bucket — UNICAMENTE si ademas s3_bucket_configuration_managed_by_this_stack=true Y s3_bucket_dedicated_to_project=true (validado dentro del modulo). Tres confirmaciones independientes, nunca una sola variable."
+  type        = bool
+  default     = false
+}
+
+variable "s3_bucket_configuration_managed_by_this_stack" {
+  description = "false (por defecto). Confirmacion EXPLICITA de que ningun otro stack/IaC administra hoy el versioning/lifecycle/encryption-por-defecto/public-access-block de s3_artifact_bucket — estos recursos REEMPLAZAN por completo esa configuracion, no la fusionan. Ver modules/s3_lifecycle/variables.tf y docs/aws/BACKUP_DR_FOUNDATION.md, \"Ownership del bucket de artifacts\"."
+  type        = bool
+  default     = false
+}
+
+variable "s3_bucket_dedicated_to_project" {
+  description = "false (por defecto). Confirmacion EXPLICITA de que s3_artifact_bucket esta dedicado exclusivamente a Territorio Electoral, no compartido con otros proyectos/workloads — tambien justifica que las reglas bucket-wide del modulo (abort multipart, delete marker cleanup) no esten acotadas por prefijo."
+  type        = bool
+  default     = false
+}
+
+variable "s3_versioning_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "s3_pending_expiration_days" {
+  description = "Dias tras los que un objeto CURRENT bajo {s3_evidence_prefix}/pending/ recibe accion de expiration (upload-intent nunca completado)."
+  type        = number
+  default     = 2
+}
+
+variable "s3_pending_noncurrent_expiration_days" {
+  description = "Solo con s3_versioning_enabled=true. Retencion noncurrent CORTA e independiente para {s3_evidence_prefix}/pending/ — deliberadamente mas corta que la de evidencia final/reports (90 dias): un pending nunca completado no tiene el mismo valor de recuperacion. Ver docs/aws/BACKUP_DR_FOUNDATION.md."
+  type        = number
+  default     = 7
+}
+
+variable "s3_reports_expiration_days" {
+  description = "0 (por defecto): sin expiracion CURRENT fisica automatica de {s3_report_prefix}/* — backend/app/scripts/cleanup_generated_reports.py y ReportService.deactivate() ya expiran/eliminan reports vencidos via artifact_storage_factory.build_report_storage(), correcto para local y S3 por igual (ver docs/aws/BACKUP_DR_FOUNDATION.md, \"Auditoria de retencion real de reports\"). Un valor > 0 anadiria una segunda expiracion current redundante."
+  type        = number
+  default     = 0
+}
+
+variable "s3_evidence_final_transition_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "s3_evidence_final_transition_days" {
+  type    = number
+  default = 90
+}
+
+variable "s3_evidence_final_transition_storage_class" {
+  type    = string
+  default = "STANDARD_IA"
+}
+
+variable "s3_evidence_final_noncurrent_transition_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "s3_evidence_final_noncurrent_transition_days" {
+  type    = number
+  default = 30
+}
+
+variable "s3_evidence_final_noncurrent_transition_storage_class" {
+  type    = string
+  default = "STANDARD_IA"
+}
+
+variable "s3_evidence_final_noncurrent_expiration_days" {
+  description = "Solo con s3_versioning_enabled=true. Retencion noncurrent LARGA para {s3_evidence_prefix}/final/, orientada a recuperacion ante overwrite/delete accidental de evidencia definitiva."
+  type        = number
+  default     = 90
+}
+
+variable "s3_reports_transition_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "s3_reports_transition_days" {
+  type    = number
+  default = 90
+}
+
+variable "s3_reports_transition_storage_class" {
+  type    = string
+  default = "STANDARD_IA"
+}
+
+variable "s3_reports_noncurrent_transition_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "s3_reports_noncurrent_transition_days" {
+  type    = number
+  default = 30
+}
+
+variable "s3_reports_noncurrent_transition_storage_class" {
+  type    = string
+  default = "STANDARD_IA"
+}
+
+variable "s3_reports_noncurrent_expiration_days" {
+  description = "Solo con s3_versioning_enabled=true. Retencion noncurrent para {s3_report_prefix}/, independiente de evidence_final (mismo default, variable propia)."
+  type        = number
+  default     = 90
+}
+
+variable "s3_expired_delete_marker_cleanup_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "s3_abort_incomplete_multipart_upload_days" {
+  type    = number
+  default = 7
+}
+
+variable "s3_default_encryption_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "s3_lifecycle_sse_mode" {
+  description = "AES256 (por defecto) o aws:kms — mismos valores validos que S3_SSE_MODE (backend/app/core/config.py). Configuracion por defecto a nivel de bucket (defensa en profundidad); la aplicacion ya envia su propio header de encryption en cada escritura, independientemente de esto."
+  type        = string
+  default     = "AES256"
+}
+
+variable "s3_lifecycle_kms_key_id" {
+  type    = string
+  default = ""
+}
+
+variable "s3_public_access_block_enabled" {
+  type    = bool
+  default = true
+}

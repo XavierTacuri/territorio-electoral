@@ -178,3 +178,16 @@ output "alarm_sns_topic_arn" {
 output "alarm_names" {
   value = module.observability.alarm_names
 }
+
+# ------------------------------------------------------------------------------
+# Fase 4C.5 — S3 Lifecycle
+# ------------------------------------------------------------------------------
+
+output "s3_lifecycle_management_enabled" {
+  description = "true si este stack esta administrando activamente la configuracion del bucket de artifacts (var.s3_lifecycle_management_enabled=true y s3_artifact_bucket no vacio)."
+  value       = module.s3_lifecycle.management_enabled
+}
+
+output "s3_versioning_enabled" {
+  value = module.s3_lifecycle.versioning_enabled
+}
