@@ -119,6 +119,17 @@ variable "performance_insights_enabled" {
   default     = false
 }
 
+variable "enabled_cloudwatch_logs_exports" {
+  description = "Tipos de log de RDS PostgreSQL a exportar a CloudWatch Logs (unicamente \"postgresql\" es valido para el engine postgres). Vacio (por defecto): sin exportacion — los logs de PostgreSQL (queries, errores del motor) no son verbosos por defecto en la configuracion actual, y habilitarlos tiene costo de ingesta/almacenamiento propio en CloudWatch Logs. Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"RDS log exports\"."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for t in var.enabled_cloudwatch_logs_exports : contains(["postgresql"], t)])
+    error_message = "enabled_cloudwatch_logs_exports solo admite \"postgresql\" para el engine postgres."
+  }
+}
+
 variable "copy_tags_to_snapshot" {
   type    = bool
   default = true

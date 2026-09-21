@@ -139,3 +139,63 @@ db_proxy_max_idle_connections_percent = 50
 #   SURVEY_SUBMISSION_HMAC_SECRET      = "<arn-real-de-secrets-manager>"
 #   POSTGRES_PASSWORD                  = "<arn-real-de-secrets-manager>"
 # }
+
+# db_enabled_cloudwatch_logs_exports = ["postgresql"]  # vacio por defecto — ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md
+
+# ==============================================================================
+# Fase 4C.4 — WAF + CloudWatch / Observabilidad
+# ==============================================================================
+
+# ALB access logs: requieren un bucket S3 EXISTENTE con la bucket policy que
+# exige el servicio de ALB — Fase 4C.4 no crea ese bucket (subfase de
+# Lifecycle S3). Vacio = deshabilitados.
+# alb_access_logs_bucket = "<bucket-existente-dedicado-a-logs-de-alb>"
+# alb_access_logs_prefix = "alb"
+
+# false = sin costo adicional de Container Insights (las metricas AWS/ECS
+# estandar ya usadas por autoscaling siguen disponibles igual).
+container_insights_enabled = false
+
+# --- WAF ---
+waf_enable_common_rule_set           = true
+waf_enable_known_bad_inputs_rule_set = true
+waf_enable_ip_reputation_list        = true
+# Baseline generoso por IP en 5 min, acotado a /api/* — ajustar en 4C.6.
+waf_rate_limit_requests = 2000
+# true (por defecto): managed rule groups en modo Count (nunca bloquean,
+# solo metrica/log) — cambiar a false solo tras observar metricas/logs
+# reales sin falsos positivos inaceptables. Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md.
+waf_managed_rules_count_mode = true
+# false (por defecto, recomendado): sin muestreo de solicitudes WAF reales
+# (headers/query strings) — cloudwatch_metrics_enabled sigue activo siempre.
+waf_sampled_requests_enabled = false
+# Logging de solicitudes WAF individuales (distinto de las metricas, que
+# siempre quedan habilitadas): deshabilitado por defecto. Si se habilita,
+# Authorization y Cookie quedan redactados automaticamente.
+waf_logging_enabled = false
+
+# --- SNS / acciones de alarma ---
+# Sin topic ni acciones reales por defecto — apropiado en validacion Terraform.
+create_alarm_sns_topic = false
+# alarm_sns_topic_arn   = "<arn-de-un-sns-topic-ya-existente>"  # alternativa a create_alarm_sns_topic
+enable_alarm_actions = false
+enable_ok_actions    = false
+
+# --- Umbrales (todos baseline inicial, Fase 4C.6 los ajusta con carga real) ---
+alb_5xx_threshold                     = 10
+alb_target_5xx_threshold              = 10
+alb_response_time_threshold_seconds   = 2
+alb_evaluation_periods                = 5
+alb_unhealthy_host_evaluation_periods = 5
+
+ecs_cpu_threshold_percent    = 85
+ecs_memory_threshold_percent = 85
+ecs_evaluation_periods       = 3
+
+rds_cpu_threshold_percent          = 80
+rds_free_storage_threshold_percent = 20
+rds_freeable_memory_threshold_mb   = 256
+rds_database_connections_threshold = 80
+rds_evaluation_periods             = 3
+
+backend_error_log_threshold = 10

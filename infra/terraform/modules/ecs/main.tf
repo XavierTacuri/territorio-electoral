@@ -5,11 +5,19 @@
 resource "aws_ecs_cluster" "this" {
   name = "${var.name_prefix}-cluster"
 
-  # Container Insights (metricas/dashboards agregados) queda fuera de
-  # alcance de 4C.2 — corresponde a la subfase de CloudWatch (Fase 4C.4).
+  # Configurable desde Fase 4C.4 (antes fijo en "disabled" en 4C.2). "enabled"
+  # es el valor estandar y bien establecido de Container Insights (agrega
+  # metricas por-tarea granulares — RunningTaskCount, PendingTaskCount, etc.
+  # bajo el namespace ECS/ContainerInsights — y logs de rendimiento, con
+  # costo propio). AWS tambien ofrece un modo "enhanced" (Container Insights
+  # with Enhanced Observability) mas reciente; no se usa aqui por no poder
+  # verificar con certeza su nombre/comportamiento exacto en este entorno
+  # sin acceso a documentacion/consola de AWS — "enabled" es el valor
+  # ampliamente documentado y verificable. Deshabilitado por defecto, ver
+  # docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, "Costos".
   setting {
     name  = "containerInsights"
-    value = "disabled"
+    value = var.container_insights_enabled ? "enabled" : "disabled"
   }
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-cluster" })

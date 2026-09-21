@@ -12,6 +12,21 @@ resource "aws_lb" "this" {
   security_groups    = [var.alb_security_group_id]
   subnets            = var.public_subnet_ids
 
+  # Deshabilitados por defecto (access_logs_bucket vacio): requieren un
+  # bucket S3 dedicado con la bucket policy que exige el servicio de ALB
+  # (principal de la cuenta de AWS que opera ELB en la region, distinto por
+  # region) — nunca el bucket de artifacts de usuarios (evidencia/actas/
+  # informes). Crear ese bucket dedicado pertenece a la subfase de
+  # Lifecycle S3, fuera de alcance de 4C.4 — ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md.
+  dynamic "access_logs" {
+    for_each = var.access_logs_bucket == "" ? [] : [1]
+    content {
+      bucket  = var.access_logs_bucket
+      prefix  = var.access_logs_prefix
+      enabled = true
+    }
+  }
+
   tags = merge(var.tags, { Name = "${var.name_prefix}-alb" })
 }
 

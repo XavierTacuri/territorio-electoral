@@ -67,6 +67,8 @@ resource "aws_db_instance" "this" {
 
   performance_insights_enabled = var.performance_insights_enabled
 
+  enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
+
   apply_immediately = var.apply_immediately
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-db" })

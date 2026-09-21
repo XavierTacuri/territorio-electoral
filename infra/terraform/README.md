@@ -1,14 +1,15 @@
 # Terraform — Territorio Electoral
 
-Infraestructura como código para el despliegue AWS de Territorio Electoral (Fase 4C). Ver la fundación de red/security groups en [`docs/aws/TERRAFORM_FOUNDATION.md`](../../docs/aws/TERRAFORM_FOUNDATION.md), la capa ECS/Fargate + ALB en [`docs/aws/ECS_ALB_FOUNDATION.md`](../../docs/aws/ECS_ALB_FOUNDATION.md), la capa de datos RDS + RDS Proxy en [`docs/aws/RDS_PROXY_FOUNDATION.md`](../../docs/aws/RDS_PROXY_FOUNDATION.md), y el diseño objetivo completo en [`docs/aws/PRODUCTION_ARCHITECTURE.md`](../../docs/aws/PRODUCTION_ARCHITECTURE.md).
+Infraestructura como código para el despliegue AWS de Territorio Electoral (Fase 4C). Ver la fundación de red/security groups en [`docs/aws/TERRAFORM_FOUNDATION.md`](../../docs/aws/TERRAFORM_FOUNDATION.md), la capa ECS/Fargate + ALB en [`docs/aws/ECS_ALB_FOUNDATION.md`](../../docs/aws/ECS_ALB_FOUNDATION.md), la capa de datos RDS + RDS Proxy en [`docs/aws/RDS_PROXY_FOUNDATION.md`](../../docs/aws/RDS_PROXY_FOUNDATION.md), WAF + CloudWatch/observabilidad en [`docs/aws/WAF_CLOUDWATCH_FOUNDATION.md`](../../docs/aws/WAF_CLOUDWATCH_FOUNDATION.md), y el diseño objetivo completo en [`docs/aws/PRODUCTION_ARCHITECTURE.md`](../../docs/aws/PRODUCTION_ARCHITECTURE.md).
 
-## Estado actual (Fase 4C.1 + 4C.2 + 4C.3)
+## Estado actual (Fase 4C.1 + 4C.2 + 4C.3 + 4C.4)
 
 - **4C.1 — fundación**: red (VPC, subredes públicas/aplicación/base de datos en 2+ AZ, NAT, endpoint S3) y security groups (límites ALB → ECS → RDS Proxy → RDS).
 - **4C.2 — ejecución**: ECS Cluster (Fargate), Task Definitions (backend, frontend, y una task de release `backend-migrate` para Alembic, no adjunta a ningún Service), ECS Services con autoscaling base, ALB con routing por path (`/api/*` → backend, resto → frontend), IAM de mínimo privilegio (Execution Role vs. Task Role).
-- **4C.3 — datos**: RDS PostgreSQL 16 (cifrado, privado, backups, Multi-AZ configurable) + RDS Proxy (TLS, autenticado vía Secrets Manager) + contraseña maestra gestionada automáticamente por RDS (nunca en Terraform). El backend y la migration task se conectan vía el endpoint del proxy, nunca directo a RDS.
+- **4C.3 — datos**: RDS PostgreSQL 16 (cifrado, privado, backups, Multi-AZ configurable) + RDS Proxy (TLS, autenticado vía Secrets Manager, identidades master/aplicación separadas) + contraseña de aplicación `ephemeral`/write-only (nunca en el Terraform state).
+- **4C.4 — protección perimetral y observabilidad**: WAFv2 Web ACL (managed rules + rate limiting en `/api/*`) asociado al ALB; 14 alarmas CloudWatch (ALB/ECS/RDS/log-based); dashboard operativo; SNS opcional para notificaciones.
 
-**No se ha creado ningún recurso real en AWS** — nada de esto se ha aplicado todavía. WAF y CloudWatch avanzado llegan en subfases posteriores.
+**No se ha creado ningún recurso real en AWS** — nada de esto se ha aplicado todavía.
 
 ## Estructura
 
@@ -20,6 +21,8 @@ infra/terraform/
     alb/                Application Load Balancer, target groups, listeners (4C.2)
     ecs/                Cluster, IAM, Task Definitions, Services, autoscaling (4C.2)
     database/           RDS PostgreSQL, RDS Proxy, IAM del proxy (4C.3)
+    waf/                WAFv2 Web ACL, managed rules, rate limiting, asociacion al ALB (4C.4)
+    observability/      Alarmas CloudWatch, dashboard, SNS (4C.4)
   environments/
     prod/               Único entorno hoy; compone los módulos de arriba
 ```

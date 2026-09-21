@@ -37,6 +37,9 @@ module "alb" {
   backend_container_port  = var.backend_container_port
   frontend_container_port = var.frontend_container_port
   certificate_arn         = var.certificate_arn
+
+  access_logs_bucket = var.alb_access_logs_bucket
+  access_logs_prefix = var.alb_access_logs_prefix
 }
 
 # ------------------------------------------------------------------------------
@@ -70,7 +73,8 @@ module "database" {
   skip_final_snapshot     = var.db_skip_final_snapshot
   multi_az                = var.db_multi_az
 
-  performance_insights_enabled = var.db_performance_insights_enabled
+  performance_insights_enabled    = var.db_performance_insights_enabled
+  enabled_cloudwatch_logs_exports = var.db_enabled_cloudwatch_logs_exports
 
   require_tls                  = var.db_proxy_require_tls
   idle_client_timeout          = var.db_proxy_idle_client_timeout
@@ -117,7 +121,8 @@ module "ecs" {
   backend_health_check_grace_period_seconds  = var.backend_health_check_grace_period_seconds
   frontend_health_check_grace_period_seconds = var.frontend_health_check_grace_period_seconds
 
-  log_retention_days = var.log_retention_days
+  log_retention_days         = var.log_retention_days
+  container_insights_enabled = var.container_insights_enabled
 
   app_env                 = var.app_env
   web_concurrency         = var.web_concurrency
@@ -150,4 +155,76 @@ module "ecs" {
   secrets_manager_secret_arns = var.secrets_manager_secret_arns
 
   depends_on = [module.alb, module.database]
+}
+
+# ------------------------------------------------------------------------------
+# Fase 4C.4: WAF + CloudWatch/observabilidad. Consumen unicamente outputs de
+# los modulos de arriba — ningun modulo de 4C.1-4C.3 se modifica salvo
+# ampliaciones minimas ya aplicadas (alb: access_logs opcional; ecs:
+# Container Insights configurable; database: RDS log exports opcionales).
+# ------------------------------------------------------------------------------
+
+module "waf" {
+  source = "../../modules/waf"
+
+  name_prefix         = local.name_prefix
+  alb_arn             = module.alb.alb_arn
+  backend_path_prefix = "/api/"
+
+  enable_common_rule_set           = var.waf_enable_common_rule_set
+  enable_known_bad_inputs_rule_set = var.waf_enable_known_bad_inputs_rule_set
+  enable_ip_reputation_list        = var.waf_enable_ip_reputation_list
+  rate_limit_requests              = var.waf_rate_limit_requests
+
+  waf_managed_rules_count_mode = var.waf_managed_rules_count_mode
+  waf_sampled_requests_enabled = var.waf_sampled_requests_enabled
+
+  waf_logging_enabled = var.waf_logging_enabled
+  log_retention_days  = var.log_retention_days
+}
+
+module "observability" {
+  source = "../../modules/observability"
+
+  name_prefix = local.name_prefix
+  aws_region  = var.aws_region
+
+  alb_arn_suffix                   = module.alb.alb_arn_suffix
+  backend_target_group_arn_suffix  = module.alb.backend_target_group_arn_suffix
+  frontend_target_group_arn_suffix = module.alb.frontend_target_group_arn_suffix
+
+  ecs_cluster_name          = module.ecs.cluster_name
+  ecs_backend_service_name  = module.ecs.backend_service_name
+  ecs_frontend_service_name = module.ecs.frontend_service_name
+
+  db_instance_id           = module.database.db_instance_id
+  db_allocated_storage_gib = var.db_allocated_storage
+
+  backend_log_group_name = module.ecs.backend_log_group_name
+  log_retention_days     = var.log_retention_days
+
+  create_alarm_sns_topic = var.create_alarm_sns_topic
+  alarm_sns_topic_arn    = var.alarm_sns_topic_arn
+  enable_alarm_actions   = var.enable_alarm_actions
+  enable_ok_actions      = var.enable_ok_actions
+
+  alb_5xx_threshold                     = var.alb_5xx_threshold
+  alb_target_5xx_threshold              = var.alb_target_5xx_threshold
+  alb_response_time_threshold_seconds   = var.alb_response_time_threshold_seconds
+  alb_evaluation_periods                = var.alb_evaluation_periods
+  alb_unhealthy_host_evaluation_periods = var.alb_unhealthy_host_evaluation_periods
+
+  ecs_cpu_threshold_percent    = var.ecs_cpu_threshold_percent
+  ecs_memory_threshold_percent = var.ecs_memory_threshold_percent
+  ecs_evaluation_periods       = var.ecs_evaluation_periods
+
+  rds_cpu_threshold_percent          = var.rds_cpu_threshold_percent
+  rds_free_storage_threshold_percent = var.rds_free_storage_threshold_percent
+  rds_freeable_memory_threshold_mb   = var.rds_freeable_memory_threshold_mb
+  rds_database_connections_threshold = var.rds_database_connections_threshold
+  rds_evaluation_periods             = var.rds_evaluation_periods
+
+  backend_error_log_threshold = var.backend_error_log_threshold
+
+  depends_on = [module.ecs, module.database]
 }

@@ -153,3 +153,28 @@ output "db_app_user_secret_arn" {
   description = "ARN del secreto (Secrets Manager, creado por Terraform) con la contrasenia del usuario de APLICACION — el que usa el ECS Service del backend en runtime. El ARN en si no es sensible; su contenido nunca se expone aqui."
   value       = module.database.app_user_secret_arn
 }
+
+# ------------------------------------------------------------------------------
+# Fase 4C.4 — WAF + CloudWatch / Observabilidad
+# ------------------------------------------------------------------------------
+
+output "waf_web_acl_arn" {
+  value = module.waf.web_acl_arn
+}
+
+output "waf_web_acl_id" {
+  value = module.waf.web_acl_id
+}
+
+output "cloudwatch_dashboard_name" {
+  value = module.observability.dashboard_name
+}
+
+output "alarm_sns_topic_arn" {
+  description = "ARN del SNS topic resuelto (creado o externo) usado por las alarmas, o cadena vacia si ninguno esta configurado."
+  value       = module.observability.alarm_sns_topic_arn
+}
+
+output "alarm_names" {
+  value = module.observability.alarm_names
+}

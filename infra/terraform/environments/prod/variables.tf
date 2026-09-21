@@ -346,3 +346,175 @@ variable "db_proxy_max_idle_connections_percent" {
   type    = number
   default = 50
 }
+
+variable "db_enabled_cloudwatch_logs_exports" {
+  description = "Tipos de log de RDS a exportar a CloudWatch (solo \"postgresql\" es valido). Vacio por defecto — ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"RDS log exports\"."
+  type        = list(string)
+  default     = []
+}
+
+# ==============================================================================
+# Fase 4C.4 — WAF + CloudWatch / Observabilidad
+# ==============================================================================
+
+variable "alb_access_logs_bucket" {
+  description = "Bucket S3 EXISTENTE para access logs del ALB. Vacio (por defecto): deshabilitados — Fase 4C.4 no crea ningun bucket nuevo. Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"ALB access logs\"."
+  type        = string
+  default     = ""
+}
+
+variable "alb_access_logs_prefix" {
+  type    = string
+  default = "alb"
+}
+
+variable "container_insights_enabled" {
+  description = "false (por defecto): CloudWatch Container Insights deshabilitado. true: habilita metricas ECS granulares adicionales, con costo propio. Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"Costos\"."
+  type        = bool
+  default     = false
+}
+
+# --- WAF ---
+
+variable "waf_enable_common_rule_set" {
+  type    = bool
+  default = true
+}
+
+variable "waf_enable_known_bad_inputs_rule_set" {
+  type    = bool
+  default = true
+}
+
+variable "waf_enable_ip_reputation_list" {
+  type    = bool
+  default = true
+}
+
+variable "waf_rate_limit_requests" {
+  description = "Limite de solicitudes por IP en 5 minutos, acotado a /api/*. Baseline inicial — Fase 4C.6 lo ajustara."
+  type        = number
+  default     = 2000
+}
+
+variable "waf_managed_rules_count_mode" {
+  description = "true (por defecto): los managed rule groups corren en Count (nunca bloquean, solo metrica/log) — rollout seguro recomendado por AWS. false: enforcement real (bloquean). Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"Rollout de Managed Rule Groups\"."
+  type        = bool
+  default     = true
+}
+
+variable "waf_sampled_requests_enabled" {
+  description = "false (por defecto, recomendado para produccion inicial): sin muestreo de solicitudes reales de WAF — evita capturar contenido de solicitud sin una capa de proteccion de datos dedicada (data_protection_config, no implementado). cloudwatch_metrics_enabled permanece siempre true, independientemente de esta variable."
+  type        = bool
+  default     = false
+}
+
+variable "waf_logging_enabled" {
+  description = "false (por defecto): sin logging de solicitudes WAF individuales (las metricas CloudWatch por regla quedan habilitadas de todas formas). true: crea un log group dedicado y habilita el logging."
+  type        = bool
+  default     = false
+}
+
+# --- SNS / acciones de alarma ---
+
+variable "create_alarm_sns_topic" {
+  description = "true: crea un SNS topic propio para las alarmas. false (por defecto, junto con alarm_sns_topic_arn vacio): las alarmas no notifican a ningun topic."
+  type        = bool
+  default     = false
+}
+
+variable "alarm_sns_topic_arn" {
+  description = "ARN de un SNS topic EXISTENTE, si create_alarm_sns_topic=false. Sin direcciones de correo hardcodeadas en este Terraform — las suscripciones se administran aparte, manualmente."
+  type        = string
+  default     = ""
+}
+
+variable "enable_alarm_actions" {
+  description = "false (por defecto): las alarmas se crean sin notificar a ningun SNS topic — apropiado para validacion/desarrollo Terraform."
+  type        = bool
+  default     = false
+}
+
+variable "enable_ok_actions" {
+  type    = bool
+  default = false
+}
+
+# --- Umbrales ALB ---
+
+variable "alb_5xx_threshold" {
+  type    = number
+  default = 10
+}
+
+variable "alb_target_5xx_threshold" {
+  type    = number
+  default = 10
+}
+
+variable "alb_response_time_threshold_seconds" {
+  type    = number
+  default = 2
+}
+
+variable "alb_evaluation_periods" {
+  type    = number
+  default = 5
+}
+
+variable "alb_unhealthy_host_evaluation_periods" {
+  type    = number
+  default = 5
+}
+
+# --- Umbrales ECS ---
+
+variable "ecs_cpu_threshold_percent" {
+  type    = number
+  default = 85
+}
+
+variable "ecs_memory_threshold_percent" {
+  type    = number
+  default = 85
+}
+
+variable "ecs_evaluation_periods" {
+  type    = number
+  default = 3
+}
+
+# --- Umbrales RDS ---
+
+variable "rds_cpu_threshold_percent" {
+  type    = number
+  default = 80
+}
+
+variable "rds_free_storage_threshold_percent" {
+  type    = number
+  default = 20
+}
+
+variable "rds_freeable_memory_threshold_mb" {
+  type    = number
+  default = 256
+}
+
+variable "rds_database_connections_threshold" {
+  description = "Baseline generico, sin relacion verificada con el max_connections real de la instance_class elegida — ajustar en Fase 4C.6."
+  type        = number
+  default     = 80
+}
+
+variable "rds_evaluation_periods" {
+  type    = number
+  default = 3
+}
+
+# --- Log-based metric ---
+
+variable "backend_error_log_threshold" {
+  type    = number
+  default = 10
+}

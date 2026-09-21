@@ -192,6 +192,12 @@ variable "log_retention_days" {
   default = 30
 }
 
+variable "container_insights_enabled" {
+  description = "false (por defecto): CloudWatch Container Insights deshabilitado — las metricas AWS/ECS estandar (CPUUtilization, MemoryUtilization, ya usadas por autoscaling desde Fase 4C.2) siguen disponibles sin esto. true: habilita metricas por-tarea granulares adicionales bajo ECS/ContainerInsights, con costo propio (ingesta de metricas custom + logs de rendimiento). Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md, \"Costos\"."
+  type        = bool
+  default     = false
+}
+
 # ============================================================================
 # Configuracion de aplicacion (backend) — no sensible
 # ============================================================================

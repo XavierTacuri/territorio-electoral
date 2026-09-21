@@ -34,6 +34,18 @@ variable "certificate_arn" {
   default     = ""
 }
 
+variable "access_logs_bucket" {
+  description = "Nombre de un bucket S3 EXISTENTE y ya configurado con la bucket policy que exige el servicio de ALB access logs, donde escribir los access logs del ALB. Vacio (por defecto): access logs deshabilitados. Fase 4C.4 no crea ningun bucket S3 nuevo (eso pertenece a la subfase de Lifecycle S3) — nunca reutilizar el bucket de artifacts de usuarios (evidencia/actas/informes) para logs de infraestructura. Ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md."
+  type        = string
+  default     = ""
+}
+
+variable "access_logs_prefix" {
+  description = "Prefijo S3 para los access logs del ALB, si access_logs_bucket esta configurado."
+  type        = string
+  default     = "alb"
+}
+
 variable "tags" {
   description = "Tags adicionales a fusionar en cada recurso, ademas de los default_tags configurados en el provider."
   type        = map(string)
