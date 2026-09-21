@@ -25,8 +25,13 @@ output "frontend_task_definition_arn" {
 }
 
 output "backend_migrate_task_definition_arn" {
-  description = "ARN de la task definition de release (Alembic). Se invoca manualmente con `aws ecs run-task`, nunca desde un aws_ecs_service."
+  description = "ARN de la task definition de release (Alembic). Se invoca manualmente con `aws ecs run-task`, nunca desde un aws_ecs_service. Usa la identidad MAESTRA."
   value       = aws_ecs_task_definition.backend_migrate.arn
+}
+
+output "backend_bootstrap_task_definition_arn" {
+  description = "ARN de la task definition de bootstrap administrativo (crea/actualiza el rol de aplicacion). Se invoca manualmente con `aws ecs run-task`, nunca desde un aws_ecs_service. Usa la identidad MAESTRA."
+  value       = aws_ecs_task_definition.backend_bootstrap.arn
 }
 
 output "execution_role_arn" {

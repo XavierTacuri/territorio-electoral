@@ -99,8 +99,13 @@ output "frontend_task_definition_arn" {
 }
 
 output "backend_migrate_task_definition_arn" {
-  description = "Task definition de release (Alembic). Invocar manualmente con `aws ecs run-task` antes de actualizar el servicio backend — ver docs/aws/ECS_ALB_FOUNDATION.md."
+  description = "Task definition de release (Alembic, identidad MAESTRA). Invocar manualmente con `aws ecs run-task` antes de actualizar el servicio backend — ver docs/aws/ECS_ALB_FOUNDATION.md."
   value       = module.ecs.backend_migrate_task_definition_arn
+}
+
+output "backend_bootstrap_task_definition_arn" {
+  description = "Task definition de bootstrap administrativo (crea/actualiza el rol de aplicacion, identidad MAESTRA). Invocar manualmente con `aws ecs run-task` — ver docs/aws/RDS_PROXY_FOUNDATION.md."
+  value       = module.ecs.backend_bootstrap_task_definition_arn
 }
 
 output "ecs_execution_role_arn" {
@@ -109,4 +114,42 @@ output "ecs_execution_role_arn" {
 
 output "ecs_task_role_arn" {
   value = module.ecs.task_role_arn
+}
+
+# ------------------------------------------------------------------------------
+# Fase 4C.3 — RDS PostgreSQL + RDS Proxy
+# ------------------------------------------------------------------------------
+# Sin password, sin DATABASE_URL con credenciales, sin contenido de Secrets
+# Manager — solo identificadores y endpoints administrativos.
+
+output "db_instance_id" {
+  value = module.database.db_instance_id
+}
+
+output "db_endpoint" {
+  description = "Endpoint DIRECTO de RDS — solo uso administrativo. La aplicacion usa db_proxy_endpoint."
+  value       = module.database.db_endpoint
+}
+
+output "db_port" {
+  value = module.database.db_port
+}
+
+output "db_proxy_endpoint" {
+  description = "Endpoint de RDS Proxy — el que usa el backend/migration task."
+  value       = module.database.proxy_endpoint
+}
+
+output "db_proxy_arn" {
+  value = module.database.proxy_arn
+}
+
+output "db_master_user_secret_arn" {
+  description = "ARN del secreto (Secrets Manager, gestionado por RDS) con la contrasenia del usuario MAESTRO — solo lo usan bootstrap y migrate. El ARN en si no es sensible; su contenido nunca se expone aqui."
+  value       = module.database.master_user_secret_arn
+}
+
+output "db_app_user_secret_arn" {
+  description = "ARN del secreto (Secrets Manager, creado por Terraform) con la contrasenia del usuario de APLICACION — el que usa el ECS Service del backend en runtime. El ARN en si no es sensible; su contenido nunca se expone aqui."
+  value       = module.database.app_user_secret_arn
 }

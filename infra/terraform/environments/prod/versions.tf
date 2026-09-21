@@ -1,4 +1,11 @@
 terraform {
+  # >= 1.7.0 es el piso propio de este archivo; el piso EFECTIVO de todo el
+  # stack es >= 1.11.0 porque modules/database declara ese requisito (usa
+  # recursos ephemeral y argumentos write-only, Fase 4C.3) — Terraform
+  # aplica el maximo de los required_version de todos los modulos de la
+  # configuracion. No se sube este valor a mano para no duplicar una
+  # constraint que ya vive, correctamente, en el modulo que realmente la
+  # necesita.
   required_version = ">= 1.7.0, < 2.0.0"
 
   required_providers {

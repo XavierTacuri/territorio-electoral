@@ -50,6 +50,12 @@ variable "frontend_container_port" {
   type = number
 }
 
+variable "db_port" {
+  description = "Puerto de PostgreSQL (POSTGRES_PORT) — el mismo puerto en el que escucha el endpoint de RDS Proxy."
+  type        = number
+  default     = 5432
+}
+
 # ============================================================================
 # Imagenes de contenedor
 # ============================================================================
@@ -255,9 +261,26 @@ variable "db_name" {
   default = "territorio_electoral"
 }
 
-variable "db_user" {
-  type    = string
-  default = "territorio_user"
+variable "db_master_user" {
+  description = "Usuario MAESTRO de RDS (POSTGRES_USER para bootstrap y migration task UNICAMENTE — el ECS Service del backend nunca lo usa). Ver docs/aws/RDS_PROXY_FOUNDATION.md, \"Separacion de identidades\"."
+  type        = string
+  default     = "territorio_user"
+}
+
+variable "db_master_secret_arn" {
+  description = "ARN del secreto (Secrets Manager, gestionado por RDS) con la contrasenia del usuario maestro — solo lo consumen backend_migrate y backend_bootstrap."
+  type        = string
+}
+
+variable "db_app_user" {
+  description = "Usuario de APLICACION (POSTGRES_USER para el ECS Service del backend en runtime, siempre via RDS Proxy). Bajo privilegio: solo DML, sin CREATEROLE/CREATEDB."
+  type        = string
+  default     = "territorio_app"
+}
+
+variable "db_app_secret_arn" {
+  description = "ARN del secreto (Secrets Manager, creado por modules/database) con la contrasenia del usuario de aplicacion — lo consume el ECS Service del backend, y tambien backend_bootstrap (para crear/actualizar ese mismo rol)."
+  type        = string
 }
 
 variable "db_pool_size" {
@@ -286,7 +309,7 @@ variable "db_connect_timeout_seconds" {
 }
 
 variable "secrets_manager_secret_arns" {
-  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager (ej. { SECRET_KEY = \"arn:aws:secretsmanager:...\" }). Vacio por defecto: Fase 4C.2 no crea la infraestructura de Secrets Manager todavia — esta interfaz deja la Task Definition y el permiso IAM del Execution Role listos para cuando exista, sin tocar ningun otro recurso. Ver docs/aws/TERRAFORM_FOUNDATION.md."
+  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager para secretos ADICIONALES a POSTGRES_PASSWORD (que ya se resuelve por separado via db_master_secret_arn/db_app_secret_arn) — ej. { SECRET_KEY = \"arn:aws:secretsmanager:...\" }. Vacio por defecto: todavia no existe infraestructura Terraform para esos otros secretos. Se aplica por igual a los tres containers de la familia backend (service, migrate, bootstrap)."
   type        = map(string)
   default     = {}
 }

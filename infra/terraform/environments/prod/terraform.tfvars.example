@@ -26,10 +26,12 @@ db_port                 = 5432
 # Fase 4C.2 — ECS/Fargate + ALB
 # ==============================================================================
 # Las variables de esta seccion SIN valor de ejemplo abajo (backend_image,
-# frontend_image, frontend_origins, browser_allowed_origins, trusted_hosts,
-# db_host) son obligatorias y no tienen default — deliberado, ver
+# frontend_image, frontend_origins, browser_allowed_origins, trusted_hosts)
+# son obligatorias y no tienen default — deliberado, ver
 # docs/aws/ECS_ALB_FOUNDATION.md. Los placeholders <ENTRE_ANGULOS> NO son
-# valores reales; sustituir antes de cualquier plan/apply real.
+# valores reales; sustituir antes de cualquier plan/apply real. db_host ya
+# no es una variable (Fase 4C.3): el backend usa automaticamente el
+# endpoint de RDS Proxy.
 
 # certificate_arn = ""  # vacio = solo HTTP. Con un ACM real: "arn:aws:acm:<region>:<account-id>:certificate/<id>"
 
@@ -76,9 +78,60 @@ s3_artifact_bucket        = "<nombre-real-del-bucket>" # obligatorio con artifac
 # s3_evidence_prefix = "evidence"  # debe coincidir con backend/app/core/config.py
 # s3_report_prefix   = "reports"   # idem — la policy IAM del Task Role usa estos mismos valores
 
-# db_host = "<endpoint-real-de-RDS-o-RDS-Proxy>"  # RDS/RDS Proxy: subfase posterior
 db_name = "territorio_electoral"
-db_user = "territorio_user"
+# db_master_user: reservado para bootstrap/migraciones (Alembic). NUNCA lo
+# usa el ECS Service del backend en runtime — ver docs/aws/RDS_PROXY_FOUNDATION.md.
+db_master_user = "territorio_user"
+# db_app_user: usuario de bajo privilegio (solo DML) que SI usa el backend
+# en runtime, siempre via RDS Proxy. Se crea/actualiza automaticamente por
+# la bootstrap task — no hace falta crearlo a mano.
+db_app_user = "territorio_app"
+# Sin db_app_password aqui ni en ningun lado: se genera como recurso
+# ephemeral (nunca persiste en el Terraform state) — ver docs/aws/RDS_PROXY_FOUNDATION.md.
+# Incrementar este numero + apply + reinvocar la bootstrap task es el
+# proceso MANUAL de rotacion (no automatizado en esta fase).
+db_app_secret_version = 1
+
+# ==============================================================================
+# Fase 4C.3 — RDS PostgreSQL + RDS Proxy
+# ==============================================================================
+# Sin db_password aqui ni en ningun lado: RDS genera y administra la
+# contrasenia maestra en Secrets Manager (manage_master_user_password = true,
+# ver modules/database/main.tf) — Terraform nunca la ve ni la almacena.
+
+# "16" (solo major) — igual version mayor que Docker/CI (postgis:16-3.4),
+# sin fijar una minor que no se puede verificar sin credenciales de AWS.
+db_engine_version = "16"
+
+# Valores iniciales conservadores — dimensionamiento definitivo: Fase 4C.6.
+db_instance_class        = "db.t4g.micro"
+db_allocated_storage     = 20
+db_max_allocated_storage = 100
+
+db_backup_retention_period = 7
+# db_backup_window    = "05:00-06:00"  # null (por defecto) = AWS elige una ventana automaticamente
+# db_maintenance_window = "sun:06:00-sun:07:00"  # idem
+
+# true (recomendado en produccion): AWS rechaza `terraform destroy`/eliminacion
+# manual hasta desactivar esto explicitamente.
+db_deletion_protection = true
+# false (recomendado en produccion): al eliminar la instancia, RDS crea un
+# snapshot final antes de destruirla.
+db_skip_final_snapshot = false
+
+# false = instancia unica (menor costo). true = standby sincronico + failover
+# automatico (mayor disponibilidad, aprox. el doble de costo de computo/storage).
+# Ver docs/aws/RDS_PROXY_FOUNDATION.md antes de cambiar este valor.
+db_multi_az = false
+
+db_performance_insights_enabled = false
+
+# RDS Proxy: valores iniciales conservadores, ajustables en Fase 4C.6.
+db_proxy_require_tls                  = true
+db_proxy_idle_client_timeout          = 1800
+db_proxy_connection_borrow_timeout    = 120
+db_proxy_max_connections_percent      = 100
+db_proxy_max_idle_connections_percent = 50
 
 # secrets_manager_secret_arns = {
 #   SECRET_KEY                         = "<arn-real-de-secrets-manager>"

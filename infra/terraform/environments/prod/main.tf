@@ -39,6 +39,46 @@ module "alb" {
   certificate_arn         = var.certificate_arn
 }
 
+# ------------------------------------------------------------------------------
+# Fase 4C.3: RDS PostgreSQL + RDS Proxy. Usa exclusivamente las database
+# subnets y los security groups rds/rds_proxy ya creados en Fase 4C.1 —
+# ningun modulo de 4C.1 se modifica.
+# ------------------------------------------------------------------------------
+
+module "database" {
+  source = "../../modules/database"
+
+  name_prefix                 = local.name_prefix
+  db_subnet_ids               = module.network.db_subnet_ids
+  rds_security_group_id       = module.security_groups.rds_security_group_id
+  rds_proxy_security_group_id = module.security_groups.rds_proxy_security_group_id
+  db_port                     = var.db_port
+
+  engine_version        = var.db_engine_version
+  instance_class        = var.db_instance_class
+  allocated_storage     = var.db_allocated_storage
+  max_allocated_storage = var.db_max_allocated_storage
+  db_name               = var.db_name
+  db_username           = var.db_master_user
+  db_app_username       = var.db_app_user
+  db_app_secret_version = var.db_app_secret_version
+
+  backup_retention_period = var.db_backup_retention_period
+  backup_window           = var.db_backup_window
+  maintenance_window      = var.db_maintenance_window
+  deletion_protection     = var.db_deletion_protection
+  skip_final_snapshot     = var.db_skip_final_snapshot
+  multi_az                = var.db_multi_az
+
+  performance_insights_enabled = var.db_performance_insights_enabled
+
+  require_tls                  = var.db_proxy_require_tls
+  idle_client_timeout          = var.db_proxy_idle_client_timeout
+  connection_borrow_timeout    = var.db_proxy_connection_borrow_timeout
+  max_connections_percent      = var.db_proxy_max_connections_percent
+  max_idle_connections_percent = var.db_proxy_max_idle_connections_percent
+}
+
 module "ecs" {
   source = "../../modules/ecs"
 
@@ -90,11 +130,24 @@ module "ecs" {
   s3_evidence_prefix        = var.s3_evidence_prefix
   s3_report_prefix          = var.s3_report_prefix
 
-  db_host = var.db_host
+  # Endpoint de RDS Proxy (Fase 4C.3), nunca el endpoint directo de RDS — el
+  # backend nunca se salta el pooling administrado del proxy.
+  db_host = module.database.proxy_endpoint
   db_name = var.db_name
-  db_user = var.db_user
+  db_port = var.db_port
 
+  # Separacion de identidades (revision de produccion de Fase 4C.3): el ECS
+  # Service del backend usa SIEMPRE el usuario de aplicacion (bajo
+  # privilegio); migrate y bootstrap usan SIEMPRE el usuario maestro. Ver
+  # docs/aws/RDS_PROXY_FOUNDATION.md, "Separacion de identidades".
+  db_master_user       = var.db_master_user
+  db_master_secret_arn = module.database.master_user_secret_arn
+  db_app_user          = var.db_app_user
+  db_app_secret_arn    = module.database.app_user_secret_arn
+
+  # Secretos ADICIONALES (SECRET_KEY, etc.), todavia sin infraestructura
+  # propia — POSTGRES_PASSWORD ya no viaja por aqui, ver db_master_secret_arn/db_app_secret_arn arriba.
   secrets_manager_secret_arns = var.secrets_manager_secret_arns
 
-  depends_on = [module.alb]
+  depends_on = [module.alb, module.database]
 }

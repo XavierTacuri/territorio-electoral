@@ -63,22 +63,25 @@ resource "aws_iam_role_policy_attachment" "execution_managed" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Permiso para leer secretos SOLO si se configuraron (var.secrets_manager_secret_arns
-# no vacio) — "si algunos permisos todavia no son necesarios en 4C.2, no los
-# agregues preventivamente" (item 6). Por defecto (mapa vacio) el Execution
-# Role no tiene ningun permiso de Secrets Manager.
+# Permiso para leer exactamente los secretos que las Task Definitions de
+# este modulo referencian en su bloque `secrets` — nunca un wildcard. Desde
+# Fase 4C.3, db_master_secret_arn/db_app_secret_arn son obligatorios (todo
+# container de la familia backend usa uno de los dos); secrets_manager_secret_arns
+# sigue siendo opcional (SECRET_KEY, etc., sin infraestructura propia
+# todavia).
 resource "aws_iam_role_policy" "execution_secrets" {
-  count = length(var.secrets_manager_secret_arns) > 0 ? 1 : 0
-
   name = "${var.name_prefix}-ecs-execution-secrets"
   role = aws_iam_role.execution.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["secretsmanager:GetSecretValue"]
-      Resource = values(var.secrets_manager_secret_arns)
+      Effect = "Allow"
+      Action = ["secretsmanager:GetSecretValue"]
+      Resource = concat(
+        [var.db_master_secret_arn, var.db_app_secret_arn],
+        values(var.secrets_manager_secret_arns),
+      )
     }]
   })
 }
@@ -161,6 +164,13 @@ resource "aws_cloudwatch_log_group" "backend_migrate" {
   tags = merge(var.tags, { Name = "${var.name_prefix}-backend-migrate-logs" })
 }
 
+resource "aws_cloudwatch_log_group" "backend_bootstrap" {
+  name              = "/ecs/${var.name_prefix}/backend-bootstrap"
+  retention_in_days = var.log_retention_days
+
+  tags = merge(var.tags, { Name = "${var.name_prefix}-backend-bootstrap-logs" })
+}
+
 # ============================================================================
 # Security group propio del frontend (item 22/23)
 # ============================================================================
@@ -221,10 +231,12 @@ resource "aws_vpc_security_group_egress_rule" "alb_to_frontend" {
 # ============================================================================
 
 locals {
-  # Variables de entorno no sensibles del backend. Los secretos (SECRET_KEY,
-  # POSTGRES_PASSWORD, etc.) NUNCA aparecen aqui — viajan via el bloque
-  # `secrets` mas abajo, resuelto desde var.secrets_manager_secret_arns.
-  backend_environment = concat(
+  # Variables de entorno no sensibles, comunes a los TRES containers de la
+  # familia backend (service, migrate, bootstrap) — todo salvo POSTGRES_USER,
+  # que difiere segun identidad (ver mas abajo, "Separacion de identidades",
+  # docs/aws/RDS_PROXY_FOUNDATION.md). Los secretos (SECRET_KEY,
+  # POSTGRES_PASSWORD, etc.) NUNCA aparecen aqui — viajan via `secrets`.
+  backend_common_environment = concat(
     [
       { name = "PORT", value = tostring(var.backend_container_port) },
       { name = "APP_ENV", value = var.app_env },
@@ -232,8 +244,8 @@ locals {
       { name = "ENABLE_API_DOCS", value = "false" },
       { name = "SECURE_HEADERS_ENABLED", value = "true" },
       { name = "POSTGRES_DB", value = var.db_name },
-      { name = "POSTGRES_USER", value = var.db_user },
       { name = "POSTGRES_HOST", value = var.db_host },
+      { name = "POSTGRES_PORT", value = tostring(var.db_port) },
       { name = "DB_POOL_SIZE", value = tostring(var.db_pool_size) },
       { name = "DB_MAX_OVERFLOW", value = tostring(var.db_max_overflow) },
       { name = "DB_POOL_TIMEOUT_SECONDS", value = tostring(var.db_pool_timeout_seconds) },
@@ -263,12 +275,34 @@ locals {
     ],
   )
 
-  backend_secrets = [
+  extra_secrets = [
     for env_name, arn in var.secrets_manager_secret_arns : {
       name      = env_name
       valueFrom = arn
     }
   ]
+
+  # --- Identidad de APLICACION: unicamente el ECS Service del backend en
+  # runtime, siempre via RDS Proxy. Bajo privilegio (solo DML) — ver
+  # modules/ecs, aws_ecs_task_definition.backend_bootstrap, que es quien
+  # crea/actualiza este rol en PostgreSQL con las credenciales MAESTRAS.
+  backend_service_environment = concat(local.backend_common_environment, [
+    { name = "POSTGRES_USER", value = var.db_app_user },
+  ])
+  backend_service_secrets = concat(
+    [{ name = "POSTGRES_PASSWORD", valueFrom = "${var.db_app_secret_arn}:password::" }],
+    local.extra_secrets,
+  )
+
+  # --- Identidad MAESTRA: unicamente bootstrap y migration task — nunca el
+  # ECS Service del backend (item 2 de la revision de 4C.3).
+  backend_admin_environment = concat(local.backend_common_environment, [
+    { name = "POSTGRES_USER", value = var.db_master_user },
+  ])
+  backend_admin_secrets = concat(
+    [{ name = "POSTGRES_PASSWORD", valueFrom = "${var.db_master_secret_arn}:password::" }],
+    local.extra_secrets,
+  )
 
   backend_container_definition = {
     name      = "api"
@@ -287,8 +321,9 @@ locals {
       containerPort = var.backend_container_port
       protocol      = "tcp"
     }]
-    environment = local.backend_environment
-    secrets     = local.backend_secrets
+    # Identidad de APLICACION — nunca la maestra. Ver docs/aws/RDS_PROXY_FOUNDATION.md.
+    environment = local.backend_service_environment
+    secrets     = local.backend_service_secrets
     healthCheck = {
       # Mismo comando que ya usa docker-compose.prod.yml — contra
       # /api/v1/health (liveness), no /api/v1/ready.
@@ -309,22 +344,102 @@ locals {
   }
 
   # Release task de migracion: mismo entorno/imagen que el backend, pero
-  # corre `alembic upgrade head` una sola vez y termina. Nunca se adjunta a
-  # un aws_ecs_service — se invoca manualmente (aws ecs run-task) antes de
-  # actualizar el servicio backend. Ver docs/aws/ECS_ALB_FOUNDATION.md.
+  # corre `alembic upgrade head` una sola vez y termina, con la identidad
+  # MAESTRA (Alembic necesita poder crear/alterar tablas, indices y, en la
+  # primera migracion del historial, la extension PostGIS — privilegios que
+  # el usuario de aplicacion nunca tiene). Nunca se adjunta a un
+  # aws_ecs_service — se invoca manualmente (aws ecs run-task) antes de
+  # actualizar el servicio backend. Ver docs/aws/ECS_ALB_FOUNDATION.md y
+  # docs/aws/RDS_PROXY_FOUNDATION.md, "Secuencia de bootstrap".
   backend_migrate_container_definition = {
     name        = "migrate"
     image       = var.backend_image
     essential   = true
     command     = ["/bin/sh", "-c", "exec alembic upgrade head"]
-    environment = local.backend_environment
-    secrets     = local.backend_secrets
+    environment = local.backend_admin_environment
+    secrets     = local.backend_admin_secrets
     logConfiguration = {
       logDriver = "awslogs"
       options = {
         "awslogs-group"         = aws_cloudwatch_log_group.backend_migrate.name
         "awslogs-region"        = var.aws_region
         "awslogs-stream-prefix" = "migrate"
+      }
+    }
+  }
+
+  # Bootstrap administrativo: crea o actualiza el rol de PostgreSQL de
+  # APLICACION (var.db_app_user) con permisos DML minimos (SELECT/INSERT/
+  # UPDATE/DELETE sobre el esquema public, sin CREATEROLE/CREATEDB/
+  # rds_superuser) — nunca ejecutado por una replica del backend, nunca
+  # parte de un aws_ecs_service. Usa la identidad MAESTRA (crear un rol
+  # requiere privilegio administrativo). Reutiliza psycopg, ya presente en
+  # la imagen del backend (requirements.txt) — cero cambios de codigo de
+  # aplicacion. Idempotente: seguro de re-ejecutar en cualquier momento. Ver
+  # docs/aws/RDS_PROXY_FOUNDATION.md, "Bootstrap administrativo".
+  db_bootstrap_script = <<-PYEOF
+    import os
+    import psycopg
+    from psycopg import sql
+
+    conn = psycopg.connect(
+        host=os.environ["POSTGRES_HOST"],
+        port=int(os.environ["POSTGRES_PORT"]),
+        dbname=os.environ["POSTGRES_DB"],
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        autocommit=True,
+    )
+    master_user = os.environ["POSTGRES_USER"]
+    app_user = os.environ["APP_DB_USERNAME"]
+    app_password = os.environ["APP_DB_PASSWORD"]
+    db_name = os.environ["POSTGRES_DB"]
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = %s", (app_user,))
+        if cur.fetchone() is None:
+            cur.execute(
+                sql.SQL("CREATE ROLE {} WITH LOGIN PASSWORD %s").format(sql.Identifier(app_user)),
+                (app_password,),
+            )
+        else:
+            cur.execute(
+                sql.SQL("ALTER ROLE {} WITH LOGIN PASSWORD %s").format(sql.Identifier(app_user)),
+                (app_password,),
+            )
+        cur.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
+            sql.Identifier(db_name), sql.Identifier(app_user)))
+        cur.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(sql.Identifier(app_user)))
+        cur.execute(sql.SQL("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {}").format(
+            sql.Identifier(app_user)))
+        cur.execute(sql.SQL("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {}").format(
+            sql.Identifier(app_user)))
+        cur.execute(sql.SQL("ALTER DEFAULT PRIVILEGES FOR ROLE {} IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {}").format(
+            sql.Identifier(master_user), sql.Identifier(app_user)))
+        cur.execute(sql.SQL("ALTER DEFAULT PRIVILEGES FOR ROLE {} IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {}").format(
+            sql.Identifier(master_user), sql.Identifier(app_user)))
+
+    conn.close()
+    print("bootstrap: application role ready")
+  PYEOF
+
+  backend_bootstrap_container_definition = {
+    name      = "bootstrap"
+    image     = var.backend_image
+    essential = true
+    command   = ["/bin/sh", "-c", "exec python3 <<'PYEOF'\n${local.db_bootstrap_script}\nPYEOF"]
+    environment = concat(local.backend_admin_environment, [
+      { name = "APP_DB_USERNAME", value = var.db_app_user },
+    ])
+    secrets = concat(local.backend_admin_secrets, [
+      { name = "APP_DB_PASSWORD", valueFrom = "${var.db_app_secret_arn}:password::" },
+    ])
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.backend_bootstrap.name
+        "awslogs-region"        = var.aws_region
+        "awslogs-stream-prefix" = "bootstrap"
       }
     }
   }
@@ -389,6 +504,20 @@ resource "aws_ecs_task_definition" "backend_migrate" {
   container_definitions = jsonencode([local.backend_migrate_container_definition])
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-backend-migrate" })
+}
+
+resource "aws_ecs_task_definition" "backend_bootstrap" {
+  family                   = "${var.name_prefix}-backend-bootstrap"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = var.backend_task_cpu
+  memory                   = var.backend_task_memory
+  execution_role_arn       = aws_iam_role.execution.arn
+  task_role_arn            = aws_iam_role.task.arn
+
+  container_definitions = jsonencode([local.backend_bootstrap_container_definition])
+
+  tags = merge(var.tags, { Name = "${var.name_prefix}-backend-bootstrap" })
 }
 
 resource "aws_ecs_task_definition" "frontend" {

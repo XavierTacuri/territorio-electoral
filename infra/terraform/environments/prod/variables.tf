@@ -229,23 +229,120 @@ variable "s3_report_prefix" {
   default     = "reports"
 }
 
-variable "db_host" {
-  description = "POSTGRES_HOST: endpoint de PostgreSQL (RDS/RDS Proxy). Sin valor por defecto: RDS/RDS Proxy son una subfase posterior."
-  type        = string
-}
-
 variable "db_name" {
   type    = string
   default = "territorio_electoral"
 }
 
-variable "db_user" {
-  type    = string
-  default = "territorio_user"
+variable "db_master_user" {
+  description = "Usuario MAESTRO de RDS — reservado para bootstrap administrativo y migraciones Alembic. El ECS Service del backend NUNCA usa esta identidad. Ver docs/aws/RDS_PROXY_FOUNDATION.md, \"Separacion de identidades\"."
+  type        = string
+  default     = "territorio_user"
+}
+
+variable "db_app_user" {
+  description = "Usuario de APLICACION (bajo privilegio, solo DML) — el que usa el ECS Service del backend en runtime, siempre via RDS Proxy."
+  type        = string
+  default     = "territorio_app"
+}
+
+variable "db_app_secret_version" {
+  description = "Disparador de rotacion del secreto de aplicacion (secret_string_wo_version). Incrementar + apply + reinvocar la bootstrap task es el proceso manual de rotacion — ver docs/aws/RDS_PROXY_FOUNDATION.md, \"Rotacion futura\". Sin rotacion automatica en esta fase."
+  type        = number
+  default     = 1
 }
 
 variable "secrets_manager_secret_arns" {
-  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager. Vacio por defecto — ver docs/aws/TERRAFORM_FOUNDATION.md."
+  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager ADICIONAL a POSTGRES_PASSWORD (que ya se resuelve por separado segun identidad, master o app — ver main.tf). Vacio por defecto — ver docs/aws/TERRAFORM_FOUNDATION.md."
   type        = map(string)
   default     = {}
+}
+
+# ==============================================================================
+# Fase 4C.3 — RDS PostgreSQL + RDS Proxy
+# ==============================================================================
+# db_host ya no es una variable: la provee module.database.proxy_endpoint
+# (ver main.tf) — el backend siempre pasa por RDS Proxy, nunca por un
+# endpoint suministrado externamente.
+
+variable "db_engine_version" {
+  description = "Version (solo major, \"16\") de PostgreSQL — igual major que Docker/CI. Ver docs/aws/RDS_PROXY_FOUNDATION.md."
+  type        = string
+  default     = "16"
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "db_allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "db_max_allocated_storage" {
+  type    = number
+  default = 100
+}
+
+variable "db_backup_retention_period" {
+  type    = number
+  default = 7
+}
+
+variable "db_backup_window" {
+  type    = string
+  default = null
+}
+
+variable "db_maintenance_window" {
+  type    = string
+  default = null
+}
+
+variable "db_deletion_protection" {
+  type    = bool
+  default = true
+}
+
+variable "db_skip_final_snapshot" {
+  type    = bool
+  default = false
+}
+
+variable "db_multi_az" {
+  description = "false (por defecto): menor costo, menor disponibilidad. true: standby sincronico + failover automatico, mayor costo. Ver docs/aws/RDS_PROXY_FOUNDATION.md, seccion de costos."
+  type        = bool
+  default     = false
+}
+
+variable "db_performance_insights_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "db_proxy_require_tls" {
+  type    = bool
+  default = true
+}
+
+variable "db_proxy_idle_client_timeout" {
+  type    = number
+  default = 1800
+}
+
+variable "db_proxy_connection_borrow_timeout" {
+  type    = number
+  default = 120
+}
+
+variable "db_proxy_max_connections_percent" {
+  type    = number
+  default = 100
+}
+
+variable "db_proxy_max_idle_connections_percent" {
+  type    = number
+  default = 50
 }
