@@ -18,5 +18,71 @@ single_nat_gateway = true
 
 alb_ingress_cidr_blocks = ["0.0.0.0/0"]
 
-backend_container_port = 8000
+backend_container_port  = 8000
+frontend_container_port = 8080
 db_port                 = 5432
+
+# ==============================================================================
+# Fase 4C.2 — ECS/Fargate + ALB
+# ==============================================================================
+# Las variables de esta seccion SIN valor de ejemplo abajo (backend_image,
+# frontend_image, frontend_origins, browser_allowed_origins, trusted_hosts,
+# db_host) son obligatorias y no tienen default — deliberado, ver
+# docs/aws/ECS_ALB_FOUNDATION.md. Los placeholders <ENTRE_ANGULOS> NO son
+# valores reales; sustituir antes de cualquier plan/apply real.
+
+# certificate_arn = ""  # vacio = solo HTTP. Con un ACM real: "arn:aws:acm:<region>:<account-id>:certificate/<id>"
+
+# backend_image  = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-api:<GIT_SHA>"
+# frontend_image = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-frontend:<GIT_SHA>"
+
+backend_task_cpu       = "256"
+backend_task_memory    = "512"
+frontend_task_cpu      = "256"
+frontend_task_memory   = "512"
+backend_desired_count  = 1
+frontend_desired_count = 1
+
+# 0 = 100% FARGATE on-demand (recomendado por defecto). Nunca 100 en un
+# servicio critico — ver docs/aws/ECS_ALB_FOUNDATION.md.
+fargate_spot_weight_percent = 0
+
+backend_min_capacity      = 1
+backend_max_capacity      = 4
+frontend_min_capacity     = 1
+frontend_max_capacity     = 4
+backend_cpu_target_value  = 70
+frontend_cpu_target_value = 70
+
+deployment_minimum_healthy_percent         = 100
+deployment_maximum_percent                 = 200
+backend_health_check_grace_period_seconds  = 60
+frontend_health_check_grace_period_seconds = 30
+
+log_retention_days = 30
+
+app_env         = "production"
+web_concurrency = 1
+
+# frontend_origins        = "<https://dominio-real-del-frontend>"
+# browser_allowed_origins = "<https://dominio-real-del-frontend>"
+# trusted_hosts           = "<dominio-real-del-frontend>"
+
+# Valor productivo para ECS/Fargate: SIEMPRE "s3" (ver docs/aws/ECS_ALB_FOUNDATION.md).
+# Requiere s3_artifact_bucket — sin el, "terraform plan"/"apply" fallan por
+# el precondition de aws_ecs_service.backend antes de crear nada.
+artifact_storage_provider = "s3"
+s3_artifact_bucket        = "<nombre-real-del-bucket>" # obligatorio con artifact_storage_provider = "s3"
+# s3_evidence_prefix = "evidence"  # debe coincidir con backend/app/core/config.py
+# s3_report_prefix   = "reports"   # idem — la policy IAM del Task Role usa estos mismos valores
+
+# db_host = "<endpoint-real-de-RDS-o-RDS-Proxy>"  # RDS/RDS Proxy: subfase posterior
+db_name = "territorio_electoral"
+db_user = "territorio_user"
+
+# secrets_manager_secret_arns = {
+#   SECRET_KEY                         = "<arn-real-de-secrets-manager>"
+#   BROWSER_REFRESH_TOKEN_HMAC_SECRET  = "<arn-real-de-secrets-manager>"
+#   SURVEY_SUBMISSION_HMAC_SECRET      = "<arn-real-de-secrets-manager>"
+#   POSTGRES_PASSWORD                  = "<arn-real-de-secrets-manager>"
+# }

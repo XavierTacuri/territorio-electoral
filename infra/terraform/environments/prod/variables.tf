@@ -57,3 +57,195 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+# ==============================================================================
+# Fase 4C.2 — ECS/Fargate + ALB
+# ==============================================================================
+
+variable "frontend_container_port" {
+  description = "Puerto del contenedor del frontend (EXPOSE 8080 en frontend/Dockerfile)."
+  type        = number
+  default     = 8080
+}
+
+variable "certificate_arn" {
+  description = "ARN de un certificado ACM ya emitido. Vacio (por defecto): el ALB solo sirve HTTP. No se crea ni se inventa ningun certificado ni dominio en Terraform — ver docs/aws/ECS_ALB_FOUNDATION.md."
+  type        = string
+  default     = ""
+}
+
+variable "backend_image" {
+  description = "URI completa de la imagen del backend (ECR por digest o tag de commit inmutable). Sin valor por defecto — ver docs/aws/ECS_ALB_FOUNDATION.md, seccion 'Estrategia de imagenes'."
+  type        = string
+}
+
+variable "frontend_image" {
+  description = "URI completa de la imagen del frontend. Mismas reglas que backend_image."
+  type        = string
+}
+
+variable "backend_task_cpu" {
+  type    = string
+  default = "256"
+}
+
+variable "backend_task_memory" {
+  type    = string
+  default = "512"
+}
+
+variable "frontend_task_cpu" {
+  type    = string
+  default = "256"
+}
+
+variable "frontend_task_memory" {
+  type    = string
+  default = "512"
+}
+
+variable "backend_desired_count" {
+  description = "Numero de tasks del servicio backend. Produccion deberia usar >= 2 (Fase 4B ya valido multiinstancia); dimensionamiento definitivo en Fase 4C.6."
+  type        = number
+  default     = 1
+}
+
+variable "frontend_desired_count" {
+  type    = number
+  default = 1
+}
+
+variable "fargate_spot_weight_percent" {
+  description = "Porcentaje (0-100) de capacidad FARGATE_SPOT frente a FARGATE on-demand. 0 (por defecto) = 100% on-demand."
+  type        = number
+  default     = 0
+}
+
+variable "backend_min_capacity" {
+  type    = number
+  default = 1
+}
+
+variable "backend_max_capacity" {
+  type    = number
+  default = 4
+}
+
+variable "frontend_min_capacity" {
+  type    = number
+  default = 1
+}
+
+variable "frontend_max_capacity" {
+  type    = number
+  default = 4
+}
+
+variable "backend_cpu_target_value" {
+  type    = number
+  default = 70
+}
+
+variable "frontend_cpu_target_value" {
+  type    = number
+  default = 70
+}
+
+variable "deployment_minimum_healthy_percent" {
+  type    = number
+  default = 100
+}
+
+variable "deployment_maximum_percent" {
+  type    = number
+  default = 200
+}
+
+variable "backend_health_check_grace_period_seconds" {
+  type    = number
+  default = 60
+}
+
+variable "frontend_health_check_grace_period_seconds" {
+  type    = number
+  default = 30
+}
+
+variable "log_retention_days" {
+  type    = number
+  default = 30
+}
+
+variable "app_env" {
+  type    = string
+  default = "production"
+}
+
+variable "web_concurrency" {
+  type    = number
+  default = 1
+}
+
+variable "frontend_origins" {
+  description = "FRONTEND_ORIGINS: dominio(s) reales del frontend, coma-separados. Sin valor por defecto: no se inventa ningun dominio."
+  type        = string
+}
+
+variable "browser_allowed_origins" {
+  description = "BROWSER_ALLOWED_ORIGINS. Mismas reglas que frontend_origins."
+  type        = string
+}
+
+variable "trusted_hosts" {
+  description = "TRUSTED_HOSTS, coma-separados."
+  type        = string
+}
+
+variable "artifact_storage_provider" {
+  description = "local o s3. Valor productivo para ECS/Fargate: siempre 's3' (default) — requiere s3_artifact_bucket. Ver docs/aws/ECS_ALB_FOUNDATION.md; el modulo ecs bloquea en plan/apply las combinaciones invalidas (s3 sin bucket, local con backend_desired_count > 1) via precondition."
+  type        = string
+  default     = "s3"
+
+  validation {
+    condition     = contains(["local", "s3"], var.artifact_storage_provider)
+    error_message = "artifact_storage_provider debe ser \"local\" o \"s3\"."
+  }
+}
+
+variable "s3_artifact_bucket" {
+  type    = string
+  default = ""
+}
+
+variable "s3_evidence_prefix" {
+  description = "S3_EVIDENCE_PREFIX. Debe coincidir con backend/app/core/config.py (default \"evidence\") — la policy IAM del Task Role se genera con este mismo valor."
+  type        = string
+  default     = "evidence"
+}
+
+variable "s3_report_prefix" {
+  description = "S3_REPORT_PREFIX. Debe coincidir con backend/app/core/config.py (default \"reports\") — la policy IAM del Task Role se genera con este mismo valor."
+  type        = string
+  default     = "reports"
+}
+
+variable "db_host" {
+  description = "POSTGRES_HOST: endpoint de PostgreSQL (RDS/RDS Proxy). Sin valor por defecto: RDS/RDS Proxy son una subfase posterior."
+  type        = string
+}
+
+variable "db_name" {
+  type    = string
+  default = "territorio_electoral"
+}
+
+variable "db_user" {
+  type    = string
+  default = "territorio_user"
+}
+
+variable "secrets_manager_secret_arns" {
+  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager. Vacio por defecto — ver docs/aws/TERRAFORM_FOUNDATION.md."
+  type        = map(string)
+  default     = {}
+}
