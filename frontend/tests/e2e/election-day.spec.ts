@@ -405,12 +405,22 @@ test.describe('Modo Jornada Electoral', () => {
     const placeCode = `DH-E2E-${stamp}`;
     const boardCode = `${placeCode}-J01`;
 
+    // Fase 2 hallazgo (retry de Playwright): el nombre visible de la fuente
+    // (dataset_name) es lo que el combobox 'Fuente' usa como texto de opción
+    // — a diferencia de `code`, antes NO llevaba el `stamp` de esta
+    // ejecución, así que un retry del mismo test (nuevo `stamp`, pero mismo
+    // dataset_name literal) creaba una segunda fuente con el MISMO texto
+    // visible que la del intento anterior, y el combobox pasaba de una
+    // opción coincidente a dos/tres (strict mode violation). Aislar por
+    // `stamp` en el nombre visible, igual que ya se hacía en `code`, es
+    // "identificador único por ejecución": cada intento queda inequívoco
+    // sin depender de limpiar el intento previo.
     const placesSourceResponse = await request.post('/api/v1/data-sources', {
       headers,
       data: {
         code: `DH_PP_${stamp}`,
         institution: 'Consejo Nacional Electoral',
-        dataset_name: 'Recintos Data Hub E2E',
+        dataset_name: `Recintos Data Hub E2E ${stamp}`,
         dataset_type: 'CNE_POLLING_PLACES',
       },
     });
@@ -420,7 +430,7 @@ test.describe('Modo Jornada Electoral', () => {
       data: {
         code: `DH_BOARDS_${stamp}`,
         institution: 'Consejo Nacional Electoral',
-        dataset_name: 'Juntas Data Hub E2E',
+        dataset_name: `Juntas Data Hub E2E ${stamp}`,
         dataset_type: 'CNE_ELECTORAL_BOARDS',
       },
     });
@@ -429,12 +439,12 @@ test.describe('Modo Jornada Electoral', () => {
     await browserLogin(page, e2eUsers.admin);
     await page.goto('/app/admin/official-data/election-day/polling-places');
     await page.getByLabel('Fuente').click();
-    await page.getByRole('option', { name: /Recintos Data Hub E2E/ }).click();
+    await page.getByRole('option', { name: new RegExp(`Recintos Data Hub E2E ${stamp}`) }).click();
     await page.setInputFiles('input[type="file"]', {
       name: 'recintos.csv',
       mimeType: 'text/csv',
       buffer: Buffer.from(
-        `process_code,province_dpa,canton_dpa,parish_dpa,polling_place_code,polling_place_name,polling_place_address,polling_place_latitude,polling_place_longitude\nE2E_ELECTION_DAY_2027,${province.code},${canton.dpa_code},${parish.dpa_code},${placeCode},Recinto Data Hub E2E,,,\n`,
+        `process_code,province_dpa,canton_dpa,parish_dpa,polling_place_code,polling_place_name,polling_place_address,polling_place_latitude,polling_place_longitude\nE2E_ELECTION_DAY_2027,${province.code},${canton.dpa_code},${parish.dpa_code},${placeCode},Recinto Data Hub E2E ${stamp},,,\n`,
       ),
     });
     await page.getByRole('button', { name: 'VALIDAR' }).click();
@@ -444,7 +454,7 @@ test.describe('Modo Jornada Electoral', () => {
 
     await page.goto('/app/admin/official-data/election-day/boards');
     await page.getByLabel('Fuente').click();
-    await page.getByRole('option', { name: /Juntas Data Hub E2E/ }).click();
+    await page.getByRole('option', { name: new RegExp(`Juntas Data Hub E2E ${stamp}`) }).click();
     await page.setInputFiles('input[type="file"]', {
       name: 'juntas.csv',
       mimeType: 'text/csv',
@@ -462,7 +472,7 @@ test.describe('Modo Jornada Electoral', () => {
     await logout(page);
     await browserLogin(page, e2eUsers.manager);
     await page.goto(`/app/campaigns/${campaign.id}/election-day`);
-    await expect(page.getByText('Recinto Data Hub E2E')).toBeVisible();
+    await expect(page.getByText(`Recinto Data Hub E2E ${stamp}`)).toBeVisible();
 
     const executiveHeaders = await managerHeaders(request);
     const places = await pollingPlaces(request, executiveHeaders, campaign.id);
