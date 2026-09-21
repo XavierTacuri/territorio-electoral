@@ -151,5 +151,10 @@ jobs:
         with:
           name: playwright-failures
           path: frontend/test-results
+      - name: Diagnose failed E2E stack
+        if: failure()
+        run: |
+          docker compose -p territorio-e2e -f docker-compose.e2e.yml ps -a
+          docker compose -p territorio-e2e -f docker-compose.e2e.yml logs --no-color --timestamps api db
       - if: always()
         run: docker compose -p territorio-e2e -f docker-compose.e2e.yml down -v
