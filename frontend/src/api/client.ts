@@ -56,7 +56,12 @@ export async function apiRequest<T>(
     } catch {
       detail = undefined;
     }
-    throw new ApiError(response.status, statusMessage(response.status), detail);
+    const retryAfterHeader = response.headers.get('Retry-After');
+    const retryAfterSeconds =
+      retryAfterHeader != null && /^\d+$/.test(retryAfterHeader)
+        ? Number(retryAfterHeader)
+        : undefined;
+    throw new ApiError(response.status, statusMessage(response.status), detail, retryAfterSeconds);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

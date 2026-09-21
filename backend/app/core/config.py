@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     db_pool_size: int = 5
     db_max_overflow: int = 10
     db_pool_timeout_seconds: int = 30
+    db_pool_recycle_seconds: int = 1800
     db_connect_timeout_seconds: int = 10
+    web_concurrency: int = 1
     secret_key: str = "replace-with-a-secure-secret-at-least-32-chars"
     access_token_expire_minutes: int = 60
     browser_access_token_minutes: int = 15
@@ -154,6 +156,10 @@ class Settings(BaseSettings):
             raise ValueError("TERRITORY_AI_RATE_LIMIT_PER_MINUTE debe ser positivo")
         if min(self.db_pool_size, self.db_pool_timeout_seconds, self.db_connect_timeout_seconds) <= 0 or self.db_max_overflow < 0:
             raise ValueError("La configuracion del pool de base de datos es invalida")
+        if self.db_pool_recycle_seconds <= 0:
+            raise ValueError("DB_POOL_RECYCLE_SECONDS debe ser positivo")
+        if self.web_concurrency <= 0:
+            raise ValueError("WEB_CONCURRENCY debe ser positivo")
         if self.auth_rate_limit_attempts <= 0 or self.auth_rate_limit_window_seconds <= 0:
             raise ValueError("La configuracion del limite de autenticacion es invalida")
         self.territory_ai_provider = self.territory_ai_provider.strip().lower()

@@ -135,6 +135,56 @@ async function syncActEvidence(
   }
 }
 
+// Fase 4B §? "política de reintentos": un error TRANSITORIO (falla de red —
+// siempre un TypeError de fetch(), nunca nuestro propio ApiError — o
+// 502/503/504/429) se reintenta con backoff exponencial + jitter acotado;
+// todo lo demás (400/401/403/409/422 y cualquier otro 4xx) es una respuesta
+// DEFINITIVA del servidor y se propaga de inmediato — reintentarla no
+// cambiaría el resultado y solo retrasaría que el delegado vea que el
+// registro "requiere revisión". Nunca reintenta client_generated_id con un
+// valor distinto: siempre la misma llamada, así que el UNIQUE/idempotencia
+// del backend (§16/§23/§32) garantiza que un reintento tras un timeout no
+// duplica nada del lado del servidor.
+const MAX_SYNC_ATTEMPTS = 5;
+const BASE_RETRY_DELAY_MS = 500;
+const MAX_RETRY_DELAY_MS = 8_000;
+
+function isTransientSyncError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return (
+      error.status === 429 || error.status === 502 || error.status === 503 || error.status === 504
+    );
+  }
+  return error instanceof TypeError;
+}
+
+function retryDelayMs(attempt: number, error: unknown): number {
+  if (error instanceof ApiError && error.status === 429 && error.retryAfterSeconds != null) {
+    return Math.min(error.retryAfterSeconds * 1000, MAX_RETRY_DELAY_MS * 4);
+  }
+  const cap = Math.min(BASE_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
+  // Jitter en [50%, 100%] del tope: evita que muchos dispositivos que
+  // recuperan señal al mismo tiempo (todo un recinto, por ejemplo) reintenten
+  // en el mismo instante exacto y produzcan una estampida sobre el servidor
+  // que recién se está recuperando.
+  return Math.round(cap * (0.5 + Math.random() * 0.5));
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withSyncRetry<T>(operation: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isTransientSyncError(error) || attempt >= MAX_SYNC_ATTEMPTS - 1) throw error;
+      await wait(retryDelayMs(attempt, error));
+    }
+  }
+}
+
 export type SyncProgress = { index: number; total: number; item: SyncQueueItem };
 export type SyncSummary = {
   synced: number;
@@ -367,7 +417,9 @@ async function syncAttachments(scope: OwnerScope, summary: SyncSummary): Promise
     }
     await setAttachmentStatus(attachment.id, 'SYNCING');
     try {
-      const result = await syncAttachment(draft.campaign_id, draft.server_id, attachment);
+      const result = await withSyncRetry(() =>
+        syncAttachment(draft.campaign_id, draft.server_id as string, attachment),
+      );
       await setAttachmentStatus(attachment.id, 'SYNCED', { serverId: result.id, lastError: null });
       summary.attachmentsSynced += 1;
     } catch (error) {
@@ -469,18 +521,19 @@ export async function syncQueue(
     await setQueueStatus(item.id, 'SYNCING');
     await setDraftStatus(draft.id, 'SYNCING');
     try {
-      const result =
+      const result = await withSyncRetry(() =>
         draft.entity_type === 'ACTIVITY'
-          ? await syncActivity(draft)
+          ? syncActivity(draft)
           : draft.entity_type === 'NEED'
-            ? await syncNeed(draft, linkedActivityServerId)
+            ? syncNeed(draft, linkedActivityServerId)
             : draft.entity_type === 'ELECTION_DAY_CHECK_IN'
-              ? await syncCheckIn(draft)
+              ? syncCheckIn(draft)
               : draft.entity_type === 'ELECTION_DAY_INCIDENT'
-                ? await syncIncident(draft)
+                ? syncIncident(draft)
                 : draft.entity_type === 'ELECTION_ACT_SUBMIT'
-                  ? await syncElectionActSubmit(draft)
-                  : await syncElectionDayDocument(draft);
+                  ? syncElectionActSubmit(draft)
+                  : syncElectionDayDocument(draft),
+      );
       await setDraftStatus(draft.id, 'SYNCED', {
         serverId: result.id,
         lastError: null,

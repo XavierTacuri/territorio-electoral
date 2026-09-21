@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from contextlib import asynccontextmanager
 from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -23,12 +24,32 @@ if settings.app_env.lower() == "production" and settings.artifact_storage_provid
     # survive a redeploy or a second instance; this only makes that gap
     # observable instead of silent.
     logging.getLogger("territorio.storage").warning("artifact_storage_local_in_production")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Fase 4B §20: graceful shutdown for ECS SIGTERM. Uvicorn/Gunicorn
+    # already stop accepting new connections and let in-flight requests
+    # finish (their own --timeout-graceful-shutdown / stop timeout, not
+    # reimplemented here — see docs/aws/PRODUCTION_ARCHITECTURE.md for the
+    # recommended value); this hook's only job is what only the app itself
+    # can do: dispose the SQLAlchemy pool so every checked-out connection is
+    # returned/closed cleanly instead of dropped when the process exits.
+    # Nothing here can lose an already-confirmed commit — disposal happens
+    # strictly after in-flight requests (and their commits) have completed.
+    yield
+    from app.db.session import engine
+
+    engine.dispose()
+
+
 app = FastAPI(
     title=settings.app_name,
     debug=settings.app_debug,
     docs_url="/docs" if settings.enable_api_docs else None,
     redoc_url="/redoc" if settings.enable_api_docs else None,
     openapi_url="/openapi.json" if settings.enable_api_docs else None,
+    lifespan=lifespan,
 )
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 app.add_middleware(GZipMiddleware, minimum_size=1000)

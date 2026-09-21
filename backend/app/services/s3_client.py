@@ -2,7 +2,7 @@
 
 Built once and reused — never constructed per-request. Credentials always
 come from boto3's standard provider chain (environment, shared config,
-instance/container metadata, and — in ECS/Fargate, Fase 4B — the task's IAM
+instance/container metadata, and — in ECS/Fargate, Fase 4C — the task's IAM
 role). This module never accepts or reads an access key/secret key; there is
 intentionally no such setting in `app.core.config.Settings`.
 """

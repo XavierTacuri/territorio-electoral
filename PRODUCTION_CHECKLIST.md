@@ -26,7 +26,7 @@ Marque cada punto contra el entorno de destino real antes de promover un desplie
 
 ## Storage persistente
 
-- [ ] `ARTIFACT_STORAGE_PROVIDER` corresponde a la topología real: `local` **solo** si exactamente una réplica de `api` comparte filesystem (Render staging, `docker-compose.prod.yml` de hoy); `s3` obligatorio para cualquier topología con ≥2 instancias independientes (ECS/Fargate, Fase 4B).
+- [ ] `ARTIFACT_STORAGE_PROVIDER` corresponde a la topología real: `local` **solo** si exactamente una réplica de `api` comparte filesystem (Render staging, `docker-compose.prod.yml` de hoy); `s3` obligatorio para cualquier topología con ≥2 instancias independientes (ECS/Fargate, Fase 4C).
 - [ ] Si `provider=local`: volumen de `report_artifacts` (`/app/generated-reports`) montado.
 - [ ] Si `provider=local`: volumen de `evidence_artifacts` (`/app/generated-evidence`) montado — **corregido en un ciclo anterior**: `docker-compose.prod.yml` no lo incluía; evidencia y documentos de Jornada Electoral se perdían al reiniciar el contenedor `api`.
 - [ ] Si `provider=local`: estrategia de respaldo de ambos volúmenes (no solo la base de datos) documentada y probada.

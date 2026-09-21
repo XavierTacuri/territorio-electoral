@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/errors';
 import { createDraft, getDraft } from './draftsRepository';
 import { syncQueue } from './syncEngine';
@@ -280,6 +280,178 @@ describe('syncEngine.syncQueue', () => {
 
     expect(mockedApiRequest).not.toHaveBeenCalled();
     expect(summary.attachmentsPending).toBe(1);
+  });
+});
+
+describe('syncEngine.syncQueue — política de reintentos (Fase 4B)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('reintenta tras una falla de red (TypeError) y termina SYNCED sin exponer el error crudo', async () => {
+    const scope = scopeFor('retry-network');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Reintento de red' },
+      'retry-network-client',
+    );
+    await enqueue(scope, draft.id, 'ACTIVITY');
+    mockedApiRequest
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ id: 'server-activity-retried' });
+
+    // Los timers se falsean recién aquí, ya escrito todo el setup de
+    // IndexedDB (createDraft/enqueue): fake-indexeddb resuelve sus
+    // transacciones vía un timer real, así que falsearlos antes de que ese
+    // setup termine los deja esperando un tick que nunca llega.
+    vi.useFakeTimers();
+    const pending = syncQueue(scope);
+    await vi.runAllTimersAsync();
+    const summary = await pending;
+    vi.useRealTimers();
+
+    expect(summary.synced).toBe(1);
+    expect(summary.failed).toBe(0);
+    expect(mockedApiRequest).toHaveBeenCalledTimes(3);
+    const updated = await getDraft(draft.id);
+    expect(updated?.sync_status).toBe('SYNCED');
+    expect(updated?.server_id).toBe('server-activity-retried');
+    // La política de reintentos siempre reenvía la MISMA petición (mismo
+    // client_generated_id) — el UNIQUE/idempotencia del backend es lo que
+    // garantiza que esto nunca duplica el registro en el servidor.
+    const bodies = mockedApiRequest.mock.calls.map(
+      (call) => JSON.parse((call[1] as RequestInit).body as string).client_generated_id,
+    );
+    expect(new Set(bodies)).toEqual(new Set(['retry-network-client']));
+  });
+
+  it.each([502, 503, 504])('reintenta un %i transitorio y termina SYNCED', async (status) => {
+    const scope = scopeFor(`retry-${status}`);
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: `Reintento ${status}` },
+      `retry-${status}-client`,
+    );
+    await enqueue(scope, draft.id, 'ACTIVITY');
+    mockedApiRequest
+      .mockRejectedValueOnce(new ApiError(status, 'Service error'))
+      .mockResolvedValueOnce({ id: `server-activity-${status}` });
+
+    vi.useFakeTimers();
+    const pending = syncQueue(scope);
+    await vi.runAllTimersAsync();
+    const summary = await pending;
+
+    expect(summary.synced).toBe(1);
+    expect(mockedApiRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('honra Retry-After en un 429 antes de reintentar', async () => {
+    const scope = scopeFor('retry-429');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Reintento 429' },
+      'retry-429-client',
+    );
+    await enqueue(scope, draft.id, 'ACTIVITY');
+    mockedApiRequest
+      .mockRejectedValueOnce(new ApiError(429, 'Too many requests', undefined, 2))
+      .mockResolvedValueOnce({ id: 'server-activity-429' });
+
+    vi.useFakeTimers();
+    const pending = syncQueue(scope);
+    // Antes de que transcurran los 2s indicados por Retry-After, el segundo
+    // intento no debe haber ocurrido todavía.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mockedApiRequest).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1500);
+    const summary = await pending;
+
+    expect(summary.synced).toBe(1);
+    expect(mockedApiRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('agota los reintentos ante fallas 503 persistentes y termina en ERROR, no en un ciclo infinito', async () => {
+    const scope = scopeFor('retry-exhausted');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Nunca se recupera' },
+      'retry-exhausted-client',
+    );
+    await enqueue(scope, draft.id, 'ACTIVITY');
+    mockedApiRequest.mockRejectedValue(new ApiError(503, 'Service unavailable'));
+
+    vi.useFakeTimers();
+    const pending = syncQueue(scope);
+    await vi.runAllTimersAsync();
+    const summary = await pending;
+    vi.useRealTimers();
+
+    expect(summary.synced).toBe(0);
+    expect(summary.failed).toBe(1);
+    // MAX_SYNC_ATTEMPTS = 5 intentos, nunca más.
+    expect(mockedApiRequest).toHaveBeenCalledTimes(5);
+    const updated = await getDraft(draft.id);
+    expect(updated?.sync_status).toBe('ERROR');
+  });
+
+  it.each([400, 401, 403, 409, 422])(
+    'NO reintenta un %i — es una respuesta definitiva del servidor',
+    async (status) => {
+      const scope = scopeFor(`no-retry-${status}`);
+      const draft = await createDraft(
+        scope,
+        'ACTIVITY',
+        41,
+        { title: `Sin reintento ${status}` },
+        `no-retry-${status}-client`,
+      );
+      await enqueue(scope, draft.id, 'ACTIVITY');
+      mockedApiRequest.mockRejectedValueOnce(new ApiError(status, 'Definitive error'));
+
+      const summary = await syncQueue(scope);
+
+      expect(summary.synced).toBe(0);
+      expect(mockedApiRequest).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('preserva el draft y su client_generated_id en IndexedDB tras una sincronización con reintentos', async () => {
+    const scope = scopeFor('retry-preserve-draft');
+    const draft = await createDraft(
+      scope,
+      'ACTIVITY',
+      41,
+      { title: 'Se conserva' },
+      'retry-preserve-draft-client',
+    );
+    await enqueue(scope, draft.id, 'ACTIVITY');
+    mockedApiRequest
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ id: 'server-activity-preserved' });
+
+    vi.useFakeTimers();
+    const pending = syncQueue(scope);
+    await vi.runAllTimersAsync();
+    await pending;
+    vi.useRealTimers();
+
+    // Simula "recargar la página": una lectura fresca del mismo id de
+    // IndexedDB, no un objeto en memoria retenido por el motor de sync.
+    const reloaded = await getDraft(draft.id);
+    expect(reloaded?.id).toBe(draft.id);
+    expect(reloaded?.client_generated_id).toBe('retry-preserve-draft-client');
+    expect(reloaded?.sync_status).toBe('SYNCED');
+    expect(reloaded?.server_id).toBe('server-activity-preserved');
   });
 });
 

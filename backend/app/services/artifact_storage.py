@@ -254,7 +254,7 @@ class S3ArtifactStorage(ArtifactStorage):
         persisted row. Only `promote_pending` (called from a verified
         `complete()`) ever moves an object out of this prefix, so a leaked
         presigned POST that's never completed leaves an orphan confined to
-        `pending/`, safe for a Fase 4B lifecycle rule to expire (§17)."""
+        `pending/`, safe for a Fase 4C lifecycle rule to expire (§17)."""
         return f"{self.prefix}/pending/{uuid4().hex}.{extension.lower()}"
 
     def presign_upload(self, key: str, *, content_type: str, max_bytes: int, sha256_hex: str) -> PresignedUpload:

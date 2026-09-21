@@ -1,0 +1,127 @@
+# Fase 4B §4/§50 — topología de PRUEBA para demostrar que dos procesos
+# FastAPI independientes (api-a, api-b), sin sticky sessions, sirven el
+# mismo estado a través de PostgreSQL/storage compartidos. NUNCA se usa
+# para producción ni se referencia desde docker-compose.prod.yml.
+#
+# Uso:
+#   TERRITORIO_MI_DB_PASSWORD=... TERRITORIO_MI_SECRET_KEY=... TERRITORIO_MI_REFRESH_SECRET=... \
+#   TERRITORIO_MI_SURVEY_SECRET=... TERRITORIO_MI_USER_PASSWORD=... \
+#     docker compose -p territorio-mi -f docker-compose.multi-instance.yml up --build -d
+#   docker compose -p territorio-mi -f docker-compose.multi-instance.yml exec -T api-a alembic upgrade head
+#   docker compose -p territorio-mi -f docker-compose.multi-instance.yml exec -T api-a python -m app.scripts.seed_e2e
+#   python backend/scripts/verify_multi_instance.py --api-a http://localhost:18101/api/v1 --api-b http://localhost:18102/api/v1
+#   docker compose -p territorio-mi -f docker-compose.multi-instance.yml down -v
+#
+# Storage: ARTIFACT_STORAGE_PROVIDER=local con un volumen Docker COMPARTIDO
+# entre api-a y api-b — ver la nota junto a `evidence_multi_instance` abajo
+# sobre por qué esto es un mecanismo de prueba de topología, nunca
+# arquitectura de producción (esa sigue siendo S3, Fase 4A).
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: territorio_multi_instance
+      POSTGRES_USER: territorio_multi_instance
+      POSTGRES_PASSWORD: ${TERRITORIO_MI_DB_PASSWORD:?TERRITORIO_MI_DB_PASSWORD is required}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U territorio_multi_instance -d territorio_multi_instance",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_multi_instance:/var/lib/postgresql/data
+
+  api-a: &api_common
+    build: ./backend
+    environment: &api_common_env
+      PORT: "8000"
+      APP_ENV: e2e
+      APP_DEBUG: "false"
+      POSTGRES_DB: territorio_multi_instance
+      POSTGRES_USER: territorio_multi_instance
+      POSTGRES_PASSWORD: ${TERRITORIO_MI_DB_PASSWORD:?TERRITORIO_MI_DB_PASSWORD is required}
+      POSTGRES_HOST: db
+      # Ambas instancias comparten exactamente el mismo secreto — un token
+      # emitido por api-a debe validar en api-b sin estado pegajoso; usar
+      # secretos distintos invalidaría la prueba (falso negativo), no
+      # probaría nada real sobre statelessness.
+      SECRET_KEY: ${TERRITORIO_MI_SECRET_KEY:?TERRITORIO_MI_SECRET_KEY is required}
+      BROWSER_REFRESH_TOKEN_HMAC_SECRET: ${TERRITORIO_MI_REFRESH_SECRET:?TERRITORIO_MI_REFRESH_SECRET is required}
+      SURVEY_SUBMISSION_HMAC_SECRET: ${TERRITORIO_MI_SURVEY_SECRET:?TERRITORIO_MI_SURVEY_SECRET is required}
+      E2E_USER_PASSWORD: ${TERRITORIO_MI_USER_PASSWORD:?TERRITORIO_MI_USER_PASSWORD is required}
+      FRONTEND_ORIGINS: http://localhost:18101,http://localhost:18102
+      BROWSER_ALLOWED_ORIGINS: http://localhost:18101,http://localhost:18102
+      TRUSTED_HOSTS: localhost,127.0.0.1,api-a,api-b
+      REPORT_OUTPUT_DIR: /app/generated-reports
+      EVIDENCE_OUTPUT_DIR: /app/generated-evidence
+      # Test-topology-only exception (§4): a shared filesystem volume,
+      # NOT S3. Fase 4A's S3ArtifactStorage already has its own dedicated
+      # tests (test_artifact_storage_s3.py) proving the real
+      # production-shaped multi-instance story (two independent
+      # S3ArtifactStorage objects, one bucket). Standing up MinIO/LocalStack
+      # here just to re-prove that, with uncertain fidelity to S3's native
+      # checksum enforcement (the actual integrity mechanism Fase 4A relies
+      # on), would test the test infrastructure more than the application.
+      # A shared volume proves the thing THIS compose file exists to prove —
+      # that api-a and api-b hold no private, un-shareable state of their
+      # own — without depending on that fidelity. Never reused outside this
+      # compose file.
+      ARTIFACT_STORAGE_PROVIDER: local
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - evidence_multi_instance:/app/generated-evidence
+      - reports_multi_instance:/app/generated-reports
+    ports:
+      - "18101:8000"
+
+  api-b:
+    <<: *api_common
+    environment:
+      <<: *api_common_env
+    # Fase 4B, hallazgo real (§ ver reporte): el CMD por defecto del
+    # Dockerfile encadena `alembic upgrade head && exec uvicorn ...`. Eso es
+    # correcto para UNA réplica, pero con dos réplicas arrancando en
+    # paralelo contra la misma base ambas corren `alembic upgrade head`
+    # simultáneamente y compiten por crear `alembic_version`
+    # (UniqueViolation) — no es una hipótesis, se reprodujo al levantar esta
+    # topología por primera vez. La corrección real de producción es la que
+    # ya documenta DEPLOYMENT.md: las migraciones corren UNA sola vez, como
+    # paso de release separado, antes de escalar réplicas (en ECS, una
+    # tarea one-off; aquí, dejamos que solo api-a migre). api-b arranca
+    # uvicorn directamente, sin tocar alembic, y espera a que api-a esté
+    # healthy (es decir, ya migrado y sirviendo) antes de arrancar.
+    command:
+      ["/bin/sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+      api-a:
+        condition: service_healthy
+    ports:
+      - "18102:8000"
+
+networks:
+  default:
+    name: territorio_multi_instance_default
+
+volumes:
+  postgres_multi_instance:
+  evidence_multi_instance:
+  reports_multi_instance:

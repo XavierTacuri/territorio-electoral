@@ -8,6 +8,7 @@ from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
+from app.core.observability import record_event
 from app.core.security import TokenValidationError
 from app.models.campaign import Campaign
 from app.models.election_day import (
@@ -445,6 +446,7 @@ class ElectionActService:
         log_context = {"provider": "s3", "operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(revision.id)}
         if not head:
             logger.warning("ARTIFACT_UPLOAD_FAILED", extra={**log_context, "outcome": "missing_object"})
+            record_event("artifact_upload_failure_total")
             raise BusinessRuleError("No se encontró la fotografía cargada. Vuelve a intentarlo.")
         # checksum_sha256_hex is S3's own additional-checksum result (see
         # HeadResult docstring) — S3 already rejected the upload at POST time
@@ -456,6 +458,7 @@ class ElectionActService:
         # upload (§3 Fase 4A audit).
         if head.size_bytes != payload["size_bytes"] or head.content_type != payload["mime_type"] or head.checksum_sha256_hex != payload["sha256"]:
             logger.warning("ARTIFACT_UPLOAD_FAILED", extra={**log_context, "outcome": "checksum_or_metadata_mismatch"})
+            record_event("artifact_upload_failure_total")
             try:
                 self.storage.delete(pending_key)
             except Exception:
@@ -496,6 +499,7 @@ class ElectionActService:
                 logger.warning("ARTIFACT_DELETE_FAILED", extra={**log_context, "outcome": "orphan_cleanup_failed"})
             raise
         logger.info("ARTIFACT_UPLOAD_COMPLETED", extra={**log_context, "size_bytes": payload["size_bytes"], "mime_type": payload["mime_type"]})
+        record_event("artifact_upload_complete_total")
         return evidence
 
     # ---------- Envío (DRAFT -> SUBMITTED, §8/§32-D) ----------
@@ -515,6 +519,7 @@ class ElectionActService:
             )
         ) or 0
         if not has_evidence:
+            record_event("act_submit_failure_total")
             raise BusinessRuleError("Debes adjuntar al menos una fotografía del acta antes de enviarla.")
         revision.status = "SUBMITTED"
         revision.submitted_at = datetime.now(timezone.utc)
@@ -525,6 +530,7 @@ class ElectionActService:
             metadata={"operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(revision.id), "revision_number": revision.revision_number},
         )
         self.db.commit()
+        record_event("act_submit_total")
         return act, revision
 
     # ---------- Corrección (§13) ----------
@@ -885,6 +891,7 @@ class ElectionActService:
             and _aware(act.review_claim_expires_at) > now
         )
         if active_claim and act.review_claimed_by_user_id != user.id:
+            record_event("act_claim_conflict_total")
             raise ConflictError("Esta acta está siendo revisada por otro validador.")
         act.review_claimed_by_user_id = user.id
         act.review_claimed_at = now
@@ -942,6 +949,7 @@ class ElectionActService:
         self._require_active_claim(act, user)
         latest = self._latest_submitted_revision(act)
         if not latest or latest.id != data.revision_id:
+            record_event("act_validation_conflict_total")
             raise ConflictError("La revisión cambió desde que la revisaste. Actualiza antes de continuar.")
         contest = self.db.get(ElectoralContest, act.electoral_contest_id)
         board = self.db.get(ElectoralBoard, act.electoral_board_id)
@@ -962,6 +970,7 @@ class ElectionActService:
             metadata={"operation_id": str(op.id), "act_id": str(act.id), "revision_id": str(latest.id), "review_source": review_source},
         )
         self.db.commit()
+        record_event("act_validation_total")
         return act
 
     def observe_act(self, campaign_id, act_id, data, user):

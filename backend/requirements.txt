@@ -1,19 +1,19 @@
-fastapi
-uvicorn
-sqlalchemy
-psycopg[binary]
-alembic
-pydantic-settings
-pytest
-httpx
-PyJWT
-pwdlib[argon2]
-python-multipart
-email-validator
-geoalchemy2
+fastapi==0.141.1
+uvicorn==0.53.0
+sqlalchemy==2.0.54
+psycopg[binary]==3.3.6
+alembic==1.20.0
+pydantic-settings==2.15.0
+pytest==9.1.1
+httpx==0.28.1
+PyJWT==2.14.0
+pwdlib[argon2]==0.3.1
+python-multipart==0.0.32
+email-validator==2.3.0
+geoalchemy2==0.20.0
 
-reportlab
-openpyxl
-pypdf
+reportlab==5.0.1
+openpyxl==3.1.5
+pypdf==6.19.0
 
-boto3
+boto3==1.43.98

@@ -3,6 +3,10 @@ export class ApiError extends Error {
     public status: number,
     message: string,
     public detail?: unknown,
+    // Delta-seconds from a 429/503 response's Retry-After header, when the
+    // server sent one — undefined otherwise. syncEngine's retry policy uses
+    // this to honor the server's own backoff hint instead of guessing.
+    public retryAfterSeconds?: number,
   ) {
     super(message);
   }
