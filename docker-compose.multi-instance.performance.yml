@@ -1,0 +1,18 @@
+# Fase 4C.6 (segunda pasada) — mismo mecanismo que docker-compose.performance.yml
+# pero para la topologia de Fase 4B (api-a + api-b): aplica el MISMO limite
+# por task a ambas instancias, para que la comparacion single-vs-multi sea
+# "1 x Profile" contra "2 x Profile" (nunca una instancia grande contra dos
+# pequenas sin aclararlo — ver docs/performance/LOAD_STRESS_TESTING.md).
+services:
+  api-a:
+    deploy:
+      resources:
+        limits:
+          cpus: "${PERF_CPU_LIMIT:?PERF_CPU_LIMIT es obligatorio}"
+          memory: "${PERF_MEM_LIMIT:?PERF_MEM_LIMIT es obligatorio}"
+  api-b:
+    deploy:
+      resources:
+        limits:
+          cpus: "${PERF_CPU_LIMIT:?PERF_CPU_LIMIT es obligatorio}"
+          memory: "${PERF_MEM_LIMIT:?PERF_MEM_LIMIT es obligatorio}"

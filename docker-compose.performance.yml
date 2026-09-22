@@ -1,0 +1,38 @@
+# Fase 4C.6 (segunda pasada) — override de SOLO benchmark que aplica limites
+# explicitos de CPU/memoria al backend, para dejar de medir "CPU sin limite
+# del host" (hasta ~200% observado en la primera pasada) y medir algo
+# comparable a una Fargate task real (backend_task_cpu=256 => 0.25 vCPU).
+#
+# Nunca se fusiona con docker-compose.prod.yml ni se usa fuera de
+# benchmarking — se aplica EXPLICITAMENTE encima de docker-compose.e2e.yml:
+#
+#   docker compose -p territorio-e2e -f docker-compose.e2e.yml -f docker-compose.performance.yml up -d
+#
+# PERF_CPU_LIMIT / PERF_MEM_LIMIT parametrizan el perfil (A/B/C, ver
+# docs/performance/LOAD_STRESS_TESTING.md, "Resource-constrained benchmark").
+# deploy.resources.limits SI se aplica en `docker compose up` sin Swarm en
+# Compose v2 (confirmado en esta revision con `docker inspect`, ver el
+# propio documento) — no requiere `docker stack deploy`.
+services:
+  api:
+    environment:
+      # Experimento aislado (§28 de la revision): default 1 = identico al
+      # comportamiento ya medido, nunca cambia el WEB_CONCURRENCY productivo
+      # de config.py por si solo.
+      WEB_CONCURRENCY: "${PERF_WEB_CONCURRENCY:-1}"
+    deploy:
+      resources:
+        limits:
+          cpus: "${PERF_CPU_LIMIT:?PERF_CPU_LIMIT es obligatorio, ej. 0.25}"
+          memory: "${PERF_MEM_LIMIT:?PERF_MEM_LIMIT es obligatorio, ej. 512M}"
+
+  # Frontend deliberadamente acotado tambien durante estos benchmarks — no
+  # para medirlo (sigue fuera de alcance, ver LOAD_STRESS_TESTING.md), sino
+  # para que nginx sirviendo assets estaticos no le quite CPU/memoria al
+  # host mientras se mide el backend (§6 de la revision).
+  frontend:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "128M"

@@ -1,0 +1,14 @@
+{
+  "campaign_id": "63cedd33-0ba9-4cf6-bd18-f331290101d2",
+  "campaign_slug": "gualaceo-e2e-2027",
+  "operation_id": "3e839531-c599-4763-a19e-20aebccd1099",
+  "operation_status": "ACTIVE",
+  "polling_place_id": "25ba7caf-4100-4102-82e2-072156146d25",
+  "board_id": "416e707a-ed5b-4be4-bc94-422c35453a52",
+  "delegate_username": "delegate_e2e_a",
+  "dataset_counts": {
+    "polling_places_total": 5,
+    "electoral_boards_total": 12,
+    "users_total": 15
+  }
+}
