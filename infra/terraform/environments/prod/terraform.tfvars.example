@@ -38,20 +38,37 @@ db_port                 = 5432
 # backend_image  = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-api:<GIT_SHA>"
 # frontend_image = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-frontend:<GIT_SHA>"
 
-backend_task_cpu       = "256"
-backend_task_memory    = "512"
+# Dimensionamiento — perfil RECOMMENDED de Fase 4C.6, ver
+# docs/performance/PERFORMANCE_BASELINE.md (§26/§38/§52) y
+# loadtests/results/SUMMARY.md. 256/512 quedo descartado con evidencia
+# directa (Profile A: 0.25 vCPU/512MiB satura con 10 VUs, p99 21s, memoria
+# al 99.97%). 1024/2048 (Profile C, 1 vCPU/2GiB) midio 34.19 RPS, p95 427ms,
+# p99 823ms, 0% error, con margen de memoria amplio. Combinacion Fargate
+# valida (1024 CPU admite 2048-8192 MiB). Confidence MEDIUM — pendiente de
+# confirmar contra Fargate/CPU credits reales (PENDING AWS VALIDATION).
+backend_task_cpu       = "1024"
+backend_task_memory    = "2048"
+# Frontend sin cambio: nunca aparecio como cuello de botella en ningun
+# benchmark — no se sobredimensiona sin evidencia.
 frontend_task_cpu      = "256"
 frontend_task_memory   = "512"
-backend_desired_count  = 1
-frontend_desired_count = 1
+# HA real (nunca 1 en produccion) + evidencia de escalado horizontal fuerte
+# (scaling efficiency ~97.6% del ideal 2x bajo limites de recursos iguales,
+# PERFORMANCE_BASELINE.md §32). Confidence HIGH (HA).
+backend_desired_count  = 2
+frontend_desired_count = 2
 
 # 0 = 100% FARGATE on-demand (recomendado por defecto). Nunca 100 en un
 # servicio critico — ver docs/aws/ECS_ALB_FOUNDATION.md.
 fargate_spot_weight_percent = 0
 
-backend_min_capacity      = 1
+backend_min_capacity      = 2
+# max_capacity=4 sin cambio — perfil RECOMMENDED de Fase 4C.6, extrapolado
+# desde 2 instancias medidas directamente (confidence MEDIUM); el techo
+# definitivo se valida con trafico AWS real, no se sube a un numero mayor
+# sin esa evidencia.
 backend_max_capacity      = 4
-frontend_min_capacity     = 1
+frontend_min_capacity     = 2
 frontend_max_capacity     = 4
 backend_cpu_target_value  = 70
 frontend_cpu_target_value = 70

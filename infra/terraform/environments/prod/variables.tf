@@ -85,34 +85,39 @@ variable "frontend_image" {
 }
 
 variable "backend_task_cpu" {
-  type    = string
-  default = "256"
+  description = "CPU units Fargate del backend. 1024 (1 vCPU) — perfil RECOMMENDED de Fase 4C.6 (docs/performance/PERFORMANCE_BASELINE.md, §52): 256 quedo descartado con evidencia directa (Profile A, 0.25 vCPU/512MiB, satura con solo 10 VUs — p99 21s, memoria al 99.97% de su limite); Profile C (1 vCPU/2GiB) midio 34.19 RPS, p95 427ms, p99 823ms, 0% error, con margen de memoria amplio. Combinacion Fargate valida (1024 CPU admite 2048-8192 MiB en incrementos de 1024). Confidence MEDIUM — ver PENDING AWS VALIDATION en el documento."
+  type        = string
+  default     = "1024"
 }
 
 variable "backend_task_memory" {
-  type    = string
-  default = "512"
+  description = "Memoria (MiB) Fargate del backend. 2048 — acompana a backend_task_cpu=1024 (ver esa variable). El pico de memoria observado en Profile A (99.97% de 512MiB) fue consecuencia directa de la restriccion de CPU, no independiente — con 1 vCPU (Profile C) la misma aplicacion nunca supero 6.87% de 2048MiB."
+  type        = string
+  default     = "2048"
 }
 
 variable "frontend_task_cpu" {
-  type    = string
-  default = "256"
+  description = "CPU units Fargate del frontend. Sin cambio en Fase 4C.6 — nginx sirviendo assets estaticos nunca aparecio como cuello de botella en ningun benchmark, y no se sobredimensiona sin evidencia (docs/performance/PERFORMANCE_BASELINE.md, §44)."
+  type        = string
+  default     = "256"
 }
 
 variable "frontend_task_memory" {
-  type    = string
-  default = "512"
+  description = "Memoria (MiB) Fargate del frontend. Sin cambio en Fase 4C.6 — misma razon que frontend_task_cpu."
+  type        = string
+  default     = "512"
 }
 
 variable "backend_desired_count" {
-  description = "Numero de tasks del servicio backend. Produccion deberia usar >= 2 (Fase 4B ya valido multiinstancia); dimensionamiento definitivo en Fase 4C.6."
+  description = "Numero de tasks del servicio backend. 2 — perfil RECOMMENDED de Fase 4C.6: HA real (nunca 1 en produccion) + evidencia de escalado horizontal fuerte (scaling efficiency ~97.6% del ideal 2x bajo limites de recursos iguales, docs/performance/PERFORMANCE_BASELINE.md, §32). Confidence HIGH (HA)."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "frontend_desired_count" {
-  type    = number
-  default = 1
+  description = "Numero de tasks del servicio frontend. 2 — HA, misma razon que backend_desired_count (nunca rendimiento: frontend nunca fue el cuello de botella)."
+  type        = number
+  default     = 2
 }
 
 variable "fargate_spot_weight_percent" {
@@ -122,18 +127,21 @@ variable "fargate_spot_weight_percent" {
 }
 
 variable "backend_min_capacity" {
-  type    = number
-  default = 1
+  description = "Capacidad minima de autoscaling del backend. 2 — igual a backend_desired_count, mismo razonamiento de HA (Fase 4C.6)."
+  type        = number
+  default     = 2
 }
 
 variable "backend_max_capacity" {
-  type    = number
-  default = 4
+  description = "Capacidad maxima de autoscaling del backend. 4 — perfil RECOMMENDED de Fase 4C.6 (sin cambio respecto al valor ya existente); extrapolado desde 2 instancias medidas directamente, confidence MEDIUM. El techo definitivo se valida con trafico AWS real."
+  type        = number
+  default     = 4
 }
 
 variable "frontend_min_capacity" {
-  type    = number
-  default = 1
+  description = "Capacidad minima de autoscaling del frontend. 2 — HA, Fase 4C.6."
+  type        = number
+  default     = 2
 }
 
 variable "frontend_max_capacity" {
