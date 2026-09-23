@@ -15,11 +15,17 @@ terraform {
     }
   }
 
-  # Backend intencionalmente sin configurar en Fase 4C.1: sin un bloque
-  # `backend` aqui, Terraform usa el backend local por defecto, por lo que
-  # `terraform init` (con o sin -backend=false) funciona sin credenciales
-  # de AWS ni un bucket de state preexistente. Ver
-  # docs/aws/TERRAFORM_FOUNDATION.md, seccion "Terraform state", para la
-  # estrategia recomendada (S3 + locking nativo) antes de cualquier
-  # `terraform apply` real contra AWS.
+  # Backend "s3" con configuracion PARCIAL (Fase 4D.1) — el bloque va vacio
+  # a proposito: bucket/key/region/use_lockfile se pasan en `terraform init`
+  # via `-backend-config`, nunca hardcodeados aqui (sin nombre de bucket
+  # real, account ID ni credenciales en el repo). Ver
+  # docs/aws/AWS_BOOTSTRAP.md, "Migracion del backend", para el
+  # procedimiento completo — NO ejecutado todavia.
+  #
+  # Mientras el bucket de docs/aws/AWS_BOOTSTRAP.md no exista realmente en
+  # AWS, `terraform init -backend=false` sigue siendo la unica forma valida
+  # de validar este stack localmente (ver infra/terraform/README.md): con
+  # `-backend=false` Terraform ignora por completo este bloque, incluso
+  # vacio, y no intenta contactar AWS ni requiere `-backend-config`.
+  backend "s3" {}
 }
