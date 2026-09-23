@@ -4,6 +4,8 @@ Este documento describe el **destino** de la infraestructura AWS para Territorio
 
 Fase 4C provisiona los recursos descritos aquí (Terraform) y mide carga real para decidir si Redis/SQS/RDS Proxy hacen falta — no se anticipan sin evidencia (§51 Fase 4A).
 
+**Nota de consolidación (Fase 4C.7)**: el diagrama de abajo describe el frontend servido vía CloudFront + S3 estático, tal como se planteó como aspiración antes de implementar Fase 4C. La implementación real (Fase 4C.2) sirve el frontend como un ECS Service propio detrás del mismo ALB que la API — decisión explícita y justificada en [`ECS_ALB_FOUNDATION.md`](./ECS_ALB_FOUNDATION.md), sección "Decisión: backend y frontend como dos ECS Services independientes". Todo lo demás de este documento (RDS Proxy, Secrets Manager, arquitectura del bucket S3 de artifacts, IAM) sigue describiendo correctamente el diseño ya implementado en `infra/terraform/`. Para el estado real de cada pieza, ver [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md).
+
 ## Diagrama de flujo objetivo
 
 ```

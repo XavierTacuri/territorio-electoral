@@ -224,7 +224,7 @@ Sin cambios KMS: ambos secretos usan la clave de Secrets Manager por defecto (AW
 
 ## Application Task Role — sin cambios
 
-La aplicación no consulta Secrets Manager en tiempo de ejecución — el **Task Role** (permisos S3 de Fase 4C.2) no necesita ningún permiso nuevo. Sin cambios en `aws_iam_role.task` ni sus policies.
+La aplicación no consulta Secrets Manager en tiempo de ejecución — el **Task Role** (permisos S3 de Fase 4C.2) no necesita ningún permiso nuevo. Sin cambios en sus policies (renombrado a `aws_iam_role.backend_task` en Fase 4C.7 al separarlo del frontend — mismos permisos, ver `ECS_ALB_FOUNDATION.md`).
 
 ## Connection pooling: SQLAlchemy + RDS Proxy
 

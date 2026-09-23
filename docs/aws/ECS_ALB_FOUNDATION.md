@@ -48,6 +48,8 @@ Dos roles con propósitos deliberadamente distintos (item 6/7):
 
 Ningún permiso se concede preventivamente: sin `secrets_manager_secret_arns` no hay política de Secrets Manager; sin `s3_artifact_bucket` no hay política de S3.
 
+**Actualización (Fase 4C.7)**: en 4C.2 ambos roles de esta tabla eran compartidos por los cuatro Task Definitions (`backend`, `backend_migrate`, `backend_bootstrap`, `frontend`) — el frontend heredaba formalmente el Task Role con permisos S3 y el Execution Role con acceso a `secretsmanager:GetSecretValue` sobre los secretos de DB, aunque nunca los invocaba (nginx no ejecuta AWS SDK ni declara `secrets`). La auditoría de 4C.7 corrigió esto: `aws_iam_role.task` se renombró a `aws_iam_role.backend_task` (mismos permisos, ahora exclusivo de la familia backend), y el frontend recibió su propio `aws_iam_role.frontend_execution` (misma política administrada, sin la policy de secretos) y ya no declara `task_role_arn` en absoluto — ver `PRODUCTION_READINESS.md` y `modules/ecs/main.tf`.
+
 ## Task Definitions
 
 - **`backend`**: Fargate, `awsvpc`, `cpu`/`memory` configurables (256/512 por defecto). Contenedor `api`, puerto configurable (8000). **El `command` sobreescribe el `CMD` del Dockerfile** para arrancar únicamente `uvicorn`, sin `alembic upgrade head` — ver "Estrategia de migraciones" abajo. `healthCheck` a nivel de contenedor idéntico al que ya usa `docker-compose.prod.yml`.
