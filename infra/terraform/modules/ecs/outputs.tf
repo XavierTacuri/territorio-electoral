@@ -34,12 +34,19 @@ output "backend_bootstrap_task_definition_arn" {
   value       = aws_ecs_task_definition.backend_bootstrap.arn
 }
 
-output "execution_role_arn" {
-  value = aws_iam_role.execution.arn
+output "backend_execution_role_arn" {
+  description = "Execution Role de la familia backend (service, migrate, bootstrap) — arranca esos contenedores y lee sus secretos de DB. El frontend usa un Execution Role propio, sin acceso a estos secretos (ver frontend_execution_role_arn)."
+  value       = aws_iam_role.execution.arn
 }
 
-output "task_role_arn" {
-  value = aws_iam_role.task.arn
+output "backend_task_role_arn" {
+  description = "Task Role de la familia backend (service, migrate, bootstrap) — unico rol con permisos S3 de aplicacion. El frontend (nginx estatico) no tiene Task Role: su Task Definition omite task_role_arn por completo."
+  value       = aws_iam_role.backend_task.arn
+}
+
+output "frontend_execution_role_arn" {
+  description = "Execution Role propio del frontend — solo arranca el contenedor (pull de imagen, logs); sin acceso a secretsmanager:GetSecretValue sobre los secretos de DB/aplicacion."
+  value       = aws_iam_role.frontend_execution.arn
 }
 
 output "frontend_tasks_security_group_id" {

@@ -42,6 +42,15 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 # ============================================================================
 # IAM — Task Execution Role vs. Application Task Role (item 6/7)
 # ============================================================================
+# Revision de produccion (Fase 4C.7): el frontend (nginx estatico) compartia
+# tanto el Execution Role como el Task Role con la familia backend
+# (backend/backend_migrate/backend_bootstrap). El Task Role compartido le
+# daba al frontend permisos S3 que nunca invoca (nginx no ejecuta AWS SDK);
+# el Execution Role compartido le daba, en la definicion de la policy, acceso
+# a secretsmanager:GetSecretValue sobre los secretos de DB, aunque la Task
+# Definition del frontend nunca declara un bloque `secrets` que lo ejercite.
+# Ambos se separan aqui por servicio — minimo privilegio real, no solo por
+# ausencia de uso.
 
 data "aws_iam_policy_document" "ecs_tasks_assume_role" {
   statement {
@@ -54,13 +63,16 @@ data "aws_iam_policy_document" "ecs_tasks_assume_role" {
   }
 }
 
-# Execution Role: lo que ECS necesita para ARRANCAR el contenedor (pull de
-# imagen, escribir logs) — nunca usado por el codigo de la aplicacion.
+# Execution Role de la familia BACKEND (service, migrate, bootstrap): lo que
+# ECS necesita para ARRANCAR esos contenedores (pull de imagen, escribir
+# logs, y leer los secretos de DB que sus Task Definitions si declaran) —
+# nunca usado por el codigo de la aplicacion en si. El frontend tiene su
+# propio Execution Role, mas abajo, sin acceso a estos secretos.
 resource "aws_iam_role" "execution" {
-  name               = "${var.name_prefix}-ecs-execution"
+  name               = "${var.name_prefix}-ecs-backend-execution"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
 
-  tags = merge(var.tags, { Name = "${var.name_prefix}-ecs-execution" })
+  tags = merge(var.tags, { Name = "${var.name_prefix}-ecs-backend-execution" })
 }
 
 # Politica administrada por AWS (no es un ARN especifico de este proyecto):
@@ -71,14 +83,15 @@ resource "aws_iam_role_policy_attachment" "execution_managed" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Permiso para leer exactamente los secretos que las Task Definitions de
-# este modulo referencian en su bloque `secrets` — nunca un wildcard. Desde
-# Fase 4C.3, db_master_secret_arn/db_app_secret_arn son obligatorios (todo
-# container de la familia backend usa uno de los dos); secrets_manager_secret_arns
-# sigue siendo opcional (SECRET_KEY, etc., sin infraestructura propia
-# todavia).
+# Permiso para leer exactamente los secretos que las Task Definitions de la
+# familia backend referencian en su bloque `secrets` — nunca un wildcard.
+# Desde Fase 4C.3, db_master_secret_arn/db_app_secret_arn son obligatorios
+# (todo container de la familia backend usa uno de los dos);
+# secrets_manager_secret_arns sigue siendo opcional (SECRET_KEY, etc., sin
+# infraestructura propia todavia). El frontend nunca recibe este permiso —
+# ver aws_iam_role.frontend_execution mas abajo.
 resource "aws_iam_role_policy" "execution_secrets" {
-  name = "${var.name_prefix}-ecs-execution-secrets"
+  name = "${var.name_prefix}-ecs-backend-execution-secrets"
   role = aws_iam_role.execution.id
 
   policy = jsonencode({
@@ -94,21 +107,46 @@ resource "aws_iam_role_policy" "execution_secrets" {
   })
 }
 
-# Task Role: lo que el CODIGO de la aplicacion puede hacer contra APIs de
-# AWS en tiempo de ejecucion (boto3 credential provider chain, Fase 4A) —
-# nunca usado por ECS para arrancar el contenedor.
-resource "aws_iam_role" "task" {
-  name               = "${var.name_prefix}-ecs-task"
+# Execution Role del FRONTEND: separado del de la familia backend a
+# proposito (Fase 4C.7) — el frontend (nginx estatico) nunca declara un
+# bloque `secrets` en su Task Definition (su configuracion se hornea en la
+# imagen en build time), por lo que no necesita, y no debe poder, leer los
+# secretos de DB/aplicacion. Solo la politica administrada de AWS para
+# arrancar el contenedor (pull de imagen ECR, logs) — nada de
+# secretsmanager:GetSecretValue.
+resource "aws_iam_role" "frontend_execution" {
+  name               = "${var.name_prefix}-ecs-frontend-execution"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
 
-  tags = merge(var.tags, { Name = "${var.name_prefix}-ecs-task" })
+  tags = merge(var.tags, { Name = "${var.name_prefix}-ecs-frontend-execution" })
+}
+
+resource "aws_iam_role_policy_attachment" "frontend_execution_managed" {
+  role       = aws_iam_role.frontend_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# Task Role de la familia BACKEND (service, migrate, bootstrap): lo que el
+# CODIGO de la aplicacion puede hacer contra APIs de AWS en tiempo de
+# ejecucion (boto3 credential provider chain, Fase 4A) — nunca usado por ECS
+# para arrancar el contenedor. El frontend (nginx estatico) no ejecuta AWS
+# SDK y no recibe ningun Task Role — ver la Task Definition del frontend mas
+# abajo, que omite `task_role_arn` por completo (argumento opcional en
+# Fargate; sin el, el contenedor no tiene ningun credential expuesto vía el
+# endpoint de metadata de la task).
+resource "aws_iam_role" "backend_task" {
+  name               = "${var.name_prefix}-ecs-backend-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = merge(var.tags, { Name = "${var.name_prefix}-ecs-backend-task" })
 }
 
 # Acceso S3 de minimo privilegio, derivado directamente de las operaciones
 # boto3 reales que ejecuta app/services/artifact_storage.py::S3ArtifactStorage
 # (Fase 4A) — no de una lista generica. Solo se crea si ya existe un bucket
 # real (var.s3_artifact_bucket no vacio). El bucket en si no es un recurso
-# de este modulo todavia.
+# de este modulo todavia. Adjunto unicamente al Task Role del backend — el
+# frontend nunca recibe este permiso (no tiene Task Role en absoluto).
 #
 # Mapeo operacion boto3 -> permiso IAM (ver docs/aws/ECS_ALB_FOUNDATION.md):
 #   put_object                        -> s3:PutObject
@@ -124,11 +162,11 @@ resource "aws_iam_role" "task" {
 # list_objects_v2 / multipart upload: no se usan en ningun lado del backend
 # (grep sobre backend/app confirma que artifact_storage.py es el unico sitio
 # que llama al cliente S3) -> sin s3:ListBucket, sin permisos de multipart.
-resource "aws_iam_role_policy" "task_s3" {
+resource "aws_iam_role_policy" "backend_task_s3" {
   count = var.s3_artifact_bucket == "" ? 0 : 1
 
-  name = "${var.name_prefix}-ecs-task-s3"
-  role = aws_iam_role.task.id
+  name = "${var.name_prefix}-ecs-backend-task-s3"
+  role = aws_iam_role.backend_task.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -493,7 +531,7 @@ resource "aws_ecs_task_definition" "backend" {
   cpu                      = var.backend_task_cpu
   memory                   = var.backend_task_memory
   execution_role_arn       = aws_iam_role.execution.arn
-  task_role_arn            = aws_iam_role.task.arn
+  task_role_arn            = aws_iam_role.backend_task.arn
 
   container_definitions = jsonencode([local.backend_container_definition])
 
@@ -507,7 +545,7 @@ resource "aws_ecs_task_definition" "backend_migrate" {
   cpu                      = var.backend_task_cpu
   memory                   = var.backend_task_memory
   execution_role_arn       = aws_iam_role.execution.arn
-  task_role_arn            = aws_iam_role.task.arn
+  task_role_arn            = aws_iam_role.backend_task.arn
 
   container_definitions = jsonencode([local.backend_migrate_container_definition])
 
@@ -521,21 +559,26 @@ resource "aws_ecs_task_definition" "backend_bootstrap" {
   cpu                      = var.backend_task_cpu
   memory                   = var.backend_task_memory
   execution_role_arn       = aws_iam_role.execution.arn
-  task_role_arn            = aws_iam_role.task.arn
+  task_role_arn            = aws_iam_role.backend_task.arn
 
   container_definitions = jsonencode([local.backend_bootstrap_container_definition])
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-backend-bootstrap" })
 }
 
+# Sin task_role_arn: nginx estatico no ejecuta AWS SDK ni necesita ningun
+# permiso runtime de AWS (Fase 4C.7 — antes heredaba el Task Role del
+# backend, con permisos S3 que nunca invocaba). `task_role_arn` es un
+# argumento opcional de aws_ecs_task_definition/Fargate; omitirlo deja al
+# contenedor del frontend sin ninguna credencial de AWS disponible via el
+# endpoint de metadata de la task.
 resource "aws_ecs_task_definition" "frontend" {
   family                   = "${var.name_prefix}-frontend"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = var.frontend_task_cpu
   memory                   = var.frontend_task_memory
-  execution_role_arn       = aws_iam_role.execution.arn
-  task_role_arn            = aws_iam_role.task.arn
+  execution_role_arn       = aws_iam_role.frontend_execution.arn
 
   container_definitions = jsonencode([local.frontend_container_definition])
 
@@ -660,7 +703,7 @@ resource "aws_ecs_service" "frontend" {
     rollback = true
   }
 
-  depends_on = [aws_iam_role_policy_attachment.execution_managed]
+  depends_on = [aws_iam_role_policy_attachment.frontend_execution_managed]
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-frontend" })
 }

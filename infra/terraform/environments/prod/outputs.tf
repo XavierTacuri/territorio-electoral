@@ -108,12 +108,19 @@ output "backend_bootstrap_task_definition_arn" {
   value       = module.ecs.backend_bootstrap_task_definition_arn
 }
 
-output "ecs_execution_role_arn" {
-  value = module.ecs.execution_role_arn
+output "ecs_backend_execution_role_arn" {
+  description = "Execution Role de la familia backend (service/migrate/bootstrap). El frontend usa uno propio, ver ecs_frontend_execution_role_arn."
+  value       = module.ecs.backend_execution_role_arn
 }
 
-output "ecs_task_role_arn" {
-  value = module.ecs.task_role_arn
+output "ecs_backend_task_role_arn" {
+  description = "Task Role de la familia backend (unico con permisos S3 de aplicacion). El frontend no tiene Task Role."
+  value       = module.ecs.backend_task_role_arn
+}
+
+output "ecs_frontend_execution_role_arn" {
+  description = "Execution Role propio del frontend, sin acceso a los secretos de DB/aplicacion."
+  value       = module.ecs.frontend_execution_role_arn
 }
 
 # ------------------------------------------------------------------------------
