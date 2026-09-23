@@ -8,6 +8,7 @@ Este documento es el manual operativo para preparar, desplegar, validar, operar 
 - [`WAF_CLOUDWATCH_FOUNDATION.md`](./WAF_CLOUDWATCH_FOUNDATION.md) — WAF, alarmas, dashboard.
 - [`BACKUP_DR_FOUNDATION.md`](./BACKUP_DR_FOUNDATION.md) — S3 lifecycle, backup/DR, matriz de incidentes, RPO/RTO.
 - [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md) — estado de preparación, matriz y blockers (léase junto con este documento antes de cualquier despliegue real).
+- [`AWS_BOOTSTRAP.md`](./AWS_BOOTSTRAP.md) — remote state, ECR, modelo IAM y procedimiento de migración del backend (Fase 4D.1, precede a cualquier `apply` de este stack).
 - [`../performance/PERFORMANCE_BASELINE.md`](../performance/PERFORMANCE_BASELINE.md) / [`../performance/LOAD_STRESS_TESTING.md`](../performance/LOAD_STRESS_TESTING.md) — evidencia detrás del dimensionamiento.
 
 **Estado de esta infraestructura al momento de escribir este runbook: ningún recurso de AWS existe todavía.** Todo lo de abajo se ha validado mediante `terraform fmt`/`init -backend=false`/`validate`, Docker Compose local y CI — nunca contra AWS real (ver `PRODUCTION_READINESS.md`, "Qué significa 'validado' en este documento"). Los procedimientos que requieren `terraform plan`/`apply`/`destroy` o el AWS CLI contra recursos reales están marcados explícitamente como **no ejecutados todavía** — este runbook describe el procedimiento a seguir cuando se autorice el primer despliegue real, no confirma que ya ocurrió.
@@ -24,7 +25,7 @@ Detalle completo y tabla de roles en `PRODUCTION_READINESS.md`, "Arquitectura de
 
 ## 1. Prerrequisitos previos a producción (Pre-Production Prerequisites)
 
-Checklist explícito. Nada de esta lista está marcado como completado salvo que exista evidencia verificable en el repositorio — ver `PRODUCTION_READINESS.md` para el estado real de cada ítem.
+Checklist explícito, correspondiente a **BEFORE FIRST PRODUCTION STACK APPLY** — el `terraform apply` de `infra/terraform/environments/prod/`, que presupone que el `apply` del bootstrap (`infra/terraform/bootstrap/`, distinto y anterior) ya se ejecutó y verificó. Ver `AWS_BOOTSTRAP.md` §25 para la lista separada de prerrequisitos **BEFORE AWS BOOTSTRAP APPLY** — no se repite aquí. Nada de esta lista está marcado como completado salvo que exista evidencia verificable en el repositorio — ver `PRODUCTION_READINESS.md`, "Blockers reales — tres momentos distintos", para el estado real y exhaustivo de cada ítem.
 
 | # | Prerrequisito | Cómo se verifica |
 | --- | --- | --- |
@@ -51,6 +52,8 @@ No se marca ningún ítem como "completado" en este documento salvo los que tien
 ---
 
 ## 2. Remote Terraform state — BLOCKER BEFORE REAL PRODUCTION APPLY
+
+**Fase 4D.1 ya preparó, en código, la solución descrita en esta sección** — ver [`AWS_BOOTSTRAP.md`](./AWS_BOOTSTRAP.md) para el detalle completo (bucket S3 dedicado, versioning, SSE-S3, Public Access Block, `SecureTransport`, `prevent_destroy`, locking nativo `use_lockfile`, backend parcial `backend "s3" {}` ya en `environments/prod/versions.tf`). **Nada de eso existe todavía en AWS** — el punto sigue siendo blocker hasta que el bootstrap se aplique y se verifique, y hasta que la migración descrita en `AWS_BOOTSTRAP.md` (§9) se ejecute.
 
 **Estado actual: el state es local.** No existe ningún bloque `backend` en `infra/terraform/environments/prod/versions.tf` ni en ningún otro `.tf` del repositorio — confirmado por búsqueda explícita. Esto es deliberado durante la fase de validación (permite `terraform init -backend=false` sin credenciales AWS), pero es un **bloqueador real antes de cualquier `apply` contra AWS**: producción no debe depender de un `terraform.tfstate` en la máquina de una sola persona.
 

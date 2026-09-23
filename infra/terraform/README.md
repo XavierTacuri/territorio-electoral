@@ -2,7 +2,11 @@
 
 Infraestructura como código para el despliegue AWS de Territorio Electoral (Fase 4C). Ver la fundación de red/security groups en [`docs/aws/TERRAFORM_FOUNDATION.md`](../../docs/aws/TERRAFORM_FOUNDATION.md), la capa ECS/Fargate + ALB en [`docs/aws/ECS_ALB_FOUNDATION.md`](../../docs/aws/ECS_ALB_FOUNDATION.md), la capa de datos RDS + RDS Proxy en [`docs/aws/RDS_PROXY_FOUNDATION.md`](../../docs/aws/RDS_PROXY_FOUNDATION.md), WAF + CloudWatch/observabilidad en [`docs/aws/WAF_CLOUDWATCH_FOUNDATION.md`](../../docs/aws/WAF_CLOUDWATCH_FOUNDATION.md), S3 lifecycle + backup/DR en [`docs/aws/BACKUP_DR_FOUNDATION.md`](../../docs/aws/BACKUP_DR_FOUNDATION.md), dimensionamiento y evidencia de carga en [`docs/performance/PERFORMANCE_BASELINE.md`](../../docs/performance/PERFORMANCE_BASELINE.md), y el diseño objetivo completo en [`docs/aws/PRODUCTION_ARCHITECTURE.md`](../../docs/aws/PRODUCTION_ARCHITECTURE.md).
 
-**Antes de operar esta infraestructura contra AWS real**: [`docs/aws/PRODUCTION_RUNBOOK.md`](../../docs/aws/PRODUCTION_RUNBOOK.md) (procedimientos de despliegue, migración, rollback, incidentes, Election Day) y [`docs/aws/PRODUCTION_READINESS.md`](../../docs/aws/PRODUCTION_READINESS.md) (matriz de preparación y blockers reales — hoy en estado **NO-GO**, ver ese documento) son de lectura obligatoria para cualquier operador nuevo.
+**Antes de operar esta infraestructura contra AWS real**: [`docs/aws/PRODUCTION_RUNBOOK.md`](../../docs/aws/PRODUCTION_RUNBOOK.md) (procedimientos de despliegue, migración, rollback, incidentes, Election Day), [`docs/aws/PRODUCTION_READINESS.md`](../../docs/aws/PRODUCTION_READINESS.md) (matriz de preparación y blockers reales — hoy en estado **NO-GO**, ver ese documento) y [`docs/aws/AWS_BOOTSTRAP.md`](../../docs/aws/AWS_BOOTSTRAP.md) (remote state, ECR, modelo IAM — Fase 4D.1, precede a cualquier `apply` de `environments/prod`) son de lectura obligatoria para cualquier operador nuevo.
+
+## Bootstrap (Fase 4D.1)
+
+`infra/terraform/bootstrap/` es un stack Terraform **separado e independiente** de `environments/prod`, que prepara los recursos que deben existir en AWS antes del primer `apply` del stack productivo: el bucket S3 de Terraform state remoto, los repositorios ECR (backend/frontend), y las policies IAM de alcance ya conocido (acceso al propio state bucket, push/pull ECR). Ver [`docs/aws/AWS_BOOTSTRAP.md`](../../docs/aws/AWS_BOOTSTRAP.md) para el detalle completo — **código preparado y validado localmente, ningún recurso creado todavía en AWS**.
 
 ## Estado actual (Fase 4C.1 a 4C.7)
 
@@ -20,6 +24,7 @@ Infraestructura como código para el despliegue AWS de Territorio Electoral (Fas
 
 ```
 infra/terraform/
+  bootstrap/          Remote state bucket, ECR backend/frontend, IAM minimo (Fase 4D.1) — stack independiente, state local
   modules/
     network/           VPC, subredes, NAT, routing, VPC endpoint S3 (4C.1)
     security_groups/   Security groups ALB / ECS tasks / RDS Proxy / RDS (4C.1)
@@ -42,7 +47,17 @@ terraform validate
 terraform fmt -check -recursive ../../..
 ```
 
-`terraform init -backend=false` funciona porque `versions.tf` no declara ningún bloque `backend` (state local por defecto) — ver la sección "Terraform state" en `docs/aws/TERRAFORM_FOUNDATION.md`.
+`terraform init -backend=false` sigue funcionando en `environments/prod` aunque `versions.tf` ya declara `backend "s3" {}` (configuración parcial, Fase 4D.1) — `-backend=false` ignora ese bloque por completo y no contacta AWS. Ver `docs/aws/AWS_BOOTSTRAP.md` para el detalle del backend remoto y la sección "Terraform state" en `docs/aws/TERRAFORM_FOUNDATION.md` para el contexto original.
+
+`infra/terraform/bootstrap/` se valida igual, desde su propio directorio:
+
+```bash
+cd infra/terraform/bootstrap
+terraform init -backend=false
+terraform validate
+```
+
+Este stack no declara ningún bloque `backend` (state local, permanente por diseño — ver `docs/aws/AWS_BOOTSTRAP.md`, "State del propio bootstrap"), por lo que `terraform init` a secas también funciona sin credenciales AWS.
 
 ## Uso previsto (cuando corresponda desplegar de verdad)
 
