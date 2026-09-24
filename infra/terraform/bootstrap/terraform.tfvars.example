@@ -2,16 +2,19 @@
 # docs/aws/AWS_BOOTSTRAP.md antes de la primera ejecucion real.
 #
 # IMPORTANTE: este bootstrap todavia NO se ha aplicado contra AWS. No
-# ejecutar `terraform plan`/`apply` hasta que el operador humano decida la
-# region y el nombre de bucket reales (ver "Decisiones pendientes" en
+# ejecutar `terraform plan`/`apply` hasta que el operador humano confirme
+# el nombre de bucket real (ver "Decisiones pendientes" en
 # docs/aws/AWS_BOOTSTRAP.md).
 
 project     = "territorio-electoral"
 environment = "prod"
 
-# Decision explicita — nunca silenciosa. Debe coincidir con la region que
-# usara environments/prod (recursos regionales, ACM futuro).
-aws_region = "<choose-region>"
+# us-east-2 (Ohio): region habilitada en la cuenta AWS disponible para el
+# primer deployment real de este proyecto — us-east-1 (N. Virginia)
+# exigiria activar caracteristicas avanzadas de la cuenta que no se van a
+# activar para esta prueba. Debe coincidir con la region que usara
+# environments/prod (recursos regionales, ACM futuro).
+aws_region = "us-east-2"
 
 # Debe ser GLOBALMENTE unico en S3 (no solo en esta cuenta). Convencion
 # sugerida: "<project>-<environment>-tfstate-<sufijo-unico>".

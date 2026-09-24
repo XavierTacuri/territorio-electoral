@@ -24,9 +24,9 @@ variable "environment" {
 }
 
 variable "aws_region" {
-  description = "Region de AWS del bootstrap. Debe ser la MISMA region que usara environments/prod (var.aws_region alli) — un certificado ACM regional y varios recursos regionales exigen coincidencia. Sin default silencioso: decision explicita antes de cualquier apply real (ver docs/aws/AWS_BOOTSTRAP.md, \"Region\")."
+  description = "Region de AWS del bootstrap. Debe ser la MISMA region que usara environments/prod (var.aws_region alli) — un certificado ACM regional y varios recursos regionales exigen coincidencia. Default us-east-2 (Ohio): region habilitada en la cuenta AWS disponible para el primer deployment real — us-east-1 (N. Virginia) exigiria activar caracteristicas avanzadas de la cuenta que no se van a activar para esta prueba. Sigue siendo una decision explicita y overridable, no silenciosa (ver docs/aws/AWS_BOOTSTRAP.md, \"AWS region\")."
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 
   validation {
     condition     = length(var.aws_region) > 0

@@ -182,11 +182,13 @@ Dos repositorios separados (nunca uno compartido):
 
 ## 13. AWS region
 
-`var.aws_region` en el bootstrap (default `us-east-1`, igual que `environments/prod`) es una variable explícita, no una decisión silenciosa. **Debe coincidir con la región que use `environments/prod`** — varios de sus recursos son regionales.
+`var.aws_region` en el bootstrap (default **`us-east-2` — US East (Ohio)**, igual que `environments/prod`) es una variable explícita, no una decisión silenciosa. **Debe coincidir con la región que use `environments/prod`** — varios de sus recursos son regionales.
+
+**Decisión para el primer deployment real de esta cuenta**: `us-east-2` (Ohio). La cuenta AWS disponible hoy permite `us-east-2`; `us-east-1` (N. Virginia) exigiría activar características avanzadas de la cuenta que deliberadamente no se activan para esta prueba. Por eso el default de `aws_region` en ambos stacks (`infra/terraform/bootstrap/variables.tf`, `infra/terraform/environments/prod/variables.tf`) y ambos `terraform.tfvars.example` es `us-east-2` — sigue siendo una variable explícita y overridable (una cuenta distinta, sin esa restricción, puede pasar cualquier otra región vía `terraform.tfvars`), no una región hardcodeada dentro de ningún recurso.
 
 ### ACM y región
 
-Un certificado ACM usado por un Application Load Balancer es **regional**: debe existir en la misma región que el ALB. No se crea ningún ACM en esta subfase porque el dominio todavía no está decidido (ver `PRODUCTION_READINESS.md`, blocker de dominio/TLS) — cuando se decida, el certificado se solicita en la misma región elegida aquí.
+Un certificado ACM usado por un Application Load Balancer es **regional**: debe existir en la misma región que el ALB. No se crea ningún ACM en esta subfase porque el dominio todavía no está decidido (ver `PRODUCTION_READINESS.md`, blocker de dominio/TLS) — cuando se decida, el certificado se solicita en `us-east-2` (o la región que en ese momento tenga `environments/prod`, si cambiara), nunca en una región distinta a la del ALB.
 
 ## 14. Account ID
 
@@ -301,7 +303,7 @@ Lista exhaustiva de lo que debe resolverse antes de que `terraform apply` en `in
 
 1. **AWS account disponible.**
 2. **Método seguro de autenticación de corta duración** para la identidad de bootstrap — nunca `access_key`/`secret_key` estáticas (§17).
-3. **Región AWS elegida** (`aws_region`) — debe coincidir con la que usará después `environments/prod`.
+3. **Región AWS elegida** (`aws_region`) — **`us-east-2` (Ohio)** ya es el default en ambos stacks para el primer deployment de esta cuenta (§13); confirmar que sigue siendo la región correcta antes del `apply`, o sobrescribirla explícitamente en `terraform.tfvars` si la cuenta cambiara. Debe coincidir con la que use `environments/prod`.
 4. **Nombre globalmente único del state bucket** (`state_bucket_name`) decidido — no reversible sin recrear el bucket (y perder el nombre).
 5. **Nombres ECR confirmados**, o aceptación explícita de los defaults documentados (`<project>-<environment>-backend`/`-frontend`, §15).
 6. **Identidad de bootstrap con permisos suficientes para crear exactamente los recursos de §3** — S3, ECR, IAM `CreatePolicy`. Nunca `AdministratorAccess`/`PowerUserAccess`.
@@ -332,7 +334,7 @@ Lista exhaustiva de lo que debe resolverse antes de que `terraform apply` en `in
 
 Lista exhaustiva de lo que el operador humano debe decidir — nada de esto lo decide este documento ni el código:
 
-1. Región AWS definitiva (bootstrap y `environments/prod` deben coincidir).
+1. ~~Región AWS definitiva~~ — **decidida: `us-east-2` (Ohio)**, ya reflejada como default en ambos stacks (bootstrap y `environments/prod` coinciden). Sigue siendo overridable vía `terraform.tfvars` si la cuenta cambiara.
 2. Nombre real y único globalmente del state bucket.
 3. Quién ejecuta el bootstrap y con qué mecanismo de credenciales de corta duración.
 4. Si se usan los nombres de ECR por defecto (`territorio-electoral-prod-backend`/`-frontend`) o nombres explícitos.

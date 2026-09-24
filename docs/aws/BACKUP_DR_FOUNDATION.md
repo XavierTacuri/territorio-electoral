@@ -243,7 +243,7 @@ Si en el futuro surge un requisito concreto (retención > 35 días, vault lock/W
 
 ## 20. Cross-region DR — deferido, no implementado
 
-La arquitectura completa (VPC, ALB, ECS, RDS, WAF) vive en una única región (`var.aws_region`, default `us-east-1`) — no existe ninguna segunda región productiva en ningún `.tf` de este repo, y esta fase no la introduce. Fallos cubiertos hoy vs. no cubiertos:
+La arquitectura completa (VPC, ALB, ECS, RDS, WAF) vive en una única región (`var.aws_region`, default `us-east-2` — Ohio, la región habilitada en la cuenta AWS disponible para el primer deployment real, ver `AWS_BOOTSTRAP.md` §13) — no existe ninguna segunda región productiva en ningún `.tf` de este repo, y esta fase no la introduce. Fallos cubiertos hoy vs. no cubiertos:
 
 | Escenario | Cubierto hoy | Mecanismo |
 | --- | --- | --- |

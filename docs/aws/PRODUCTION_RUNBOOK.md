@@ -30,7 +30,7 @@ Checklist explícito, correspondiente a **BEFORE FIRST PRODUCTION STACK APPLY** 
 | # | Prerrequisito | Cómo se verifica |
 | --- | --- | --- |
 | 1 | Cuenta AWS lista, con billing/soporte configurado | Fuera del repositorio — confirmación operativa externa |
-| 2 | Región AWS decidida | `aws_region` en `terraform.tfvars` (default `us-east-1`, `terraform.tfvars.example`) |
+| 2 | Región AWS decidida | `aws_region` en `terraform.tfvars` — default **`us-east-2` (Ohio)** en `terraform.tfvars.example` y en `variables.tf` de ambos stacks (bootstrap y `environments/prod`); la cuenta AWS disponible para el primer deployment real no tiene `us-east-1` habilitado sin activar características avanzadas, ver `AWS_BOOTSTRAP.md` §13 |
 | 3 | Permisos IAM del operador que ejecutará `plan`/`apply` | Rol/usuario IAM con permisos suficientes sobre VPC/ECS/RDS/WAF/CloudWatch/Secrets Manager — no documentado como policy en este repo (es el operador, no la aplicación) |
 | 4 | Terraform compatible instalado | `>= 1.11.0` (piso real, ver `RDS_PROXY_FOUNDATION.md` — requerido por `ephemeral`/`secret_string_wo`) |
 | 5 | Remote Terraform state resuelto | **NO resuelto — BLOCKER**, ver §2 |

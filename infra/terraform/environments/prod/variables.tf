@@ -11,9 +11,9 @@ variable "environment" {
 }
 
 variable "aws_region" {
-  description = "Region de AWS donde se despliega la infraestructura."
+  description = "Region de AWS donde se despliega la infraestructura. Default us-east-2 (Ohio): region habilitada en la cuenta AWS disponible para el primer deployment real — us-east-1 (N. Virginia) exigiria activar caracteristicas avanzadas de la cuenta que no se van a activar para esta prueba. Debe coincidir con var.aws_region de infra/terraform/bootstrap (recursos regionales, ACM futuro) — ver docs/aws/AWS_BOOTSTRAP.md, \"AWS region\"."
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "vpc_cidr" {
