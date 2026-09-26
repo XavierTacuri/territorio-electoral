@@ -5,6 +5,24 @@
 # backend, cualquier otra ruta al del frontend. Ver docs/aws/ECS_ALB_FOUNDATION.md
 # para por que el ALB, y no nginx, hace ahora ese split.
 
+locals {
+  # aws_lb_target_group.name tiene un limite de AWS mucho mas estricto (32
+  # caracteres, solo alfanumerico/guiones, no puede empezar/terminar en
+  # guion) que el resto de recursos de este stack (ALB/ECS/RDS/S3 toleran
+  # name_prefix completo sin truncar) -- "${name_prefix}-backend"/"-frontend"
+  # ya lo supera con el name_prefix actual (25 + 8/9 = 33/34 caracteres).
+  # Se trunca name_prefix a 20 caracteres y se le agrega un hash corto
+  # DETERMINISTA (md5 solo como identificador de naming, nunca con proposito
+  # criptografico) derivado unicamente de var.name_prefix -- estable entre
+  # plans, sin account ID, sin timestamps, sin nada random del provider.
+  # Nunca se usa el argumento "name_prefix" de aws_lb_target_group: genera
+  # un sufijo aleatorio distinto en cada apply, rompiendo la reproducibilidad
+  # que el resto de este stack ya tiene con nombres fijos.
+  target_group_name_hash     = substr(md5(var.name_prefix), 0, 6)
+  backend_target_group_name  = "${substr(var.name_prefix, 0, 20)}-be-${local.target_group_name_hash}"
+  frontend_target_group_name = "${substr(var.name_prefix, 0, 20)}-fe-${local.target_group_name_hash}"
+}
+
 resource "aws_lb" "this" {
   name               = "${var.name_prefix}-alb"
   internal           = false
@@ -31,11 +49,18 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "backend" {
-  name        = "${var.name_prefix}-backend"
+  name        = local.backend_target_group_name
   port        = var.backend_container_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
+
+  lifecycle {
+    precondition {
+      condition     = length(local.backend_target_group_name) <= 32
+      error_message = "backend_target_group_name ('${local.backend_target_group_name}', ${length(local.backend_target_group_name)} caracteres) excede el limite de 32 caracteres de AWS para aws_lb_target_group.name — revisar local.backend_target_group_name en modules/alb/main.tf."
+    }
+  }
 
   health_check {
     # /api/v1/health (liveness, nunca toca la base de datos) — deliberadamente
@@ -59,11 +84,18 @@ resource "aws_lb_target_group" "backend" {
 }
 
 resource "aws_lb_target_group" "frontend" {
-  name        = "${var.name_prefix}-frontend"
+  name        = local.frontend_target_group_name
   port        = var.frontend_container_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
+
+  lifecycle {
+    precondition {
+      condition     = length(local.frontend_target_group_name) <= 32
+      error_message = "frontend_target_group_name ('${local.frontend_target_group_name}', ${length(local.frontend_target_group_name)} caracteres) excede el limite de 32 caracteres de AWS para aws_lb_target_group.name — revisar local.frontend_target_group_name en modules/alb/main.tf."
+    }
+  }
 
   health_check {
     # /health: el mismo endpoint que ya usa el HEALTHCHECK del propio

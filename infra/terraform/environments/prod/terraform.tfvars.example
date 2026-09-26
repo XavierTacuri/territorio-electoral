@@ -176,12 +176,22 @@ db_proxy_connection_borrow_timeout    = 120
 db_proxy_max_connections_percent      = 100
 db_proxy_max_idle_connections_percent = 50
 
+# Desde Fase 4D.3, SECRET_KEY / BROWSER_REFRESH_TOKEN_HMAC_SECRET /
+# SURVEY_SUBMISSION_HMAC_SECRET / INITIAL_ADMIN_PASSWORD ya NO requieren un
+# ARN manual aqui: module.app_secrets (main.tf) los genera automaticamente
+# con valores aleatorios (ephemeral + write-only, nunca en tfstate).
+# POSTGRES_PASSWORD tampoco va aqui — se resuelve por separado segun
+# identidad (master/app), ver db_master_secret_arn/db_app_secret_arn en
+# main.tf. secrets_manager_secret_arns queda para overrides puntuales (un
+# ARN aqui con la misma clave que uno de los 4 generados tiene precedencia)
+# o secretos futuros sin infraestructura propia todavia:
 # secrets_manager_secret_arns = {
-#   SECRET_KEY                         = "<arn-real-de-secrets-manager>"
-#   BROWSER_REFRESH_TOKEN_HMAC_SECRET  = "<arn-real-de-secrets-manager>"
-#   SURVEY_SUBMISSION_HMAC_SECRET      = "<arn-real-de-secrets-manager>"
-#   POSTGRES_PASSWORD                  = "<arn-real-de-secrets-manager>"
+#   SOME_OTHER_SECRET = "<arn-real-de-secrets-manager>"
 # }
+
+# Disparador de rotacion de los 4 secretos de app_secrets — incrementar +
+# apply reescribe los 4 con nuevos valores aleatorios.
+app_secrets_version = 1
 
 # db_enabled_cloudwatch_logs_exports = ["postgresql"]  # vacio por defecto — ver docs/aws/WAF_CLOUDWATCH_FOUNDATION.md
 

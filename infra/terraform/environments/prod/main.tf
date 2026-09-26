@@ -120,6 +120,26 @@ module "s3_artifact_bucket" {
   tags = local.common_tags
 }
 
+# ------------------------------------------------------------------------------
+# Fase 4D.3: secretos de aplicacion (SECRET_KEY, BROWSER_REFRESH_TOKEN_HMAC_SECRET,
+# SURVEY_SUBMISSION_HMAC_SECRET, INITIAL_ADMIN_PASSWORD) — los 4 que
+# backend/app/core/config.py exige en app_env=production y que, hasta ahora,
+# no tenian infraestructura propia (secrets_manager_secret_arns era un mapa
+# vacio que el operador debia llenar a mano). Igual que module.s3_artifact_bucket,
+# se instancia antes de module.ecs porque este consume su output. Valores
+# ephemeral + write-only (ver modules/app_secrets/main.tf): nunca llegan al
+# tfstate.
+# ------------------------------------------------------------------------------
+
+module "app_secrets" {
+  source = "../../modules/app_secrets"
+
+  name_prefix    = local.name_prefix
+  secret_version = var.app_secrets_version
+
+  tags = local.common_tags
+}
+
 module "ecs" {
   source = "../../modules/ecs"
 
@@ -191,7 +211,11 @@ module "ecs" {
 
   # Secretos ADICIONALES (SECRET_KEY, etc.), todavia sin infraestructura
   # propia — POSTGRES_PASSWORD ya no viaja por aqui, ver db_master_secret_arn/db_app_secret_arn arriba.
-  secrets_manager_secret_arns = var.secrets_manager_secret_arns
+  # Los 4 secretos generados por module.app_secrets son la base; un ARN
+  # manual en var.secrets_manager_secret_arns (misma clave) tiene precedencia
+  # y lo sobrescribe — mismo patron de precedencia ya usado en este archivo
+  # para frontend_origins/browser_allowed_origins/trusted_hosts.
+  secrets_manager_secret_arns = merge(module.app_secrets.secret_arns, var.secrets_manager_secret_arns)
 
   depends_on = [module.alb, module.database]
 }

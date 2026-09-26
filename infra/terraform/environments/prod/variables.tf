@@ -310,9 +310,15 @@ variable "db_app_secret_version" {
 }
 
 variable "secrets_manager_secret_arns" {
-  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager ADICIONAL a POSTGRES_PASSWORD (que ya se resuelve por separado segun identidad, master o app — ver main.tf). Vacio por defecto — ver docs/aws/TERRAFORM_FOUNDATION.md."
+  description = "Mapa nombre-de-variable-de-entorno -> ARN de Secrets Manager ADICIONAL a POSTGRES_PASSWORD (que ya se resuelve por separado segun identidad, master o app — ver main.tf) y a los 4 generados automaticamente por module.app_secrets (SECRET_KEY, BROWSER_REFRESH_TOKEN_HMAC_SECRET, SURVEY_SUBMISSION_HMAC_SECRET, INITIAL_ADMIN_PASSWORD). Vacio por defecto: un ARN aqui con la MISMA clave que uno de esos 4 tiene precedencia y lo sobrescribe (main.tf hace el merge); tambien sirve para secretos futuros sin infraestructura propia todavia."
   type        = map(string)
   default     = {}
+}
+
+variable "app_secrets_version" {
+  description = "Disparador de rotacion de los 4 secretos de aplicacion generados por module.app_secrets (secret_string_wo_version, mismo patron que db_app_secret_version). Incrementar + apply reescribe los 4 con nuevos valores aleatorios. Sin rotacion automatica en esta fase."
+  type        = number
+  default     = 1
 }
 
 # ==============================================================================
