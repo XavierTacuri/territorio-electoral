@@ -31,8 +31,7 @@ db_port                 = 5432
 # Fase 4C.2 — ECS/Fargate + ALB
 # ==============================================================================
 # Las variables de esta seccion SIN valor de ejemplo abajo (backend_image,
-# frontend_image, frontend_origins, browser_allowed_origins, trusted_hosts)
-# son obligatorias y no tienen default — deliberado, ver
+# frontend_image) son obligatorias y no tienen default — deliberado, ver
 # docs/aws/ECS_ALB_FOUNDATION.md. Los placeholders <ENTRE_ANGULOS> NO son
 # valores reales; sustituir antes de cualquier plan/apply real. db_host ya
 # no es una variable (Fase 4C.3): el backend usa automaticamente el
@@ -42,6 +41,18 @@ db_port                 = 5432
 
 # backend_image  = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-api:<GIT_SHA>"
 # frontend_image = "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/territorio-electoral-frontend:<GIT_SHA>"
+
+# frontend_origins / browser_allowed_origins / trusted_hosts: OPCIONALES
+# desde Fase 4D.2 (default ""). Vacias: module.ecs deriva automaticamente
+# "http://<DNS del ALB>" (origins) y "<DNS del ALB>" (trusted_hosts) — sin
+# dominio/ACM, permite el primer plan/apply de prueba por HTTP. Un valor
+# explicito aqui SIEMPRE tiene precedencia (sin mezclar ambas fuentes) y es
+# obligatorio en cuanto exista un dominio real, porque un certificado ACM no
+# puede emitirse para el DNS propio del ALB. Ver docs/aws/ECS_ALB_FOUNDATION.md,
+# "Prueba sin dominio (ALB DNS)".
+# frontend_origins        = "<https://dominio-real-del-frontend>"
+# browser_allowed_origins = "<https://dominio-real-del-frontend>"
+# trusted_hosts           = "<dominio-real-del-frontend>"
 
 # Dimensionamiento — perfil RECOMMENDED de Fase 4C.6, ver
 # docs/performance/PERFORMANCE_BASELINE.md (§26/§38/§52) y
@@ -88,9 +99,15 @@ log_retention_days = 30
 app_env         = "production"
 web_concurrency = 1
 
-# frontend_origins        = "<https://dominio-real-del-frontend>"
-# browser_allowed_origins = "<https://dominio-real-del-frontend>"
-# trusted_hosts           = "<dominio-real-del-frontend>"
+# true (default, OBLIGATORIO en cualquier despliegue con certificate_arn/
+# dominio real — bloqueado en plan/apply por el check "https_requires_secure_cookies"
+# de main.tf si se deja en false con certificate_arn configurado): las
+# cookies de sesion del navegador llevan el atributo Secure. Cambiar a
+# false SOLO en un terraform.tfvars local, no versionado, para la prueba
+# temporal por HTTP sin dominio (certificate_arn = "") — sin esto, el login
+# por navegador basado en cookies no persiste sesion sobre HTTP puro. Ver
+# docs/aws/ECS_ALB_FOUNDATION.md, "Prueba sin dominio (ALB DNS)".
+browser_cookie_secure = true
 
 # Valor productivo para ECS/Fargate: SIEMPRE "s3" (ver docs/aws/ECS_ALB_FOUNDATION.md).
 # Requiere s3_artifact_bucket_name — sin el, "terraform plan"/"apply" fallan

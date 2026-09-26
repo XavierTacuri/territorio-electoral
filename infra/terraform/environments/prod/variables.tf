@@ -194,19 +194,28 @@ variable "web_concurrency" {
   default = 1
 }
 
+variable "browser_cookie_secure" {
+  description = "BROWSER_COOKIE_SECURE. true (default, produccion normal/dominio HTTPS): las cookies de sesion del navegador llevan el atributo Secure. false: SOLO para la prueba temporal por HTTP sin dominio via DNS del ALB (certificate_arn=\"\") — el check \"https_requires_secure_cookies\" (main.tf) impide dejarlo en false si certificate_arn esta configurado. Ver docs/aws/ECS_ALB_FOUNDATION.md, \"Prueba sin dominio (ALB DNS)\"."
+  type        = bool
+  default     = true
+}
+
 variable "frontend_origins" {
-  description = "FRONTEND_ORIGINS: dominio(s) reales del frontend, coma-separados. Sin valor por defecto: no se inventa ningun dominio."
+  description = "FRONTEND_ORIGINS: origen(es) real(es) del frontend, coma-separados, CON esquema (ej. \"https://app.dominio-real\"). Vacio (por defecto): sin dominio propio todavia — module.ecs deriva automaticamente \"http://<DNS del ALB>\" para la primera prueba sin dominio/ACM (ver docs/aws/ECS_ALB_FOUNDATION.md, \"Prueba sin dominio (ALB DNS)\"). Nunca se inventa un dominio: un valor explicito aqui tiene siempre precedencia sobre la derivacion automatica, y es obligatorio en cuanto exista un dominio real (no se puede emitir un certificado ACM para el DNS propio del ALB, asi que certificate_arn y esta derivacion automatica son mutuamente excluyentes en la practica)."
   type        = string
+  default     = ""
 }
 
 variable "browser_allowed_origins" {
-  description = "BROWSER_ALLOWED_ORIGINS. Mismas reglas que frontend_origins."
+  description = "BROWSER_ALLOWED_ORIGINS. Mismas reglas y mismo default vacio (auto-derivado) que frontend_origins."
   type        = string
+  default     = ""
 }
 
 variable "trusted_hosts" {
-  description = "TRUSTED_HOSTS, coma-separados."
+  description = "TRUSTED_HOSTS, coma-separados, SIN esquema (Starlette TrustedHostMiddleware compara solo el hostname). Vacio (por defecto): se deriva automaticamente el DNS del ALB. Un valor explicito tiene precedencia — debe incluir el dominio real y, si corresponde, seguir incluyendo el DNS del ALB."
   type        = string
+  default     = ""
 }
 
 variable "artifact_storage_provider" {

@@ -83,7 +83,7 @@ Automatizar este flujo (un paso de pipeline que invoque `run-task` y espere su r
 
 | Target group | Puerto | Health check | Por qué |
 | --- | --- | --- | --- |
-| `backend` | 8000 | `GET /api/v1/health` | Liveness, nunca toca la base de datos. **Deliberadamente no `/api/v1/ready`**: ese endpoint sí consulta la DB, y usarlo como health check del target group haría que el ALB deje de enrutar tráfico (o que ECS reemplace la task) ante una caída transitoria de la base — justo lo que el split `/health`/`/ready` de Fase 4B evita a nivel de contenedor. `/ready` sigue existiendo y disponible para otros usos (un chequeo manual, un futuro gate de despliegue) — simplemente no conduce el health check automático del target group |
+| `backend` | 8000 | `GET /api/v1/health` | Liveness, nunca toca la base de datos. **Deliberadamente no `/api/v1/ready`**: ese endpoint sí consulta la DB, y usarlo como health check del target group haría que el ALB deje de enrutar tráfico (o que ECS reemplace la task) ante una caída transitoria de la base — justo lo que el split `/health`/`/ready` de Fase 4B evita a nivel de contenedor. `/ready` sigue existiendo y disponible para otros usos (un chequeo manual, un futuro gate de despliegue) — simplemente no conduce el health check automático del target group. **Nota (Fase 4D.2)**: con `target_type = "ip"`, el health checker del ALB envía el header `Host` igual a la IP privada de la task, nunca el dominio real ni el DNS del ALB (comportamiento documentado de AWS, mismo problema conocido de Django `ALLOWED_HOSTS` con ELB) — `backend/app/main.py` exceptúa puntualmente esta ruta exacta de `TrustedHostMiddleware` para que el probe no reciba 400; ninguna otra ruta queda exenta |
 | `frontend` | 8080 | `GET /health` | El mismo endpoint que ya usa el `HEALTHCHECK` de `frontend/Dockerfile` |
 
 ### Listeners
@@ -92,6 +92,21 @@ Automatizar este flujo (un paso de pipeline que invoque `run-task` y espere su r
 - **HTTPS :443**: solo se crea si `certificate_arn` no está vacío (`count`). `ssl_policy = "ELBSecurityPolicy-TLS13-1-2-2021-06"`. Mismo routing por path que el listener HTTP.
 
 No se creó ningún certificado ACM ni se hardcodeó ningún dominio.
+
+## Prueba sin dominio (ALB DNS) — Fase 4D.2
+
+`frontend_origins`, `browser_allowed_origins` y `trusted_hosts` son opcionales (default `""`) desde esta subfase — antes eran obligatorias sin default. Cuando el operador no provee un dominio real, `module.ecs` (`local.resolved_*`, `main.tf`) deriva automáticamente:
+
+- `FRONTEND_ORIGINS` / `BROWSER_ALLOWED_ORIGINS` = `"http://${var.alb_dns_name}"` (con esquema — formato que exige `CORSMiddleware`/`_validate_origin`).
+- `TRUSTED_HOSTS` = `var.alb_dns_name` (sin esquema — `TrustedHostMiddleware`/Starlette comparan solo el hostname, sin `http(s)://` ni puerto).
+
+Un valor explícito en cualquiera de las tres variables tiene **siempre precedencia total** sobre la derivación automática (nunca se mezclan ambas fuentes) y es obligatorio en cuanto exista un dominio real: no puede emitirse un certificado ACM para el DNS propio del ALB (`*.elb.amazonaws.com`), así que `certificate_arn` real y esta derivación automática son, en la práctica, mutuamente excluyentes.
+
+**Por qué no hay dependency cycle**: `module.alb` no depende de `module.ecs` — el ALB, sus target groups y listeners existen independientemente de qué tasks se registren en ellos (las tasks ECS se registran *dentro* de target groups ya creados). Pasar `module.alb.alb_dns_name` como variable de `module.ecs` es exactamente el mismo patrón de dependencia unidireccional (`alb -> ecs`) que ya existe hoy con `backend_target_group_arn`/`frontend_target_group_arn`. En el primer `apply`, `alb_dns_name` es *known-after-apply* durante el `plan` (el ALB todavía no existe) — esto es un `(known after apply)` normal en la salida de `terraform plan`, no un error ni un ciclo: Terraform crea el ALB primero (`aws_lb.this` no depende de nada de `module.ecs`) y, dentro del mismo `apply`, usa su `dns_name` ya resuelto para la task definition del backend/frontend.
+
+**Por qué no hace falta CORS especial (same-origin)**: frontend (`/*`) y backend (`/api/*`) se sirven detrás del **mismo ALB**, mismo listener, mismo host — el navegador ve `http://<DNS-del-ALB>/` para el SPA y `http://<DNS-del-ALB>/api/v1/...` para la API: mismo esquema+host+puerto, es decir, same-origin real. `VITE_API_BASE_URL` ya es relativo por defecto (`/api/v1`, `frontend/.env.example` y `frontend/src/api/client.ts`) y no se modificó — el bundle del frontend nunca necesita conocer el DNS del ALB. Un `fetch` same-origin no dispara preflight de CORS ni depende de `Access-Control-Allow-Origin` para que el navegador acepte la respuesta. Sin embargo, `FRONTEND_ORIGINS`/`BROWSER_ALLOWED_ORIGINS` deben seguir teniendo un valor explícito no vacío: (a) `Settings.validate_security_settings` rechaza el arranque en `app_env=production` si están vacíos o son `"*"` (`backend/app/core/config.py`), y (b) `_validate_origin` (`backend/app/api/routes/auth.py`) compara el header `Origin` real que el navegador sí envía en peticiones `POST` same-origin contra `BROWSER_ALLOWED_ORIGINS` como parte de su defensa anti-CSRF en `/auth/browser/login` — de ahí que el valor derivado deba ser el origen HTTP exacto del ALB, no un comodín.
+
+**Limitación conocida — cookies de navegador sobre HTTP puro**: `BROWSER_COOKIE_SECURE` está hardcodeado a `"true"` en `modules/ecs/main.tf` (no es una variable de `tfvars`). Sin `certificate_arn`/HTTPS, el navegador descarta las cookies `Secure` del login por navegador (`te_refresh`, `te_csrf`) aunque el backend responda 200 — la sesión no persiste entre requests. La prueba sin dominio sirve para validar arranque, health checks, CORS/trusted-host y cualquier endpoint sin cookies de navegador; **no** para un login completo por UI, que requiere HTTPS real (`certificate_arn` + dominio). No se relajó esta bandera para "hacer funcionar" el modo HTTP — sería una regresión de seguridad fuera del alcance de esta subfase.
 
 ## Health check grace period
 
@@ -126,7 +141,8 @@ El SG `ecs_tasks` de 4C.1 se documentó y se implementó con alcance específico
 | Categoría | Variables de esta fase | Notas |
 | --- | --- | --- |
 | No sensible, con default razonable | `app_env`, `web_concurrency`, `backend_task_cpu/memory`, `*_desired_count`, `*_min/max_capacity`, `*_cpu_target_value`, `deployment_*`, `*_health_check_grace_period_seconds`, `log_retention_days`, `db_name`, `db_user`, `fargate_spot_weight_percent`, `artifact_storage_provider` (default `s3`, ver nota abajo) | Configurables en `terraform.tfvars`, sin secretos |
-| Obligatorias, sin default (no se inventan) | `backend_image`, `frontend_image`, `frontend_origins`, `browser_allowed_origins`, `trusted_hosts`, `db_host` | Requieren un valor real (imagen de un registry, dominio real, endpoint real de DB) antes de cualquier `plan`/`apply` |
+| Opcionales, default `""` con derivación automática (Fase 4D.2) | `frontend_origins`, `browser_allowed_origins`, `trusted_hosts` | Vacías: `module.ecs` deriva el origen/host del DNS del ALB (ver "Prueba sin dominio (ALB DNS)" arriba) — nunca `"*"`. Un valor explícito tiene siempre precedencia y es obligatorio en cuanto exista un dominio real |
+| Obligatorias, sin default (no se inventan) | `backend_image`, `frontend_image`, `db_host` | Requieren un valor real (imagen de un registry, endpoint real de DB) antes de cualquier `plan`/`apply` |
 | Secreto (interfaz preparada, no infraestructura todavía) | `secrets_manager_secret_arns` (mapa nombre→ARN) | Vacío por defecto. Cuando exista la infraestructura de Secrets Manager (subfase posterior), basta con pasar este mapa — la task definition y el permiso IAM ya están cableados |
 | Provisto por infraestructura futura | `s3_artifact_bucket` (subfase S3), `db_host` (subfase RDS/RDS Proxy), `certificate_arn` (subfase de dominio/ACM) | Todas vacías/sin default hoy |
 

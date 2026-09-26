@@ -42,6 +42,11 @@ variable "frontend_target_group_arn" {
   type        = string
 }
 
+variable "alb_dns_name" {
+  description = "DNS del ALB (modulo alb, aws_lb.this.dns_name) — known-after-apply en el primer apply. Unico uso: derivar automaticamente FRONTEND_ORIGINS/BROWSER_ALLOWED_ORIGINS/TRUSTED_HOSTS cuando el operador no provee un dominio real (ver frontend_origins/browser_allowed_origins/trusted_hosts mas abajo). No crea un dependency cycle: module.alb no depende de module.ecs (los target groups ya existen antes de que las tasks se registren en ellos), asi que este valor simplemente se resuelve en el mismo apply, antes de que Terraform cree la task definition."
+  type        = string
+}
+
 variable "backend_container_port" {
   type = number
 }
@@ -213,19 +218,28 @@ variable "web_concurrency" {
   default     = 1
 }
 
+variable "browser_cookie_secure" {
+  description = "BROWSER_COOKIE_SECURE. true (default, produccion normal/dominio HTTPS): las cookies de sesion del navegador (te_refresh, te_csrf) llevan el atributo Secure — el navegador las descarta si la conexion no es HTTPS. false: SOLO para la prueba temporal por HTTP sin dominio via DNS del ALB (certificate_arn vacio) — sin esto, el login por navegador basado en cookies no persiste sesion sobre HTTP puro, porque el navegador nunca guarda una cookie Secure servida por HTTP. Nunca cambiar a false en un despliegue con certificate_arn configurado (ver check \"https_requires_secure_cookies\", main.tf de environments/prod). No afecta SameSite/HttpOnly, que siguen fijos en backend/app/api/routes/auth.py."
+  type        = bool
+  default     = true
+}
+
 variable "frontend_origins" {
-  description = "FRONTEND_ORIGINS: dominio(s) reales del frontend, coma-separados. Sin valor por defecto: no se inventa ningun dominio."
+  description = "FRONTEND_ORIGINS: origen(es) real(es) del frontend, coma-separados, con esquema (ej. \"https://app.dominio-real\"). Vacio (por defecto): sin dominio propio todavia, este modulo deriva automaticamente \"http://<alb_dns_name>\" (ver local.resolved_frontend_origins, main.tf) — nunca \"*\", nunca inventado. Un valor explicito aqui tiene SIEMPRE precedencia sobre la derivacion automatica; obligatorio proveerlo explicitamente en cuanto exista certificate_arn/dominio real, porque no se puede emitir un certificado ACM para el DNS propio del ALB."
   type        = string
+  default     = ""
 }
 
 variable "browser_allowed_origins" {
-  description = "BROWSER_ALLOWED_ORIGINS. Mismas reglas que frontend_origins."
+  description = "BROWSER_ALLOWED_ORIGINS. Mismas reglas y mismo default vacio (auto-derivado) que frontend_origins."
   type        = string
+  default     = ""
 }
 
 variable "trusted_hosts" {
-  description = "TRUSTED_HOSTS, coma-separados. Debe incluir el dominio real y, si corresponde, el DNS del ALB."
+  description = "TRUSTED_HOSTS, coma-separados, SIN esquema (Starlette TrustedHostMiddleware compara solo el hostname, sin \"http(s)://\" ni puerto). Vacio (por defecto): se deriva automaticamente el DNS del ALB (var.alb_dns_name, sin esquema). Un valor explicito tiene precedencia — debe incluir el dominio real y, si corresponde, seguir incluyendo el DNS del ALB."
   type        = string
+  default     = ""
 }
 
 variable "artifact_storage_provider" {

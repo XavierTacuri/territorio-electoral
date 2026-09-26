@@ -3,6 +3,22 @@
 # RDS). ALB, ECS/Fargate, RDS, RDS Proxy, WAF y CloudWatch se agregan en
 # subfases posteriores de Fase 4C — ver docs/aws/TERRAFORM_FOUNDATION.md.
 
+# Fase 4D.2: combinacion insegura bloqueada en plan/apply sin introducir
+# ningun dependency cycle — un `check` solo lee 2 variables de este mismo
+# root module, no depende de ningun recurso ni de otro modulo. Con un
+# certificado ACM real (HTTPS) configurado, las cookies de sesion del
+# navegador SIEMPRE deben llevar el atributo Secure; `browser_cookie_secure
+# = false` solo es valido durante la prueba temporal por HTTP sin dominio
+# (certificate_arn = ""). No fuerza certificate_arn — un stack sin
+# certificate_arn puede tener browser_cookie_secure en true o false por
+# igual (el HTTP no lo necesita, pero tampoco lo prohibe).
+check "https_requires_secure_cookies" {
+  assert {
+    condition     = var.certificate_arn == "" || var.browser_cookie_secure
+    error_message = "browser_cookie_secure debe ser true cuando certificate_arn esta configurado (HTTPS real) — false solo es valido para la prueba temporal por HTTP sin dominio (certificate_arn vacio). Ver docs/aws/ECS_ALB_FOUNDATION.md, \"Prueba sin dominio (ALB DNS)\"."
+  }
+}
+
 module "network" {
   source = "../../modules/network"
 
@@ -115,6 +131,7 @@ module "ecs" {
   ecs_tasks_security_group_id = module.security_groups.ecs_tasks_security_group_id
   backend_target_group_arn    = module.alb.backend_target_group_arn
   frontend_target_group_arn   = module.alb.frontend_target_group_arn
+  alb_dns_name                = module.alb.alb_dns_name
   backend_container_port      = var.backend_container_port
   frontend_container_port     = var.frontend_container_port
 
@@ -147,6 +164,7 @@ module "ecs" {
 
   app_env                 = var.app_env
   web_concurrency         = var.web_concurrency
+  browser_cookie_secure   = var.browser_cookie_secure
   frontend_origins        = var.frontend_origins
   browser_allowed_origins = var.browser_allowed_origins
   trusted_hosts           = var.trusted_hosts

@@ -34,7 +34,7 @@ Checklist explícito, correspondiente a **BEFORE FIRST PRODUCTION STACK APPLY** 
 | 3 | Permisos IAM del operador que ejecutará `plan`/`apply` | Rol/usuario IAM con permisos suficientes sobre VPC/ECS/RDS/WAF/CloudWatch/Secrets Manager — no documentado como policy en este repo (es el operador, no la aplicación) |
 | 4 | Terraform compatible instalado | `>= 1.11.0` (piso real, ver `RDS_PROXY_FOUNDATION.md` — requerido por `ephemeral`/`secret_string_wo`) |
 | 5 | Remote Terraform state resuelto | Bucket ya creado y verificado (bootstrap aplicado) — **migración de `environments/prod` a ese backend: NO resuelta, BLOCKER**, ver §2 |
-| 6 | Dominio decidido | No configurado — `frontend_origins`/`browser_allowed_origins`/`trusted_hosts` sin valor en `terraform.tfvars.example` |
+| 6 | Dominio decidido | No configurado todavía. Ya NO bloquea el primer `plan`/`apply` de prueba (Fase 4D.2): `frontend_origins`/`browser_allowed_origins`/`trusted_hosts` son opcionales (default `""`) y, vacías, `module.ecs` deriva automáticamente el origen/host del DNS del ALB (HTTP, sin dominio propio) — ver `ECS_ALB_FOUNDATION.md`, "Prueba sin dominio (ALB DNS)". Sigue bloqueando el login por navegador vía cookies (requiere HTTPS, ver ítem 7) y, obviamente, cualquier acceso por un dominio propio |
 | 7 | Certificado ACM disponible | No configurado — `certificate_arn = ""` por defecto → solo HTTP (ver §16 de la auditoría, PRE-PRODUCTION REQUIREMENT) |
 | 8 | Imágenes de contenedor inmutables disponibles en un registry | `backend_image`/`frontend_image` sin default — deben apuntar a un tag/digest real antes de cualquier `apply` |
 | 9 | Nombre del bucket de artifacts S3 elegido | `s3_artifact_bucket_name` sin default — obligatorio con `artifact_storage_provider = "s3"`. Desde Fase 4C.8, `modules/s3_artifact_bucket` CREA este bucket (ya no un bucket externo) — mismo tipo de decisión que `state_bucket_name` del bootstrap: un nombre globalmente único, no una confirmación de ownership |
@@ -77,7 +77,7 @@ No se marca ningún ítem como "completado" en este documento salvo los que tien
 1. Confirmar que todos los prerrequisitos de §1 están resueltos (especialmente remote state, §2).
 2. Clonar/actualizar el repositorio en la máquina/pipeline que ejecutará Terraform.
 3. `cd infra/terraform/environments/prod`.
-4. `cp terraform.tfvars.example terraform.tfvars` y completar los valores obligatorios sin default (`backend_image`, `frontend_image`, `frontend_origins`, `browser_allowed_origins`, `trusted_hosts`, `s3_artifact_bucket_name`, `secrets_manager_secret_arns`, `certificate_arn` si aplica).
+4. `cp terraform.tfvars.example terraform.tfvars` y completar los valores obligatorios sin default (`backend_image`, `frontend_image`, `s3_artifact_bucket_name`, `secrets_manager_secret_arns`, `certificate_arn` si aplica). `frontend_origins`/`browser_allowed_origins`/`trusted_hosts` son opcionales desde Fase 4D.2 — dejarlas vacías deriva automáticamente el DNS del ALB (sin dominio propio); fijarlas explícitamente en cuanto exista un dominio real (ver `ECS_ALB_FOUNDATION.md`, "Prueba sin dominio (ALB DNS)").
 5. Confirmar que `terraform.tfvars` **nunca** se commitea (contiene nombres reales de bucket/dominio, aunque no secretos — ver `TERRAFORM_FOUNDATION.md`).
 6. Verificar identidad AWS del operador: credenciales configuradas (perfil/rol), región correcta.
 7. Continuar con el preflight de Terraform (§5) antes de cualquier `plan`.

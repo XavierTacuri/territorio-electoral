@@ -277,6 +277,18 @@ resource "aws_vpc_security_group_egress_rule" "alb_to_frontend" {
 # ============================================================================
 
 locals {
+  # Resolucion automatica de FRONTEND_ORIGINS/BROWSER_ALLOWED_ORIGINS/
+  # TRUSTED_HOSTS cuando el operador no provee un dominio real todavia (ver
+  # descripciones de las 3 variables, variables.tf): permite el primer
+  # terraform plan/apply de prueba SIN comprar/configurar un dominio ni ACM,
+  # sirviendo por HTTP a traves del DNS nativo del ALB. Un valor explicito en
+  # cualquiera de las 3 variables tiene SIEMPRE precedencia total sobre esta
+  # derivacion (nunca se combinan/mezclan ambos). Nunca produce "*" ni deja
+  # CORS abierto: el valor derivado es siempre el origen HTTP exacto del ALB.
+  resolved_frontend_origins        = var.frontend_origins != "" ? var.frontend_origins : "http://${var.alb_dns_name}"
+  resolved_browser_allowed_origins = var.browser_allowed_origins != "" ? var.browser_allowed_origins : "http://${var.alb_dns_name}"
+  resolved_trusted_hosts           = var.trusted_hosts != "" ? var.trusted_hosts : var.alb_dns_name
+
   # Variables de entorno no sensibles, comunes a los TRES containers de la
   # familia backend (service, migrate, bootstrap) — todo salvo POSTGRES_USER,
   # que difiere segun identidad (ver mas abajo, "Separacion de identidades",
@@ -298,11 +310,11 @@ locals {
       { name = "DB_POOL_RECYCLE_SECONDS", value = tostring(var.db_pool_recycle_seconds) },
       { name = "DB_CONNECT_TIMEOUT_SECONDS", value = tostring(var.db_connect_timeout_seconds) },
       { name = "WEB_CONCURRENCY", value = tostring(var.web_concurrency) },
-      { name = "BROWSER_COOKIE_SECURE", value = "true" },
+      { name = "BROWSER_COOKIE_SECURE", value = tostring(var.browser_cookie_secure) },
       { name = "BROWSER_COOKIE_SAMESITE", value = "lax" },
-      { name = "FRONTEND_ORIGINS", value = var.frontend_origins },
-      { name = "BROWSER_ALLOWED_ORIGINS", value = var.browser_allowed_origins },
-      { name = "TRUSTED_HOSTS", value = var.trusted_hosts },
+      { name = "FRONTEND_ORIGINS", value = local.resolved_frontend_origins },
+      { name = "BROWSER_ALLOWED_ORIGINS", value = local.resolved_browser_allowed_origins },
+      { name = "TRUSTED_HOSTS", value = local.resolved_trusted_hosts },
       { name = "TERRITORY_AI_PROVIDER", value = "unavailable" },
       { name = "PUBLIC_FETCH_ALLOW_PRIVATE_HOSTS", value = "false" },
       { name = "METRICS_ENABLED", value = "false" },
