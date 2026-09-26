@@ -6,7 +6,9 @@ Preparación, mediante código y documentación, de los recursos que deben exist
 - [`PRODUCTION_RUNBOOK.md`](./PRODUCTION_RUNBOOK.md), §2 — "Remote Terraform state — BLOCKER BEFORE REAL PRODUCTION APPLY".
 - [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md) — matriz de preparación y blockers.
 
-**Estado al cierre de Fase 4D.1: código de bootstrap preparado en `infra/terraform/bootstrap/`, validado localmente (`fmt`/`init -backend=false`/`validate`). Ningún recurso de AWS ha sido creado. Ningún `terraform plan`/`apply`/`destroy` se ha ejecutado contra una cuenta AWS real.**
+**Estado actualizado (post Fase 4D.1): el bootstrap (`infra/terraform/bootstrap/`) YA FUE aplicado y verificado manualmente contra AWS real.** Existen en la cuenta los recursos de §3: el bucket S3 de Terraform remote state (con versioning/encryption/Public Access Block/ownership controls/policy asociados), los dos repositorios ECR (backend y frontend), la IAM policy `terraform_state_access` y la IAM policy `ecr_push` — nombres reales no repetidos aquí (ver §15 sobre la convención de nombres, sin exponer el valor real elegido en `terraform.tfvars`, que no está versionado). El state de ese `apply` permanece **local** (`infra/terraform/bootstrap/terraform.tfstate`), por diseño — ver §10, "State del propio bootstrap" — está gitignored y **nunca debe versionarse**; es el único mapeo entre este código y esos recursos reales, y debe protegerse/respaldarse en consecuencia (ver también §21, "State sensible").
+
+**Esto NO significa que el stack productivo exista.** `infra/terraform/environments/prod/` (VPC, ECS/Fargate, RDS, RDS Proxy, ALB, WAF, CloudWatch, bucket de artifacts) sigue **sin ningún `terraform apply` ejecutado** — solo validado localmente (`fmt`/`init -backend=false`/`validate`). Su eventual state de producción será **distinto** del state local del bootstrap: vivirá en el bucket S3 que el bootstrap ya creó, pero bajo una key propia (`territorio-electoral/prod/terraform.tfstate`, §8) — nunca la misma key ni el mismo archivo que el state del bootstrap. Tampoco confundir ese **state bucket** (guarda el `.tfstate`, un artefacto operativo de Terraform) con el **bucket de artifacts de la aplicación** (evidencia/informes, `modules/s3_artifact_bucket`, Fase 4C.8, que crea `environments/prod` — todavía no aplicado) — son dos buckets S3 completamente distintos, con propósitos, stacks y ownership distintos, ver §12 y `BACKUP_DR_FOUNDATION.md`, "Ownership del bucket de artifacts".
 
 ---
 
@@ -47,9 +49,11 @@ infra/terraform/
                             CloudWatch, S3 lifecycle.
 ```
 
-El bootstrap es deliberadamente pequeño: **no** contiene VPC, ECS, RDS, ALB, WAF, ni ningún recurso de aplicación. Tampoco adopta el bucket de artifacts de la aplicación (ese bucket sigue siendo un blocker separado, ver §12).
+El bootstrap es deliberadamente pequeño: **no** contiene VPC, ECS, RDS, ALB, WAF, ni ningún recurso de aplicación. Tampoco crea el bucket de artifacts de la aplicación — ese bucket lo crea `environments/prod` (`modules/s3_artifact_bucket`, Fase 4C.8), nunca el bootstrap: son dos buckets S3 completamente distintos, con dos `resource "aws_s3_bucket"` distintos en dos stacks Terraform distintos, ver §12.
 
-## 3. Qué crea este bootstrap (cuando se aplique)
+## 3. Qué crea este bootstrap (YA APLICADO)
+
+Los 10 recursos de AWS de la tabla siguiente existen actualmente en la cuenta — verificados manualmente (AWS Console/CLI) tras el `apply`, sin exponer aquí ningún nombre/ARN real. (El state local además registra 3 `data "aws_iam_policy_document"` usados para renderizar las policies de abajo — no son recursos de AWS por sí mismos, solo documentos JSON calculados por Terraform.)
 
 | Recurso | Archivo | Propósito |
 | --- | --- | --- |
@@ -67,7 +71,7 @@ El bootstrap es deliberadamente pequeño: **no** contiene VPC, ECS, RDS, ALB, WA
 ## 4. Qué NO crea este bootstrap
 
 - VPC, security groups, ECS, ALB, RDS, RDS Proxy, WAF, CloudWatch — eso es `environments/prod` (Fase 4C, ya completa a nivel de código).
-- El bucket de artifacts de la aplicación (evidence/reports) — sigue siendo un blocker operativo separado (`s3_artifact_bucket`, ver `BACKUP_DR_FOUNDATION.md`). **No se adopta silenciosamente aquí.**
+- El bucket de artifacts de la aplicación (evidence/reports) — lo crea `environments/prod` (`modules/s3_artifact_bucket`, `var.s3_artifact_bucket_name`, Fase 4C.8), no este bootstrap. **No se adopta ni se crea silenciosamente aquí.**
 - Ningún Route53 hosted zone ni certificado ACM — requieren un dominio real, todavía no decidido.
 - Ningún secreto real en Secrets Manager — pertenecen a `environments/prod` (RDS) o a Fase 4D.2 (secrets de aplicación).
 - Un IAM Role de "Terraform deployment" con permisos sobre VPC/ECS/RDS/WAF/CloudWatch/Secrets Manager — ver §7.
@@ -134,23 +138,23 @@ territorio-electoral/prod/terraform.tfstate
 
 Sin datos personales. Un entorno futuro (`environments/staging`, si llegara a existir) usaría `territorio-electoral/staging/terraform.tfstate` en el mismo bucket.
 
-## 9. Secuencia exacta: bootstrap → migración de state → production plan (documentada, NO ejecutada)
+## 9. Secuencia exacta: bootstrap → migración de state → production plan (pasos 1-5 YA EJECUTADOS, pasos 6-9 pendientes)
 
 Orden estricto — cada paso presupone que el anterior se completó y se verificó, nunca se saltan pasos para "ganar tiempo":
 
-1. **El Terraform del bootstrap continúa con state local** (§10) — no requiere ninguna acción previa, es su estado por diseño.
-2. **Ejecutar el `terraform plan` del bootstrap** contra la cuenta/región elegidas (`infra/terraform/bootstrap/`).
-3. **Revisar ese plan** (revisión humana, mismo criterio que cualquier `plan` real — `PRODUCTION_RUNBOOK.md` §5) — confirmar que solo toca los recursos de §3 (state bucket, ECR, IAM policies), nada más.
-4. **`terraform apply` del bootstrap** — el primer contacto real de este proyecto con AWS.
-5. **Verificar manualmente** (AWS Console o CLI) el state bucket (versioning `Enabled`, encryption configurada, Public Access Block activo, bucket policy de `SecureTransport`) y los dos repositorios ECR — no asumir que el `apply` fue exitoso sin verificarlo.
-6. **Inicializar `environments/prod` con el backend S3 real**: `terraform init` con los 4 `-backend-config` de §7 (bucket/key/region/`use_lockfile`) — el backend parcial `backend "s3" {}` ya está en `versions.tf` desde esta subfase.
-7. **Migrar el state de `environments/prod`**: Terraform pregunta si se desea copiar el state local existente al backend remoto recién inicializado — responder que sí; luego verificar con `terraform state list` (ya contra el backend remoto) que la lista de recursos coincide exactamente con la que mostraba el state local antes de migrar.
-8. **Verificar state remoto y locking**: respaldar el `terraform.tfstate` local anterior (copiarlo fuera del repositorio, con fecha, sin eliminarlo todavía) y confirmar el locking ejecutando dos `terraform plan` casi simultáneos (prueba deliberada) — el segundo debe esperar o fallar por lock, nunca correr ambos sobre el mismo state a la vez.
-9. **Solo después de (1)-(8) verificados, preparar el `terraform plan` de producción** — este paso es un evento distinto (BEFORE FIRST PRODUCTION STACK APPLY, `PRODUCTION_READINESS.md`), con sus propios prerrequisitos (imágenes en ECR, ownership del bucket de artifacts, secrets, etc.), no una continuación automática de la migración de state.
+1. ✅ **YA HECHO** — El Terraform del bootstrap continúa con state local (§10) — no requiere ninguna acción previa, es su estado por diseño.
+2. ✅ **YA HECHO** — `terraform plan` del bootstrap ejecutado contra la cuenta/región elegidas (`infra/terraform/bootstrap/`).
+3. ✅ **YA HECHO** — Ese plan fue revisado (revisión humana, mismo criterio que cualquier `plan` real — `PRODUCTION_RUNBOOK.md` §5) — confirmado que solo tocaba los recursos de §3 (state bucket, ECR, IAM policies), nada más.
+4. ✅ **YA HECHO** — `terraform apply` del bootstrap ejecutado — el primer contacto real de este proyecto con AWS.
+5. ✅ **YA HECHO** — Verificación manual (AWS Console/CLI) del state bucket (versioning `Enabled`, encryption configurada, Public Access Block activo, bucket policy de `SecureTransport`) y los dos repositorios ECR — confirmado, no asumido.
+6. ⬜ **PENDIENTE** — Inicializar `environments/prod` con el backend S3 real: `terraform init` con los 4 `-backend-config` de §7 (bucket/key/region/`use_lockfile`) — el backend parcial `backend "s3" {}` ya está en `versions.tf` desde esta subfase, pero `environments/prod` no se ha inicializado todavía con esos valores reales.
+7. ⬜ **PENDIENTE** — Migrar el state de `environments/prod`: Terraform preguntará si se desea copiar el state local existente al backend remoto recién inicializado — responder que sí; luego verificar con `terraform state list` (ya contra el backend remoto) que la lista de recursos coincide exactamente con la que mostraba el state local antes de migrar. (El state local de `environments/prod` hoy está prácticamente vacío — solo validaciones con `-backend=false`, cero recursos reales de producción aplicados — así que esta migración, cuando ocurra, no migrará ningún recurso real de aplicación, solo prepara el backend para el primer `apply` productivo.)
+8. ⬜ **PENDIENTE** — Verificar state remoto y locking: respaldar el `terraform.tfstate` local anterior (copiarlo fuera del repositorio, con fecha, sin eliminarlo todavía) y confirmar el locking ejecutando dos `terraform plan` casi simultáneos (prueba deliberada) — el segundo debe esperar o fallar por lock, nunca correr ambos sobre el mismo state a la vez.
+9. ⬜ **PENDIENTE** — Solo después de (6)-(8) verificados, preparar el `terraform plan` de producción — este paso es un evento distinto (BEFORE FIRST PRODUCTION STACK APPLY, `PRODUCTION_READINESS.md`), con sus propios prerrequisitos (imágenes en ECR, nombre del bucket de artifacts, secrets, etc.), no una continuación automática de la migración de state.
 
 Solo después de confirmar (8) de forma explícita (no automática) que el remoto es correcto y accesible por el equipo se archiva el `tfstate` local respaldado — nunca eliminarlo inmediatamente sin ese respaldo.
 
-**Ninguno de estos 9 pasos se ha ejecutado en Fase 4D.1.**
+**Los pasos 1-5 (bootstrap: plan, revisión, apply, verificación manual) ya se ejecutaron y verificaron contra AWS real. Los pasos 6-9 (migración del state de `environments/prod` al backend S3 ya creado, y preparación del primer plan productivo) NO se han ejecutado** — `environments/prod` sigue validándose exclusivamente con `terraform init -backend=false` (local, sin contactar AWS).
 
 ## 10. State del propio bootstrap
 
@@ -158,7 +162,9 @@ El bootstrap (`infra/terraform/bootstrap`) usa **state local**, de forma deliber
 
 Estrategia elegida para esta subfase: **(A) el state del bootstrap permanece local y protegido** (respaldado manualmente por el operador, nunca commiteado — ya cubierto por `.gitignore`, ver §14). Es la opción de menor complejidad y evita cualquier dependencia circular.
 
-Alternativa documentada para más adelante, si el equipo lo decide explícitamente: **(B)** una vez que el state bucket ya existe (tras el primer `apply` del bootstrap), migrar el propio state del bootstrap a una key separada del mismo bucket (p. ej. `territorio-electoral/bootstrap/terraform.tfstate`) con un `terraform init -migrate-state` **dentro del propio directorio `bootstrap/`** — sin circularidad porque el bucket ya existiría en ese momento. No se resuelve mediante ningún truco de dependencia circular (p. ej. no se intenta que el bootstrap se auto-referencie en su primer `apply`).
+**Esto ya no es una decisión hipotética**: `infra/terraform/bootstrap/terraform.tfstate` existe hoy en disco, con los 13 recursos/data sources reales de §3 registrados — es el único mapeo entre ese código y los recursos que YA existen en AWS. Perderlo sin un respaldo obligaría a un `terraform import` manual, recurso por recurso, para volver a poder administrarlos con Terraform — los recursos en sí no desaparecerían de AWS, pero Terraform dejaría de "conocerlos". Tratarlo con la misma disciplina que cualquier credencial: respaldo regular fuera del repositorio, nunca en texto plano en un canal compartido no cifrado, nunca commiteado (confirmado gitignored, ver §22).
+
+Alternativa documentada para más adelante, si el equipo lo decide explícitamente: **(B)** ahora que el state bucket ya existe (el bootstrap ya se aplicó), migrar el propio state del bootstrap a una key separada del mismo bucket (p. ej. `territorio-electoral/bootstrap/terraform.tfstate`) con un `terraform init -migrate-state` **dentro del propio directorio `bootstrap/`** — sin circularidad porque el bucket ya existiría en ese momento. No se resuelve mediante ningún truco de dependencia circular (p. ej. no se intenta que el bootstrap se auto-referencie en su primer `apply`).
 
 **El state del bootstrap y el state remoto de `environments/prod` son, y deben seguir siendo, dos states distintos** — nunca la misma key, incluso si en el futuro (opción B) ambos terminan viviendo en el mismo bucket físico. Key de producción: `territorio-electoral/prod/terraform.tfstate` (§8). Key del bootstrap, si algún día se migra (opción B): `territorio-electoral/bootstrap/terraform.tfstate` — prefijo distinto, nunca superpuesto. Mezclarlos en una sola key haría que un `apply` de un stack pudiera sobrescribir o corromper el state del otro.
 
@@ -205,7 +211,7 @@ identidad de bootstrap (humana, permisos acotados a los recursos
 de §3, credenciales de corta duración — nunca access keys estáticas)
         |
         v
-  [BOOTSTRAP APPLY: crea state bucket, ECR, policies]
+  [BOOTSTRAP APPLY: crea state bucket, ECR, policies]  <-- YA EJECUTADO
         |
         v
   [uso TEMPORAL, solo si se autoriza explícitamente: la misma
@@ -288,6 +294,8 @@ override.tf.json
 
 ## 24. Costos
 
+Estos costos ya se están incurriendo (recursos reales, no proyectados):
+
 | Recurso | Costo aproximado | Nota |
 | --- | --- | --- |
 | S3 state bucket | Bajo pero no cero — almacenamiento (un archivo de pocos KB-MB, con versiones) + requests | Costo marginal, no significativo a esta escala |
@@ -295,11 +303,11 @@ override.tf.json
 | Escaneo básico de ECR (`scan_on_push`) | Sin costo adicional | Incluido en ECR estándar |
 | IAM (policies) | Sin costo | — |
 
-Sin infraestructura de aplicación todavía (VPC/ECS/RDS/ALB/WAF/CloudWatch de `environments/prod` no se ha aplicado). AWS Budgets con una alarma de costo real queda como mejora recomendada para una fase posterior, **una vez exista una dirección de notificación real decidida** — no se crea aquí una alarma con un email de ejemplo/ficticio.
+Sin infraestructura de aplicación todavía — VPC/ECS/RDS/ALB/WAF/CloudWatch/bucket de artifacts de `environments/prod` **no se han aplicado**, sin costo asociado hasta que ese `apply` ocurra. AWS Budgets con una alarma de costo real queda como mejora recomendada para una fase posterior, **una vez exista una dirección de notificación real decidida** — no se crea aquí una alarma con un email de ejemplo/ficticio.
 
-## 25. BEFORE AWS BOOTSTRAP APPLY
+## 25. BEFORE AWS BOOTSTRAP APPLY — histórico, YA RESUELTO
 
-Lista exhaustiva de lo que debe resolverse antes de que `terraform apply` en `infra/terraform/bootstrap/` pueda ejecutarse — copia autorizada de `PRODUCTION_READINESS.md`, sección "Blockers reales — tres momentos distintos" (fuente única, mantener ambas en sincronía si se edita una). Ninguno de estos puntos se resuelve en esta subfase — son decisiones del operador humano:
+**Esta lista ya se resolvió: el bootstrap está aplicado.** Se conserva aquí como registro de lo que se resolvió y como referencia si algún día hace falta re-crear un bootstrap (otra cuenta, otro proyecto) — copia autorizada de `PRODUCTION_READINESS.md`, sección "Blockers reales — tres momentos distintos" (fuente única, mantener ambas en sincronía si se edita una):
 
 1. **AWS account disponible.**
 2. **Método seguro de autenticación de corta duración** para la identidad de bootstrap — nunca `access_key`/`secret_key` estáticas (§17).
@@ -310,12 +318,12 @@ Lista exhaustiva de lo que debe resolverse antes de que `terraform apply` en `in
 7. **`terraform.tfvars` real del bootstrap preparado localmente** (copiado de `terraform.tfvars.example`) y **no versionado** (§22).
 8. **Revisión humana del primer `terraform plan` del bootstrap** antes de cualquier `apply` (§9, paso 3).
 
-**NO forman parte de esta lista** — no bloquean el bootstrap apply, aunque sí bloqueen el production stack apply o el go-live: ownership del bucket de artifacts, dominio, ACM, secrets de aplicación, decisión de Multi-AZ, `db_instance_class`, rollout de WAF (Count → Enforce). El bootstrap no crea, ni depende de, ninguno de esos recursos — ver §4, "Qué NO crea este bootstrap".
+**NO forman parte de esta lista** — no bloquean el bootstrap apply, aunque sí bloqueen el production stack apply o el go-live: nombre del bucket de artifacts (`s3_artifact_bucket_name`, Fase 4C.8 — ya no una decisión de ownership, ver `BACKUP_DR_FOUNDATION.md`), dominio, ACM, secrets de aplicación, decisión de Multi-AZ, `db_instance_class`, rollout de WAF (Count → Enforce). El bootstrap no crea, ni depende de, ninguno de esos recursos — ver §4, "Qué NO crea este bootstrap".
 
 ## 26. Notas de seguridad
 
 - Cero secretos, cero credenciales AWS estáticas, cero account IDs de 12 dígitos, cero políticas `Resource: "*"` amplias en `infra/terraform/bootstrap/` — confirmado por auditoría explícita en esta subfase (grep de AWS access keys, private keys, account IDs, `password=`, `:latest`). El único wildcard de recurso (`resources = ["*"]` en `ecr_push`) está acotado a una única acción de autenticación (`ecr:GetAuthorizationToken`), exigida por el propio diseño de la API de ECR — no hay ARN de recurso más específico posible para esa acción.
-- `prevent_destroy = true` en el state bucket es la única excepción deliberada a "no usar `prevent_destroy` indiscriminadamente" — justificada porque perderlo compromete la capacidad de administrar toda la infraestructura restante.
+- `prevent_destroy = true` en el state bucket es una excepción deliberada a "no usar `prevent_destroy` indiscriminadamente" — justificada porque perderlo compromete la capacidad de administrar toda la infraestructura restante. Desde Fase 4C.8, `modules/s3_artifact_bucket` (`environments/prod`, stack distinto de este bootstrap) aplica el mismo `prevent_destroy = true` sobre el bucket de artifacts, por la misma razón — ver `BACKUP_DR_FOUNDATION.md`, §36.
 - Ningún dato personal en ningún nombre de recurso (bucket, repositorio, key de state).
 
 ## 27. Troubleshooting
@@ -330,14 +338,12 @@ Lista exhaustiva de lo que debe resolverse antes de que `terraform apply` en `in
 
 ---
 
-## Decisiones pendientes antes del primer AWS apply (bootstrap)
-
-Lista exhaustiva de lo que el operador humano debe decidir — nada de esto lo decide este documento ni el código:
+## Decisiones — bootstrap (1-4) YA RESUELTAS, `environments/prod` (5-7) pendientes
 
 1. ~~Región AWS definitiva~~ — **decidida: `us-east-2` (Ohio)**, ya reflejada como default en ambos stacks (bootstrap y `environments/prod` coinciden). Sigue siendo overridable vía `terraform.tfvars` si la cuenta cambiara.
-2. Nombre real y único globalmente del state bucket.
-3. Quién ejecuta el bootstrap y con qué mecanismo de credenciales de corta duración.
-4. Si se usan los nombres de ECR por defecto (`territorio-electoral-prod-backend`/`-frontend`) o nombres explícitos.
-5. Cuándo y quién crea el "Terraform deployment role" (§16) — depende del primer `plan` real de `environments/prod`, que sigue sin ejecutarse.
-6. Si/cuándo se habilita GitHub OIDC (§18) — no antes de tener el deployment role del punto anterior.
-7. Cuándo se ejecuta la migración real del state (§9) — requiere que el bootstrap ya esté aplicado y verificado.
+2. ~~Nombre real y único globalmente del state bucket~~ — **decidido y aplicado** (el bucket existe en AWS, ver §3). No se repite aquí el nombre real (evitar exponerlo innecesariamente en documentación versionada).
+3. ~~Quién ejecuta el bootstrap y con qué mecanismo de credenciales de corta duración~~ — **resuelto**: el `apply` ya se ejecutó y se verificó manualmente.
+4. ~~Si se usan los nombres de ECR por defecto o nombres explícitos~~ — **resuelto**: los dos repositorios ECR ya existen (ver §3).
+5. **Pendiente** — Cuándo y quién crea el "Terraform deployment role" (§16) — depende del primer `plan` real de `environments/prod`, que sigue sin ejecutarse.
+6. **Pendiente** — Si/cuándo se habilita GitHub OIDC (§18) — no antes de tener el deployment role del punto anterior.
+7. **Pendiente** — Cuándo se ejecuta la migración real del state de `environments/prod` (§9, pasos 6-9) — el bootstrap ya está aplicado y verificado (prerequisito cumplido), pero la migración en sí todavía no se ha ejecutado.

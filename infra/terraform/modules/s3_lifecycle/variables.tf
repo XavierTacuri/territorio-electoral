@@ -2,68 +2,64 @@
 # Ownership del bucket (ver docs/aws/BACKUP_DR_FOUNDATION.md, "Ownership del
 # bucket de artifacts")
 # ============================================================================
-# El bucket de artifacts (var.bucket_name) NO es un recurso de este modulo ni
-# de ningun otro modulo de este stack — lo confirma modules/ecs/main.tf
-# (comentario sobre aws_iam_role_policy.task_s3: "El bucket en si no es un
-# recurso de este modulo todavia") desde Fase 4C.2. Este modulo administra
-# UNICAMENTE configuracion adjunta al bucket por NOMBRE (versioning,
-# lifecycle, encryption por defecto, public access block) — recursos
-# independientes del AWS provider que no requieren poseer/crear el propio
-# `aws_s3_bucket`. Aun asi, activar cualquiera de ellos convierte a este
-# stack en el OWNER real de esas configuraciones concretas: si otro
-# stack/IaC ya administra el lifecycle o el versioning de ese mismo bucket,
-# aplicar este modulo lo sobrescribiria (un `aws_s3_bucket_lifecycle_configuration`
+# Historicamente (Fase 4C.5) el bucket de artifacts (var.bucket_name) no era
+# un recurso Terraform en ningun modulo de este stack, y este modulo
+# administraba ademas su versioning/encryption/public-access-block por
+# nombre. Eso cambio: modules/s3_artifact_bucket ahora declara el
+# `aws_s3_bucket` y posee su versioning, su encryption por defecto y su
+# public access block — este modulo quedo reducido a UNA sola
+# responsabilidad, la lifecycle configuration, precisamente para que ningun
+# aspecto de S3 se administre desde dos modulos a la vez (doble ownership).
+#
+# El riesgo que motivaba el triple gate de abajo sigue existiendo para la
+# lifecycle configuration en si (un `aws_s3_bucket_lifecycle_configuration`
 # reemplaza TODA la lifecycle configuration del bucket, no la fusiona con
-# reglas creadas por otro medio) — por eso activar este modulo exige TRES
-# confirmaciones explicitas independientes, no una sola variable:
+# reglas creadas por otro medio) — por eso se conserva, ahora acotado a ese
+# unico recurso:
 #
 #   1. var.enabled                              — "quiero que este modulo haga algo"
 #   2. var.bucket_configuration_managed_by_this_stack — "confirmo que NINGUN
-#      otro stack/IaC administra hoy el versioning/lifecycle/encryption/
-#      public-access-block de var.bucket_name"
+#      otro stack/IaC administra hoy la lifecycle configuration de var.bucket_name"
 #   3. var.bucket_dedicated_to_project           — "confirmo que var.bucket_name
 #      esta dedicado exclusivamente a Territorio Electoral, no compartido
 #      con otros proyectos/workloads"
 #
 # Las tres deben ser `true` simultaneamente (validado en `enabled` mas abajo)
-# para que cualquier recurso se cree — cambiar una sola variable nunca activa
-# nada por accidente. Ver tambien "Bucket dedicado" en
-# docs/aws/BACKUP_DR_FOUNDATION.md sobre por que bucket_dedicated_to_project
-# es ademas el prerequisito que justifica que abort-incomplete-multipart-upload
-# y expired-delete-marker-cleanup (mas abajo) sean bucket-wide en vez de
-# acotados por prefijo.
-#
-# Implicacion de "terraform destroy": destruiria estos recursos de
-# configuracion (el bucket volveria a sus valores por defecto de AWS: sin
-# versioning gestionado por Terraform, sin estas reglas de lifecycle, sin
-# encryption/public-access-block gestionados por Terraform) — NUNCA el
-# bucket en si ni sus objetos, porque `aws_s3_bucket` nunca se declara aqui.
+# para que el recurso se cree — cambiar una sola variable nunca activa nada
+# por accidente. Cuando este modulo se usa junto a modules/s3_artifact_bucket
+# en el mismo stack (el caso real de environments/prod), ambas confirmaciones
+# son ciertas por construccion — el bucket lo crea este mismo stack,
+# exclusivamente para este proyecto — y se pasan como literal `true` desde
+# environments/prod/main.tf, no como variables sueltas en tfvars. El modulo
+# sigue siendo utilizable de forma independiente (bucket_name apuntando a un
+# bucket externo) si algun dia hiciera falta, de ahi que el gate se conserve
+# en vez de eliminarse.
 
 variable "enabled" {
-  description = "Interruptor maestro explicito. false (por defecto): este modulo no administra nada del bucket externo. true: los recursos de abajo se crean UNICAMENTE si ademas bucket_configuration_managed_by_this_stack=true y bucket_dedicated_to_project=true (validado abajo) y bucket_name no esta vacio — tres condiciones independientes, nunca una sola."
+  description = "Interruptor maestro explicito. false: este modulo no administra la lifecycle configuration del bucket. true (por defecto en environments/prod desde que el bucket es propio): el recurso de abajo se crea UNICAMENTE si ademas bucket_configuration_managed_by_this_stack=true y bucket_dedicated_to_project=true (validado abajo) y bucket_name no esta vacio — tres condiciones independientes, nunca una sola."
   type        = bool
   default     = false
 
   validation {
     condition     = !var.enabled || (var.bucket_configuration_managed_by_this_stack && var.bucket_dedicated_to_project)
-    error_message = "enabled=true requiere ADEMAS bucket_configuration_managed_by_this_stack=true Y bucket_dedicated_to_project=true — dos confirmaciones explicitas independientes, no basta con esta variable. Este modulo administrara (y sobrescribira por completo, no fusionara) el versioning/lifecycle/encryption-por-defecto/public-access-block de bucket_name. Antes de poner las tres en true: (a) confirma que ningun otro stack/IaC administra hoy esas mismas configuraciones sobre ese bucket, y (b) confirma que ese bucket esta dedicado exclusivamente a Territorio Electoral, no compartido con otros proyectos. Ver docs/aws/BACKUP_DR_FOUNDATION.md, \"Ownership del bucket de artifacts\"."
+    error_message = "enabled=true requiere ADEMAS bucket_configuration_managed_by_this_stack=true Y bucket_dedicated_to_project=true — dos confirmaciones explicitas independientes, no basta con esta variable. Este modulo administrara (y sobrescribira por completo, no fusionara) la lifecycle configuration de bucket_name. Ver docs/aws/BACKUP_DR_FOUNDATION.md, \"Ownership del bucket de artifacts\"."
   }
 }
 
 variable "bucket_configuration_managed_by_this_stack" {
-  description = "false (por defecto). Confirmacion EXPLICITA de que ningun otro stack/IaC administra hoy el versioning, la lifecycle configuration, la encryption por defecto ni el public access block de var.bucket_name — aws_s3_bucket_lifecycle_configuration (y los otros tres recursos de este modulo) REEMPLAZAN por completo la configuracion existente del bucket para ese aspecto, no la fusionan. Poner esto en true sin haber verificado lo anterior podria borrar silenciosamente reglas manuales o de otro IaC que Terraform no conoce."
+  description = "Confirmacion EXPLICITA de que ningun otro stack/IaC administra hoy la lifecycle configuration de var.bucket_name — aws_s3_bucket_lifecycle_configuration REEMPLAZA por completo la configuracion existente del bucket para ese aspecto, no la fusiona. Cuando bucket_name proviene de modules/s3_artifact_bucket en el mismo stack, esto es cierto por construccion (environments/prod/main.tf lo pasa como literal true)."
   type        = bool
   default     = false
 }
 
 variable "bucket_dedicated_to_project" {
-  description = "false (por defecto). Confirmacion EXPLICITA de que var.bucket_name esta dedicado exclusivamente a Territorio Electoral (no es un bucket compartido con otros proyectos/workloads). Este modulo no puede comprobarlo tecnicamente (el bucket es externo, ver arriba) — es una decision operativa que el equipo confirma aqui. Ademas de gatear enabled (junto con bucket_configuration_managed_by_this_stack), es el prerequisito que justifica que las reglas bucket-wide de este modulo (abort-incomplete-multipart-upload, expired-delete-marker-cleanup) no esten acotadas por prefijo: si el bucket no fuera dedicado, esas reglas podrian afectar objetos de otros workloads ajenos a Territorio Electoral."
+  description = "Confirmacion EXPLICITA de que var.bucket_name esta dedicado exclusivamente a Territorio Electoral (no es un bucket compartido con otros proyectos/workloads). Ademas de gatear enabled (junto con bucket_configuration_managed_by_this_stack), es el prerequisito que justifica que las reglas bucket-wide de este modulo (abort-incomplete-multipart-upload, expired-delete-marker-cleanup) no esten acotadas por prefijo. Cuando bucket_name proviene de modules/s3_artifact_bucket en el mismo stack, esto es cierto por construccion."
   type        = bool
   default     = false
 }
 
 variable "bucket_name" {
-  description = "Nombre del bucket S3 externo (mismo valor que var.s3_artifact_bucket en environments/prod). Vacio (por defecto): ningun recurso se crea, independientemente de los demas valores."
+  description = "Nombre del bucket S3 (valor real de module.s3_artifact_bucket.bucket_name en environments/prod — nunca un string inventado). Vacio (por defecto): ningun recurso se crea, independientemente de los demas valores."
   type        = string
   default     = ""
 }
@@ -92,7 +88,7 @@ variable "report_prefix" {
 # ============================================================================
 
 variable "enable_versioning" {
-  description = "true (por defecto): S3 Versioning activado — protege contra overwrite/delete accidental de evidencia/informes (docs/aws/PRODUCTION_ARCHITECTURE.md ya documentaba este valor como el target). Las reglas de noncurrent version de abajo solo tienen efecto si esto es true. IMPORTANTE (ver docs/aws/BACKUP_DR_FOUNDATION.md, \"Semantica de expiration con versioning\"): con versioning activo, una `expiration.days` sobre un objeto CURRENT nunca borra bytes de inmediato — inserta un delete marker como nueva version actual y la version anterior pasa a ser NONCURRENT, gobernada desde ese momento por las reglas noncurrent_version_* correspondientes a su prefijo, no por la regla de expiration."
+  description = "true (por defecto): informa a las reglas de lifecycle de abajo que el bucket tiene versioning activo, para que incluyan sus bloques noncurrent_version_* — este modulo YA NO crea el recurso aws_s3_bucket_versioning (eso es responsabilidad de modules/s3_artifact_bucket; ver ese modulo y environments/prod/main.tf, que pasan el mismo var.s3_versioning_enabled a ambos, una unica fuente de verdad). Debe coincidir siempre con el versioning real del bucket — un desajuste no rompe el apply, pero produce reglas de lifecycle incoherentes con el estado real (noncurrent_version_* presentes sin versioning real, o ausentes con versioning real). IMPORTANTE (ver docs/aws/BACKUP_DR_FOUNDATION.md, \"Semantica de expiration con versioning\"): con versioning activo, una `expiration.days` sobre un objeto CURRENT nunca borra bytes de inmediato — inserta un delete marker como nueva version actual y la version anterior pasa a ser NONCURRENT, gobernada desde ese momento por las reglas noncurrent_version_* correspondientes a su prefijo, no por la regla de expiration."
   type        = bool
   default     = true
 }
@@ -310,49 +306,9 @@ variable "abort_incomplete_multipart_upload_days" {
 }
 
 # ============================================================================
-# Encryption por defecto del bucket (defensa en profundidad: la aplicacion
-# ya envia ServerSideEncryption en cada put_object/presigned POST — ver
-# S3ArtifactStorage._encryption_args — esto cubre ademas cualquier objeto
-# escrito sin ese header, ej. una subida manual via consola/CLI). Sujeto al
-# mismo gate de ownership que el resto del modulo (enabled +
-# bucket_configuration_managed_by_this_stack + bucket_dedicated_to_project)
-# — este stack no debe competir con otro IaC por la encryption configuration
-# por defecto del bucket, igual que con el lifecycle/versioning.
+# Encryption por defecto y Public Access Block: YA NO son variables de este
+# modulo — modules/s3_artifact_bucket los administra incondicionalmente
+# (encryption siempre activa, Public Access Block siempre 4/4) sobre el
+# bucket que el mismo crea. Ver ese modulo. Mantenerlos aqui tambien habria
+# sido doble ownership del mismo aspecto de S3 desde dos modulos distintos.
 # ============================================================================
-
-variable "enable_default_encryption" {
-  type    = bool
-  default = true
-}
-
-variable "sse_mode" {
-  description = "AES256 (por defecto) o aws:kms — mismos dos valores validos que S3_SSE_MODE en backend/app/core/config.py. Migrar a aws:kms con una CMK dedicada es una decision futura, no forzada aqui."
-  type        = string
-  default     = "AES256"
-
-  validation {
-    condition     = contains(["AES256", "aws:kms"], var.sse_mode)
-    error_message = "sse_mode debe ser \"AES256\" o \"aws:kms\"."
-  }
-}
-
-variable "kms_key_id" {
-  description = "ARN/ID de la CMK, obligatorio si sse_mode = \"aws:kms\". Sin valor por defecto: no se crea ninguna CMK automaticamente."
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = var.sse_mode != "aws:kms" || (var.kms_key_id != null && trimspace(var.kms_key_id) != "")
-    error_message = "kms_key_id es obligatorio cuando sse_mode = \"aws:kms\"."
-  }
-}
-
-# ============================================================================
-# Public Access Block — mismo gate de ownership que el resto del modulo.
-# ============================================================================
-
-variable "enable_public_access_block" {
-  description = "true (por defecto): las 4 protecciones de Block Public Access activas. El bucket de artifacts nunca debe ser publico — los uploads/downloads directos usan URLs firmadas (S3ArtifactStorage.download/presign_upload), nunca ACLs ni policies publicas."
-  type        = bool
-  default     = true
-}

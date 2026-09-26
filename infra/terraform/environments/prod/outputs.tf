@@ -187,14 +187,24 @@ output "alarm_names" {
 }
 
 # ------------------------------------------------------------------------------
-# Fase 4C.5 — S3 Lifecycle
+# Fase 4C.5/4C.8 — Bucket de artifacts + S3 Lifecycle
 # ------------------------------------------------------------------------------
 
+output "s3_artifact_bucket_name" {
+  description = "Nombre real del bucket S3 de artifacts (evidencia/informes) creado por module.s3_artifact_bucket — el mismo valor que recibe S3_ARTIFACT_BUCKET en el backend."
+  value       = module.s3_artifact_bucket.bucket_name
+}
+
+output "s3_artifact_bucket_arn" {
+  value = module.s3_artifact_bucket.bucket_arn
+}
+
 output "s3_lifecycle_management_enabled" {
-  description = "true si este stack esta administrando activamente la configuracion del bucket de artifacts (var.s3_lifecycle_management_enabled=true y s3_artifact_bucket no vacio)."
+  description = "true si este stack esta administrando activamente las reglas de lifecycle del bucket de artifacts (var.s3_lifecycle_management_enabled=true)."
   value       = module.s3_lifecycle.management_enabled
 }
 
 output "s3_versioning_enabled" {
-  value = module.s3_lifecycle.versioning_enabled
+  description = "true si versioning esta Enabled en el bucket de artifacts real — fuente de verdad: module.s3_artifact_bucket, que es quien crea el recurso aws_s3_bucket_versioning."
+  value       = module.s3_artifact_bucket.versioning_enabled
 }

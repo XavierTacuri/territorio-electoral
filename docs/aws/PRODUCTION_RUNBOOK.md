@@ -11,7 +11,7 @@ Este documento es el manual operativo para preparar, desplegar, validar, operar 
 - [`AWS_BOOTSTRAP.md`](./AWS_BOOTSTRAP.md) — remote state, ECR, modelo IAM y procedimiento de migración del backend (Fase 4D.1, precede a cualquier `apply` de este stack).
 - [`../performance/PERFORMANCE_BASELINE.md`](../performance/PERFORMANCE_BASELINE.md) / [`../performance/LOAD_STRESS_TESTING.md`](../performance/LOAD_STRESS_TESTING.md) — evidencia detrás del dimensionamiento.
 
-**Estado de esta infraestructura al momento de escribir este runbook: ningún recurso de AWS existe todavía.** Todo lo de abajo se ha validado mediante `terraform fmt`/`init -backend=false`/`validate`, Docker Compose local y CI — nunca contra AWS real (ver `PRODUCTION_READINESS.md`, "Qué significa 'validado' en este documento"). Los procedimientos que requieren `terraform plan`/`apply`/`destroy` o el AWS CLI contra recursos reales están marcados explícitamente como **no ejecutados todavía** — este runbook describe el procedimiento a seguir cuando se autorice el primer despliegue real, no confirma que ya ocurrió.
+**Estado de esta infraestructura: el bootstrap (`infra/terraform/bootstrap/`) YA FUE aplicado y verificado manualmente contra AWS real** (state bucket, dos repositorios ECR, dos IAM policies — ver `AWS_BOOTSTRAP.md`). **El stack productivo descrito en el resto de este runbook (`infra/terraform/environments/prod/`: VPC, ECS, RDS, ALB, WAF, CloudWatch, bucket de artifacts) sigue sin ningún recurso en AWS** — todo lo de abajo se ha validado mediante `terraform fmt`/`init -backend=false`/`validate`, Docker Compose local y CI, nunca contra AWS real (ver `PRODUCTION_READINESS.md`, "Qué significa 'validado' en este documento"). Los procedimientos de este runbook que requieren `terraform plan`/`apply`/`destroy` o el AWS CLI contra el stack productivo están marcados explícitamente como **no ejecutados todavía** — este runbook describe el procedimiento a seguir cuando se autorice ese primer despliegue real, no confirma que ya ocurrió.
 
 ### IAM — quién puede hacer qué (referencia rápida)
 
@@ -33,12 +33,12 @@ Checklist explícito, correspondiente a **BEFORE FIRST PRODUCTION STACK APPLY** 
 | 2 | Región AWS decidida | `aws_region` en `terraform.tfvars` — default **`us-east-2` (Ohio)** en `terraform.tfvars.example` y en `variables.tf` de ambos stacks (bootstrap y `environments/prod`); la cuenta AWS disponible para el primer deployment real no tiene `us-east-1` habilitado sin activar características avanzadas, ver `AWS_BOOTSTRAP.md` §13 |
 | 3 | Permisos IAM del operador que ejecutará `plan`/`apply` | Rol/usuario IAM con permisos suficientes sobre VPC/ECS/RDS/WAF/CloudWatch/Secrets Manager — no documentado como policy en este repo (es el operador, no la aplicación) |
 | 4 | Terraform compatible instalado | `>= 1.11.0` (piso real, ver `RDS_PROXY_FOUNDATION.md` — requerido por `ephemeral`/`secret_string_wo`) |
-| 5 | Remote Terraform state resuelto | **NO resuelto — BLOCKER**, ver §2 |
+| 5 | Remote Terraform state resuelto | Bucket ya creado y verificado (bootstrap aplicado) — **migración de `environments/prod` a ese backend: NO resuelta, BLOCKER**, ver §2 |
 | 6 | Dominio decidido | No configurado — `frontend_origins`/`browser_allowed_origins`/`trusted_hosts` sin valor en `terraform.tfvars.example` |
 | 7 | Certificado ACM disponible | No configurado — `certificate_arn = ""` por defecto → solo HTTP (ver §16 de la auditoría, PRE-PRODUCTION REQUIREMENT) |
 | 8 | Imágenes de contenedor inmutables disponibles en un registry | `backend_image`/`frontend_image` sin default — deben apuntar a un tag/digest real antes de cualquier `apply` |
-| 9 | Bucket de artifacts S3 confirmado | `s3_artifact_bucket` sin default — obligatorio con `artifact_storage_provider = "s3"` |
-| 10 | Ownership del bucket confirmado | Las 3 variables de `modules/s3_lifecycle` (`s3_lifecycle_management_enabled`, `s3_bucket_configuration_managed_by_this_stack`, `s3_bucket_dedicated_to_project`) en `false` por defecto — deben confirmarse explícitamente antes de activarlas |
+| 9 | Nombre del bucket de artifacts S3 elegido | `s3_artifact_bucket_name` sin default — obligatorio con `artifact_storage_provider = "s3"`. Desde Fase 4C.8, `modules/s3_artifact_bucket` CREA este bucket (ya no un bucket externo) — mismo tipo de decisión que `state_bucket_name` del bootstrap: un nombre globalmente único, no una confirmación de ownership |
+| 10 | Lifecycle del bucket activo | `s3_lifecycle_management_enabled = true` por defecto (Fase 4C.8) — `modules/s3_lifecycle` aplica sus reglas de expiración/transición automáticamente; las dos confirmaciones de ownership de la versión anterior ya no son variables de tfvars (se pasan como literal `true`, ciertas por construcción) |
 | 11 | Secrets Manager preparado | `secrets_manager_secret_arns` (SECRET_KEY, HMAC secrets) vacío por defecto — deben crearse y referenciarse antes de `apply` |
 | 12 | Parámetros de producción revisados | Ver §12 de la auditoría (ECS sizing) — perfil RECOMMENDED de Fase 4C.6 ya aplicado en `terraform.tfvars.example` |
 | 13 | Decisión de RDS Multi-AZ tomada | `db_multi_az = false` por defecto — decisión de costo/disponibilidad explícita, pendiente de confirmación de negocio |
@@ -53,9 +53,9 @@ No se marca ningún ítem como "completado" en este documento salvo los que tien
 
 ## 2. Remote Terraform state — BLOCKER BEFORE REAL PRODUCTION APPLY
 
-**Fase 4D.1 ya preparó, en código, la solución descrita en esta sección** — ver [`AWS_BOOTSTRAP.md`](./AWS_BOOTSTRAP.md) para el detalle completo (bucket S3 dedicado, versioning, SSE-S3, Public Access Block, `SecureTransport`, `prevent_destroy`, locking nativo `use_lockfile`, backend parcial `backend "s3" {}` ya en `environments/prod/versions.tf`). **Nada de eso existe todavía en AWS** — el punto sigue siendo blocker hasta que el bootstrap se aplique y se verifique, y hasta que la migración descrita en `AWS_BOOTSTRAP.md` (§9) se ejecute.
+**Fase 4D.1 ya preparó, en código, la solución descrita en esta sección** — ver [`AWS_BOOTSTRAP.md`](./AWS_BOOTSTRAP.md) para el detalle completo (bucket S3 dedicado, versioning, SSE-S3, Public Access Block, `SecureTransport`, `prevent_destroy`, locking nativo `use_lockfile`, backend parcial `backend "s3" {}` ya en `environments/prod/versions.tf`). **El bucket YA EXISTE en AWS** — el bootstrap ya se aplicó y se verificó manualmente. El punto sigue siendo blocker, pero por una razón más acotada: falta ejecutar la migración de `environments/prod` a ese backend ya creado, descrita en `AWS_BOOTSTRAP.md` (§9, pasos 6-9) — no falta crear el bucket.
 
-**Estado actual: el state es local.** No existe ningún bloque `backend` en `infra/terraform/environments/prod/versions.tf` ni en ningún otro `.tf` del repositorio — confirmado por búsqueda explícita. Esto es deliberado durante la fase de validación (permite `terraform init -backend=false` sin credenciales AWS), pero es un **bloqueador real antes de cualquier `apply` contra AWS**: producción no debe depender de un `terraform.tfstate` en la máquina de una sola persona.
+**Estado actual: el state de `environments/prod` sigue siendo local.** El bloque `backend "s3" {}` (configuración parcial, sin `bucket`/`key`/`region` dentro) ya está en `infra/terraform/environments/prod/versions.tf` desde Fase 4D.1, pero `environments/prod` no se ha inicializado todavía con los `-backend-config` reales que apunten al bucket del bootstrap — sigue validándose exclusivamente con `terraform init -backend=false` (sin contactar AWS). Esto es deliberado durante la fase de validación, pero es un **bloqueador real antes de cualquier `apply` contra AWS**: producción no debe depender de un `terraform.tfstate` en la máquina de una sola persona.
 
 **Requisitos mínimos del backend remoto a implementar antes del primer `apply` real** (la decisión del proveedor/recurso concreto queda pendiente — no se inventa aquí):
 
@@ -77,7 +77,7 @@ No se marca ningún ítem como "completado" en este documento salvo los que tien
 1. Confirmar que todos los prerrequisitos de §1 están resueltos (especialmente remote state, §2).
 2. Clonar/actualizar el repositorio en la máquina/pipeline que ejecutará Terraform.
 3. `cd infra/terraform/environments/prod`.
-4. `cp terraform.tfvars.example terraform.tfvars` y completar los valores obligatorios sin default (`backend_image`, `frontend_image`, `frontend_origins`, `browser_allowed_origins`, `trusted_hosts`, `s3_artifact_bucket`, `secrets_manager_secret_arns`, `certificate_arn` si aplica).
+4. `cp terraform.tfvars.example terraform.tfvars` y completar los valores obligatorios sin default (`backend_image`, `frontend_image`, `frontend_origins`, `browser_allowed_origins`, `trusted_hosts`, `s3_artifact_bucket_name`, `secrets_manager_secret_arns`, `certificate_arn` si aplica).
 5. Confirmar que `terraform.tfvars` **nunca** se commitea (contiene nombres reales de bucket/dominio, aunque no secretos — ver `TERRAFORM_FOUNDATION.md`).
 6. Verificar identidad AWS del operador: credenciales configuradas (perfil/rol), región correcta.
 7. Continuar con el preflight de Terraform (§5) antes de cualquier `plan`.
@@ -287,7 +287,7 @@ Basado en `BACKUP_DR_FOUNDATION.md`, §25:
 - **Objeto faltante / eliminado**: `aws s3api list-object-versions --bucket <bucket> --prefix <key>` para ubicar el delete marker o la versión anterior; revivir eliminando el delete marker más reciente (`aws s3api delete-object --version-id <delete-marker-version-id>`).
 - **Objeto sobrescrito**: recuperar la versión noncurrent anterior con `aws s3api get-object --version-id <version-id>`, y si corresponde restaurarla como versión actual con `copy-object` sobre sí misma.
 - **Pending huérfano** (`evidence/pending/*` nunca completado): no requiere acción — la regla de lifecycle `pending-cleanup` lo limpia automáticamente (2 días current + 7 días noncurrent, si `s3_lifecycle_management_enabled=true`).
-- **Permission denied**: confirmar que la IAM Task Role del backend tiene los permisos esperados (`s3:GetObject`/`PutObject`/`DeleteObject` sobre `evidence/*` y `reports/*`, ver `ECS_ALB_FOUNDATION.md`) y que el bucket policy externo (si existe) no está denegando explícitamente.
+- **Permission denied**: confirmar que la IAM Task Role del backend tiene los permisos esperados (`s3:GetObject`/`PutObject`/`DeleteObject` sobre `evidence/*` y `reports/*`, ver `ECS_ALB_FOUNDATION.md`) y que la bucket policy (`modules/s3_artifact_bucket`, solo deniega tráfico sin TLS — nunca deniega al Task Role) no está siendo malinterpretada; el backend siempre usa HTTPS, así que esa policy no debería ser la causa.
 - **Problema de credenciales**: el backend nunca usa claves estáticas — revisar que la IAM Task Role esté correctamente asociada a la task definition, y que no haya expirado ningún rol asumido si el operador está probando manualmente con AWS CLI.
 
 ---
@@ -431,10 +431,10 @@ Justificación: `docs/performance/PERFORMANCE_BASELINE.md` (§26/§32/§44/§52)
 - [ ] Health checks en verde (`/health`, `/ready`, target groups del ALB).
 - [ ] Alertas configuradas (al menos un destino SNS con `enable_alarm_actions=true`) — **actualmente NO cumplido** (ambos en `false`/vacío por defecto).
 - [ ] Capacidad revisada (§17).
-- [ ] Ownership del bucket de artifacts confirmado (las 3 variables de `modules/s3_lifecycle` en `true` simultáneamente, si se desea que Terraform administre su configuración).
+- [ ] Nombre del bucket de artifacts (`s3_artifact_bucket_name`) elegido y disponible globalmente en S3 — `modules/s3_artifact_bucket` lo crea (Fase 4C.8); ya no es una confirmación de ownership de un bucket externo.
 - [ ] Procedimiento de DR disponible (este documento + `BACKUP_DR_FOUNDATION.md`) — cumplido a nivel de documentación; **sin ejercicio de DR real ejecutado todavía**.
 - [ ] Ninguna vulnerabilidad crítica conocida sin resolver (ver auditoría de seguridad, `PRODUCTION_READINESS.md`).
 
-**NO-GO si cualquiera de los bloqueadores críticos de `PRODUCTION_READINESS.md` (remote state, dominio/TLS, secrets de producción, primer `terraform plan`/`apply` real nunca ejecutado) sigue pendiente.**
+**NO-GO si cualquiera de los bloqueadores críticos de `PRODUCTION_READINESS.md` (migración del remote state, dominio/TLS, secrets de producción, primer `terraform plan`/`apply` real del stack `environments/prod` nunca ejecutado) sigue pendiente.** (El bootstrap en sí ya está aplicado — este NO-GO es sobre el stack productivo, no sobre el bootstrap.)
 
 Este checklist no dispara ningún despliegue automático — es una lista de verificación humana antes de autorizar el primer `apply` real.

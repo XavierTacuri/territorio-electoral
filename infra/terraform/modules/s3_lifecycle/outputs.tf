@@ -1,10 +1,6 @@
 output "management_enabled" {
-  description = "true si este modulo esta administrando activamente la configuracion del bucket (var.enabled=true y var.bucket_name no vacio)."
+  description = "true si este modulo esta administrando activamente la lifecycle configuration del bucket (var.enabled=true y var.bucket_name no vacio). Ya no cubre versioning/encryption/public-access-block — ver modules/s3_artifact_bucket para el estado real de esos tres."
   value       = local.manage
-}
-
-output "versioning_enabled" {
-  value = local.manage && var.enable_versioning
 }
 
 output "lifecycle_configuration_id" {

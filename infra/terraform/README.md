@@ -6,7 +6,7 @@ Infraestructura como código para el despliegue AWS de Territorio Electoral (Fas
 
 ## Bootstrap (Fase 4D.1)
 
-`infra/terraform/bootstrap/` es un stack Terraform **separado e independiente** de `environments/prod`, que prepara los recursos que deben existir en AWS antes del primer `apply` del stack productivo: el bucket S3 de Terraform state remoto, los repositorios ECR (backend/frontend), y las policies IAM de alcance ya conocido (acceso al propio state bucket, push/pull ECR). Ver [`docs/aws/AWS_BOOTSTRAP.md`](../../docs/aws/AWS_BOOTSTRAP.md) para el detalle completo — **código preparado y validado localmente, ningún recurso creado todavía en AWS**.
+`infra/terraform/bootstrap/` es un stack Terraform **separado e independiente** de `environments/prod`, que prepara los recursos que deben existir en AWS antes del primer `apply` del stack productivo: el bucket S3 de Terraform state remoto, los repositorios ECR (backend/frontend), y las policies IAM de alcance ya conocido (acceso al propio state bucket, push/pull ECR). Ver [`docs/aws/AWS_BOOTSTRAP.md`](../../docs/aws/AWS_BOOTSTRAP.md) para el detalle completo — **APLICADO y verificado manualmente contra AWS real**: el state bucket, los dos repositorios ECR y las dos policies IAM ya existen en la cuenta. El state de este `apply` permanece **local** en `infra/terraform/bootstrap/terraform.tfstate` (gitignored, nunca versionado — ver "State del propio bootstrap" en `AWS_BOOTSTRAP.md`). Esto es distinto de `environments/prod` (abajo), que sigue sin aplicarse.
 
 ## Estado actual (Fase 4C.1 a 4C.7)
 
@@ -14,11 +14,12 @@ Infraestructura como código para el despliegue AWS de Territorio Electoral (Fas
 - **4C.2 — ejecución**: ECS Cluster (Fargate), Task Definitions (backend, frontend, y una task de release `backend-migrate` para Alembic, no adjunta a ningún Service), ECS Services con autoscaling base, ALB con routing por path (`/api/*` → backend, resto → frontend), IAM de mínimo privilegio (Execution Role vs. Task Role).
 - **4C.3 — datos**: RDS PostgreSQL 16 (cifrado, privado, backups, Multi-AZ configurable) + RDS Proxy (TLS, autenticado vía Secrets Manager, identidades master/aplicación separadas) + contraseña de aplicación `ephemeral`/write-only (nunca en el Terraform state).
 - **4C.4 — protección perimetral y observabilidad**: WAFv2 Web ACL (managed rules + rate limiting en `/api/*`) asociado al ALB; 14 alarmas CloudWatch (ALB/ECS/RDS/log-based); dashboard operativo; SNS opcional para notificaciones.
-- **4C.5 — S3 lifecycle + backup/DR**: configuración opcional (versioning, lifecycle rules, encryption por defecto, public access block) adjunta por nombre al bucket externo de artifacts, sin adoptarlo como recurso Terraform; documentación completa de backup/DR de RDS (PITR, snapshots, RPO/RTO, matriz de incidentes, procedimientos de restore) — ver `docs/aws/BACKUP_DR_FOUNDATION.md`.
+- **4C.5 — S3 lifecycle + backup/DR**: lifecycle rules por prefijo (`modules/s3_lifecycle`) sobre el bucket de artifacts; documentación completa de backup/DR de RDS (PITR, snapshots, RPO/RTO, matriz de incidentes, procedimientos de restore) — ver `docs/aws/BACKUP_DR_FOUNDATION.md`.
+- **4C.8 — bucket de artifacts propio**: `modules/s3_artifact_bucket` crea y posee el bucket S3 de evidencia/informes (antes externo) — versioning, encryption por defecto, Public Access Block 4/4, ownership controls `BucketOwnerEnforced` y bucket policy `SecureTransport`. `modules/s3_lifecycle` queda acotado exclusivamente a la lifecycle configuration sobre ese mismo bucket, sin duplicar versioning/encryption/PAB. Distinto del bucket de Terraform state (`infra/terraform/bootstrap`) — ver `docs/aws/BACKUP_DR_FOUNDATION.md`.
 - **4C.6 — load/stress testing + dimensionamiento**: perfil RECOMMENDED aplicado a `terraform.tfvars.example` (backend 1024 CPU/2048 MiB, frontend 256 CPU/512 MiB, `desired_count`/`min`/`max` 2/2/4 ambos) con evidencia de `k6` — ver `docs/performance/PERFORMANCE_BASELINE.md`.
 - **4C.7 — runbook + validación integral**: auditoría completa de networking/IAM/secrets/storage/sizing/observabilidad, runbook operativo y matriz de preparación — ver `docs/aws/PRODUCTION_RUNBOOK.md` y `docs/aws/PRODUCTION_READINESS.md` (estado actual: **NO-GO**, blockers reales listados ahí).
 
-**No se ha creado ningún recurso real en AWS** — nada de esto se ha aplicado todavía.
+**El stack productivo (`environments/prod`, Fase 4C.1-4C.8: VPC, ECS, RDS, ALB, WAF, CloudWatch, bucket de artifacts) sigue sin aplicarse** — ningún recurso de esta lista existe en AWS, solo validado localmente (`fmt`/`init -backend=false`/`validate`). Distinto del bootstrap (sección de arriba), que ya está aplicado — no confundir ambos stacks ni sus states.
 
 ## Estructura
 
@@ -33,7 +34,8 @@ infra/terraform/
     database/           RDS PostgreSQL, RDS Proxy, IAM del proxy (4C.3)
     waf/                WAFv2 Web ACL, managed rules, rate limiting, asociacion al ALB (4C.4)
     observability/      Alarmas CloudWatch, dashboard, SNS (4C.4)
-    s3_lifecycle/       Versioning/lifecycle/encryption/public-access-block sobre el bucket externo de artifacts (4C.5)
+    s3_lifecycle/       Lifecycle configuration (por prefijo) sobre el bucket de artifacts (4C.5, acotado en 4C.8)
+    s3_artifact_bucket/ Bucket S3 de artifacts propio: versioning, encryption, Public Access Block 4/4, SecureTransport (4C.8)
   environments/
     prod/               Único entorno hoy; compone los módulos de arriba
 ```

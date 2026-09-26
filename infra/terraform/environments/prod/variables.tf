@@ -220,9 +220,49 @@ variable "artifact_storage_provider" {
   }
 }
 
-variable "s3_artifact_bucket" {
-  type    = string
-  default = ""
+variable "s3_artifact_bucket_name" {
+  description = "Nombre GLOBALMENTE UNICO del bucket S3 de artifacts (evidencia/informes) que module.s3_artifact_bucket crea y administra (Fase 4C.8) — ya no un bucket externo. Sin default: nunca se inventa un nombre de bucket real, mismo criterio que state_bucket_name en infra/terraform/bootstrap y que backend_image/frontend_image/frontend_origins mas arriba. Obligatorio: artifact_storage_provider por defecto es \"s3\", que requiere este valor. RECOMENDADO para este proyecto: evitar \".\" en el nombre (aunque la regla oficial de S3 lo permite, ver validations abajo) — un nombre con puntos rompe la validacion de certificado TLS wildcard de S3 en acceso virtual-hosted-style (*.s3.amazonaws.com), degradando a HTTP o a path-style; un nombre solo con letras/digitos/guiones evita ese problema por completo. Ver terraform.tfvars.example."
+  type        = string
+
+  # Reglas oficiales de nombres de bucket S3 (General Purpose Buckets),
+  # cada una en su propia validation — mas legible y mas facil de mantener
+  # que una unica regex monolitica, y cada mensaje de error senala
+  # exactamente que regla se violo.
+
+  validation {
+    condition     = length(var.s3_artifact_bucket_name) >= 3 && length(var.s3_artifact_bucket_name) <= 63
+    error_message = "s3_artifact_bucket_name debe tener entre 3 y 63 caracteres."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9.-]+$", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name solo puede contener minusculas (a-z), digitos (0-9), puntos (.) y guiones (-) — sin mayusculas, guiones bajos ni ningun otro caracter."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9].*[a-z0-9]$", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name debe empezar y terminar con una letra minuscula o un digito — nunca con un punto o un guion."
+  }
+
+  validation {
+    condition     = !can(regex("\\.\\.", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name no puede contener dos puntos consecutivos (\"..\")."
+  }
+
+  validation {
+    condition     = !can(regex("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name no puede tener formato de direccion IPv4 (ej. \"192.168.1.1\") — prohibido por las reglas de S3, independientemente de si los octetos son validos como IP real."
+  }
+
+  validation {
+    condition     = !can(regex("^(xn--|sthree-|amzn-s3-demo-)", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name no puede empezar con un prefijo reservado por AWS: \"xn--\", \"sthree-\" o \"amzn-s3-demo-\"."
+  }
+
+  validation {
+    condition     = !can(regex("(-s3alias|--ol-s3|\\.mrap|--x-s3|--table-s3)$", var.s3_artifact_bucket_name))
+    error_message = "s3_artifact_bucket_name no puede terminar con un sufijo reservado por AWS: \"-s3alias\", \"--ol-s3\", \".mrap\", \"--x-s3\" o \"--table-s3\"."
+  }
 }
 
 variable "s3_evidence_prefix" {
@@ -528,36 +568,25 @@ variable "backend_error_log_threshold" {
 }
 
 # ==============================================================================
-# Fase 4C.5 — S3 Lifecycle + Backup/Disaster Recovery
+# Fase 4C.5/4C.8 — Bucket de artifacts + S3 Lifecycle + Backup/Disaster Recovery
 # ==============================================================================
-# El bucket de artifacts sigue sin ser un recurso Terraform (ver
-# modules/s3_lifecycle/variables.tf, "Ownership del bucket"). RDS ya expone
+# El bucket de artifacts es, desde Fase 4C.8, un recurso Terraform real
+# (module.s3_artifact_bucket, ver main.tf) — ya no externo. RDS ya expone
 # toda su superficie de backup/DR real (backup_retention_period,
 # deletion_protection, skip_final_snapshot, multi_az — Fase 4C.3): esta
-# seccion solo agrega el interruptor y los parametros del modulo
-# s3_lifecycle. Ver docs/aws/BACKUP_DR_FOUNDATION.md.
+# seccion agrega el nombre del bucket, su encryption, y el interruptor y los
+# parametros del modulo s3_lifecycle. Ver docs/aws/BACKUP_DR_FOUNDATION.md.
 
 variable "s3_lifecycle_management_enabled" {
-  description = "false (por defecto): este stack NO administra ninguna configuracion del bucket externo de artifacts — decision de ownership explicita, nunca asumida silenciosamente. true: activa modules/s3_lifecycle (versioning, lifecycle rules, encryption por defecto, public access block) sobre var.s3_artifact_bucket — UNICAMENTE si ademas s3_bucket_configuration_managed_by_this_stack=true Y s3_bucket_dedicated_to_project=true (validado dentro del modulo). Tres confirmaciones independientes, nunca una sola variable."
+  description = "true (por defecto): activa modules/s3_lifecycle (reglas de expiracion/transicion por prefijo) sobre el bucket real que crea module.s3_artifact_bucket. Las dos confirmaciones de ownership que este modulo exige internamente ya no son variables de tfvars — environments/prod/main.tf las pasa como literal true, porque al ser este mismo stack quien crea el bucket son ciertas por construccion (a diferencia del diseno anterior, con un bucket externo). false: sin ninguna regla de lifecycle (el bucket sigue existiendo, con versioning/encryption/public-access-block igual de activos via module.s3_artifact_bucket, que no depende de este interruptor)."
   type        = bool
-  default     = false
-}
-
-variable "s3_bucket_configuration_managed_by_this_stack" {
-  description = "false (por defecto). Confirmacion EXPLICITA de que ningun otro stack/IaC administra hoy el versioning/lifecycle/encryption-por-defecto/public-access-block de s3_artifact_bucket — estos recursos REEMPLAZAN por completo esa configuracion, no la fusionan. Ver modules/s3_lifecycle/variables.tf y docs/aws/BACKUP_DR_FOUNDATION.md, \"Ownership del bucket de artifacts\"."
-  type        = bool
-  default     = false
-}
-
-variable "s3_bucket_dedicated_to_project" {
-  description = "false (por defecto). Confirmacion EXPLICITA de que s3_artifact_bucket esta dedicado exclusivamente a Territorio Electoral, no compartido con otros proyectos/workloads — tambien justifica que las reglas bucket-wide del modulo (abort multipart, delete marker cleanup) no esten acotadas por prefijo."
-  type        = bool
-  default     = false
+  default     = true
 }
 
 variable "s3_versioning_enabled" {
-  type    = bool
-  default = true
+  description = "true (por defecto): S3 Versioning activado en el bucket de artifacts. Una unica fuente de verdad pasada a AMBOS module.s3_artifact_bucket (que crea el recurso real aws_s3_bucket_versioning) y module.s3_lifecycle (que lo usa solo para decidir si sus reglas incluyen noncurrent_version_*) — nunca dos booleans independientes que puedan desincronizarse."
+  type        = bool
+  default     = true
 }
 
 variable "s3_pending_expiration_days" {
@@ -660,23 +689,19 @@ variable "s3_abort_incomplete_multipart_upload_days" {
   default = 7
 }
 
-variable "s3_default_encryption_enabled" {
-  type    = bool
-  default = true
-}
-
-variable "s3_lifecycle_sse_mode" {
-  description = "AES256 (por defecto) o aws:kms — mismos valores validos que S3_SSE_MODE (backend/app/core/config.py). Configuracion por defecto a nivel de bucket (defensa en profundidad); la aplicacion ya envia su propio header de encryption en cada escritura, independientemente de esto."
+variable "s3_artifact_bucket_sse_mode" {
+  description = "AES256 (por defecto) o aws:kms — mismos valores validos que S3_SSE_MODE (backend/app/core/config.py). Encryption por defecto SIEMPRE activa a nivel de bucket (module.s3_artifact_bucket, sin interruptor on/off — defensa en profundidad); la aplicacion ya envia ademas su propio header de encryption en cada escritura, independientemente de esto."
   type        = string
   default     = "AES256"
 }
 
-variable "s3_lifecycle_kms_key_id" {
-  type    = string
-  default = ""
+variable "s3_artifact_bucket_kms_key_id" {
+  description = "ARN/ID de la CMK, obligatorio solo si s3_artifact_bucket_sse_mode = \"aws:kms\". Sin valor por defecto: no se crea ninguna CMK automaticamente."
+  type        = string
+  default     = ""
 }
 
-variable "s3_public_access_block_enabled" {
-  type    = bool
-  default = true
-}
+# Nota: ya no existen s3_default_encryption_enabled ni s3_public_access_block_enabled
+# como interruptores — module.s3_artifact_bucket aplica encryption y Public
+# Access Block (4/4) de forma incondicional sobre el bucket que el mismo
+# crea, sin variable que pueda desactivarlos por error.

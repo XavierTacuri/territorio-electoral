@@ -83,6 +83,27 @@ module "database" {
   max_idle_connections_percent = var.db_proxy_max_idle_connections_percent
 }
 
+# ------------------------------------------------------------------------------
+# Fase 4C.8: bucket S3 de artifacts (evidencia/informes), ahora propiedad
+# real de este stack — a diferencia del diseno anterior de Fase 4C.5 (ver
+# modules/s3_lifecycle), este modulo SI declara aws_s3_bucket. Se instancia
+# antes de module.ecs y module.s3_lifecycle porque ambos consumen su output
+# bucket_name (el nombre REAL del bucket, nunca un string inventado). Ver
+# docs/aws/BACKUP_DR_FOUNDATION.md, "Ownership del bucket de artifacts".
+# ------------------------------------------------------------------------------
+
+module "s3_artifact_bucket" {
+  source = "../../modules/s3_artifact_bucket"
+
+  bucket_name = var.s3_artifact_bucket_name
+
+  enable_versioning = var.s3_versioning_enabled
+  sse_mode          = var.s3_artifact_bucket_sse_mode
+  kms_key_id        = var.s3_artifact_bucket_kms_key_id
+
+  tags = local.common_tags
+}
+
 module "ecs" {
   source = "../../modules/ecs"
 
@@ -131,7 +152,7 @@ module "ecs" {
   trusted_hosts           = var.trusted_hosts
 
   artifact_storage_provider = var.artifact_storage_provider
-  s3_artifact_bucket        = var.s3_artifact_bucket
+  s3_artifact_bucket        = module.s3_artifact_bucket.bucket_name
   s3_evidence_prefix        = var.s3_evidence_prefix
   s3_report_prefix          = var.s3_report_prefix
 
@@ -230,20 +251,41 @@ module "observability" {
 }
 
 # ------------------------------------------------------------------------------
-# Fase 4C.5: S3 lifecycle. Administra UNICAMENTE configuracion adjunta al
-# bucket de artifacts (var.s3_artifact_bucket) por nombre — ese bucket sigue
-# sin ser un recurso Terraform (aws_s3_bucket) en ningun modulo de este
-# stack. Ver modules/s3_lifecycle/variables.tf, "Ownership del bucket", y
-# docs/aws/BACKUP_DR_FOUNDATION.md.
+# Fase 4C.5/4C.8: S3 lifecycle. Administra UNICAMENTE la lifecycle
+# configuration adjunta por nombre al bucket que crea module.s3_artifact_bucket
+# (arriba) — el propio aws_s3_bucket, su versioning, su encryption por
+# defecto y su public access block son responsabilidad exclusiva de ese otro
+# modulo, nunca de este (ver modules/s3_lifecycle/variables.tf, "Ownership
+# del bucket", y docs/aws/BACKUP_DR_FOUNDATION.md). Las dos confirmaciones de
+# ownership del modulo se pasan como literal `true`: al ser este mismo stack
+# quien crea el bucket exclusivamente para Territorio Electoral, ambas son
+# ciertas por construccion — ya no son decisiones separadas que el operador
+# deba confirmar a mano en tfvars (a diferencia del diseno anterior, donde el
+# bucket era externo y esa certeza no existia).
+#
+# depends_on = [module.s3_artifact_bucket] explicito (revision pre-commit):
+# bucket_name = module.s3_artifact_bucket.bucket_name SOLO crea una arista de
+# dependencia hacia el recurso que produce ESE output (aws_s3_bucket.this) —
+# Terraform no infiere una dependencia implicita hacia los recursos hermanos
+# de ese mismo modulo (aws_s3_bucket_versioning.this,
+# aws_s3_bucket_server_side_encryption_configuration.this,
+# aws_s3_bucket_public_access_block.this, aws_s3_bucket_policy.secure_transport)
+# porque ningun valor que este modulo consume proviene de ellos. Sin este
+# depends_on explicito, aws_s3_bucket_lifecycle_configuration.this (con sus
+# bloques noncurrent_version_* condicionados a var.enable_versioning, ver
+# modules/s3_lifecycle/main.tf) podria crearse en paralelo con
+# aws_s3_bucket_versioning.this, en vez de estrictamente despues — exactamente
+# el race que este depends_on de modulo completo (equivalente al ya usado en
+# module.ecs/module.observability mas arriba) elimina.
 # ------------------------------------------------------------------------------
 
 module "s3_lifecycle" {
   source = "../../modules/s3_lifecycle"
 
   enabled                                    = var.s3_lifecycle_management_enabled
-  bucket_configuration_managed_by_this_stack = var.s3_bucket_configuration_managed_by_this_stack
-  bucket_dedicated_to_project                = var.s3_bucket_dedicated_to_project
-  bucket_name                                = var.s3_artifact_bucket
+  bucket_configuration_managed_by_this_stack = true
+  bucket_dedicated_to_project                = true
+  bucket_name                                = module.s3_artifact_bucket.bucket_name
 
   evidence_prefix = var.s3_evidence_prefix
   report_prefix   = var.s3_report_prefix
@@ -277,9 +319,5 @@ module "s3_lifecycle" {
 
   abort_incomplete_multipart_upload_days = var.s3_abort_incomplete_multipart_upload_days
 
-  enable_default_encryption = var.s3_default_encryption_enabled
-  sse_mode                  = var.s3_lifecycle_sse_mode
-  kms_key_id                = var.s3_lifecycle_kms_key_id
-
-  enable_public_access_block = var.s3_public_access_block_enabled
+  depends_on = [module.s3_artifact_bucket]
 }

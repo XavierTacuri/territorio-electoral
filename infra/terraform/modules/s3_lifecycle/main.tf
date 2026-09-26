@@ -2,6 +2,14 @@
 # NOMBRE — ninguno de ellos declara ni administra un recurso aws_s3_bucket.
 # Ver variables.tf ("Ownership del bucket") para el razonamiento completo y
 # docs/aws/BACKUP_DR_FOUNDATION.md para la version documentada.
+#
+# Este modulo administra UNICAMENTE la lifecycle configuration del bucket.
+# El propio aws_s3_bucket, su versioning, su encryption por defecto y su
+# public access block son responsabilidad de modules/s3_artifact_bucket (ver
+# environments/prod/main.tf) — nunca de este modulo, para evitar que dos
+# modulos administren el mismo aspecto de S3 (doble ownership). var.bucket_name
+# recibe el nombre REAL que produce ese modulo (module.s3_artifact_bucket.bucket_name),
+# nunca un string inventado.
 
 locals {
   # Redundante con la validation de var.enabled (que ya exige
@@ -25,20 +33,6 @@ locals {
   # expiration.days es incondicional.
   evidence_final_rule_active = var.evidence_final_transition_enabled || var.enable_versioning
   reports_rule_active        = var.reports_expiration_days > 0 || var.reports_transition_enabled || var.enable_versioning
-}
-
-# ============================================================================
-# Versioning
-# ============================================================================
-
-resource "aws_s3_bucket_versioning" "this" {
-  count = local.manage && var.enable_versioning ? 1 : 0
-
-  bucket = var.bucket_name
-
-  versioning_configuration {
-    status = "Enabled"
-  }
 }
 
 # ============================================================================
@@ -206,36 +200,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
       days_after_initiation = var.abort_incomplete_multipart_upload_days
     }
   }
-}
-
-# ============================================================================
-# Encryption por defecto (defensa en profundidad — ver variables.tf)
-# ============================================================================
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
-  count = local.manage && var.enable_default_encryption ? 1 : 0
-
-  bucket = var.bucket_name
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = var.sse_mode
-      kms_master_key_id = var.sse_mode == "aws:kms" ? var.kms_key_id : null
-    }
-  }
-}
-
-# ============================================================================
-# Public Access Block
-# ============================================================================
-
-resource "aws_s3_bucket_public_access_block" "this" {
-  count = local.manage && var.enable_public_access_block ? 1 : 0
-
-  bucket = var.bucket_name
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
 }

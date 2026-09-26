@@ -93,10 +93,14 @@ web_concurrency = 1
 # trusted_hosts           = "<dominio-real-del-frontend>"
 
 # Valor productivo para ECS/Fargate: SIEMPRE "s3" (ver docs/aws/ECS_ALB_FOUNDATION.md).
-# Requiere s3_artifact_bucket — sin el, "terraform plan"/"apply" fallan por
-# el precondition de aws_ecs_service.backend antes de crear nada.
+# Requiere s3_artifact_bucket_name — sin el, "terraform plan"/"apply" fallan
+# por el precondition de aws_ecs_service.backend antes de crear nada.
 artifact_storage_provider = "s3"
-s3_artifact_bucket        = "<nombre-real-del-bucket>" # obligatorio con artifact_storage_provider = "s3"
+# OBLIGATORIO, sin default (Fase 4C.8: module.s3_artifact_bucket lo CREA,
+# no asume que ya existe). Debe ser GLOBALMENTE UNICO en S3 — no solo en la
+# cuenta. <ENTRE_ANGULOS> no es un valor real; sustituir antes de cualquier
+# plan/apply real. Ver docs/aws/BACKUP_DR_FOUNDATION.md.
+s3_artifact_bucket_name = "<nombre-globalmente-unico-del-bucket-de-artifacts>"
 # s3_evidence_prefix = "evidence"  # debe coincidir con backend/app/core/config.py
 # s3_report_prefix   = "reports"   # idem — la policy IAM del Task Role usa estos mismos valores
 
@@ -223,25 +227,18 @@ rds_evaluation_periods             = 3
 backend_error_log_threshold = 10
 
 # ==============================================================================
-# Fase 4C.5 — S3 Lifecycle + Backup/Disaster Recovery
+# Fase 4C.5/4C.8 — Bucket de artifacts + S3 Lifecycle + Backup/Disaster Recovery
 # ==============================================================================
-# El bucket de artifacts sigue sin ser un recurso Terraform (mismo bucket
-# externo de la seccion Fase 4C.2 arriba, s3_artifact_bucket). Ver
-# docs/aws/BACKUP_DR_FOUNDATION.md antes de activar s3_lifecycle_management_enabled.
+# El bucket de artifacts es, desde Fase 4C.8, un recurso Terraform real
+# (module.s3_artifact_bucket, nombrado arriba con s3_artifact_bucket_name) —
+# ya no externo. Ver docs/aws/BACKUP_DR_FOUNDATION.md.
 
-# false (por defecto): decision de ownership explicita, nunca asumida. Las
-# TRES variables siguientes deben ser true simultaneamente para que el
-# modulo administre nada — cambiar una sola nunca activa nada por accidente
-# (validado dentro de modules/s3_lifecycle).
-s3_lifecycle_management_enabled = false
-# Confirma que NINGUN otro stack/IaC administra hoy el versioning/lifecycle/
-# encryption/public-access-block de s3_artifact_bucket.
-s3_bucket_configuration_managed_by_this_stack = false
-# Confirma que s3_artifact_bucket esta dedicado EXCLUSIVAMENTE a Territorio
-# Electoral (no compartido con otros proyectos) — tambien justifica que las
-# reglas bucket-wide (abort multipart, delete marker cleanup) no esten
-# acotadas por prefijo.
-s3_bucket_dedicated_to_project = false
+# true (por defecto): activa las reglas de lifecycle (modules/s3_lifecycle)
+# sobre el bucket real. Las dos confirmaciones de ownership de la version
+# anterior (s3_bucket_configuration_managed_by_this_stack/s3_bucket_dedicated_to_project)
+# ya no son variables aqui — main.tf las pasa como literal true, porque al
+# ser este mismo stack quien crea el bucket son ciertas por construccion.
+s3_lifecycle_management_enabled = true
 
 s3_versioning_enabled = true
 
@@ -290,10 +287,12 @@ s3_expired_delete_marker_cleanup_enabled = true
 # Proteccion de bajo riesgo aunque la aplicacion no usa multipart upload hoy.
 s3_abort_incomplete_multipart_upload_days = 7
 
-# Defensa en profundidad — la aplicacion ya envia su propio header de
-# encryption en cada escritura (S3ArtifactStorage), independientemente de esto.
-s3_default_encryption_enabled = true
-s3_lifecycle_sse_mode         = "AES256"
-# s3_lifecycle_kms_key_id     = "<arn-real-de-una-cmk>"  # obligatorio solo si s3_lifecycle_sse_mode = "aws:kms"
+# Encryption del bucket de artifacts — SIEMPRE activa (module.s3_artifact_bucket
+# no tiene interruptor on/off); la aplicacion ademas ya envia su propio
+# header de encryption en cada escritura (S3ArtifactStorage), independientemente
+# de esto (defensa en profundidad).
+s3_artifact_bucket_sse_mode = "AES256"
+# s3_artifact_bucket_kms_key_id = "<arn-real-de-una-cmk>"  # obligatorio solo si s3_artifact_bucket_sse_mode = "aws:kms"
 
-s3_public_access_block_enabled = true
+# Public Access Block (4/4) tambien SIEMPRE activo en module.s3_artifact_bucket
+# — sin variable que pueda desactivarlo por error.

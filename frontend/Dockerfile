@@ -5,7 +5,8 @@ RUN npm ci
 COPY . .
 RUN npm run typecheck && npm run build
 
-FROM nginx:1.28.0-alpine3.21
+FROM nginx:stable-alpine3.24
+RUN apk add --no-cache --upgrade libexpat
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY proxy_params /etc/nginx/proxy_params
 COPY --from=build /build/dist /usr/share/nginx/html

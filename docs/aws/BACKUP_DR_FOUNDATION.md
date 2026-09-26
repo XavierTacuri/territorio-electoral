@@ -1,6 +1,8 @@
-# S3 Lifecycle + Backup / Disaster Recovery — Fase 4C.5
+# S3 Lifecycle + Backup / Disaster Recovery — Fase 4C.5 (actualizado en Fase 4C.8 y 4D.1)
 
-Este documento describe lo que Fase 4C.5 creó como código en `infra/terraform/` (módulo `modules/s3_lifecycle`) y la estrategia de backup/DR completa de Territorio Electoral — parte ya implementada en Fase 4C.3 (RDS), parte solo documentada por ahora (procedimientos de restore, matriz de incidentes, RPO/RTO). Complementa [`TERRAFORM_FOUNDATION.md`](./TERRAFORM_FOUNDATION.md), [`ECS_ALB_FOUNDATION.md`](./ECS_ALB_FOUNDATION.md), [`RDS_PROXY_FOUNDATION.md`](./RDS_PROXY_FOUNDATION.md), [`WAF_CLOUDWATCH_FOUNDATION.md`](./WAF_CLOUDWATCH_FOUNDATION.md) y [`PRODUCTION_ARCHITECTURE.md`](./PRODUCTION_ARCHITECTURE.md). **Ningún recurso de AWS existe todavía** — no se ejecutó `terraform apply` ni `terraform plan`, y esta fase **no realiza ningún restore real**.
+Este documento describe lo que Fase 4C.5 creó como código en `infra/terraform/` (módulo `modules/s3_lifecycle`) y la estrategia de backup/DR completa de Territorio Electoral — parte ya implementada en Fase 4C.3 (RDS), parte solo documentada por ahora (procedimientos de restore, matriz de incidentes, RPO/RTO). Complementa [`TERRAFORM_FOUNDATION.md`](./TERRAFORM_FOUNDATION.md), [`ECS_ALB_FOUNDATION.md`](./ECS_ALB_FOUNDATION.md), [`RDS_PROXY_FOUNDATION.md`](./RDS_PROXY_FOUNDATION.md), [`WAF_CLOUDWATCH_FOUNDATION.md`](./WAF_CLOUDWATCH_FOUNDATION.md) y [`PRODUCTION_ARCHITECTURE.md`](./PRODUCTION_ARCHITECTURE.md). **Ningún recurso del STACK PRODUCTIVO (`environments/prod`, lo que describe este documento: S3 lifecycle, RDS backup/DR) existe todavía en AWS** — no se ejecutó `terraform apply` ni `terraform plan` de `environments/prod`, y esta fase **no realiza ningún restore real**. Distinto es el bootstrap (`infra/terraform/bootstrap/`, Fase 4D.1) — ese sí está aplicado; ver `AWS_BOOTSTRAP.md` y §31 más abajo.
+
+**Actualización de Fase 4C.8 (resolución del blocker de ownership del bucket)**: el §4 original de esta fase (abajo, conservado con una nota) asumía un bucket de artifacts **externo**, no administrado por este Terraform. Esa decisión cambió: `modules/s3_artifact_bucket` (nuevo) ahora declara `aws_s3_bucket` y posee su versioning, su encryption por defecto y su Public Access Block — el resto de este documento (§4, §8-12, §36) se actualizó en línea para reflejarlo; el diagrama, las tablas §1-3 y las secciones de lifecycle por prefijo (§5-7, §13) no cambiaron, porque `modules/s3_lifecycle` conserva exactamente el mismo diseño de reglas, solo que ahora administra únicamente la lifecycle configuration (nunca versioning/encryption/PAB) sobre el bucket que crea el módulo nuevo. Ver también `docs/aws/AWS_BOOTSTRAP.md` sobre por qué este bucket sigue siendo un recurso completamente distinto del bucket de Terraform state.
 
 **Nota sobre `terraform validate` y las validaciones cruzadas de este documento** (§4, §21): `terraform validate` confirma que el HCL de abajo es sintácticamente válido y que los tipos son correctos, pero — verificado empíricamente en esta revisión con un harness aislado — **no evalúa una `validation` de variable de un módulo hijo contra el valor real que le pasa el módulo llamador** cuando ese valor solo es literal en el sitio de la llamada; usa el default de la propia variable. Las tres confirmaciones de ownership del §4 están razonadas manualmente (misma sintaxis ya usada y aceptada en `modules/observability` desde Fase 4C.4) y son sintácticamente válidas, pero su disparo real ante un intento de activación parcial solo puede confirmarse con `terraform plan`, prohibido en esta fase — ver §4 para el detalle.
 
@@ -8,7 +10,7 @@ Este documento describe lo que Fase 4C.5 creó como código en `infra/terraform/
 
 ```mermaid
 flowchart TD
-    subgraph s3["S3 — bucket externo (var.s3_artifact_bucket)"]
+    subgraph s3["S3 — bucket propio de este stack (module.s3_artifact_bucket, var.s3_artifact_bucket_name)"]
         evpending["evidence/pending/\ncurrent: 2 dias / noncurrent: 7 dias"]
         evroot["evidence/*.ext\n(store() directo, sin regla propia)"]
         evfinal["evidence/final/\ncurrent: nunca / noncurrent: 90 dias"]
@@ -36,7 +38,7 @@ Revisión directa de `backend/app/services/artifact_storage.py`, `backend/app/se
 | Bucket | `settings.s3_artifact_bucket` (`S3_ARTIFACT_BUCKET`) — un único bucket para todo | `config.py:64` |
 | Prefijo evidencia | `settings.s3_evidence_prefix`, default `"evidence"` | `config.py:65` |
 | Prefijo informes | `settings.s3_report_prefix`, default `"reports"` | `config.py:66` |
-| Quién crea el bucket | **Nadie, en este Terraform.** `modules/ecs/main.tf:110`: *"El bucket en si no es un recurso de este modulo todavia"* — confirmado también en esta fase (§4) | `modules/ecs/main.tf` |
+| Quién crea el bucket | **Este mismo Terraform, desde Fase 4C.8** — `modules/s3_artifact_bucket` (`aws_s3_bucket.this`), invocado en `environments/prod/main.tf`. `S3_ARTIFACT_BUCKET` que recibe el backend es `module.s3_artifact_bucket.bucket_name` (el nombre real devuelto por AWS), nunca un string suelto en `modules/ecs` — ver §4 | `modules/s3_artifact_bucket/main.tf` |
 | Encryption | SSE-S3 (`AES256`) por defecto, o SSE-KMS con `S3_KMS_KEY_ID` — enviado en cada `put_object`/`generate_presigned_post` (`_encryption_args()`) | `artifact_storage.py:196-200` |
 | Versioning previo | No hay evidencia de que el bucket real tenga versioning — la aplicación no lo requiere ni lo verifica; `PRODUCTION_ARCHITECTURE.md` ya documentaba versioning como **target**, no como implementado | `PRODUCTION_ARCHITECTURE.md:57` |
 | Lifecycle previo | Ninguno — explícitamente listado como pendiente en `PRODUCTION_ARCHITECTURE.md:60-61` | — |
@@ -59,14 +61,16 @@ Objetos "pending" abandonados solo pueden surgir del primer flujo (upload-intent
 
 | Tipo | Bucket/recurso | Administrado por | Estado en este stack |
 | --- | --- | --- | --- |
-| A. Artifacts (evidencia/actas/informes) | `var.s3_artifact_bucket` | Externo (no Terraform) | Configuración de lifecycle/versioning/encryption/PAB gestionada opcionalmente por `modules/s3_lifecycle` (§4) |
+| A. Artifacts (evidencia/actas/informes) | `var.s3_artifact_bucket_name` | **Terraform, este stack** (`modules/s3_artifact_bucket`, desde Fase 4C.8) | El bucket, su versioning, su encryption y su Public Access Block los crea `modules/s3_artifact_bucket`; `modules/s3_lifecycle` administra únicamente las reglas de lifecycle sobre ese mismo bucket (§4) |
 | B. Logs de infraestructura (ALB access logs) | `var.alb_access_logs_bucket` (Fase 4C.4) | Externo, bucket **dedicado**, distinto del de artifacts | Deshabilitado por defecto, nunca reutiliza el bucket A |
-| C. Terraform state futuro | Ninguno todavía | N/A | Hoy el state es **local** (§28 Terraform state DR) — no existe un bucket S3 para esto en ningún `.tf` de este repo |
+| C. Terraform state | `aws_s3_bucket.terraform_state` (`infra/terraform/bootstrap/state_bucket.tf`) | AWS, stack bootstrap — **ya aplicado y verificado en AWS real** (Fase 4D.1, ver `AWS_BOOTSTRAP.md`) | El bucket ya existe. `environments/prod` (este stack) aún NO ha migrado su propio state a él — sigue en local (§31 abajo). El state del bootstrap en sí también permanece local, por diseño (`AWS_BOOTSTRAP.md`, "State del propio bootstrap") |
 | D. Backups/snapshots de RDS | Gestión nativa de AWS (Secrets Manager para credenciales, snapshots internos de RDS) | AWS (vía `aws_db_instance`) | No usa S3 en absoluto — los snapshots de RDS viven en el namespace de snapshots de RDS, no en ningún bucket |
 
 Ninguna de las cuatro responsabilidades se mezcla: el bucket de artifacts (A) nunca se reutiliza para (B), (C) ni (D), y esta fase no crea ningún recurso que las mezcle.
 
-## 4. Ownership del bucket de artifacts
+## 4. Ownership del bucket de artifacts (Fase 4C.5 original, resuelto en Fase 4C.8)
+
+### Diseño original de Fase 4C.5 (histórico — ya no vigente, conservado por trazabilidad)
 
 **El bucket sigue sin ser un recurso Terraform** (`aws_s3_bucket`) en ningún módulo de este stack — confirmado de nuevo en esta fase, no solo heredado de 4C.2. `var.s3_artifact_bucket` sigue siendo una variable de tipo `string`, provista externamente (`terraform.tfvars`), sin `resource "aws_s3_bucket"` en ningún `.tf`.
 
@@ -88,6 +92,26 @@ Las tres deben ser `true` simultáneamente — `modules/s3_lifecycle/variables.t
 - **Qué NO se implementa por esta razón**: una `aws_s3_bucket_policy` (§11 abajo) — a diferencia de los cuatro recursos anteriores, una bucket policy es un documento único por bucket; si el verdadero propietario del bucket ya tiene una policy propia, que Terraform la gestionara la sobrescribiría silenciosamente. Se documenta como requisito externo en vez de codificarse.
 - **Bucket dedicado**: no puede comprobarse técnicamente desde este Terraform (el bucket es externo) — `s3_bucket_dedicated_to_project` es la confirmación explícita que sustituye esa comprobación. Además de gatear la activación completa, es el prerequisito que justifica que las dos reglas bucket-wide del módulo (§8) no estén acotadas por prefijo.
 - **Si otro stack ya administra alguna de estas configuraciones**: debe resolverse el ownership primero (migrar esa configuración a este módulo, o mantenerla donde está y no activar `s3_lifecycle_management_enabled`) — este módulo nunca intenta fusionarse con configuración existente de otro origen.
+
+### Diseño vigente desde Fase 4C.8
+
+Esa decisión de ownership se resolvió: **este stack ahora crea el bucket**. `modules/s3_artifact_bucket` (nuevo) declara `aws_s3_bucket.this` y es el owner real de cuatro aspectos que antes dependían de un gate de "confío en que nadie más los toca": `aws_s3_bucket_ownership_controls` (`BucketOwnerEnforced`), `aws_s3_bucket_versioning`, `aws_s3_bucket_server_side_encryption_configuration` y `aws_s3_bucket_public_access_block` — los cuatro **incondicionales**, sin variable de interruptor (a diferencia del diseño anterior), porque ya no compiten con ningún otro IaC por esa configuración: la crearon ellos mismos. Añade además `aws_s3_bucket_policy` con `Deny` de `SecureTransport` (§11), imposible de implementar con seguridad en el diseño anterior — mismo patrón exacto que `aws_s3_bucket_policy.terraform_state` en `infra/terraform/bootstrap/state_bucket.tf`.
+
+`modules/s3_lifecycle` **se redujo a una sola responsabilidad**: la `aws_s3_bucket_lifecycle_configuration` (§5-8, sin cambios de diseño). Ya no crea versioning/encryption/public-access-block — eliminarlos de este módulo, en vez de dejarlos convivir con los nuevos de `modules/s3_artifact_bucket`, es lo que evita que **dos módulos administren el mismo aspecto de S3** (doble ownership: sin esa eliminación, ambos módulos declararían recursos distintos apuntando al mismo `bucket = <nombre>` para, por ejemplo, `aws_s3_bucket_versioning`, y cada `apply` competiría por esa configuración).
+
+El triple gate de `modules/s3_lifecycle` **se conserva**, pero reducido a lo que ese módulo sigue haciendo (la lifecycle configuration, que igual que antes reemplaza por completo cualquier configuración existente para ese aspecto, nunca la fusiona):
+
+| # | Variable (`environments/prod`) | Qué confirma | Valor real |
+| --- | --- | --- | --- |
+| 1 | `s3_lifecycle_management_enabled` | "Quiero que `modules/s3_lifecycle` administre reglas de lifecycle" | `true` por defecto (antes `false`: ya no hay incertidumbre de ownership que justifique defaultear a inactivo) |
+| 2 | `bucket_configuration_managed_by_this_stack` (pasada a `modules/s3_lifecycle` como literal `true` desde `main.tf`) | "Confirmo que ningún otro stack/IaC administra hoy la lifecycle configuration de ese bucket" | `true`, cierto por construcción — este mismo stack acaba de crear el bucket |
+| 3 | `bucket_dedicated_to_project` (idem, literal `true`) | "Confirmo que el bucket está dedicado exclusivamente a Territorio Electoral" | `true`, cierto por construcción — el bucket se creó únicamente para este propósito |
+
+Las variables 2 y 3 **ya no existen como variables de `terraform.tfvars`** (eran `s3_bucket_configuration_managed_by_this_stack`/`s3_bucket_dedicated_to_project`) — pasarlas como literal desde `environments/prod/main.tf` en vez de pedirle al operador que las confirme a mano es, precisamente, "eliminar un gate de ownership externo que ya no tiene sentido" una vez que el bucket es propio: ya no son una confirmación operativa de un hecho incierto, son un hecho garantizado por el propio código.
+
+- **Qué implica el nuevo diseño**: `terraform destroy` sobre este stack destruiría también el bucket — por eso `modules/s3_artifact_bucket` aplica `lifecycle { prevent_destroy = true }` (§36 actualizado), el mismo mecanismo ya usado en `aws_s3_bucket.terraform_state` (`infra/terraform/bootstrap/state_bucket.tf`). `terraform destroy` sin más rechazará la destrucción; eliminar el bucket intencionalmente exige el mismo procedimiento manual documentado para el state bucket (`docs/aws/AWS_BOOTSTRAP.md`, "Eliminación controlada del state bucket": comentar `prevent_destroy`, `apply`, y solo entonces `destroy`).
+- **Bucket dedicado**: ahora sí puede garantizarse por diseño — el bucket no preexistía, se crea únicamente para Territorio Electoral. Sigue siendo, igual que antes, el prerequisito que justifica que las dos reglas bucket-wide de `modules/s3_lifecycle` (§8) no estén acotadas por prefijo.
+- **Distinto del bucket de Terraform state**: `infra/terraform/bootstrap/state_bucket.tf` sigue siendo un stack Terraform completamente separado, con su propio `aws_s3_bucket.terraform_state` — nunca el mismo recurso ni el mismo nombre que `module.s3_artifact_bucket.this` (ver `docs/aws/AWS_BOOTSTRAP.md`, "Remote state", y §2-3 arriba).
 
 ## 5. Semántica de `expiration` con S3 Versioning
 
@@ -147,24 +171,24 @@ Revisión directa del código, no supuesta. La aplicación tiene **dos mecanismo
 
 ## 8. Alcance de multipart cleanup y delete marker cleanup — por qué son bucket-wide
 
-`abort-incomplete-multipart-upload` y `expired-delete-marker-cleanup` son las **únicas** reglas de este módulo sin `filter.prefix` acotado. Dado que el bucket es externo, esto podría abortar multipart uploads de workloads ajenos si el bucket fuera compartido — **por eso su alcance bucket-wide está condicionado, igual que el resto del módulo, a `s3_bucket_dedicated_to_project = true` (§4)**: activar el módulo en absoluto ya exige esa confirmación explícita, así que en el momento en que cualquiera de estas dos reglas llega a crearse, la dedicación exclusiva del bucket ya está confirmada por definición. No se dividieron en reglas separadas por prefijo (`evidence/`, `reports/`) porque, con esa confirmación como prerequisito obligatorio de todo el módulo, hacerlo añadiría complejidad sin beneficio real — evidencia adicional de la decisión, no una suposición.
+`abort-incomplete-multipart-upload` y `expired-delete-marker-cleanup` son las **únicas** reglas de este módulo sin `filter.prefix` acotado. Esto podría abortar multipart uploads de workloads ajenos si el bucket fuera compartido — **por eso su alcance bucket-wide sigue condicionado, igual que el resto del módulo, a `bucket_dedicated_to_project = true` (§4)**: activar el módulo en absoluto ya exige esa confirmación, así que en el momento en que cualquiera de estas dos reglas llega a crearse, la dedicación exclusiva del bucket ya está confirmada. Desde Fase 4C.8 esa confirmación es cierta por construcción (el bucket lo crea `modules/s3_artifact_bucket` únicamente para este proyecto, ver §4) en vez de una promesa externa no verificable — pero el diseño de la regla en sí (sin acotar por prefijo) no cambió. No se dividieron en reglas separadas por prefijo (`evidence/`, `reports/`) porque, con esa confirmación como prerequisito obligatorio de todo el módulo, hacerlo añadiría complejidad sin beneficio real.
 
 ## 9. Encryption S3
 
-Dos capas independientes, ambas documentadas para no confundirlas, y ambas sujetas al mismo gate de ownership de §4 (activar la capa 2 también convierte a este stack en owner de esa configuración concreta del bucket):
+Dos capas independientes, ambas documentadas para no confundirlas:
 
 1. **Por objeto** (ya implementado, Fase 4A): cada `put_object`/`generate_presigned_post` envía `ServerSideEncryption`/`x-amz-server-side-encryption` explícito (`artifact_storage.py:196-200,274-279`) — `AES256` por defecto, o `aws:kms` con `S3_KMS_KEY_ID`.
-2. **Por defecto del bucket** (nuevo en esta fase, opcional): `aws_s3_bucket_server_side_encryption_configuration`, gestionado si `s3_default_encryption_enabled = true` (default) — solo si el gate de §4 está activo. Defensa en profundidad — cubre cualquier objeto escrito sin ese header (ej. una subida manual vía consola/CLI que no lo especifique).
+2. **Por defecto del bucket**: `aws_s3_bucket_server_side_encryption_configuration` en `modules/s3_artifact_bucket` — desde Fase 4C.8, **incondicional** (sin variable on/off: ya no existe `s3_default_encryption_enabled`, ni el gate de ownership de §4, porque este módulo es el owner real del bucket y no compite con nadie por esta configuración). Defensa en profundidad — cubre cualquier objeto escrito sin ese header (ej. una subida manual vía consola/CLI que no lo especifique).
 
-**No se migra a SSE-KMS por defecto** en esta fase — `AES256` ya cumple la arquitectura actual. Cambiar a una CMK dedicada (`s3_lifecycle_sse_mode = "aws:kms"` + `s3_lifecycle_kms_key_id`) queda documentado como opción futura si un requisito de cumplimiento concreto lo exige — no se crea ninguna CMK especulativamente.
+**No se migra a SSE-KMS por defecto** — `AES256` sigue siendo el default. Cambiar a una CMK dedicada (`s3_artifact_bucket_sse_mode = "aws:kms"` + `s3_artifact_bucket_kms_key_id`, ambas en `environments/prod/variables.tf`) queda documentado como opción futura si un requisito de cumplimiento concreto lo exige — no se crea ninguna CMK especulativamente.
 
 ## 10. Public Access Block
 
-`aws_s3_bucket_public_access_block`, gestionado si `s3_public_access_block_enabled = true` (default) — sujeto al mismo gate de ownership de §4: las 4 protecciones activas (`block_public_acls`, `block_public_policy`, `ignore_public_acls`, `restrict_public_buckets`). Los uploads/downloads directos usan exclusivamente URLs firmadas (`S3ArtifactStorage.download`/`presign_upload`) — el bucket nunca necesita, ni debe, ser público. Igual que la encryption por defecto (§9), este stack no debe competir con otro IaC por este recurso — de ahí que dependa de las mismas tres confirmaciones, no de una variable de activación propia e independiente.
+`aws_s3_bucket_public_access_block` en `modules/s3_artifact_bucket` — desde Fase 4C.8, **incondicional** (ya no existe `s3_public_access_block_enabled`; sin variable que pueda desactivarlo por error): las 4 protecciones siempre activas (`block_public_acls`, `block_public_policy`, `ignore_public_acls`, `restrict_public_buckets`). Los uploads/downloads directos usan exclusivamente URLs firmadas (`S3ArtifactStorage.download`/`presign_upload`) — el bucket nunca necesita, ni debe, ser público.
 
-## 11. SecureTransport (TLS) — deferido, no implementado
+## 11. SecureTransport (TLS) — implementado desde Fase 4C.8
 
-Por la razón documentada en §4 (una bucket policy es un documento único por bucket, y este stack no tiene ownership confirmado del bucket), **no se crea ningún `aws_s3_bucket_policy`** en esta fase. Referencia de la policy recomendada, a aplicar manualmente o por quien administre el bucket, una vez confirmado el ownership — placeholder, nunca un bucket real:
+`aws_s3_bucket_policy.secure_transport` en `modules/s3_artifact_bucket`, vía `data "aws_iam_policy_document"` (mismo patrón exacto que `aws_s3_bucket_policy.terraform_state` en `infra/terraform/bootstrap/state_bucket.tf`) — `Deny` explícito de cualquier acción S3 sobre el bucket cuando `aws:SecureTransport = false`, sin ningún account ID hardcodeado (`Principal "*"` acotado únicamente por el `Resource`, este bucket específico, y la `Condition`). Antes (Fase 4C.5) esto se documentaba como requisito externo, nunca implementado, precisamente porque el bucket no era un recurso de este stack (§4, diseño original) — resuelto ahora que sí lo es:
 
 ```json
 {
@@ -180,9 +204,9 @@ Por la razón documentada en §4 (una bucket policy es un documento único por b
 }
 ```
 
-## 12. Object Lock — deferido, no habilitado
+## 12. Object Lock — sigue deferido, no habilitado (decisión de costo/alcance, ya no de ownership)
 
-Object Lock (WORM) solo puede activarse **al crear el bucket** — no es retroactivo. Como este stack no crea el bucket (§4), Object Lock queda fuera de alcance mientras esa decisión de ownership no cambie. Además, no existe hoy un requisito confirmado de retención legal/regulatoria (WORM) para Territorio Electoral que lo justifique — se documenta como opción futura, condicionada a: (a) que el equipo decida que Terraform cree el bucket desde cero, y (b) que exista un requisito legal/regulatorio explícito. No se activa por defecto ni especulativamente.
+Object Lock (WORM) solo puede activarse **al crear el bucket** — no es retroactivo. Antes (Fase 4C.5) quedaba fuera de alcance porque este stack no creaba el bucket; desde Fase 4C.8 esa razón ya no aplica — `modules/s3_artifact_bucket` sí podría activarlo en la creación. **Deliberadamente no se hace**: no existe hoy un requisito confirmado de retención legal/regulatoria (WORM) para Territorio Electoral que lo justifique, y activarlo especulativamente añadiría restricciones difíciles de revertir (Object Lock no puede deshabilitarse una vez activado en modo `COMPLIANCE`) sin beneficio real — mismo criterio conservador que el resto de esta ronda (§9 de la ronda de auditoría: no agregar Object Lock salvo requisito previo explícito). Se documenta como opción futura, condicionada a un requisito legal/regulatorio explícito.
 
 ## 13. Transiciones de storage class — resumen
 
@@ -383,11 +407,16 @@ Dado que el snapshot/PITR restaura el estado completo de la base de datos (inclu
 
 ## 31. Terraform state — riesgo de DR
 
-**El state de este stack es local hoy** — no existe ningún bloque `backend` en `infra/terraform/environments/prod/versions.tf` ni en ningún otro `.tf` de este repo (confirmado por búsqueda explícita en esta fase). Esto es un **riesgo operativo real**, incluido en la matriz de incidentes por esta razón, aunque su resolución esté fuera de alcance de Fase 4C.5:
+**Actualización (Fase 4D.1): existen DOS states locales distintos, con estados de riesgo muy diferentes — no confundirlos.**
 
-- Perder el archivo local `terraform.tfstate` (o su equivalente si alguna vez se ejecuta un `apply` real) significa perder el mapeo entre los recursos declarados en código y los recursos reales en AWS — Terraform ya no podría gestionar esos recursos sin un `import` manual, recurso por recurso.
-- La estrategia recomendada futura (no implementada aquí, fuera de alcance): backend remoto (ej. S3 + DynamoDB para locking, o Terraform Cloud), con versioning propio, locking para evitar applies concurrentes, encryption, y acceso restringido (IAM dedicado, nunca el mismo bucket de artifacts — ver §3).
-- No se crean esos recursos en esta fase porque siguen fuera del alcance actual (ningún `apply` real se ha ejecutado todavía) — pero perder el state sería un incidente real el día que sí se ejecute, por eso se documenta aquí.
+1. **State de `environments/prod` (este stack)** — sigue siendo local hoy: `environments/prod/versions.tf` declara un backend `"s3" {}` parcial (vacío, sin `bucket`/`key`/`region`), pero `environments/prod` todavía no se inicializó con `-backend-config` reales, así que su `terraform.tfstate` local sigue prácticamente vacío (solo validaciones con `-backend=false`, cero recursos de producción aplicados). El riesgo de perderlo hoy es bajo precisamente porque no hay nada real que mapear todavía.
+2. **State del bootstrap (`infra/terraform/bootstrap/terraform.tfstate`)** — este **sí es crítico ya mismo**: el bootstrap ya se aplicó y se verificó contra AWS real (state bucket, dos repositorios ECR, dos IAM policies — ver `AWS_BOOTSTRAP.md`), y ese archivo local es el único mapeo entre ese código y esos recursos reales. Está gitignored y **nunca debe versionarse** — perderlo sin respaldo obligaría a un `import` manual, recurso por recurso, para que Terraform pueda volver a administrarlos (los recursos en sí no desaparecerían de AWS, pero Terraform dejaría de "conocerlos").
+
+Esto sigue siendo un **riesgo operativo real** para ambos states, incluido en la matriz de incidentes por esta razón:
+
+- Perder cualquiera de los dos archivos locales `terraform.tfstate` sin respaldo significa perder el mapeo entre los recursos declarados en código y los recursos reales en AWS (para el bootstrap, recursos que YA existen; para `environments/prod`, recursos que existirán tras su primer `apply` real) — Terraform ya no podría gestionarlos sin un `import` manual, recurso por recurso.
+- La estrategia recomendada para `environments/prod` — backend remoto S3 con locking nativo (`use_lockfile`), ya preparado en código por el bootstrap — está lista pero **todavía no migrada** (ver `AWS_BOOTSTRAP.md`, §9, pasos 6-9). El bootstrap en sí permanece intencionalmente en state local, sin backend remoto propio, por diseño (dependencia circular: no puede usar como backend el bucket que él mismo crea en su primer `apply`) — ver `AWS_BOOTSTRAP.md`, "State del propio bootstrap".
+- El bucket de state (creado por el bootstrap) y el bucket de artifacts de la aplicación (`modules/s3_artifact_bucket`, §4 arriba) son, y deben seguir siendo, dos buckets S3 completamente distintos — nunca confundirlos ni reutilizar uno para el propósito del otro.
 
 ## 32. ECS / recuperación de imágenes
 
@@ -414,13 +443,11 @@ Toda la infraestructura de red, cómputo y perímetro está codificada en Terraf
 
 Todas las retenciones introducidas por esta fase son variables de Terraform con defaults seguros documentados (`s3_pending_expiration_days`, `s3_reports_expiration_days`, `s3_evidence_final_transition_days`, `s3_reports_transition_days`, `s3_noncurrent_version_transition_days`, `s3_noncurrent_version_expiration_days`, `s3_abort_incomplete_multipart_upload_days`) — ninguna está hardcodeada dentro de `main.tf`. Las retenciones de RDS (`db_backup_retention_period`) ya eran configurables desde Fase 4C.3, sin cambios en esta fase.
 
-## 36. `prevent_destroy` — evaluado, no aplicado
+## 36. `prevent_destroy` — RDS via `deletion_protection`, bucket de artifacts vía `prevent_destroy` desde Fase 4C.8
 
-Se evaluó agregar `lifecycle { prevent_destroy = true }` a recursos críticos (la instancia RDS, el bucket de artifacts si se llegara a crear como recurso). **No se aplica en esta fase**:
-
-- RDS ya tiene `deletion_protection` (configurable, default `true`) — un mecanismo equivalente y más flexible: se puede desactivar explícitamente vía `terraform apply` con la variable en `false` cuando una destrucción deliberada es necesaria (ej. recrear un entorno), sin necesitar editar código HCL ni hacer un `state rm` para sortear `prevent_destroy`.
-- El bucket de artifacts nunca es un recurso Terraform en este stack (§4) — `prevent_destroy` no aplicaría a nada.
-- `prevent_destroy` en recursos que sí gestiona este stack (ej. la lifecycle configuration del bucket) complicaría operabilidad (recrear el entorno, cambiar el nombre del bucket) sin aportar protección real — la configuración de lifecycle es recreable sin pérdida de datos, a diferencia del propio bucket o de la base de datos.
+- RDS usa `deletion_protection` (configurable, default `true`) — un mecanismo equivalente y más flexible que `prevent_destroy`: se puede desactivar explícitamente vía `terraform apply` con la variable en `false` cuando una destrucción deliberada es necesaria (ej. recrear un entorno), sin necesitar editar código HCL ni hacer un `state rm`.
+- El bucket de artifacts (Fase 4C.5) **no era un recurso Terraform en este stack** — `prevent_destroy` no aplicaba a nada. Desde Fase 4C.8, `modules/s3_artifact_bucket` sí lo es, y sí aplica `lifecycle { prevent_destroy = true }` sobre `aws_s3_bucket.this` — mismo criterio exacto que `aws_s3_bucket.terraform_state` en `infra/terraform/bootstrap/state_bucket.tf`: destruir por accidente la evidencia de actas/informes de producción es inaceptable, y a diferencia de RDS no existe un `deletion_protection` nativo para S3. Eliminación intencional: mismo procedimiento manual documentado para el state bucket (`docs/aws/AWS_BOOTSTRAP.md`, "Eliminación controlada del state bucket") — comentar/eliminar el bloque `lifecycle`, `apply`, y solo entonces `destroy`.
+- `prevent_destroy` en recursos que este stack sigue recreando libremente (la lifecycle configuration del bucket, `modules/s3_lifecycle`) seguiría complicando operabilidad sin aportar protección real — esa configuración es recreable sin pérdida de datos, a diferencia del propio bucket o de la base de datos. No se aplica ahí.
 
 ## 37. Costos
 
