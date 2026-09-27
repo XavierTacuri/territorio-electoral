@@ -461,13 +461,15 @@ locals {
         cur.execute("SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = %s", (app_user,))
         if cur.fetchone() is None:
             cur.execute(
-                sql.SQL("CREATE ROLE {} WITH LOGIN PASSWORD %s").format(sql.Identifier(app_user)),
-                (app_password,),
+                sql.SQL("CREATE ROLE {} WITH LOGIN PASSWORD {}").format(
+                    sql.Identifier(app_user), sql.Literal(app_password)
+                )
             )
         else:
             cur.execute(
-                sql.SQL("ALTER ROLE {} WITH LOGIN PASSWORD %s").format(sql.Identifier(app_user)),
-                (app_password,),
+                sql.SQL("ALTER ROLE {} WITH LOGIN PASSWORD {}").format(
+                    sql.Identifier(app_user), sql.Literal(app_password)
+                )
             )
         cur.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
             sql.Identifier(db_name), sql.Identifier(app_user)))
