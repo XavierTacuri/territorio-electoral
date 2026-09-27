@@ -129,7 +129,7 @@ resource "aws_vpc_security_group_egress_rule" "ecs_to_rds_proxy" {
 
 resource "aws_vpc_security_group_egress_rule" "ecs_https_egress" {
   security_group_id = aws_security_group.ecs_tasks.id
-  description       = "HTTPS saliente hacia APIs de AWS (S3 vía VPC endpoint, ECR, CloudWatch, Secrets Manager, STS) y hosts publicos que la aplicacion consulta explicitamente (PUBLIC_FETCH_*, ver backend/app/core/config.py). Candidato a restringirse a prefix lists especificas de AWS en una subfase posterior — ver docs/aws/TERRAFORM_FOUNDATION.md, riesgos."
+  description       = "HTTPS saliente hacia APIs de AWS (S3 via VPC endpoint, ECR, CloudWatch, Secrets Manager, STS) y hosts publicos que la aplicacion consulta explicitamente (PUBLIC_FETCH_*, ver backend/app/core/config.py). Candidato a restringirse a prefix lists especificas de AWS en una subfase posterior - ver docs/aws/TERRAFORM_FOUNDATION.md, riesgos."
   ip_protocol       = "tcp"
   from_port         = 443
   to_port           = 443
@@ -160,7 +160,7 @@ resource "aws_vpc_security_group_egress_rule" "rds_proxy_to_rds" {
 
 resource "aws_vpc_security_group_ingress_rule" "rds_from_proxy" {
   security_group_id            = aws_security_group.rds.id
-  description                  = "Conexiones de base de datos unicamente desde RDS Proxy. Nunca 0.0.0.0/0 — la base de datos jamas queda publicamente accesible."
+  description                  = "Conexiones de base de datos unicamente desde RDS Proxy. Nunca 0.0.0.0/0 - la base de datos jamas queda publicamente accesible."
   ip_protocol                  = "tcp"
   from_port                    = var.db_port
   to_port                      = var.db_port
