@@ -235,21 +235,12 @@ resource "aws_security_group" "frontend_tasks" {
   name        = "${var.name_prefix}-frontend-tasks"
   description = "Tasks ECS/Fargate del frontend: solo reciben trafico del ALB en el puerto del contenedor; salen hacia APIs de AWS (ECR, CloudWatch) via HTTPS."
   vpc_id      = var.vpc_id
-  # ingress/egress = [] SI se mantienen aqui a proposito (a diferencia de
-  # los 4 security groups de modules/security_groups/main.tf, ver su nota
-  # de cabecera para el conflicto que motiva quitarlos ahi): este SG
-  # TODAVIA no existe en AWS. Quitar el argumento justo antes de su PRIMERA
-  # creacion dejaria la regla "permitir todo egress" que AWS agrega por
-  # defecto a todo security group nuevo sin revocar (Terraform solo revoca
-  # esa regla por defecto cuando administra activamente el atributo egress)
-  # -- una regresion real de seguridad (egress sin restriccion en vez de
-  # solo 443) para un recurso que hoy no tiene ningun drift que corregir. En
-  # cuanto este SG y sus reglas (frontend_from_alb, frontend_https_egress)
-  # existan en AWS, aplicara el mismo conflicto de ownership documentado
-  # arriba -- momento en el que corresponde quitar este ingress/egress con
-  # la misma correccion, no antes.
-  ingress = []
-  egress  = []
+  # ingress/egress: NO declarados a proposito -- ownership exclusivo de
+  # frontend_from_alb, frontend_https_egress (mas abajo). Este SG y ambas
+  # reglas ya existen en AWS (creado con ingress/egress = [] en su primer
+  # apply para evitar la regla "permitir todo" por defecto); ahora se quita
+  # el atributo para evitar el mismo conflicto de ownership documentado en
+  # la cabecera de modules/security_groups/main.tf.
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-frontend-tasks" })
 
