@@ -71,7 +71,10 @@ module "database" {
   db_subnet_ids               = module.network.db_subnet_ids
   rds_security_group_id       = module.security_groups.rds_security_group_id
   rds_proxy_security_group_id = module.security_groups.rds_proxy_security_group_id
+  ecs_tasks_security_group_id = module.security_groups.ecs_tasks_security_group_id
   db_port                     = var.db_port
+
+  db_proxy_enabled = var.db_proxy_enabled
 
   engine_version        = var.db_engine_version
   instance_class        = var.db_instance_class
@@ -194,9 +197,11 @@ module "ecs" {
   s3_evidence_prefix        = var.s3_evidence_prefix
   s3_report_prefix          = var.s3_report_prefix
 
-  # Endpoint de RDS Proxy (Fase 4C.3), nunca el endpoint directo de RDS — el
-  # backend nunca se salta el pooling administrado del proxy.
-  db_host = module.database.proxy_endpoint
+  # Endpoint de RDS Proxy (Fase 4C.3) cuando db_proxy_enabled=true (default);
+  # endpoint directo de RDS SOLO si db_proxy_enabled=false (cuentas AWS con
+  # RDS Proxy no disponible) — ver module.database.effective_db_host,
+  # variables.tf "db_proxy_enabled" y docs/aws/RDS_PROXY_FOUNDATION.md.
+  db_host = module.database.effective_db_host
   db_name = var.db_name
   db_port = var.db_port
 

@@ -37,12 +37,18 @@ output "app_user_secret_arn" {
 }
 
 output "proxy_endpoint" {
-  description = "Endpoint de RDS Proxy — este es el host que debe usar la aplicacion (POSTGRES_HOST del backend, la migration task y la bootstrap task). RDS Proxy identifica que credencial (maestra o de aplicacion) se esta usando por el username de cada conexion."
-  value       = aws_db_proxy.this.endpoint
+  description = "Endpoint de RDS Proxy, o null si var.db_proxy_enabled=false (modo direct-RDS, sin proxy). No usar directamente como POSTGRES_HOST -- ver effective_db_host, que ya resuelve cual de los dos endpoints corresponde."
+  value       = one(aws_db_proxy.this[*].endpoint)
 }
 
 output "proxy_arn" {
-  value = aws_db_proxy.this.arn
+  description = "ARN de RDS Proxy, o null si var.db_proxy_enabled=false."
+  value       = one(aws_db_proxy.this[*].arn)
+}
+
+output "effective_db_host" {
+  description = "POSTGRES_HOST real que debe usar la aplicacion (backend, migration task y bootstrap task) -- el UNICO output que environments/prod/main.tf debe pasar a module.ecs como db_host. true (default): endpoint de RDS Proxy. false (solo cuentas AWS con RDS Proxy no disponible): endpoint directo de la instancia RDS (aws_db_instance.this.endpoint) -- nunca se resuelve a un hardcode ni a una IP."
+  value       = var.db_proxy_enabled ? one(aws_db_proxy.this[*].endpoint) : aws_db_instance.this.endpoint
 }
 
 output "proxy_role_arn" {

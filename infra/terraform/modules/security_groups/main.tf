@@ -147,9 +147,18 @@ resource "aws_vpc_security_group_egress_rule" "ecs_to_rds_proxy" {
   referenced_security_group_id = aws_security_group.rds_proxy.id
 }
 
+# HTTPS saliente hacia APIs de AWS (S3 via VPC endpoint, ECR, CloudWatch,
+# Secrets Manager, STS) y hosts publicos que la aplicacion consulta
+# explicitamente (PUBLIC_FETCH_*, ver backend/app/core/config.py). Candidato
+# a restringirse a prefix lists especificas de AWS en una subfase posterior
+# - ver docs/aws/TERRAFORM_FOUNDATION.md, riesgos. El campo `description` de
+# abajo se mantiene corto a proposito: AWS exige <256 caracteres ASCII para
+# aws_vpc_security_group_egress_rule.description (confirmado contra la API
+# real - un texto mas largo, incluso en ASCII puro, hace fallar la creacion
+# de la regla con "Invalid rule description").
 resource "aws_vpc_security_group_egress_rule" "ecs_https_egress" {
   security_group_id = aws_security_group.ecs_tasks.id
-  description       = "HTTPS saliente hacia APIs de AWS (S3 via VPC endpoint, ECR, CloudWatch, Secrets Manager, STS) y hosts publicos que la aplicacion consulta explicitamente (PUBLIC_FETCH_*, ver backend/app/core/config.py). Candidato a restringirse a prefix lists especificas de AWS en una subfase posterior - ver docs/aws/TERRAFORM_FOUNDATION.md, riesgos."
+  description       = "Allow HTTPS egress for AWS services and image pulls"
   ip_protocol       = "tcp"
   from_port         = 443
   to_port           = 443

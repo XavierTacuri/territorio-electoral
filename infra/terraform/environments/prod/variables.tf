@@ -385,6 +385,12 @@ variable "db_performance_insights_enabled" {
   default = false
 }
 
+variable "db_proxy_enabled" {
+  description = "true (DEFAULT productivo, no cambiar): arquitectura production-like completa -- ECS runtime se conecta a PostgreSQL a traves de RDS Proxy. false: SOLO para cuentas AWS con planes limitados donde la API de AWS rechaza la creacion de RDS Proxy con FreeTierRestrictionError (\"This feature isn't available with free plan accounts\") -- ECS runtime se conecta DIRECTO a la instancia RDS. RDS Proxy nunca se elimina de la arquitectura: este interruptor solo evita crear su SERVICIO en cuentas donde AWS lo rechaza. Ver module.database (modules/database/variables.tf) y docs/aws/RDS_PROXY_FOUNDATION.md, \"Modo direct-RDS para cuentas Free Plan\". Set false only for limited test accounts where RDS Proxy is unavailable."
+  type        = bool
+  default     = true
+}
+
 variable "db_proxy_require_tls" {
   type    = bool
   default = true

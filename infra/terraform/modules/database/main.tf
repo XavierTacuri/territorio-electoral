@@ -187,8 +187,17 @@ resource "aws_iam_role_policy" "proxy_secrets" {
 # elige el secreto correcto segun el username que presenta cada conexion
 # entrante — "el proxy debe autenticar unicamente los usuarios que
 # realmente necesiten conectarse a traves de el" (item 4).
-
+#
+# Los 3 recursos de abajo son el UNICO SERVICIO real de RDS Proxy (el que
+# AWS factura y el que un plan Free Tier limitado rechaza con
+# FreeTierRestrictionError) -- por eso son los unicos condicionados por
+# var.db_proxy_enabled. aws_iam_role.proxy/aws_iam_role_policy.proxy_secrets
+# (arriba) NUNCA se condicionan: son recursos de soporte sin costo propio,
+# y en un stack donde ya existen (creados en un apply parcial anterior),
+# condicionarlos ahora forzaria su destruccion sin necesidad real.
 resource "aws_db_proxy" "this" {
+  count = var.db_proxy_enabled ? 1 : 0
+
   name                   = "${var.name_prefix}-proxy"
   engine_family          = "POSTGRESQL"
   role_arn               = aws_iam_role.proxy.arn
@@ -218,7 +227,9 @@ resource "aws_db_proxy" "this" {
 }
 
 resource "aws_db_proxy_default_target_group" "this" {
-  db_proxy_name = aws_db_proxy.this.name
+  count = var.db_proxy_enabled ? 1 : 0
+
+  db_proxy_name = aws_db_proxy.this[0].name
 
   connection_pool_config {
     connection_borrow_timeout    = var.connection_borrow_timeout
@@ -228,7 +239,42 @@ resource "aws_db_proxy_default_target_group" "this" {
 }
 
 resource "aws_db_proxy_target" "this" {
-  db_proxy_name          = aws_db_proxy.this.name
-  target_group_name      = aws_db_proxy_default_target_group.this.name
+  count = var.db_proxy_enabled ? 1 : 0
+
+  db_proxy_name          = aws_db_proxy.this[0].name
+  target_group_name      = aws_db_proxy_default_target_group.this[0].name
   db_instance_identifier = aws_db_instance.this.identifier
+}
+
+# ============================================================================
+# Direct RDS access (db_proxy_enabled = false)
+# ============================================================================
+# Reglas standalone independientes de las del modo proxy
+# (modules/security_groups/main.tf: ecs_to_rds_proxy / rds_proxy_from_ecs /
+# rds_proxy_to_rds / rds_from_proxy), que NUNCA se tocan ni se eliminan --
+# quedan simplemente inertes cuando no existe ningun RDS Proxy detras del
+# security group correspondiente (documentadas ahi como soporte temporal sin
+# uso). Estas 2 reglas son el UNICO camino de red hacia RDS cuando
+# db_proxy_enabled=false. Siempre por referencia de security group, nunca
+# CIDR -- RDS nunca queda expuesta a 0.0.0.0/0 en ningun modo.
+resource "aws_vpc_security_group_egress_rule" "ecs_to_rds_direct" {
+  count = var.db_proxy_enabled ? 0 : 1
+
+  security_group_id            = var.ecs_tasks_security_group_id
+  description                  = "Direct RDS access when RDS Proxy is unavailable (db_proxy_enabled=false)."
+  ip_protocol                  = "tcp"
+  from_port                    = var.db_port
+  to_port                      = var.db_port
+  referenced_security_group_id = var.rds_security_group_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds_from_ecs_direct" {
+  count = var.db_proxy_enabled ? 0 : 1
+
+  security_group_id            = var.rds_security_group_id
+  description                  = "Direct RDS access when RDS Proxy is unavailable (db_proxy_enabled=false)."
+  ip_protocol                  = "tcp"
+  from_port                    = var.db_port
+  to_port                      = var.db_port
+  referenced_security_group_id = var.ecs_tasks_security_group_id
 }

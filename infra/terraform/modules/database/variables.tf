@@ -22,6 +22,11 @@ variable "rds_proxy_security_group_id" {
   type        = string
 }
 
+variable "ecs_tasks_security_group_id" {
+  description = "Security group de las tasks ECS del backend (modulo security_groups). Solo se usa para crear las reglas directas ECS->RDS cuando var.db_proxy_enabled=false — con el proxy habilitado (default), ECS nunca se conecta directo a RDS, y este ID no genera ninguna regla nueva."
+  type        = string
+}
+
 variable "db_port" {
   type    = number
   default = 5432
@@ -144,6 +149,12 @@ variable "apply_immediately" {
 # ============================================================================
 # RDS Proxy
 # ============================================================================
+
+variable "db_proxy_enabled" {
+  description = "true (DEFAULT productivo, no cambiar): arquitectura production-like completa -- ECS runtime se conecta a PostgreSQL a traves de RDS Proxy (aws_db_proxy + target group + target, mas abajo). false: SOLO para cuentas AWS con planes limitados donde RDS Proxy no esta disponible (la API de AWS devuelve FreeTierRestrictionError: \"This feature isn't available with free plan accounts\" -- confirmado contra una cuenta real, no una limitacion de Terraform ni de este modulo) -- ECS runtime se conecta DIRECTO a la instancia RDS (aws_db_instance.this.endpoint), sin proxy ni pooling administrado. RDS Proxy NUNCA se elimina de la arquitectura: este interruptor solo evita intentar crear el SERVICIO de RDS Proxy en cuentas donde AWS lo rechaza; los recursos de soporte ya existentes (IAM role/policy del proxy, security group del proxy y sus reglas) se conservan sin cambio en ambos modos. Ver docs/aws/RDS_PROXY_FOUNDATION.md, \"Modo direct-RDS para cuentas Free Plan\"."
+  type        = bool
+  default     = true
+}
 
 variable "require_tls" {
   description = "true (por defecto): RDS Proxy exige TLS en toda conexion entrante. psycopg3 (el driver que ya usa el backend) negocia TLS automaticamente via el sslmode por defecto de libpq (\"prefer\": intenta TLS primero) — no requiere ningun cambio de codigo. Ver docs/aws/RDS_PROXY_FOUNDATION.md."

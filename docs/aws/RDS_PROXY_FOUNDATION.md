@@ -270,6 +270,25 @@ Ninguna de las dos se convierte en `aws_ecs_service`; ninguna se automatiza en u
 
 Nada de esto se ha creado — no se ejecutó `terraform apply`.
 
+## Modo direct-RDS para cuentas Free Plan
+
+`db_proxy_enabled` (default `true`, no cambiar en el tfvars versionado ni en `terraform.tfvars.example`): production-like completo, ECS runtime → RDS Proxy → RDS, exactamente como describe el resto de este documento.
+
+`db_proxy_enabled = false` — **solo** para cuentas AWS cuyo plan actual no permite crear RDS Proxy en absoluto. Confirmado contra una cuenta real, no una limitación de Terraform ni de este proyecto: `terraform apply` devolvió
+
+```
+Error: creating RDS DB Proxy: FreeTierRestrictionError: This feature isn't
+available with free plan accounts. To remove all limitations, upgrade your
+account plan.
+```
+
+RDS Proxy **no se elimina de la arquitectura** — el interruptor solo evita intentar crear su servicio (`aws_db_proxy`, `aws_db_proxy_default_target_group`, `aws_db_proxy_target`, en `modules/database/main.tf`) en una cuenta donde la API de AWS lo rechaza. Con `db_proxy_enabled = false`:
+
+- `module.database.effective_db_host` (nuevo output, el único que `environments/prod/main.tf` pasa a `module.ecs` como `db_host`) resuelve al endpoint **directo** de la instancia RDS (`aws_db_instance.this.endpoint`) en vez del endpoint del proxy — nunca un hardcode, nunca una IP.
+- `backend`, `backend_migrate` y `backend_bootstrap` reciben el mismo `POSTGRES_HOST` (comparten `local.backend_common_environment` en `modules/ecs/main.tf`) — el cambio de host es transparente para las tres identidades (app_user en runtime, MAESTRO en bootstrap/migración).
+- Dos reglas de security group nuevas y exclusivas de este modo, `ecs_to_rds_direct`/`rds_from_ecs_direct` (`modules/database/main.tf`, condicionadas a `!var.db_proxy_enabled`), abren `ECS tasks SG ⇄ RDS SG` puerto 5432 **por referencia de security group, nunca CIDR** — RDS sigue sin ser públicamente accesible en ningún modo.
+- Los recursos de soporte del proxy que ya existan (`aws_iam_role.proxy`, `aws_iam_role_policy.proxy_secrets`, el security group `rds_proxy` y sus reglas `ecs_to_rds_proxy`/`rds_proxy_from_ecs`/`rds_proxy_to_rds`/`rds_from_proxy`) **no se destruyen ni se condicionan** — quedan inertes, sin costo propio, listos para reutilizarse el día que `db_proxy_enabled` vuelva a `true` en una cuenta sin esta restricción.
+
 ## Limitaciones y riesgos documentados
 
 1. **Versión de PostGIS en RDS**: no verificada contra la API/consola de AWS — confirmar antes de cualquier migración real de datos geoespaciales.

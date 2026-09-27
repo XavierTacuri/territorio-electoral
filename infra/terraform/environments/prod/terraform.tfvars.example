@@ -169,6 +169,13 @@ db_multi_az = false
 
 db_performance_insights_enabled = false
 
+# RDS Proxy: production-like completo. NO cambiar a false como default
+# productivo -- Set false only for limited test accounts where RDS Proxy is
+# unavailable (AWS FreeTierRestrictionError: "This feature isn't available
+# with free plan accounts"). Ver docs/aws/RDS_PROXY_FOUNDATION.md, "Modo
+# direct-RDS para cuentas Free Plan".
+db_proxy_enabled = true
+
 # RDS Proxy: valores iniciales conservadores, ajustables en Fase 4C.6.
 db_proxy_require_tls                  = true
 db_proxy_idle_client_timeout          = 1800
