@@ -47,8 +47,8 @@ output "proxy_arn" {
 }
 
 output "effective_db_host" {
-  description = "POSTGRES_HOST real que debe usar la aplicacion (backend, migration task y bootstrap task) -- el UNICO output que environments/prod/main.tf debe pasar a module.ecs como db_host. true (default): endpoint de RDS Proxy. false (solo cuentas AWS con RDS Proxy no disponible): endpoint directo de la instancia RDS (aws_db_instance.this.endpoint) -- nunca se resuelve a un hardcode ni a una IP."
-  value       = var.db_proxy_enabled ? one(aws_db_proxy.this[*].endpoint) : aws_db_instance.this.endpoint
+  description = "POSTGRES_HOST real que debe usar la aplicacion (backend, migration task y bootstrap task) -- el UNICO output que environments/prod/main.tf debe pasar a module.ecs como db_host. true (default): endpoint de RDS Proxy (host-only). false (solo cuentas AWS con RDS Proxy no disponible): address de la instancia RDS (aws_db_instance.this.address, host-only) -- nunca se resuelve a un hardcode ni a una IP. NUNCA usar aws_db_instance.this.endpoint aqui: ese atributo incluye el puerto (\"host:port\"), y POSTGRES_PORT ya se pasa por separado (ver module.ecs) -- combinarlos duplica el puerto en la URL de conexion."
+  value       = var.db_proxy_enabled ? one(aws_db_proxy.this[*].endpoint) : aws_db_instance.this.address
 }
 
 output "proxy_role_arn" {
