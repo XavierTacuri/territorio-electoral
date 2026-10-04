@@ -26,9 +26,20 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
+      # El Dockerfile del backend arranca Uvicorn en $${PORT:-10000} si PORT
+      # no esta definido -- nginx.conf (test-vps y prod) siempre espera
+      # api:8000. Mismo patron que docker-compose.yml/docker-compose.prod.yml
+      # del repo: forzar PORT=8000 explicitamente.
+      PORT: "8000"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
     logging:
       driver: json-file
@@ -41,7 +52,8 @@ services:
     ports:
       - "80:8080"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: json-file
