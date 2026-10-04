@@ -1,0 +1,14 @@
+# Copiar como terraform.tfvars y ajustar si hace falta. No contiene
+# secretos — ver README.md de este directorio antes de aplicar.
+
+aws_region = "us-east-2"
+
+# Tags conocidos de las imagenes seguras preservadas en ECR (verificar que
+# siguen existiendo antes de `terraform apply`):
+#   aws ecr describe-images --repository-name territorio-electoral-backend --image-ids imageTag=<tag>
+backend_image_tag  = "c53992c385f780f8172aefea0d3fe2b36ca466ac-amd64-sec1"
+frontend_image_tag = "8a79e844183f1d6a6be0d44e29ccc24b2e94d566-amd64-sec3"
+
+instance_type        = "t3.small"
+root_volume_size_gb   = 20
+allowed_http_cidr_blocks = ["0.0.0.0/0"]

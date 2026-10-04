@@ -37,7 +37,8 @@ infra/terraform/
     s3_lifecycle/       Lifecycle configuration (por prefijo) sobre el bucket de artifacts (4C.5, acotado en 4C.8)
     s3_artifact_bucket/ Bucket S3 de artifacts propio: versioning, encryption, Public Access Block 4/4, SecureTransport (4C.8)
   environments/
-    prod/               Único entorno hoy; compone los módulos de arriba
+    prod/               Único entorno productivo; compone los módulos de arriba
+    test-vps/           Entorno TEMPORAL tipo VPS (EC2 unica + Docker Compose + Postgres local) — independiente de prod, state propio, sin NAT/ALB/ECS/RDS/WAF
 ```
 
 ## Validación local (sin credenciales de AWS)
@@ -60,6 +61,21 @@ terraform validate
 ```
 
 Este stack no declara ningún bloque `backend` (state local, permanente por diseño — ver `docs/aws/AWS_BOOTSTRAP.md`, "State del propio bootstrap"), por lo que `terraform init` a secas también funciona sin credenciales AWS.
+
+## test-vps (entorno temporal tipo VPS)
+
+`infra/terraform/environments/test-vps/` es un stack Terraform **separado e independiente** de `environments/prod`: una única EC2 pública con Docker Compose (frontend + backend + PostgreSQL local), pensada como prueba temporal y económica, sin NAT Gateway, ALB, ECS/Fargate, RDS ni WAF. Usa su propio state remoto, en el mismo bucket S3 del bootstrap pero con una key distinta:
+
+```bash
+cd infra/terraform/environments/test-vps
+terraform init -backend-config="bucket=<state-bucket-de-bootstrap>" \
+  -backend-config="key=territorio-electoral/test-vps/terraform.tfstate" \
+  -backend-config="region=us-east-2"
+cp terraform.tfvars.example terraform.tfvars   # editar si hace falta
+terraform plan -out=test-vps-create.tfplan
+```
+
+Solo LEE los repositorios ECR backend/frontend que crea `infra/terraform/bootstrap` (nunca los crea ni les hace push) y nunca toca el state ni los recursos de `environments/prod`. Acceso administrativo exclusivamente via AWS Systems Manager Session Manager (sin SSH, sin puerto 22). Los secretos de la aplicación (`POSTGRES_PASSWORD`, `SECRET_KEY`, `BROWSER_REFRESH_TOKEN_HMAC_SECRET`, `SURVEY_SUBMISSION_HMAC_SECRET`, `INITIAL_ADMIN_PASSWORD`) se generan localmente en la propia EC2 en su primer arranque (CSPRNG vía `openssl rand`, guardados root-only en `/opt/territorio-electoral/.env.secrets`) — ninguno viaja por variables Terraform, Secrets Manager ni el state. Sin Elastic IP: la IP pública cambia tras un `STOP`/`START`; un servicio systemd (`territorio-electoral.service`) la recalcula vía IMDSv2 y vuelve a levantar Docker Compose en cada arranque.
 
 ## Uso previsto (cuando corresponda desplegar de verdad)
 
