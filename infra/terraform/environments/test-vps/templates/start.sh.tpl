@@ -110,8 +110,13 @@ retry docker compose pull > /dev/null
 docker compose up -d
 
 # --- Espera a que la API responda a traves de nginx antes de inicializar ----
+# Se usa $PUBLIC_IP (no 127.0.0.1) como host de la URL: curl envia ese mismo
+# valor como header Host, y TrustedHostMiddleware del backend solo acepta
+# TRUSTED_HOSTS=$PUBLIC_IP (ver .env.runtime arriba) -- con 127.0.0.1 esta
+# llamada recibiria siempre 400 Bad Request y el loop agotaria sus 60
+# intentos sin detectar nunca un backend realmente listo.
 for _ in $(seq 1 60); do
-  if curl -sf "http://127.0.0.1/api/v1/ready" > /dev/null; then
+  if curl -sf "http://$PUBLIC_IP/api/v1/ready" > /dev/null; then
     break
   fi
   sleep 5

@@ -34,12 +34,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready')"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     restart: unless-stopped
     logging:
       driver: json-file
@@ -52,8 +46,7 @@ services:
     ports:
       - "80:8080"
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     restart: unless-stopped
     logging:
       driver: json-file
